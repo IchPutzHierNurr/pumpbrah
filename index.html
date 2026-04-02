@@ -334,7 +334,14 @@ const DEFAULT_PLAN = {
 function save(){
   localStorage.setItem('pb_data',JSON.stringify(D));
   if(useFirebase&&db&&syncCode){
-    db.collection('pumpbrah').doc(syncCode).set(D).catch(e=>console.warn('Sync-Fehler:',e));
+    db.collection('pumpbrah').doc(syncCode).set(D).then(()=>{
+      updateSyncPill(true);
+      console.log('PUMPBRAH: Synced to Firestore');
+    }).catch(e=>{
+      console.error('PUMPBRAH: Sync-Fehler:',e.message);
+      updateSyncPill(false);
+      toast('⚠️ Sync fehlgeschlagen — Check Firestore Regeln!');
+    });
   }
 }
 function loadLocal(){
@@ -350,30 +357,40 @@ function initFirebase(){
     if(FIREBASE_CONFIG.apiKey==='DEIN_API_KEY')return false;
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.firestore();
+    console.log('PUMPBRAH: Firebase initialized ✓');
     return true;
-  }catch(e){console.warn('Firebase init fehlgeschlagen:',e);return false}
+  }catch(e){
+    console.error('PUMPBRAH: Firebase init fehlgeschlagen:',e.message);
+    return false;
+  }
 }
 
 function startSync(){
   if(!db||!syncCode)return;
   if(unsubscribe)unsubscribe();
   const ref=db.collection('pumpbrah').doc(syncCode);
+  console.log('PUMPBRAH: Starting sync for',syncCode);
   // Initial load
   ref.get().then(doc=>{
     if(doc.exists){
+      console.log('PUMPBRAH: Remote data found, merging');
       const remote=doc.data();
-      // Merge: remote wins if it has more history
       if(remote.history&&remote.history.length>=D.history.length){
         D={...D,...remote};
         if(!D.notes)D.notes={};
         if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};
-        save();
+        localStorage.setItem('pb_data',JSON.stringify(D));
       }
     }else{
-      ref.set(D);
+      console.log('PUMPBRAH: No remote data, creating document');
+      ref.set(D).then(()=>console.log('PUMPBRAH: Initial document created')).catch(e=>console.error('PUMPBRAH: Create failed:',e.message));
     }
     renderAll();
-  }).catch(()=>{});
+    updateSyncPill(true);
+  }).catch(e=>{
+    console.error('PUMPBRAH: Initial load failed:',e.message);
+    updateSyncPill(false);
+  });
   // Realtime listener
   unsubscribe=ref.onSnapshot(doc=>{
     if(doc.exists){
@@ -387,7 +404,10 @@ function startSync(){
       }
     }
     updateSyncPill(true);
-  },()=>updateSyncPill(false));
+  },e=>{
+    console.error('PUMPBRAH: Realtime listener error:',e.message);
+    updateSyncPill(false);
+  });
 }
 
 function updateSyncPill(online){
@@ -406,7 +426,11 @@ function doLogin(){
   localStorage.setItem('pb_sync',code);
   useFirebase=initFirebase();
   loadLocal();
-  if(useFirebase)startSync();
+  if(useFirebase){
+    startSync();
+    // Force initial write to Firestore
+    setTimeout(()=>{ save(); console.log('PUMPBRAH: Initial sync write for',syncCode) },1500);
+  }
   showApp();
 }
 function offlineMode(){
