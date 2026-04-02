@@ -55,7 +55,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .exr.pre{border-color:rgba(255,140,66,.12)}.exr.mob{border-color:rgba(78,202,255,.12)}
 .exr-h{display:flex;align-items:center;gap:10px;padding:12px;cursor:pointer}
 .exr-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.c-chest{background:rgba(200,255,0,.1)}.c-back{background:rgba(78,202,255,.1)}.c-legs{background:rgba(180,126,255,.08)}.c-shoulders{background:rgba(255,140,66,.1)}.c-arms{background:rgba(255,59,92,.1)}.c-pre{background:rgba(255,140,66,.08)}.c-mob{background:rgba(78,202,255,.08)}
+.c-chest{background:rgba(200,255,0,.1)}.c-back{background:rgba(78,202,255,.1)}.c-legs{background:rgba(180,126,255,.08)}.c-shoulders{background:rgba(255,140,66,.1)}.c-arms{background:rgba(255,59,92,.1)}.c-core{background:rgba(52,211,153,.1)}.c-pre{background:rgba(255,140,66,.08)}.c-mob{background:rgba(78,202,255,.08)}
 .exr-b{flex:1;min-width:0}.exr-n{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .exr-m{font-size:11px;color:var(--text2);margin-top:1px;display:flex;gap:6px;align-items:center}
 .rb{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--nd);color:var(--neon);font-weight:600}
@@ -115,6 +115,56 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .login-sub{color:var(--text2);font-size:14px;margin-bottom:32px}
 .login-input{width:100%;max-width:300px;padding:14px;background:var(--bg3);border:2px solid var(--bg4);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:18px;text-align:center;outline:none;margin-bottom:12px;letter-spacing:2px}
 .login-input:focus{border-color:var(--neon)}
+.sticky-timer{position:sticky;top:44px;z-index:40;background:var(--bg);padding:8px 0;margin:0 -16px;padding-left:16px;padding-right:16px;border-bottom:1px solid var(--bg3)}
+.st-inner{display:flex;align-items:center;gap:12px}
+.st-circle{width:52px;height:52px;border-radius:50%;border:2.5px solid var(--bg4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.st-circle.run{border-color:var(--neon);box-shadow:0 0 15px rgba(200,255,0,.15)}
+.st-circle.done{border-color:var(--green);box-shadow:0 0 15px rgba(52,211,153,.15)}
+.st-time{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1}
+.st-circle.run .st-time{color:var(--neon)}.st-circle.done .st-time{color:var(--green)}
+.st-btns{display:flex;gap:4px;flex-wrap:wrap}
+.st-btn{padding:5px 10px;border-radius:6px;border:none;font-size:11px;font-weight:600;cursor:pointer}
+.st-info{flex:1;min-width:0}
+.st-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.st-elapsed{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
+.mini-hist{margin-top:6px;padding:6px 8px;background:var(--bg3);border-radius:6px;font-size:11px;color:var(--text2);max-height:80px;overflow-y:auto}
+.mini-hist-row{display:flex;gap:6px;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.mini-hist-row:last-child{border:none}
+.mini-hist-row .mh-d{color:var(--text3);font-size:10px;min-width:55px}
+.mini-hist-row .mh-v{font-family:'JetBrains Mono',monospace;color:var(--text);font-size:11px}
+.wo-summary{text-align:center;padding:20px 0}
+.wo-sum-big{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--neon);line-height:1}
+.wo-sum-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.wo-sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.wo-sum-card{background:var(--bg3);border-radius:10px;padding:12px;text-align:center}
+.wo-sum-card .sv{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--neon)}
+.wo-sum-card .sl{font-size:10px;color:var(--text2);text-transform:uppercase;margin-top:2px}
+.wo-sum-quote{font-style:italic;color:var(--text2);font-size:14px;margin-top:16px;padding:16px;background:var(--bg3);border-radius:12px;border-left:3px solid var(--neon)}
+.wo-sum-prog{margin:12px 0}
+.wo-sp-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--bg3)}
+.wo-sp-row:last-child{border:none}
+.ana-muscle{background:var(--bg2);border:1px solid var(--bg3);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:.15s}
+.ana-muscle:active{transform:scale(.98)}
+.ana-muscle-hdr{display:flex;align-items:center;gap:10px}
+.ana-muscle-ico{font-size:24px}
+.ana-muscle-name{font-weight:700;font-size:15px;flex:1}
+.ana-muscle-cnt{font-size:11px;color:var(--text3)}
+.ana-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bg3)}
+.ana-muscle.open .ana-detail{display:block}
+.lib-cat{margin-bottom:16px}
+.lib-cat-hdr{display:flex;align-items:center;gap:8px;padding:10px 0;cursor:pointer;font-weight:700;font-size:14px}
+.lib-cat-hdr .lib-ico{font-size:20px}
+.lib-cat-hdr .lib-cnt{font-size:11px;color:var(--text3);margin-left:auto}
+.lib-cat-hdr .lib-arr{color:var(--text3);font-size:14px;transition:transform .2s}
+.lib-cat.open .lib-arr{transform:rotate(90deg)}
+.lib-items{display:none;padding-left:4px}.lib-cat.open .lib-items{display:block}
+.lib-item{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border-radius:8px;margin-bottom:4px;cursor:pointer;transition:.15s}
+.lib-item:active{transform:scale(.98);background:var(--bg4)}
+.lib-item .li-name{font-size:13px;font-weight:500;flex:1}
+.lib-item .li-info{font-size:10px;color:var(--text3)}
+.lib-search{width:100%;padding:10px 14px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:10px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px}
+.lib-search:focus{border-color:var(--neon)}
+.lib-search::placeholder{color:var(--text3)}
 .login-hint{font-size:12px;color:var(--text3);margin-bottom:20px;max-width:300px}
 </style>
 </head>
@@ -140,6 +190,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="ni on" onclick="go('dash')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Home</span></div>
 <div class="ni" onclick="go('wo')"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="nl">Workout</span></div>
 <div class="ni" onclick="go('plan')"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="nl">Plan</span></div>
+<div class="ni" onclick="go('ana')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nl">Stats</span></div>
 <div class="ni" onclick="go('hist')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="nl">History</span></div>
 <div class="ni" onclick="go('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="nl">Setup</span></div>
 </nav>
@@ -176,6 +227,14 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="hdr"><div class="logo">HISTORY</div><div class="pill" id="h-cnt">0</div></div>
 <div class="dtabs" id="hist-filter-tabs"></div>
 <div id="hl"></div>
+</div>
+
+<!-- ANALYTICS -->
+<div class="screen" id="s-ana">
+<div class="hdr"><div class="logo">STATS</div><div class="pill" id="ana-total">0 Sätze</div></div>
+<div class="hero"><div class="hs"><div class="v" id="a-maxw">0</div><div class="l">Max Gewicht</div></div><div class="hs"><div class="v" id="a-avgrir">—</div><div class="l">Ø RIR</div></div><div class="hs"><div class="v" id="a-excount">0</div><div class="l">Übungen</div></div></div>
+<div class="st">MUSKELGRUPPEN <div class="ln"></div></div>
+<div id="ana-muscles"></div>
 </div>
 
 <!-- SETTINGS -->
@@ -233,6 +292,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 
 <div class="mbg" id="m-add"><div class="mdl">
 <div class="mt">ÜBUNG <button class="mc" onclick="cm('m-add')">✕</button></div>
+<button class="btn btn-g" style="margin-bottom:12px" onclick="cm('m-add');openLibrary()">📚 AUS BIBLIOTHEK WÄHLEN</button>
+<div class="sep" style="margin:0 0 12px"></div>
 <div class="ir"><div class="ig"><label>Übungsname</label><input type="text" id="a-name" placeholder="z.B. Bankdrücken"></div></div>
 <div class="ir">
 <div class="ig"><label>Sätze</label><input type="number" id="a-sets" value="3"></div>
@@ -243,10 +304,16 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="ig"><label>RIR</label><input type="number" id="a-rir" value="2"></div>
 <div class="ig"><label>Typ</label><select id="a-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
 </div>
-<div class="ir"><div class="ig"><label>Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option></select></div></div>
+<div class="ir"><div class="ig"><label>Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
 <div class="ir"><div class="ig"><label>Notiz</label><input type="text" id="a-note" placeholder="Ausführungshinweis"></div></div>
 <div style="font-size:12px;color:var(--text2);margin-bottom:8px" id="a-target"></div>
 <button class="btn" id="a-btn" onclick="confirmAddEx()">+ HINZUFÜGEN</button>
+</div></div>
+
+<div class="mbg" id="m-lib"><div class="mdl" style="max-height:90vh">
+<div class="mt">ÜBUNGSBIBLIOTHEK <button class="mc" onclick="cm('m-lib')">✕</button></div>
+<input class="lib-search" id="lib-search" placeholder="🔍 Übung suchen..." oninput="filterLib(this.value)">
+<div id="lib-content"></div>
 </div></div>
 
 <div class="mbg" id="m-pick"><div class="mdl">
@@ -257,6 +324,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="mbg" id="m-exhist"><div class="mdl">
 <div class="mt"><span id="exh-name">Übung</span> <button class="mc" onclick="cm('m-exhist')">✕</button></div>
 <div id="exh-content"></div>
+</div></div>
+
+<div class="mbg" id="m-wosummary"><div class="mdl">
+<div class="mt">WORKOUT COMPLETE 🏆 <button class="mc" onclick="cm('m-wosummary')">✕</button></div>
+<div id="wo-sum-content"></div>
+<button class="btn" onclick="cm('m-wosummary');go('dash')">👊 FERTIG</button>
 </div></div>
 
 <div class="mbg" id="m-exnote"><div class="mdl">
@@ -466,7 +539,7 @@ function resetAll(){
 })();
 
 // ===== HELPERS =====
-const EMO={chest:'🫁',back:'🔙',legs:'🦵',shoulders:'🏔️',arms:'💪'};
+const EMO={chest:'🫁',back:'🔙',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
 let curTab=null, timerInt=null, timerSec=0, timerTgt=0, logTgt=null, editIdx=null, histFilter='all';
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
@@ -475,9 +548,9 @@ function om(id){document.getElementById(id).classList.add('show')}
 function go(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('s-'+id).classList.add('active');
-  document.querySelectorAll('.ni').forEach((n,i)=>n.classList.toggle('on',['dash','wo','plan','hist','settings'][i]===id));
+  document.querySelectorAll('.ni').forEach((n,i)=>n.classList.toggle('on',['dash','wo','plan','ana','hist','settings'][i]===id));
   window.scrollTo(0,0);
-  if(id==='dash')renderDash();if(id==='wo')renderWo();if(id==='plan')renderPlan();if(id==='hist')renderHist();if(id==='settings')renderSettings();
+  if(id==='dash')renderDash();if(id==='wo')renderWo();if(id==='plan')renderPlan();if(id==='hist')renderHist();if(id==='settings')renderSettings();if(id==='ana')renderAna();
 }
 function renderAll(){renderDash();renderWo()}
 function reps(e){return e.rmin===e.rmax?e.rmin:e.rmin+'–'+e.rmax}
@@ -722,6 +795,219 @@ function confirmAddEx(){
   save();cm('m-add');renderPL();toast(editIdx!==null?'Gespeichert!':'Hinzugefügt!');editIdx=null;
 }
 
+// ===== EXERCISE LIBRARY =====
+const EXLIB=[
+{cat:"🔥 Warm-Up / Pre-Workout",items:[
+{name:"ATG: Tibialis Raise",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
+{name:"ATG: Split Squat Slantboard",s:3,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Slantboard, Knie weit vor, LANGSAM"},
+{name:"ATG: Seated Good Morning KH",s:3,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Auf Bank, Hohlkreuz, Brust zwischen Beine"},
+{name:"Band Pull Aparts",s:3,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Theraband auf Schulterhöhe auseinanderziehen"},
+{name:"Shoulder Dislocates",s:2,rn:10,rx:15,rir:null,t:"pre",m:"shoulders",note:"Stab/Band, weiter Griff, über Kopf nach hinten"},
+{name:"Arm Circles",s:2,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Kleine→große Kreise, vorwärts + rückwärts"},
+{name:"Hip Circles",s:2,rn:10,rx:10,rir:null,t:"pre",m:"legs",note:"Stehend, Knie anheben und kreisen"},
+{name:"Glute Bridges",s:2,rn:15,rx:20,rir:null,t:"pre",m:"legs",note:"Hüfte heben, Glutes anspannen. Aktivierung"},
+{name:"Cat-Cow Stretch",s:2,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Vierfüßlerstand, Rücken rund→hohl"},
+{name:"Inchworms",s:2,rn:6,rx:8,rir:null,t:"pre",m:"back",note:"Stehend vorbeugen, in Liegestütz laufen, zurück"},
+{name:"World's Greatest Stretch",s:2,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Ausfallschritt + Rotation + Arm hoch"},
+{name:"Dead Hangs",s:2,rn:30,rx:45,rir:null,t:"pre",m:"back",note:"An Stange hängen (Sek). Schultern + Grip"},
+{name:"Bird Dogs",s:2,rn:10,rx:10,rir:null,t:"pre",m:"core",note:"Vierfüßlerstand, gegengleich Arm+Bein strecken"}
+]},
+{cat:"🫁 Brust",items:[
+{name:"Bankdrücken (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Ellenbogen 45°, kontrollierte Exzentrik 2-3s"},
+{name:"Schrägbankdrücken (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Winkel 30°, kontrolliert"},
+{name:"Negativbankdrücken (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Bank leicht negativ, untere Brust"},
+{name:"KH Bankdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Hanteln parallel, volle ROM, Stretch unten"},
+{name:"KH Schrägbankdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"30° Winkel, kontrolliert"},
+{name:"Brustpresse Maschine",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Stretch unten, kein Lockout"},
+{name:"Butterfly / Pec Deck",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Arme leicht gebeugt, Squeeze in der Mitte"},
+{name:"Cable Flys (oben)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel oben, Hände unten zusammen. Untere Brust"},
+{name:"Cable Flys (mitte)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel Brusthöhe, Arme vor Brust zusammen"},
+{name:"Cable Flys (unten)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel unten, Hände oben zusammen. Obere Brust"},
+{name:"KH Flys (Flachbank)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Arme leicht gebeugt, tiefer Stretch"},
+{name:"Incline Flys (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Schrägbank 30°, Dehnung betonen"},
+{name:"Dips (Brust)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Oberkörper vorgelehnt, tiefe ROM"},
+{name:"Floor Press",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Am Boden, Oberarme berühren Boden. Lockout-Kraft"},
+{name:"KH Pullover",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Quer auf Bank, KH hinter Kopf. Brust+Lat Stretch"},
+{name:"Landmine Press",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"LH-Ende am Boden, ein-/beidarmig drücken"},
+{name:"Smith Bankdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Multipresse, geführt, gut für Solo"},
+{name:"Close Grip Bankdrücken",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Enger Griff, Trizeps + innere Brust"}
+]},
+{cat:"🔙 Rücken",items:[
+{name:"Latziehen breit Obergriff",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter runter, Brust raus"},
+{name:"Latziehen eng Untergriff",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Enger Untergriff, Bizeps hilft. Unterer Lat"},
+{name:"Latziehen neutral (V-Griff)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"V-Griff, gute Lat-Aktivierung"},
+{name:"Maschinenrudern eng neutral",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter zusammen, Chest-Support"},
+{name:"Maschinenrudern breit",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Breiter Griff, oberer Rücken + Rhomboide"},
+{name:"Seated Cable Row (eng)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"V-Griff, zum Bauchnabel ziehen"},
+{name:"Seated Cable Row (breit)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Breite Stange, zum Brustbein ziehen"},
+{name:"Einarmiges Kabelrudern",s:3,rn:10,rx:12,rir:2,t:"main",m:"back",note:"Einarmig, Rotation kontrollieren"},
+{name:"Vorgebeugtes Rudern (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"back",note:"45° Oberkörper, Stange zum Bauch"},
+{name:"KH Rudern einarmig",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Hand auf Bank, Ellenbogen eng hochziehen"},
+{name:"Pendlay Rows",s:3,rn:5,rx:8,rir:3,t:"main",m:"back",note:"Vom Boden, explosiv zur Brust. Absetzen zwischen Wdh"},
+{name:"T-Bar Rudern",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Enger Griff, Brust gegen Pad"},
+{name:"Straight Arm Pulldown",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Arme gestreckt, Stange zum Oberschenkel. Lat-Iso"},
+{name:"Klimmzüge (breit)",s:3,rn:6,rx:10,rir:2,t:"main",m:"back",note:"Breiter Obergriff, Brust zur Stange"},
+{name:"Klimmzüge (eng/neutral)",s:3,rn:6,rx:10,rir:2,t:"main",m:"back",note:"Enger neutraler Griff"},
+{name:"Kreuzheben",s:3,rn:5,rx:8,rir:3,t:"main",m:"back",note:"Hüftbreit, Rücken gerade. King of Compounds"},
+{name:"Rack Pulls",s:3,rn:6,rx:8,rir:3,t:"main",m:"back",note:"Stange auf Kniehöhe. Oberer Bereich Kreuzheben"},
+{name:"Hyperextensions",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"45° Bank, unterer Rücken"},
+{name:"Face Pulls",s:3,rn:12,rx:15,rir:2,t:"main",m:"back",note:"Seil Gesichtshöhe, ext. Rotation. Schultergesundheit"},
+{name:"Shrugs (LH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Schultern gerade hoch, 1s halten. Trapezius"},
+{name:"Shrugs (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"KH seitlich, Schultern hochziehen"},
+{name:"Reverse Hypers",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Beine hinter Körper heben. Unterer Rücken+Glutes"}
+]},
+{cat:"🦵 Beine",items:[
+{name:"Kniebeugen (Back Squat)",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, mindestens parallel"},
+{name:"Front Squats",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange vorne, aufrechter Oberkörper. Quad-Fokus"},
+{name:"Goblet Squats (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"KH vor Brust, tief. Gut für Mobilität"},
+{name:"Beinpresse",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Hüftbreit-mittig, Knie nicht locken"},
+{name:"Beinpresse eng (Quads)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Füße eng+tief. Quad-Fokus"},
+{name:"Beinpresse breit (Adduktoren)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Füße breit+hoch. Adduktoren+Glutes"},
+{name:"Hack Squats",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Maschine, Schulter unter Polster. Quad-dominant"},
+{name:"Reverse Hack Squats",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Gesicht zur Maschine, Glute+Ham Fokus"},
+{name:"Rumänisches Kreuzheben (LH)",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Hüftdominant, Stange eng. Hamstrings+Glutes"},
+{name:"Rumänisches Kreuzheben (KH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"KH seitlich, gleiche Technik"},
+{name:"Ausfallschritte (KH)",s:3,rn:10,rx:12,rir:2,t:"main",m:"legs",note:"Abwechselnd oder Walking"},
+{name:"Bulgarian Split Squats",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Hinterer Fuß auf Bank. Einbeinig, brutal"},
+{name:"Leg Extension",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"1s Squeeze oben. Quad-Isolation"},
+{name:"Leg Extension (einbeinig)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Einbeinig für Symmetrie"},
+{name:"Leg Curl (liegend)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Volle ROM, 2s Exzentrik. Ham-Isolation"},
+{name:"Leg Curl (sitzend)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Sitzend, andere Dehnungsposition"},
+{name:"Hip Thrust (LH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Schultern auf Bank, Stange auf Hüfte. Glute-King"},
+{name:"Hip Thrust (Maschine)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Geführt, einfacheres Setup"},
+{name:"Wadenheben stehend",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Volle ROM, Pause unten+oben"},
+{name:"Wadenheben sitzend",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Knie 90°, Soleus-Fokus"},
+{name:"Wadenpresse (Beinpresse)",s:3,rn:15,rx:20,rir:2,t:"main",m:"legs",note:"Zehen auf Kante, Waden drücken"},
+{name:"Adduktoren Maschine",s:3,rn:12,rx:15,rir:2,t:"main",m:"legs",note:"Beine zusammen. Innere Oberschenkel"},
+{name:"Abduktoren Maschine",s:3,rn:12,rx:15,rir:2,t:"main",m:"legs",note:"Beine auseinander. Glute Med"},
+{name:"Step Ups (KH)",s:3,rn:10,rx:12,rir:2,t:"main",m:"legs",note:"Auf Box steigen, kontrolliert"},
+{name:"Sissy Squats",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Knie weit vor, Oberkörper zurück. Quad-Stretch"},
+{name:"Nordic Hamstring Curls",s:3,rn:4,rx:8,rir:2,t:"main",m:"legs",note:"Kniend, kontrolliert fallen. Exzentrisch!"},
+{name:"Good Mornings (LH)",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, Hüftbeuge. Hams+unterer Rücken"},
+{name:"Sumo Kreuzheben",s:3,rn:5,rx:8,rir:3,t:"main",m:"legs",note:"Breiter Stand, Hände innen. Adduktoren+Glutes"},
+{name:"Belt Squat",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Gewicht an Hüftgurt, kein Rücken-Load"}
+]},
+{cat:"🏔️ Schultern",items:[
+{name:"Schulterdrücken (LH/OHP)",s:3,rn:6,rx:10,rir:3,t:"main",m:"shoulders",note:"Stehend/sitzend, Stange über Kopf"},
+{name:"KH Schulterdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Sitzend, KH neben Ohren starten"},
+{name:"Arnold Press",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Start vor Brust, rotierend nach oben"},
+{name:"Schulterdrücken Maschine",s:3,rn:10,rx:12,rir:2,t:"main",m:"shoulders",note:"Geführt, gut bei Schulterproblemen"},
+{name:"KH Seitheben",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Kontrolliert, Pinky-Lead. Seitl. Delts"},
+{name:"KH Frontheben",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Abwechselnd/gleichzeitig. Vordere Delts"},
+{name:"Cable Lateral Raise",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Kabel unten, einarmig. Konstante Spannung"},
+{name:"Cable Front Raise",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Kabel unten, Stange oder Seil"},
+{name:"Reverse Flys (KH)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Vorgebeugt, KH seitlich. Hintere Schulter"},
+{name:"Reverse Flys (Maschine)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Butterfly umgekehrt, hintere Schulter"},
+{name:"Face Pulls (Schulter)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Seil Gesichtshöhe, ext. Rotation"},
+{name:"Upright Rows",s:3,rn:10,rx:12,rir:2,t:"main",m:"shoulders",note:"Stange eng am Körper hoch. Vorsicht Impingement"},
+{name:"Lu Raises",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Seitheben→vorne drehen→über Kopf"},
+{name:"Plate Front Raise",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Hantelscheibe vor Körper hochheben"}
+]},
+{cat:"💪 Bizeps",items:[
+{name:"KH Curls",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Supination, langsame Exzentrik"},
+{name:"Hammer Curls (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Neutraler Griff, Brachialis"},
+{name:"SZ-Curls (stehend)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"EZ-Bar, schont Handgelenke"},
+{name:"Preacher Curls (SZ)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Scott-Bank, kein Schwung. Isolation"},
+{name:"Preacher Curls (Maschine)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Geführt, konstante Spannung"},
+{name:"Concentration Curls",s:3,rn:10,rx:12,rir:2,t:"main",m:"arms",note:"Sitzend, Ellenbogen an Oberschenkel"},
+{name:"Cable Curls (Stange)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Am Kabelzug, kein Schwung"},
+{name:"Cable Curls (Seil)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil, Hammer oder supiniert"},
+{name:"Incline Curls (KH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Schrägbank 45°, langer Kopf Stretch"},
+{name:"Spider Curls",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Brust auf Schrägbank, Peak Contraction"},
+{name:"Reverse Curls",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Obergriff, Unterarme+Brachioradialis"},
+{name:"21s Curls",s:2,rn:21,rx:21,rir:1,t:"main",m:"arms",note:"7 unten, 7 oben, 7 voll. Metabolischer Stress"},
+{name:"Cross Body Hammer Curls",s:3,rn:10,rx:12,rir:2,t:"main",m:"arms",note:"KH vor Körper zur anderen Schulter"}
+]},
+{cat:"🦾 Trizeps",items:[
+{name:"Trizeps Pushdown (Seil)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil auseinanderziehen am unteren Punkt"},
+{name:"Trizeps Pushdown (V-Bar)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"V-Bar, Ellenbogen eng"},
+{name:"Trizeps Pushdown (gerade)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Gerade Stange, Obergriff. Lateraler Kopf"},
+{name:"Katana Extensions (Kabel)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Kabel überkreuzt, Scapular Plane. Langer Kopf"},
+{name:"Overhead Trizeps (Kabel)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Rücken zum Kabel, Seil über Kopf"},
+{name:"Overhead Trizeps (KH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Sitzend, KH beidarmig hinter Kopf"},
+{name:"Skullcrusher (SZ)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Liegend, SZ-Bar zur Stirn senken"},
+{name:"French Press",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Wie Skullcrusher, hinter den Kopf senken"},
+{name:"Close Grip Bench",s:3,rn:8,rx:10,rir:3,t:"main",m:"arms",note:"Enger Griff, Compound Trizeps+Brust"},
+{name:"Dips (Trizeps)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Aufrecht, Ellenbogen eng. Trizeps-Fokus"},
+{name:"Trizeps Kickbacks (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Vorgebeugt, Arm strecken. Squeeze!"},
+{name:"Diamond Push-Ups",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Hände eng, Rauten-Form"},
+{name:"JM Press",s:3,rn:8,rx:10,rir:2,t:"main",m:"arms",note:"Mix aus Close Grip Bench + Skullcrusher"}
+]},
+{cat:"🎯 Core / Bauch",items:[
+{name:"Cable Crunch",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kniend am Kabelzug, einrollen"},
+{name:"Plank",s:3,rn:30,rx:60,rir:null,t:"main",m:"core",note:"Unterarme, Körper gerade. Sekunden"},
+{name:"Hanging Leg Raise",s:3,rn:8,rx:15,rir:2,t:"main",m:"core",note:"An Stange hängend, Beine heben"},
+{name:"Hanging Knee Raise",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Einfachere Variante, Knie anziehen"},
+{name:"Ab Roller",s:3,rn:8,rx:12,rir:2,t:"main",m:"core",note:"Kniend/stehend, weit nach vorne rollen"},
+{name:"Russian Twist",s:3,rn:15,rx:20,rir:2,t:"main",m:"core",note:"Sitzend, Oberkörper rotieren. Obliques"},
+{name:"Woodchoppers (Kabel)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kabel diagonal, Rotation. Obliques"},
+{name:"Pallof Press",s:3,rn:10,rx:12,rir:2,t:"main",m:"core",note:"Kabel seitlich, Arme strecken. Anti-Rotation"},
+{name:"Decline Sit-Ups",s:3,rn:12,rx:20,rir:2,t:"main",m:"core",note:"Negative Bank, aufrollen"},
+{name:"Leg Raises (liegend)",s:3,rn:12,rx:20,rir:2,t:"main",m:"core",note:"Rücken am Boden, Beine heben"},
+{name:"Dead Bug",s:3,rn:10,rx:10,rir:null,t:"main",m:"core",note:"Rücken am Boden, gegengleich strecken"},
+{name:"Side Plank",s:3,rn:30,rx:45,rir:null,t:"main",m:"core",note:"Seitlich auf Unterarm. Sekunden"},
+{name:"Dragon Flag",s:3,rn:5,rx:8,rir:2,t:"main",m:"core",note:"Auf Bank, Körper gerade heben. Fortgeschritten!"},
+{name:"Rückenstrecker (Maschine)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kontrollierte Extension. Unterer Rücken"}
+]},
+{cat:"🧘 Mobility",items:[
+{name:"Backward Walk Laufband",s:1,rn:5,rx:10,rir:null,t:"mob",m:"legs",note:"Laufband AUS, rückwärts gehen"},
+{name:"Poliquin Step Slantboard",s:3,rn:15,rx:20,rir:null,t:"mob",m:"legs",note:"1 Fuß auf Slantboard, Knie beugen"},
+{name:"Slantboard Calf Raise",s:3,rn:15,rx:15,rir:null,t:"mob",m:"legs",note:"Fersen TIEF sinken, LANGSAM"},
+{name:"Ring Rows",s:3,rn:10,rx:12,rir:null,t:"mob",m:"back",note:"TRX/Ringe zur Brust ziehen"},
+{name:"KH Pullover (Mobility)",s:3,rn:10,rx:10,rir:null,t:"mob",m:"chest",note:"Quer auf Bank, Brustkorb öffnen"},
+{name:"Jefferson Curl (KH)",s:2,rn:5,rx:5,rir:null,t:"mob",m:"back",note:"Auf Box, Wirbel für Wirbel. SUPER LANGSAM"},
+{name:"Incline Pigeon Pose",s:1,rn:60,rx:60,rir:null,t:"mob",m:"legs",note:"60 Sek pro Seite. Hüfte öffnen"},
+{name:"Couch Stretch",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Knie an Wand, Hüftflexor. Sek/Seite"},
+{name:"90/90 Stretch",s:2,rn:30,rx:45,rir:null,t:"mob",m:"legs",note:"Beine 90°, Rotation. Hüftmobilität"},
+{name:"Wall Slides",s:3,rn:10,rx:12,rir:null,t:"mob",m:"shoulders",note:"Rücken an Wand, Arme gleiten"},
+{name:"Thoracic Spine Rotation",s:2,rn:10,rx:10,rir:null,t:"mob",m:"back",note:"Seitlage, Arm öffnen. BWS mobilisieren"},
+{name:"Foam Rolling Quads",s:1,rn:60,rx:90,rir:null,t:"mob",m:"legs",note:"Faszienrolle, Oberschenkel. Sekunden"},
+{name:"Foam Rolling Lats",s:1,rn:60,rx:90,rir:null,t:"mob",m:"back",note:"Seitlich auf Rolle. Sekunden"},
+{name:"Hängen (Passive Hang)",s:2,rn:30,rx:60,rir:null,t:"mob",m:"back",note:"An Stange, Schultern entspannen. Dekompression"}
+]}
+];
+
+function openLibrary(){
+  renderLib('');document.getElementById('lib-search').value='';
+  om('m-lib');setTimeout(()=>document.getElementById('lib-search').focus(),200);
+}
+function renderLib(q){
+  q=q.toLowerCase().trim();
+  const c=document.getElementById('lib-content');
+  let h='';
+  EXLIB.forEach((cat,ci)=>{
+    const fl=q?cat.items.filter(i=>i.name.toLowerCase().includes(q)||i.note.toLowerCase().includes(q)):cat.items;
+    if(!fl.length)return;
+    h+=`<div class="lib-cat${q?' open':''}" onclick="this.classList.toggle('open')">
+      <div class="lib-cat-hdr"><span class="lib-ico">${cat.cat.split(' ')[0]}</span>${cat.cat.split(' ').slice(1).join(' ')}<span class="lib-cnt">${fl.length}</span><span class="lib-arr">▸</span></div>
+      <div class="lib-items">`;
+    fl.forEach(item=>{
+      const oi=cat.items.indexOf(item);
+      const rp=item.rn===item.rx?item.rn:item.rn+'–'+item.rx;
+      h+=`<div class="lib-item" onclick="event.stopPropagation();pickLib(${ci},${oi})"><div class="li-name">${item.name}</div><div class="li-info">${item.s}×${rp}</div></div>`;
+    });
+    h+=`</div></div>`;
+  });
+  if(!h)h='<div class="empty">Keine Übung gefunden</div>';
+  c.innerHTML=h;
+}
+function filterLib(q){renderLib(q)}
+function pickLib(ci,ii){
+  const item=EXLIB[ci].items[ii];
+  cm('m-lib');editIdx=null;
+  document.getElementById('a-name').value=item.name;
+  document.getElementById('a-sets').value=item.s;
+  document.getElementById('a-rmin').value=item.rn;
+  document.getElementById('a-rmax').value=item.rx;
+  document.getElementById('a-rir').value=item.rir||0;
+  document.getElementById('a-type').value=item.t;
+  document.getElementById('a-mus').value=item.m;
+  document.getElementById('a-note').value=item.note||'';
+  document.getElementById('a-target').textContent='Wird zu: '+(curTab||'').replace('_',' ');
+  document.getElementById('a-btn').textContent='+ HINZUFÜGEN';
+  om('m-add');toast('📚 '+item.name);
+}
+
 // ===== EXERCISE NOTES =====
 function openExNote(name){
   document.getElementById('exn-name').textContent=name;
@@ -756,22 +1042,23 @@ function renderWo(){
   if(!D.active){eb.style.display='none';c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;return}
   eb.style.display='';
   const el=Math.floor((Date.now()-D.active.startTime)/60000);
-  let h=`<div style="text-align:center;padding:12px 0 16px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--neon);letter-spacing:2px">${D.active.planKey.replace('_',' ')}</div><div style="font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text2)">⏱ ${el} min</div></div>`;
+  const tRem=Math.max(0,timerTgt-timerSec);
+  const tState=timerInt?'run':(timerSec>0&&timerSec>=timerTgt?'done':'');
 
-  // Timer
-  h+=`<div style="text-align:center;padding:10px 0 16px">
-    <div class="tc${timerInt?' run':''}${timerSec>0&&timerSec>=timerTgt?' done':''}" id="tc">
-      <div class="tv" id="td">${fmtT(Math.max(0,timerTgt-timerSec))}</div><div class="tl">Pause</div>
+  let h=`<div style="text-align:center;padding:4px 0 8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--neon);letter-spacing:2px">${D.active.planKey.replace('_',' ')}</div></div>`;
+
+  // Sticky compact timer
+  h+=`<div class="sticky-timer"><div class="st-inner">
+    <div class="st-circle ${tState}" id="tc"><div class="st-time" id="td">${fmtT(tRem)}</div></div>
+    <div class="st-info"><div class="st-label">Pause Timer</div><div class="st-elapsed">⏱ ${el} min Workout</div></div>
+    <div class="st-btns">
+      <button class="st-btn" style="background:var(--neon);color:var(--bg)" onclick="startTmr()">${timerInt?'⏸':'▶'}</button>
+      <button class="st-btn" style="background:var(--bg4);color:var(--text)" onclick="resetTmr()">⏭</button>
+      <button class="st-btn" style="background:var(--bg4);color:var(--text2)" onclick="adjTmr(-15)">-15</button>
+      <button class="st-btn" style="background:var(--bg4);color:var(--text2)" onclick="adjTmr(15)">+15</button>
+      <button class="st-btn" style="background:var(--bg4);color:var(--text2)" onclick="adjTmr(30)">+30</button>
     </div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
-      <button class="btn btn-s" style="background:var(--neon);color:var(--bg)" onclick="startTmr()">${timerInt?'⏸':'▶'}</button>
-      <button class="btn btn-s btn-g" onclick="resetTmr()">⏭</button>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:center;margin-top:6px;font-size:12px;color:var(--text2)">
-      <span onclick="adjTmr(-15)" style="cursor:pointer;padding:4px 10px;background:var(--bg3);border-radius:6px">-15s</span>
-      <span onclick="adjTmr(15)" style="cursor:pointer;padding:4px 10px;background:var(--bg3);border-radius:6px">+15s</span>
-      <span onclick="adjTmr(30)" style="cursor:pointer;padding:4px 10px;background:var(--bg3);border-radius:6px">+30s</span>
-    </div></div>`;
+  </div></div>`;
 
   D.active.exercises.forEach((ex,ei)=>{
     const ico=ex.type==='pre'?'🔥':ex.type==='mob'?'🧘':EMO[ex.muscle]||'💪';
@@ -779,15 +1066,30 @@ function renderWo(){
     const last=getLastW(ex.name);
     const uNote=D.notes[ex.name];
     const skipped=ex.skipped;
+    // Mini history
+    const hist=getAllSets(ex.name).filter(s=>s.w>0);
+    const lastSets=hist.slice(-6);
 
-    h+=`<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);padding:14px;margin-bottom:10px;${done?'opacity:.5':''}${skipped?'opacity:.3':''}">
+    h+=`<div style="background:var(--bg2);border:1px solid ${done?'rgba(52,211,153,.2)':'var(--bg3)'};border-radius:var(--radius);padding:14px;margin-bottom:10px;${skipped?'opacity:.3':''}">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="font-size:20px">${ico}</span>
-        <div style="flex:1"><div style="font-weight:700;font-size:15px">${ex.name}${skipped?' (übersprungen)':''}</div><div style="font-size:12px;color:var(--text2)">${ex.sets}×${reps(ex)}${ex.rir!==null?' @ RIR '+ex.rir:''}</div></div>
+        <div style="flex:1"><div style="font-weight:700;font-size:15px">${ex.name}${skipped?' (skip)':''}</div><div style="font-size:12px;color:var(--text2)">${ex.sets}×${reps(ex)}${ex.rir!==null?' @ RIR '+ex.rir:''}</div></div>
         ${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}
-      </div>
-      ${uNote?`<div style="font-size:11px;color:var(--purple);margin-bottom:6px;padding:4px 8px;background:rgba(180,126,255,.08);border-radius:6px">📝 ${uNote}</div>`:''}
-      ${last&&!skipped?`<div style="font-size:11px;color:var(--text2);margin-bottom:8px">📊 <b style="color:var(--text);font-family:JetBrains Mono,monospace">${last.w}kg × ${last.r}</b></div>`:''}`;
+      </div>`;
+
+    // Personal note
+    if(uNote) h+=`<div style="font-size:11px;color:var(--purple);margin-bottom:6px;padding:4px 8px;background:rgba(180,126,255,.08);border-radius:6px">📝 ${uNote}</div>`;
+
+    // Mini history inline (last 4-6 entries)
+    if(lastSets.length>0&&!skipped){
+      h+=`<div class="mini-hist">`;
+      lastSets.forEach(s=>{
+        h+=`<div class="mini-hist-row"><span class="mh-d">${s.date||''}</span><span class="mh-v">${s.w}kg×${s.r}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${s.rir}</span></div>`;
+      });
+      h+=`</div>`;
+    } else if(last&&!skipped){
+      h+=`<div style="font-size:11px;color:var(--text2);margin-bottom:6px">📊 <b style="color:var(--text);font-family:JetBrains Mono,monospace">${last.w}kg × ${last.r}</b></div>`;
+    }
 
     if(!skipped){
       for(let si=0;si<ex.sets;si++){
@@ -849,7 +1151,12 @@ function redoLast(){
   const last=ex.logged[ex.logged.length-1];
   ex.logged.push({...last});
   save();cm('m-log');
-  timerTgt=D.settings.compound;timerSec=0;startTmr();
+  // Auto timer (same logic as confirmLog)
+  const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);
+  timerTgt=isC?D.settings.compound:D.settings.isolation;
+  timerSec=0;
+  if(timerInt){clearInterval(timerInt);timerInt=null}
+  startTmr();
   renderWo();toast(`↩ Wiederholt: ${last.w}kg × ${last.r}`);
 }
 
@@ -861,12 +1168,71 @@ function skipEx(ei){
 
 function endWorkout(){
   if(!D.active)return;if(!confirm('Workout beenden?'))return;
-  const s={date:new Date().toLocaleDateString('de-DE'),planKey:D.active.planKey,duration:Math.floor((Date.now()-D.active.startTime)/60000),sets:[]};
+  const dur=Math.floor((Date.now()-D.active.startTime)/60000);
+  const s={date:new Date().toLocaleDateString('de-DE'),planKey:D.active.planKey,duration:dur,sets:[]};
   D.active.exercises.forEach(ex=>{
     if(!ex.skipped)ex.logged.forEach((l,i)=>{s.sets.push({ex:ex.name,nr:i+1,w:l.w,r:l.r,rir:l.rir,note:l.note})});
   });
-  if(s.sets.length>0){D.history.push(s)}
-  D.active=null;save();resetTmr();renderWo();toast('Workout gespeichert! 💪');
+  if(s.sets.length===0){D.active=null;save();resetTmr();renderWo();toast('Kein Satz geloggt');return}
+
+  // Calculate progression before saving
+  const progData=[];
+  const exNames=[...new Set(s.sets.map(x=>x.ex))];
+  exNames.forEach(name=>{
+    const current=s.sets.filter(x=>x.ex===name);
+    const curMax=Math.max(...current.map(x=>x.w));
+    const prevSets=getAllSets(name).filter(x=>x.w>0);
+    if(prevSets.length>0){
+      const prevMax=Math.max(...prevSets.map(x=>x.w));
+      const diff=curMax-prevMax;
+      const pct=prevMax>0?((diff/prevMax)*100):0;
+      progData.push({name,curMax,prevMax,diff,pct});
+    }
+  });
+
+  D.history.push(s);
+  D.active=null;save();resetTmr();
+
+  // Build summary
+  const totalW=s.sets.reduce((a,x)=>a+x.w*x.r,0);
+  const avgRir=s.sets.length?(s.sets.reduce((a,x)=>a+x.rir,0)/s.sets.length).toFixed(1):'—';
+  const ups=progData.filter(p=>p.diff>0);
+  const downs=progData.filter(p=>p.diff<0);
+  const avgPct=progData.length?progData.reduce((a,p)=>a+p.pct,0)/progData.length:0;
+
+  // Pick quote based on performance
+  let quote='';
+  if(ups.length>2)quote='Massive Progression! Du frisst Gewichte zum Frühstück. 🔥';
+  else if(ups.length>0)quote='Stärker als letztes Mal. So baut man Muskeln. 💪';
+  else if(downs.length>1)quote='Nicht jeder Tag ist ein PR-Tag. Erholung checken, Ernährung checken, und nächstes Mal angreifen. 🧠';
+  else if(downs.length>0)quote='Ein kleiner Rückgang — kein Stress. Das gehört dazu. Fokus auf Konsistenz. ⚡';
+  else quote='Solides Workout! Konstanz ist King. Weiter so. 👊';
+
+  let sh=`<div class="wo-summary"><div class="wo-sum-big">${dur}'</div><div class="wo-sum-label">Minuten</div></div>`;
+  sh+=`<div class="wo-sum-grid">
+    <div class="wo-sum-card"><div class="sv">${s.sets.length}</div><div class="sl">Sätze</div></div>
+    <div class="wo-sum-card"><div class="sv">${Math.round(totalW)}</div><div class="sl">Kg Volumen</div></div>
+    <div class="wo-sum-card"><div class="sv">${exNames.length}</div><div class="sl">Übungen</div></div>
+    <div class="wo-sum-card"><div class="sv">${avgRir}</div><div class="sl">Ø RIR</div></div>
+  </div>`;
+
+  if(progData.length>0){
+    sh+=`<div class="st">PROGRESSION <div class="ln"></div></div><div class="wo-sum-prog">`;
+    progData.forEach(p=>{
+      const cl=p.diff>0?'trend-up':p.diff<0?'trend-down':'trend-flat';
+      const icon=p.diff>0?'📈':p.diff<0?'📉':'➡️';
+      const sign=p.diff>0?'+':'';
+      sh+=`<div class="wo-sp-row"><div>${icon} ${p.name}</div><div class="${cl}" style="font-family:'JetBrains Mono',monospace">${sign}${p.diff.toFixed(1)}kg (${sign}${p.pct.toFixed(0)}%)</div></div>`;
+    });
+    sh+=`</div>`;
+  }
+
+  sh+=`<div class="wo-sum-quote">${quote}</div>`;
+
+  document.getElementById('wo-sum-content').innerHTML=sh;
+  om('m-wosummary');
+  renderWo();
+  toast('Workout gespeichert! 💪');
 }
 
 // ===== TIMER =====
@@ -923,6 +1289,88 @@ function renderHist(){
   c.innerHTML=h;
 }
 function delSess(i){if(!confirm('Löschen?'))return;D.history.splice(i,1);save();renderHist();toast('Gelöscht')}
+
+// ===== ANALYTICS =====
+function renderAna(){
+  const allSets=[];
+  D.history.forEach(s=>s.sets.forEach(set=>allSets.push({...set,date:s.date})));
+  const totalSets=allSets.length;
+  const maxW=allSets.length?Math.max(...allSets.filter(s=>s.w>0).map(s=>s.w)):0;
+  const avgR=allSets.length?(allSets.reduce((a,s)=>a+s.rir,0)/allSets.length).toFixed(1):'—';
+  const exNames=[...new Set(allSets.map(s=>s.ex))];
+
+  document.getElementById('ana-total').textContent=totalSets+' Sätze total';
+  document.getElementById('a-maxw').textContent=maxW;
+  document.getElementById('a-avgrir').textContent=avgR;
+  document.getElementById('a-excount').textContent=exNames.length;
+
+  // Group exercises by muscle
+  const muscles={chest:{emoji:'🫁',name:'Brust',exercises:{}},back:{emoji:'🔙',name:'Rücken',exercises:{}},legs:{emoji:'🦵',name:'Beine',exercises:{}},shoulders:{emoji:'🏔️',name:'Schultern',exercises:{}},arms:{emoji:'💪',name:'Arme',exercises:{}},core:{emoji:'🎯',name:'Core',exercises:{}}};
+
+  // Map exercise names to muscle groups from plan
+  const exMuscleMap={};
+  Object.values(D.plan).forEach(p=>p.exercises.forEach(ex=>{exMuscleMap[ex.name]=ex.muscle}));
+  // Also check EXLIB
+  EXLIB.forEach(cat=>cat.items.forEach(item=>{if(!exMuscleMap[item.name])exMuscleMap[item.name]=item.m}));
+
+  allSets.forEach(set=>{
+    const m=exMuscleMap[set.ex]||'chest';
+    if(!muscles[m])return;
+    if(!muscles[m].exercises[set.ex])muscles[m].exercises[set.ex]=[];
+    muscles[m].exercises[set.ex].push(set);
+  });
+
+  const mc=document.getElementById('ana-muscles');
+  let h='';
+  Object.entries(muscles).forEach(([key,mg])=>{
+    const exCount=Object.keys(mg.exercises).length;
+    const setCount=Object.values(mg.exercises).reduce((a,arr)=>a+arr.length,0);
+    if(setCount===0)return;
+
+    h+=`<div class="ana-muscle" onclick="this.classList.toggle('open')">
+      <div class="ana-muscle-hdr">
+        <div class="ana-muscle-ico">${mg.emoji}</div>
+        <div class="ana-muscle-name">${mg.name}</div>
+        <div class="ana-muscle-cnt">${exCount} Übungen • ${setCount} Sätze</div>
+      </div>
+      <div class="ana-detail">`;
+
+    Object.entries(mg.exercises).forEach(([exName,sets])=>{
+      const ws=sets.filter(s=>s.w>0);
+      if(!ws.length)return;
+      const maxEx=Math.max(...ws.map(s=>s.w));
+      const minEx=Math.min(...ws.map(s=>s.w));
+      const avgRirEx=(ws.reduce((a,s)=>a+s.rir,0)/ws.length).toFixed(1);
+      const trend=getExTrend(exName);
+      const tIcon=trend==='up'?'📈':trend==='down'?'📉':trend==='flat'?'➡️':'—';
+      const tClass=trend==='up'?'trend-up':trend==='down'?'trend-down':'trend-flat';
+
+      // Mini bar chart
+      const last8=ws.slice(-8);
+      const barMax=Math.max(...last8.map(s=>s.w),1);
+
+      h+=`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-weight:600;font-size:13px;cursor:pointer" onclick="event.stopPropagation();showExHist('${exName.replace(/'/g,"\\'")}')">${exName}</div>
+          <span class="${tClass}" style="font-size:12px;font-weight:600">${tIcon}</span>
+        </div>
+        <div style="display:flex;gap:10px;font-size:11px;color:var(--text2);margin-bottom:6px">
+          <span>Max: <b style="color:var(--neon)">${maxEx}kg</b></span>
+          <span>Ø RIR: ${avgRirEx}</span>
+          <span>${ws.length} Sätze</span>
+        </div>
+        <div class="bars" style="height:30px">
+          ${last8.map(s=>`<div class="bar" style="height:${Math.max(10,(s.w/barMax)*100)}%;background:var(--neon)" data-tip="${s.w}kg"></div>`).join('')}
+        </div>
+      </div>`;
+    });
+
+    h+=`</div></div>`;
+  });
+
+  if(!h)h='<div class="empty">Noch keine Daten. Log dein erstes Workout!</div>';
+  mc.innerHTML=h;
+}
 
 // ===== SETTINGS =====
 function renderSettings(){
