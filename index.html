@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -151,6 +152,20 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .ana-muscle-cnt{font-size:11px;color:var(--text3)}
 .ana-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--bg3)}
 .ana-muscle.open .ana-detail{display:block}
+.rir-circles{display:flex;gap:6px;justify-content:center;margin:8px 0}
+.rir-c{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;cursor:pointer;transition:.15s;border:2.5px solid transparent;color:#111}
+.rir-c:active{transform:scale(.9)}
+.rir-c.sel{border-color:#fff;transform:scale(1.12);box-shadow:0 0 12px rgba(255,255,255,.2)}
+.rir-5{background:#34d399}.rir-4{background:#86efac}.rir-3{background:#fde047}.rir-2{background:#fbbf24}.rir-1{background:#f97316}.rir-0{background:#ef4444;color:#fff}
+.bio-input-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:12px}
+.bio-chart{position:relative;background:var(--bg3);border-radius:10px;padding:12px;margin-bottom:12px}
+.bio-entries{max-height:150px;overflow-y:auto}
+.bio-entry{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;border-bottom:1px solid var(--bg3)}
+.bio-entry:last-child{border:none}
+.bio-entry .be-d{color:var(--text3);min-width:70px}
+.bio-entry .be-v{font-family:'JetBrains Mono',monospace;font-weight:600}
+.bio-entry .be-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 6px}
+.plan-mgmt{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .lib-cat{margin-bottom:16px}
 .lib-cat-hdr{display:flex;align-items:center;gap:8px;padding:10px 0;cursor:pointer;font-weight:700;font-size:14px}
 .lib-cat-hdr .lib-ico{font-size:20px}
@@ -218,6 +233,11 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <!-- PLAN -->
 <div class="screen" id="s-plan">
 <div class="hdr"><div class="logo">PLAN</div><button class="btn btn-s btn-o" onclick="openAddEx()">+ ÜBUNG</button></div>
+<div class="plan-mgmt">
+<button class="btn btn-s btn-g" onclick="addPlanDay()">+ Tag</button>
+<button class="btn btn-s btn-g" onclick="renamePlanDay()">✏️ Umbenennen</button>
+<button class="btn btn-s btn-r" style="font-size:12px" onclick="deletePlanDay()">🗑️ Tag</button>
+</div>
 <div class="dtabs" id="pt"></div>
 <div id="pl"></div>
 </div>
@@ -232,7 +252,25 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <!-- ANALYTICS -->
 <div class="screen" id="s-ana">
 <div class="hdr"><div class="logo">STATS</div><div class="pill" id="ana-total">0 Sätze</div></div>
-<div class="hero"><div class="hs"><div class="v" id="a-maxw">0</div><div class="l">Max Gewicht</div></div><div class="hs"><div class="v" id="a-avgrir">—</div><div class="l">Ø RIR</div></div><div class="hs"><div class="v" id="a-excount">0</div><div class="l">Übungen</div></div></div>
+
+<div class="st">KÖRPERDATEN <div class="ln"></div></div>
+<div class="card">
+<div class="ir">
+<div class="ig"><label>Größe (cm)</label><input type="number" id="bio-height" placeholder="180" onchange="saveBioHeight(this.value)"></div>
+<div class="ig"><label>Aktuelles Gewicht</label>
+<div style="display:flex;gap:4px"><input type="number" step="0.1" id="bio-weight-input" placeholder="kg" style="flex:1"><button class="btn btn-s" style="margin:0;padding:8px 12px" onclick="addWeight()">+</button></div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">
+<span style="color:var(--text2)">Letztes Gewicht: <b style="color:var(--text)" id="bio-last-w">—</b></span>
+<span style="color:var(--text2)">BMI: <b style="color:var(--neon)" id="bio-bmi">—</b></span>
+</div>
+</div>
+
+<div id="bio-chart-area"></div>
+<div id="bio-entries-area"></div>
+
+<div class="hero" style="margin-top:12px"><div class="hs"><div class="v" id="a-maxw">0</div><div class="l">Max Gewicht</div></div><div class="hs"><div class="v" id="a-avgrir">—</div><div class="l">Ø RIR</div></div><div class="hs"><div class="v" id="a-excount">0</div><div class="l">Übungen</div></div></div>
 <div class="st">MUSKELGRUPPEN <div class="ln"></div></div>
 <div id="ana-muscles"></div>
 </div>
@@ -283,8 +321,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="ir">
 <div class="ig"><label>Gewicht (kg)</label><input type="number" step="0.5" id="log-w" placeholder="0"></div>
 <div class="ig"><label>Wdh</label><input type="number" id="log-r" placeholder="0"></div>
-<div class="ig"><label>RIR</label><input type="number" min="0" max="5" id="log-rir" placeholder="2"></div>
 </div>
+<div style="margin-bottom:8px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px">RIR (Reps in Reserve)</label>
+<div class="rir-circles" id="log-rir-circles">
+<div class="rir-c rir-5" data-v="5" onclick="pickRir(this,5)">5</div>
+<div class="rir-c rir-4" data-v="4" onclick="pickRir(this,4)">4</div>
+<div class="rir-c rir-3" data-v="3" onclick="pickRir(this,3)">3</div>
+<div class="rir-c rir-2 sel" data-v="2" onclick="pickRir(this,2)">2</div>
+<div class="rir-c rir-1" data-v="1" onclick="pickRir(this,1)">1</div>
+<div class="rir-c rir-0" data-v="0" onclick="pickRir(this,0)">0</div>
+</div></div>
+<input type="hidden" id="log-rir" value="2">
 <div class="ir"><div class="ig"><label>Notiz (optional)</label><input type="text" id="log-note" placeholder="z.B. Progression"></div></div>
 <button class="btn" onclick="confirmLog()">✓ SATZ SPEICHERN</button>
 <button class="btn btn-g" style="margin-top:6px" onclick="redoLast()">↩ LETZTEN SATZ WIEDERHOLEN</button>
@@ -301,7 +348,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="ig"><label>Wdh Max</label><input type="number" id="a-rmax" value="12"></div>
 </div>
 <div class="ir">
-<div class="ig"><label>RIR</label><input type="number" id="a-rir" value="2"></div>
+<div class="ig"><label>RIR</label>
+<div class="rir-circles" id="a-rir-circles" style="justify-content:flex-start;gap:4px;margin:0">
+<div class="rir-c rir-5" style="width:32px;height:32px;font-size:13px" data-v="5" onclick="pickRirAdd(this,5)">5</div>
+<div class="rir-c rir-4" style="width:32px;height:32px;font-size:13px" data-v="4" onclick="pickRirAdd(this,4)">4</div>
+<div class="rir-c rir-3" style="width:32px;height:32px;font-size:13px" data-v="3" onclick="pickRirAdd(this,3)">3</div>
+<div class="rir-c rir-2 sel" style="width:32px;height:32px;font-size:13px" data-v="2" onclick="pickRirAdd(this,2)">2</div>
+<div class="rir-c rir-1" style="width:32px;height:32px;font-size:13px" data-v="1" onclick="pickRirAdd(this,1)">1</div>
+<div class="rir-c rir-0" style="width:32px;height:32px;font-size:13px" data-v="0" onclick="pickRirAdd(this,0)">0</div>
+</div>
+<input type="hidden" id="a-rir" value="2">
+</div>
 <div class="ig"><label>Typ</label><select id="a-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
 </div>
 <div class="ir"><div class="ig"><label>Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
@@ -363,8 +420,9 @@ let D = {
   history: [],
   active: null,
   settings: {compound:150, isolation:90},
-  notes: {},       // {exerciseName: "note text"}
-  health: {sick:false, sickSince:null, sickDays:0}
+  notes: {},
+  health: {sick:false, sickSince:null, sickDays:0},
+  bio: {height:null, weights:[]}  // weights: [{date:'DD.MM.YYYY', kg:80.5}]
 };
 
 const DEFAULT_PLAN = {
@@ -421,7 +479,8 @@ function loadLocal(){
   try{const s=localStorage.getItem('pb_data');if(s)D=JSON.parse(s)}catch{}
   if(!D.plan)D.plan={...DEFAULT_PLAN};
   if(!D.notes)D.notes={};
-  if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};
+  if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};if(!D.bio)D.bio={height:null,weights:[]};
+  if(!D.bio)D.bio={height:null,weights:[]};
 }
 
 // ===== FIREBASE =====
@@ -451,7 +510,7 @@ function startSync(){
       if(remote.history&&remote.history.length>=D.history.length){
         D={...D,...remote};
         if(!D.notes)D.notes={};
-        if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};
+        if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};if(!D.bio)D.bio={height:null,weights:[]};
         localStorage.setItem('pb_data',JSON.stringify(D));
       }
     }else{
@@ -471,7 +530,7 @@ function startSync(){
       if(JSON.stringify(remote)!==JSON.stringify(D)){
         D={...D,...remote};
         if(!D.notes)D.notes={};
-        if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};
+        if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};if(!D.bio)D.bio={height:null,weights:[]};
         localStorage.setItem('pb_data',JSON.stringify(D));
         renderAll();
       }
@@ -772,7 +831,7 @@ function openAddEx(){
   editIdx=null;
   document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');
   document.getElementById('a-name').value='';document.getElementById('a-note').value='';
-  document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;document.getElementById('a-rir').value=2;
+  document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);
   document.getElementById('a-btn').textContent='+ HINZUFÜGEN';
   om('m-add');
 }
@@ -780,7 +839,7 @@ function openEditEx(i){
   editIdx=i;const ex=D.plan[curTab].exercises[i];
   document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;
   document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;
-  document.getElementById('a-rir').value=ex.rir||0;document.getElementById('a-type').value=ex.type;
+  setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;
   document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';
   document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';
   document.getElementById('a-btn').textContent='✓ SPEICHERN';
@@ -999,13 +1058,134 @@ function pickLib(ci,ii){
   document.getElementById('a-sets').value=item.s;
   document.getElementById('a-rmin').value=item.rn;
   document.getElementById('a-rmax').value=item.rx;
-  document.getElementById('a-rir').value=item.rir||0;
+  setAddRir(item.rir||0);
   document.getElementById('a-type').value=item.t;
   document.getElementById('a-mus').value=item.m;
   document.getElementById('a-note').value=item.note||'';
   document.getElementById('a-target').textContent='Wird zu: '+(curTab||'').replace('_',' ');
   document.getElementById('a-btn').textContent='+ HINZUFÜGEN';
   om('m-add');toast('📚 '+item.name);
+}
+
+// ===== RIR CIRCLE PICKER =====
+function pickRir(el,v){
+  document.querySelectorAll('#log-rir-circles .rir-c').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('log-rir').value=v;
+}
+function setLogRir(v){
+  document.getElementById('log-rir').value=v;
+  document.querySelectorAll('#log-rir-circles .rir-c').forEach(c=>c.classList.toggle('sel',parseInt(c.dataset.v)===v));
+}
+function pickRirAdd(el,v){
+  document.querySelectorAll('#a-rir-circles .rir-c').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('a-rir').value=v;
+}
+function setAddRir(v){
+  document.getElementById('a-rir').value=v;
+  document.querySelectorAll('#a-rir-circles .rir-c').forEach(c=>c.classList.toggle('sel',parseInt(c.dataset.v)===v));
+}
+
+// ===== PLAN DAY MANAGEMENT =====
+function addPlanDay(){
+  const name=prompt('Name des neuen Trainingstags (z.B. Push_A, Legs_C):');
+  if(!name||!name.trim())return;
+  const key=name.trim().replace(/\s+/g,'_');
+  if(D.plan[key]){toast('Existiert bereits!');return}
+  const day=prompt('Wochentag(e) (z.B. Mo, Di + Fr):')||'';
+  D.plan[key]={day:day.trim(),exercises:[]};
+  save();curTab=key;renderPlan();toast('✓ '+key+' erstellt');
+}
+function renamePlanDay(){
+  if(!curTab){toast('Erst einen Tag wählen');return}
+  const newName=prompt('Neuer Name für '+curTab+':',curTab);
+  if(!newName||!newName.trim()||newName.trim()===curTab)return;
+  const key=newName.trim().replace(/\s+/g,'_');
+  if(D.plan[key]){toast('Name existiert bereits!');return}
+  const newDay=prompt('Wochentag(e):',D.plan[curTab].day||'')||'';
+  D.plan[key]={...D.plan[curTab],day:newDay.trim()};
+  // Update history references
+  D.history.forEach(s=>{if(s.planKey===curTab)s.planKey=key});
+  delete D.plan[curTab];
+  curTab=key;save();renderPlan();toast('✓ Umbenannt zu '+key);
+}
+function deletePlanDay(){
+  if(!curTab){toast('Erst einen Tag wählen');return}
+  if(Object.keys(D.plan).length<=1){toast('Mindestens 1 Tag nötig!');return}
+  if(!confirm(curTab+' mit allen Übungen löschen?'))return;
+  delete D.plan[curTab];
+  curTab=Object.keys(D.plan)[0];
+  save();renderPlan();toast('Gelöscht');
+}
+
+// ===== BIOMETRIC TRACKING =====
+function saveBioHeight(v){
+  D.bio.height=parseFloat(v)||null;
+  save();renderBio();
+}
+function addWeight(){
+  const v=parseFloat(document.getElementById('bio-weight-input').value);
+  if(!v||v<20||v>300){toast('Gewicht eingeben (20-300kg)');return}
+  const today=new Date().toLocaleDateString('de-DE');
+  // Replace if same date exists
+  const idx=D.bio.weights.findIndex(w=>w.date===today);
+  if(idx>=0)D.bio.weights[idx].kg=v;
+  else D.bio.weights.push({date:today,kg:v});
+  D.bio.weights.sort((a,b)=>{const pa=a.date.split('.');const pb=b.date.split('.');return new Date(pa[2],pa[1]-1,pa[0])-new Date(pb[2],pb[1]-1,pb[0])});
+  document.getElementById('bio-weight-input').value='';
+  save();renderBio();toast('✓ '+v+'kg gespeichert');
+}
+function delWeight(i){
+  D.bio.weights.splice(i,1);save();renderBio();
+}
+function renderBio(){
+  // Height + last weight + BMI
+  if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
+  const ws=D.bio.weights;
+  const lastW=ws.length?ws[ws.length-1].kg:null;
+  document.getElementById('bio-last-w').textContent=lastW?lastW+' kg':'—';
+  if(lastW&&D.bio.height){
+    const hm=D.bio.height/100;
+    document.getElementById('bio-bmi').textContent=(lastW/(hm*hm)).toFixed(1);
+  }else document.getElementById('bio-bmi').textContent='—';
+
+  // Chart
+  const ca=document.getElementById('bio-chart-area');
+  if(ws.length<2){ca.innerHTML='';} else {
+    const vals=ws.map(w=>w.kg);
+    const mx=Math.max(...vals);
+    const mn=Math.min(...vals);
+    const med=vals.slice().sort((a,b)=>a-b)[Math.floor(vals.length/2)];
+    const range=mx-mn||1;
+    const medPct=((med-mn)/range)*100;
+    ca.innerHTML=`<div class="bio-chart">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:6px"><span>${mn.toFixed(1)}kg</span><span style="color:var(--orange)">Median: ${med.toFixed(1)}kg</span><span>${mx.toFixed(1)}kg</span></div>
+      <div class="bars" style="height:60px;position:relative">
+        <div style="position:absolute;left:0;right:0;bottom:${medPct}%;height:2px;background:var(--orange);z-index:2;pointer-events:none"></div>
+        ${vals.map((v,i)=>{
+          const pct=((v-mn)/range)*100;
+          const col=i===vals.length-1?'var(--neon)':'var(--blue)';
+          return`<div class="bar" style="height:${Math.max(8,pct)}%;background:${col}" data-tip="${ws[i].date}: ${v}kg"></div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px"><span>${ws[0].date}</span><span>${ws[ws.length-1].date}</span></div>
+    </div>`;
+  }
+
+  // Entries list
+  const ea=document.getElementById('bio-entries-area');
+  if(ws.length===0){ea.innerHTML='';return}
+  let h='<div class="card"><div style="font-size:12px;font-weight:600;margin-bottom:6px">Gewichtsverlauf</div><div class="bio-entries">';
+  [...ws].reverse().forEach((w,i)=>{
+    const ri=ws.length-1-i;
+    const diff=ri>0?(w.kg-ws[ri-1].kg):0;
+    const dc=diff>0?'trend-up':diff<0?'trend-down':'trend-flat';
+    const ds=diff>0?'+'+diff.toFixed(1):diff<0?diff.toFixed(1):'±0';
+    h+=`<div class="bio-entry"><span class="be-d">${w.date}</span><span class="be-v">${w.kg} kg</span><span class="${dc}" style="font-size:11px;font-family:'JetBrains Mono',monospace">${ds}</span><button class="be-del" onclick="delWeight(${ri})">✕</button></div>`;
+  });
+  h+='</div></div>';
+  ea.innerHTML=h;
 }
 
 // ===== EXERCISE NOTES =====
@@ -1120,9 +1300,9 @@ function openLog(ei){
   // Pre-fill
   const lastS=ex.logged.length>0?ex.logged[ex.logged.length-1]:null;
   const lastH=getLastW(ex.name);
-  if(lastS){document.getElementById('log-w').value=lastS.w;document.getElementById('log-r').value=lastS.r;document.getElementById('log-rir').value=lastS.rir}
-  else if(lastH){document.getElementById('log-w').value=lastH.w;document.getElementById('log-r').value=lastH.r;document.getElementById('log-rir').value=lastH.rir}
-  else{document.getElementById('log-w').value='';document.getElementById('log-r').value='';document.getElementById('log-rir').value=ex.rir||2}
+  if(lastS){document.getElementById('log-w').value=lastS.w;document.getElementById('log-r').value=lastS.r;setLogRir(lastS.rir)}
+  else if(lastH){document.getElementById('log-w').value=lastH.w;document.getElementById('log-r').value=lastH.r;setLogRir(lastH.rir)}
+  else{document.getElementById('log-w').value='';document.getElementById('log-r').value='';setLogRir(ex.rir||2)}
   document.getElementById('log-note').value='';
   om('m-log');
   setTimeout(()=>document.getElementById('log-w').focus(),200);
@@ -1292,6 +1472,7 @@ function delSess(i){if(!confirm('Löschen?'))return;D.history.splice(i,1);save()
 
 // ===== ANALYTICS =====
 function renderAna(){
+  renderBio();
   const allSets=[];
   D.history.forEach(s=>s.sets.forEach(set=>allSets.push({...set,date:s.date})));
   const totalSets=allSets.length;
@@ -1396,7 +1577,7 @@ function exportData(){
 function importData(e){
   const f=e.target.files[0];if(!f)return;
   const r=new FileReader();r.onload=function(ev){
-    try{const d=JSON.parse(ev.target.result);D={...D,...d};if(!D.notes)D.notes={};if(!D.health)D.health={sick:false};save();toast('Importiert!');renderAll()}catch{toast('Fehler!')}
+    try{const d=JSON.parse(ev.target.result);D={...D,...d};if(!D.notes)D.notes={};if(!D.health)D.health={sick:false};if(!D.bio)D.bio={height:null,weights:[]};save();toast('Importiert!');renderAll()}catch{toast('Fehler!')}
   };r.readAsText(f);
 }
 </script>
