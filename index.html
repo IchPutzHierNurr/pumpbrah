@@ -198,6 +198,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <button class="btn btn-g" style="max-width:300px" onclick="offlineMode()">Offline-Modus (ohne Sync)</button>
 </div>
 
+<!-- ===== ONBOARDING ===== -->
+<div id="onboard-screen" style="display:none" class="login-screen">
+<div class="login-logo">SETUP</div>
+<div class="login-sub" id="ob-sub">Lass uns dein Training einrichten</div>
+<div style="width:100%;max-width:340px;text-align:left" id="ob-content"></div>
+</div>
+
 <!-- ===== MAIN APP (hidden until login) ===== -->
 <div id="main-app" style="display:none">
 
@@ -553,29 +560,247 @@ function updateSyncPill(online){
 // ===== LOGIN =====
 function doLogin(){
   const code=document.getElementById('sync-code').value.trim().toLowerCase();
-  if(!code){toast('Code eingeben!');return}
+  if(!code){toast('Name eingeben!');return}
   syncCode=code;
   localStorage.setItem('pb_sync',code);
   useFirebase=initFirebase();
   loadLocal();
-  if(useFirebase){
-    startSync();
-    // Force initial write to Firestore
-    setTimeout(()=>{ save(); console.log('PUMPBRAH: Initial sync write for',syncCode) },1500);
+  if(useFirebase&&db){
+    db.collection('pumpbrah').doc(code).get().then(doc=>{
+      if(doc.exists){
+        const remote=doc.data();
+        D={...D,...remote};
+        if(!D.notes)D.notes={};if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};if(!D.bio)D.bio={height:null,weights:[]};
+        localStorage.setItem('pb_data',JSON.stringify(D));
+        startSync();showApp();
+      }else{ startOnboarding(); }
+    }).catch(()=>{
+      if(D.bio&&D.bio.height){showApp()}else{startOnboarding()}
+    });
+  }else{
+    if(D.bio&&D.bio.height){showApp()}else{startOnboarding()}
   }
-  showApp();
 }
 function offlineMode(){
   useFirebase=false;syncCode='offline';
   localStorage.setItem('pb_sync','offline');
-  loadLocal();showApp();
+  loadLocal();
+  if(D.bio&&D.bio.height){showApp()}else{startOnboarding()}
 }
 function showApp(){
   document.getElementById('login-screen').style.display='none';
+  document.getElementById('onboard-screen').style.display='none';
   document.getElementById('main-app').style.display='';
   document.getElementById('show-sync').textContent=syncCode;
   renderAll();
 }
+
+// ===== ONBOARDING =====
+let obStep=0;
+let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner'};
+
+function startOnboarding(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('onboard-screen').style.display='flex';
+  obStep=0;
+  renderObStep();
+}
+
+function renderObStep(){
+  const c=document.getElementById('ob-content');
+  const sub=document.getElementById('ob-sub');
+  const steps=[
+    // 0: Height
+    {sub:'Schritt 1/5 — Körperdaten',html:`
+      <div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="180" style="font-size:20px;padding:14px;width:100%"></div>
+      <button class="btn" onclick="obNext(0)">WEITER →</button>`},
+    // 1: Weight
+    {sub:'Schritt 2/5 — Körperdaten',html:`
+      <div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="80" style="font-size:20px;padding:14px;width:100%"></div>
+      <button class="btn" onclick="obNext(1)">WEITER →</button>
+      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`},
+    // 2: Days
+    {sub:'Schritt 3/5 — Trainingsplan',html:`
+      <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Wie viele Tage pro Woche trainierst du?</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;min-width:52px;padding:16px;background:var(--bg3);border:2px solid var(--bg4);border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text)${d===3?';border-color:var(--neon)':''}">${d}</div>`).join('')}
+      </div></div>
+      <button class="btn" onclick="obNext(2)">WEITER →</button>
+      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`},
+    // 3: Focus
+    {sub:'Schritt 4/5 — Trainingsfokus',html:`
+      <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Was ist dein Hauptziel?</label>
+      ${[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},
+         {k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},
+         {k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},
+         {k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'}
+      ].map(f=>`<div onclick="document.querySelectorAll('.ob-focus').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.focus='${f.k}'" class="ob-focus" style="padding:14px;background:var(--bg3);border:2px solid ${f.k==='balanced'?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer">
+        <div style="font-weight:700;font-size:15px">${f.l}</div><div style="font-size:12px;color:var(--text2)">${f.d}</div></div>`).join('')}
+      </div>
+      <button class="btn" onclick="obNext(3)">WEITER →</button>
+      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`},
+    // 4: Experience
+    {sub:'Schritt 5/5 — Erfahrung',html:`
+      <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingserfahrung?</label>
+      ${[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},
+         {k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},
+         {k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre, kennt die Basics'}
+      ].map(e=>`<div onclick="document.querySelectorAll('.ob-exp').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.experience='${e.k}'" class="ob-exp" style="padding:14px;background:var(--bg3);border:2px solid ${e.k==='beginner'?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer">
+        <div style="font-weight:700;font-size:15px">${e.l}</div><div style="font-size:12px;color:var(--text2)">${e.d}</div></div>`).join('')}
+      </div>
+      <button class="btn" onclick="finishOnboarding()">🚀 PLAN ERSTELLEN</button>
+      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`}
+  ];
+  sub.textContent=steps[obStep].sub;
+  c.innerHTML=steps[obStep].html;
+}
+
+function obNext(step){
+  if(step===0){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}
+  if(step===1){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}
+  obStep++;renderObStep();
+}
+
+function finishOnboarding(){
+  // Save bio data
+  D.bio.height=obData.height;
+  if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];
+
+  // Generate plan based on days + focus
+  D.plan={};
+  const rir=obData.experience==='beginner'?3:obData.experience==='intermediate'?2:2;
+  const dayNames=['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+  if(obData.days<=3){
+    // Full Body Split
+    for(let i=0;i<obData.days;i++){
+      const key='Ganzkörper_'+String.fromCharCode(65+i);
+      const di=i===0?'Di':i===1?'Do':'Sa';
+      D.plan[key]={day:di,exercises:generateFullBody(rir,i)};
+    }
+  }else if(obData.days===4){
+    // Upper/Lower
+    D.plan['Oberkörper_A']={day:'Mo',exercises:generateUpper(rir,'A')};
+    D.plan['Unterkörper_A']={day:'Di',exercises:generateLower(rir,'A')};
+    D.plan['Oberkörper_B']={day:'Do',exercises:generateUpper(rir,'B')};
+    D.plan['Unterkörper_B']={day:'Fr',exercises:generateLower(rir,'B')};
+  }else{
+    // Push/Pull/Legs
+    D.plan['Push_A']={day:'Mo',exercises:generatePush(rir)};
+    D.plan['Pull_A']={day:'Di',exercises:generatePull(rir)};
+    D.plan['Beine_A']={day:'Mi',exercises:generateLegs(rir)};
+    D.plan['Push_B']={day:'Do',exercises:generatePush(rir)};
+    D.plan['Pull_B']={day:'Fr',exercises:generatePull(rir)};
+    if(obData.days>=6)D.plan['Beine_B']={day:'Sa',exercises:generateLegs(rir)};
+  }
+
+  save();
+  if(useFirebase)startSync();
+  setTimeout(()=>save(),1000);
+  showApp();
+  toast('🚀 Plan erstellt! Viel Erfolg, '+syncCode+'!');
+}
+
+function mkEx(name,sets,rmin,rmax,rir,type,muscle,note){return{id:Date.now()+Math.random()*1000|0,name,sets,rmin,rmax,rir,type,muscle,note}}
+
+function generateFullBody(rir,variant){
+  const ex=[];
+  ex.push(mkEx('Gesäßbrücke (Glute Bridges)',2,15,20,null,'pre','legs','Aktivierung'));
+  if(variant===0){
+    ex.push(mkEx('Bankdrücken (Bench Press)',3,8,10,rir,'main','chest','Kontrollierte Exzentrik'));
+    ex.push(mkEx('Kabelrudern eng (Seated Cable Row)',3,8,12,rir,'main','back','Schulterblätter zusammen'));
+    ex.push(mkEx('Beinpresse (Leg Press)',3,10,12,rir,'main','legs','Knie nicht locken'));
+    ex.push(mkEx('KH Seitheben (DB Lateral Raise)',3,10,15,rir-1>0?rir-1:1,'main','shoulders','Kontrolliert'));
+    ex.push(mkEx('Beinstrecker (Leg Extension)',2,10,15,rir-1>0?rir-1:1,'main','legs','Squeeze oben'));
+    ex.push(mkEx('Gesichtziehen (Face Pulls)',2,12,15,rir,'main','shoulders','Schultergesundheit'));
+  }else if(variant===1){
+    ex.push(mkEx('Schrägbankdrücken (Incline Bench Press)',3,8,10,rir,'main','chest','30° Winkel'));
+    ex.push(mkEx('Latziehen breit (Wide Lat Pulldown)',3,8,12,rir,'main','back','Brust raus'));
+    ex.push(mkEx('Rumän. Kreuzheben LH (Romanian Deadlift)',3,8,12,rir,'main','legs','Hüftdominant'));
+    ex.push(mkEx('Brustpresse Maschine (Chest Press)',2,10,12,rir-1>0?rir-1:1,'main','chest','Kein Lockout'));
+    ex.push(mkEx('Beinbeuger liegend (Lying Leg Curl)',3,10,15,rir-1>0?rir-1:1,'main','legs','2s Exzentrik'));
+    ex.push(mkEx('KH Curls (DB Curls)',2,10,15,rir,'main','arms','Langsame Exzentrik'));
+  }else{
+    ex.push(mkEx('KH Bankdrücken (DB Bench Press)',3,8,12,rir,'main','chest','Volle ROM'));
+    ex.push(mkEx('Maschinenrudern eng (Machine Row Close)',3,8,12,rir,'main','back','Chest-Support'));
+    ex.push(mkEx('Kniebeugen (Back Squat)',3,8,10,rir,'main','legs','Mindestens parallel'));
+    ex.push(mkEx('KH Schulterdrücken (DB Shoulder Press)',3,8,12,rir,'main','shoulders','KH neben Ohren'));
+    ex.push(mkEx('Wadenheben stehend (Standing Calf Raise)',3,12,20,rir,'main','legs','Volle ROM'));
+    ex.push(mkEx('Trizepsdrücken Seil (Rope Pushdown)',2,10,15,rir,'main','arms','Seil auseinander'));
+  }
+  return ex;
+}
+
+function generateUpper(rir,v){
+  const ex=[];
+  if(v==='A'){
+    ex.push(mkEx('Bankdrücken (Bench Press)',3,8,10,rir,'main','chest','Ellenbogen 45°'));
+    ex.push(mkEx('Latziehen breit (Wide Lat Pulldown)',3,8,12,rir,'main','back','Brust raus'));
+    ex.push(mkEx('KH Schulterdrücken (DB Shoulder Press)',3,8,12,rir,'main','shoulders','Kontrolliert'));
+    ex.push(mkEx('Kabelrudern eng (Seated Cable Row)',3,8,12,rir,'main','back','V-Griff'));
+    ex.push(mkEx('KH Seitheben (DB Lateral Raise)',3,10,15,rir-1>0?rir-1:1,'main','shoulders','Seitliche Delts'));
+    ex.push(mkEx('SZ-Curls stehend (EZ-Bar Curls)',2,8,12,rir,'main','arms','Handgelenke schonen'));
+    ex.push(mkEx('Trizepsdrücken Seil (Rope Pushdown)',2,10,15,rir,'main','arms','Seil auseinander'));
+  }else{
+    ex.push(mkEx('Schrägbankdrücken (Incline Bench Press)',3,8,10,rir,'main','chest','30° Winkel'));
+    ex.push(mkEx('Klimmzüge eng (Chin-Ups)',3,6,10,rir,'main','back','Untergriff'));
+    ex.push(mkEx('Butterfly (Pec Deck)',3,10,15,rir-1>0?rir-1:1,'main','chest','Squeeze Mitte'));
+    ex.push(mkEx('KH Rudern einarmig (DB Row)',3,8,12,rir,'main','back','Ellenbogen hochziehen'));
+    ex.push(mkEx('Umgekehrte Fliegende KH (Reverse Flys)',3,12,15,rir,'main','shoulders','Hintere Schulter'));
+    ex.push(mkEx('Hammercurls KH (Hammer Curls)',2,10,15,rir,'main','arms','Brachialis'));
+    ex.push(mkEx('Überkopf-Strecken Kabel (Overhead Cable Ext.)',2,10,15,rir,'main','arms','Langer Kopf'));
+  }
+  return ex;
+}
+
+function generateLower(rir,v){
+  const ex=[];
+  ex.push(mkEx('Gesäßbrücke (Glute Bridges)',2,15,20,null,'pre','legs','Aktivierung'));
+  if(v==='A'){
+    ex.push(mkEx('Kniebeugen (Back Squat)',3,6,10,rir,'main','legs','Parallel oder tiefer'));
+    ex.push(mkEx('Rumän. Kreuzheben LH (Romanian Deadlift)',3,8,12,rir,'main','legs','Hüftdominant'));
+    ex.push(mkEx('Beinpresse (Leg Press)',3,10,12,rir,'main','legs','Hüftbreit'));
+    ex.push(mkEx('Beinbeuger liegend (Lying Leg Curl)',3,10,15,rir-1>0?rir-1:1,'main','legs','2s Exzentrik'));
+    ex.push(mkEx('Wadenheben stehend (Standing Calf Raise)',3,12,20,rir,'main','legs','Volle ROM'));
+  }else{
+    ex.push(mkEx('Hackenschmidt (Hack Squat)',3,8,12,rir,'main','legs','Quad-dominant'));
+    ex.push(mkEx('Hüftstoß LH (Barbell Hip Thrust)',3,8,12,rir,'main','legs','Gesäß!'));
+    ex.push(mkEx('Bulgarische Kniebeuge (Bulgarian Split Squat)',3,8,12,rir,'main','legs','Einbeinig'));
+    ex.push(mkEx('Beinstrecker (Leg Extension)',3,10,15,rir-1>0?rir-1:1,'main','legs','Squeeze'));
+    ex.push(mkEx('Wadenheben sitzend (Seated Calf Raise)',3,12,20,rir,'main','legs','Soleus'));
+  }
+  return ex;
+}
+
+function generatePush(rir){return[
+  mkEx('Bankdrücken (Bench Press)',3,8,10,rir,'main','chest','Kontrolliert'),
+  mkEx('Schrägbankdrücken (Incline Bench Press)',3,8,10,rir,'main','chest','30°'),
+  mkEx('KH Schulterdrücken (DB Shoulder Press)',3,8,12,rir,'main','shoulders','Neben Ohren'),
+  mkEx('Kabelflys Mitte (Mid Cable Flys)',3,10,15,rir-1>0?rir-1:1,'main','chest','Zusammenführen'),
+  mkEx('KH Seitheben (DB Lateral Raise)',3,10,15,rir-1>0?rir-1:1,'main','shoulders','Seitlich'),
+  mkEx('Trizepsdrücken Seil (Rope Pushdown)',3,10,15,rir,'main','arms','Seil auseinander'),
+  mkEx('Überkopf-Strecken Kabel (Overhead Cable Ext.)',2,10,15,rir,'main','arms','Langer Kopf')
+]}
+
+function generatePull(rir){return[
+  mkEx('Latziehen breit (Wide Lat Pulldown)',3,8,12,rir,'main','back','Brust raus'),
+  mkEx('Kabelrudern eng (Seated Cable Row)',3,8,12,rir,'main','back','V-Griff'),
+  mkEx('KH Rudern einarmig (DB Row)',3,8,12,rir,'main','back','Ellenbogen hoch'),
+  mkEx('Gesichtziehen (Face Pulls)',3,12,15,rir,'main','shoulders','Schultergesundheit'),
+  mkEx('Umgekehrte Fliegende Maschine (Reverse Pec Deck)',3,12,15,rir,'main','shoulders','Hintere Schulter'),
+  mkEx('SZ-Curls stehend (EZ-Bar Curls)',3,8,12,rir,'main','arms','Handgelenke schonen'),
+  mkEx('Hammercurls KH (Hammer Curls)',2,10,15,rir,'main','arms','Brachialis')
+]}
+
+function generateLegs(rir){return[
+  mkEx('Gesäßbrücke (Glute Bridges)',2,15,20,null,'pre','legs','Aktivierung'),
+  mkEx('Kniebeugen (Back Squat)',3,6,10,rir,'main','legs','Parallel'),
+  mkEx('Rumän. Kreuzheben LH (Romanian Deadlift)',3,8,12,rir,'main','legs','Hüftdominant'),
+  mkEx('Beinpresse (Leg Press)',3,10,12,rir,'main','legs','Hüftbreit'),
+  mkEx('Beinstrecker (Leg Extension)',3,10,15,rir-1>0?rir-1:1,'main','legs','Squeeze'),
+  mkEx('Beinbeuger liegend (Lying Leg Curl)',3,10,15,rir-1>0?rir-1:1,'main','legs','2s Exzentrik'),
+  mkEx('Wadenheben stehend (Standing Calf Raise)',3,12,20,rir,'main','legs','Volle ROM')
+]}
 function doLogout(){
   if(unsubscribe)unsubscribe();
   localStorage.removeItem('pb_sync');
@@ -856,176 +1081,158 @@ function confirmAddEx(){
 
 // ===== EXERCISE LIBRARY =====
 const EXLIB=[
-{cat:"🔥 Warm-Up / Pre-Workout",items:[
-{name:"ATG: Tibialis Raise",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
-{name:"ATG: Split Squat Slantboard",s:3,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Slantboard, Knie weit vor, LANGSAM"},
-{name:"ATG: Seated Good Morning KH",s:3,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Auf Bank, Hohlkreuz, Brust zwischen Beine"},
-{name:"Band Pull Aparts",s:3,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Theraband auf Schulterhöhe auseinanderziehen"},
-{name:"Shoulder Dislocates",s:2,rn:10,rx:15,rir:null,t:"pre",m:"shoulders",note:"Stab/Band, weiter Griff, über Kopf nach hinten"},
-{name:"Arm Circles",s:2,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Kleine→große Kreise, vorwärts + rückwärts"},
-{name:"Hip Circles",s:2,rn:10,rx:10,rir:null,t:"pre",m:"legs",note:"Stehend, Knie anheben und kreisen"},
-{name:"Glute Bridges",s:2,rn:15,rx:20,rir:null,t:"pre",m:"legs",note:"Hüfte heben, Glutes anspannen. Aktivierung"},
-{name:"Cat-Cow Stretch",s:2,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Vierfüßlerstand, Rücken rund→hohl"},
-{name:"Inchworms",s:2,rn:6,rx:8,rir:null,t:"pre",m:"back",note:"Stehend vorbeugen, in Liegestütz laufen, zurück"},
-{name:"World's Greatest Stretch",s:2,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Ausfallschritt + Rotation + Arm hoch"},
-{name:"Dead Hangs",s:2,rn:30,rx:45,rir:null,t:"pre",m:"back",note:"An Stange hängen (Sek). Schultern + Grip"},
-{name:"Bird Dogs",s:2,rn:10,rx:10,rir:null,t:"pre",m:"core",note:"Vierfüßlerstand, gegengleich Arm+Bein strecken"}
+{cat:"🔥 Aufwärmen / Pre-Workout",items:[
+{name:"ATG: Schienbeinheben (Tibialis Raise)",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
+{name:"ATG: Keilbrett-Ausfallschritt (Split Squat Slantboard)",s:3,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Keilbrett, Knie weit vor, LANGSAM"},
+{name:"ATG: Sitzender Guten Morgen (Seated Good Morning KH)",s:3,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Auf Bank, Hohlkreuz, Brust zwischen Beine"},
+{name:"Bandauseinanderziehen (Band Pull Aparts)",s:3,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Theraband auf Schulterhöhe"},
+{name:"Schulterluxation (Shoulder Dislocates)",s:2,rn:10,rx:15,rir:null,t:"pre",m:"shoulders",note:"Stab/Band, weiter Griff, über Kopf"},
+{name:"Armkreisen (Arm Circles)",s:2,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Kleine→große Kreise, vor+zurück"},
+{name:"Hüftkreisen (Hip Circles)",s:2,rn:10,rx:10,rir:null,t:"pre",m:"legs",note:"Stehend, Knie anheben und kreisen"},
+{name:"Gesäßbrücke (Glute Bridges)",s:2,rn:15,rx:20,rir:null,t:"pre",m:"legs",note:"Hüfte heben, Gesäß anspannen"},
+{name:"Katzenbuckel (Cat-Cow)",s:2,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Vierfüßlerstand, Rücken rund→hohl"},
+{name:"Raupengang (Inchworms)",s:2,rn:6,rx:8,rir:null,t:"pre",m:"back",note:"Stehend in Liegestütz laufen, zurück"},
+{name:"Weltbeste Dehnung (World's Greatest Stretch)",s:2,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Ausfallschritt+Rotation+Arm hoch"},
+{name:"Totes Hängen (Dead Hangs)",s:2,rn:30,rx:45,rir:null,t:"pre",m:"back",note:"An Stange hängen (Sek). Griffkraft"},
+{name:"Vogel-Hund (Bird Dogs)",s:2,rn:10,rx:10,rir:null,t:"pre",m:"core",note:"Vierfüßlerstand, gegengleich strecken"}
 ]},
-{cat:"🫁 Brust",items:[
-{name:"Bankdrücken (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Ellenbogen 45°, kontrollierte Exzentrik 2-3s"},
-{name:"Schrägbankdrücken (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Winkel 30°, kontrolliert"},
-{name:"Negativbankdrücken (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Bank leicht negativ, untere Brust"},
-{name:"KH Bankdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Hanteln parallel, volle ROM, Stretch unten"},
-{name:"KH Schrägbankdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"30° Winkel, kontrolliert"},
-{name:"Brustpresse Maschine",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Stretch unten, kein Lockout"},
-{name:"Butterfly / Pec Deck",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Arme leicht gebeugt, Squeeze in der Mitte"},
-{name:"Cable Flys (oben)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel oben, Hände unten zusammen. Untere Brust"},
-{name:"Cable Flys (mitte)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel Brusthöhe, Arme vor Brust zusammen"},
-{name:"Cable Flys (unten)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel unten, Hände oben zusammen. Obere Brust"},
-{name:"KH Flys (Flachbank)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Arme leicht gebeugt, tiefer Stretch"},
-{name:"Incline Flys (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Schrägbank 30°, Dehnung betonen"},
-{name:"Dips (Brust)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Oberkörper vorgelehnt, tiefe ROM"},
-{name:"Floor Press",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Am Boden, Oberarme berühren Boden. Lockout-Kraft"},
-{name:"KH Pullover",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Quer auf Bank, KH hinter Kopf. Brust+Lat Stretch"},
-{name:"Landmine Press",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"LH-Ende am Boden, ein-/beidarmig drücken"},
-{name:"Smith Bankdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Multipresse, geführt, gut für Solo"},
-{name:"Close Grip Bankdrücken",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Enger Griff, Trizeps + innere Brust"}
+{cat:"🏃 Cardio / Ausdauer",items:[
+{name:"Treppensteiger (StairMaster)",s:1,rn:10,rx:20,rir:null,t:"pre",m:"legs",note:"10-20 Min, moderate Intensität"},
+{name:"Crosstrainer (Elliptical)",s:1,rn:10,rx:20,rir:null,t:"pre",m:"legs",note:"10-20 Min, Ganzkörper-Cardio"},
+{name:"Laufband Gehen (Treadmill Walk)",s:1,rn:10,rx:20,rir:null,t:"pre",m:"legs",note:"Incline Walking, 5-12% Steigung"},
+{name:"Laufband Joggen (Treadmill Run)",s:1,rn:10,rx:30,rir:null,t:"pre",m:"legs",note:"6-12 km/h, moderate Belastung"},
+{name:"Rudergerät (Rowing Machine)",s:1,rn:10,rx:20,rir:null,t:"pre",m:"back",note:"Gleichmäßiger Rhythmus, Ganzkörper"},
+{name:"Fahrradergometer (Stationary Bike)",s:1,rn:10,rx:30,rir:null,t:"pre",m:"legs",note:"Moderate Intensität, knieschonend"},
+{name:"Assault Bike / Air Bike",s:1,rn:5,rx:15,rir:null,t:"pre",m:"legs",note:"Hohe Intensität, HIIT-geeignet"},
+{name:"Seilspringen (Jump Rope)",s:3,rn:60,rx:120,rir:null,t:"pre",m:"legs",note:"Sekunden pro Runde. Koordination"},
+{name:"Skiergometer (SkiErg)",s:1,rn:10,rx:15,rir:null,t:"pre",m:"back",note:"Ski-Zugbewegung, Oberkörper+Core"},
+{name:"Sprints Intervall (HIIT Sprints)",s:6,rn:20,rx:30,rir:null,t:"pre",m:"legs",note:"20-30s Sprint, 60-90s Pause"},
+{name:"Bergsteiger (Mountain Climbers)",s:3,rn:20,rx:30,rir:null,t:"pre",m:"core",note:"Liegestütz, Knie zur Brust"},
+{name:"Hampelmann (Jumping Jacks)",s:3,rn:30,rx:50,rir:null,t:"pre",m:"legs",note:"Klassisches Aufwärm-Cardio"}
 ]},
-{cat:"🔙 Rücken",items:[
-{name:"Latziehen breit Obergriff",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter runter, Brust raus"},
-{name:"Latziehen eng Untergriff",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Enger Untergriff, Bizeps hilft. Unterer Lat"},
-{name:"Latziehen neutral (V-Griff)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"V-Griff, gute Lat-Aktivierung"},
-{name:"Maschinenrudern eng neutral",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter zusammen, Chest-Support"},
-{name:"Maschinenrudern breit",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Breiter Griff, oberer Rücken + Rhomboide"},
-{name:"Seated Cable Row (eng)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"V-Griff, zum Bauchnabel ziehen"},
-{name:"Seated Cable Row (breit)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Breite Stange, zum Brustbein ziehen"},
-{name:"Einarmiges Kabelrudern",s:3,rn:10,rx:12,rir:2,t:"main",m:"back",note:"Einarmig, Rotation kontrollieren"},
-{name:"Vorgebeugtes Rudern (LH)",s:3,rn:8,rx:10,rir:3,t:"main",m:"back",note:"45° Oberkörper, Stange zum Bauch"},
-{name:"KH Rudern einarmig",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Hand auf Bank, Ellenbogen eng hochziehen"},
-{name:"Pendlay Rows",s:3,rn:5,rx:8,rir:3,t:"main",m:"back",note:"Vom Boden, explosiv zur Brust. Absetzen zwischen Wdh"},
-{name:"T-Bar Rudern",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Enger Griff, Brust gegen Pad"},
-{name:"Straight Arm Pulldown",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Arme gestreckt, Stange zum Oberschenkel. Lat-Iso"},
-{name:"Klimmzüge (breit)",s:3,rn:6,rx:10,rir:2,t:"main",m:"back",note:"Breiter Obergriff, Brust zur Stange"},
-{name:"Klimmzüge (eng/neutral)",s:3,rn:6,rx:10,rir:2,t:"main",m:"back",note:"Enger neutraler Griff"},
-{name:"Kreuzheben",s:3,rn:5,rx:8,rir:3,t:"main",m:"back",note:"Hüftbreit, Rücken gerade. King of Compounds"},
-{name:"Rack Pulls",s:3,rn:6,rx:8,rir:3,t:"main",m:"back",note:"Stange auf Kniehöhe. Oberer Bereich Kreuzheben"},
-{name:"Hyperextensions",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"45° Bank, unterer Rücken"},
-{name:"Face Pulls",s:3,rn:12,rx:15,rir:2,t:"main",m:"back",note:"Seil Gesichtshöhe, ext. Rotation. Schultergesundheit"},
-{name:"Shrugs (LH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Schultern gerade hoch, 1s halten. Trapezius"},
-{name:"Shrugs (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"KH seitlich, Schultern hochziehen"},
-{name:"Reverse Hypers",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Beine hinter Körper heben. Unterer Rücken+Glutes"}
+{cat:"🫁 Brust (Chest)",items:[
+{name:"Bankdrücken (Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Ellenbogen 45°, Exzentrik 2-3s"},
+{name:"Schrägbankdrücken (Incline Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Winkel 30°, kontrolliert"},
+{name:"Negativbankdrücken (Decline Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Leicht negativ, untere Brust"},
+{name:"KH Bankdrücken (DB Bench Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Volle ROM, Stretch unten"},
+{name:"KH Schrägbankdrücken (DB Incline Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"30° Winkel, kontrolliert"},
+{name:"Brustpresse Maschine (Chest Press)",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Stretch unten, kein Lockout"},
+{name:"Butterfly (Pec Deck)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Arme leicht gebeugt, Squeeze"},
+{name:"Kabelflys oben (High Cable Flys)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel oben, untere Brust"},
+{name:"Kabelflys Mitte (Mid Cable Flys)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel Brusthöhe"},
+{name:"Kabelflys unten (Low Cable Flys)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Kabel unten, obere Brust"},
+{name:"KH Fliegende (DB Flys Flat)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Tiefer Stretch, kontrolliert"},
+{name:"Dips Brust (Chest Dips)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Vorgelehnt, tiefe ROM"},
+{name:"KH Überzug (DB Pullover)",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Quer auf Bank, Brust+Lat"},
+{name:"Landmine Drücken (Landmine Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"LH-Ende am Boden drücken"},
+{name:"Enges Bankdrücken (Close Grip Bench)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Enger Griff, Trizeps+Brust"}
 ]},
-{cat:"🦵 Beine",items:[
-{name:"Kniebeugen (Back Squat)",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, mindestens parallel"},
-{name:"Front Squats",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange vorne, aufrechter Oberkörper. Quad-Fokus"},
-{name:"Goblet Squats (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"KH vor Brust, tief. Gut für Mobilität"},
-{name:"Beinpresse",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Hüftbreit-mittig, Knie nicht locken"},
-{name:"Beinpresse eng (Quads)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Füße eng+tief. Quad-Fokus"},
-{name:"Beinpresse breit (Adduktoren)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Füße breit+hoch. Adduktoren+Glutes"},
-{name:"Hack Squats",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Maschine, Schulter unter Polster. Quad-dominant"},
-{name:"Reverse Hack Squats",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Gesicht zur Maschine, Glute+Ham Fokus"},
-{name:"Rumänisches Kreuzheben (LH)",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Hüftdominant, Stange eng. Hamstrings+Glutes"},
-{name:"Rumänisches Kreuzheben (KH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"KH seitlich, gleiche Technik"},
-{name:"Ausfallschritte (KH)",s:3,rn:10,rx:12,rir:2,t:"main",m:"legs",note:"Abwechselnd oder Walking"},
-{name:"Bulgarian Split Squats",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Hinterer Fuß auf Bank. Einbeinig, brutal"},
-{name:"Leg Extension",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"1s Squeeze oben. Quad-Isolation"},
-{name:"Leg Extension (einbeinig)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Einbeinig für Symmetrie"},
-{name:"Leg Curl (liegend)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Volle ROM, 2s Exzentrik. Ham-Isolation"},
-{name:"Leg Curl (sitzend)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Sitzend, andere Dehnungsposition"},
-{name:"Hip Thrust (LH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Schultern auf Bank, Stange auf Hüfte. Glute-King"},
-{name:"Hip Thrust (Maschine)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Geführt, einfacheres Setup"},
-{name:"Wadenheben stehend",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Volle ROM, Pause unten+oben"},
-{name:"Wadenheben sitzend",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Knie 90°, Soleus-Fokus"},
-{name:"Wadenpresse (Beinpresse)",s:3,rn:15,rx:20,rir:2,t:"main",m:"legs",note:"Zehen auf Kante, Waden drücken"},
-{name:"Adduktoren Maschine",s:3,rn:12,rx:15,rir:2,t:"main",m:"legs",note:"Beine zusammen. Innere Oberschenkel"},
-{name:"Abduktoren Maschine",s:3,rn:12,rx:15,rir:2,t:"main",m:"legs",note:"Beine auseinander. Glute Med"},
-{name:"Step Ups (KH)",s:3,rn:10,rx:12,rir:2,t:"main",m:"legs",note:"Auf Box steigen, kontrolliert"},
-{name:"Sissy Squats",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Knie weit vor, Oberkörper zurück. Quad-Stretch"},
-{name:"Nordic Hamstring Curls",s:3,rn:4,rx:8,rir:2,t:"main",m:"legs",note:"Kniend, kontrolliert fallen. Exzentrisch!"},
-{name:"Good Mornings (LH)",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, Hüftbeuge. Hams+unterer Rücken"},
-{name:"Sumo Kreuzheben",s:3,rn:5,rx:8,rir:3,t:"main",m:"legs",note:"Breiter Stand, Hände innen. Adduktoren+Glutes"},
-{name:"Belt Squat",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Gewicht an Hüftgurt, kein Rücken-Load"}
+{cat:"🔙 Rücken (Back)",items:[
+{name:"Latziehen breit (Wide Lat Pulldown)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter runter, Brust raus"},
+{name:"Latziehen eng Untergriff (Close Grip Pulldown)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Enger Untergriff, Bizeps hilft"},
+{name:"Latziehen V-Griff (V-Bar Pulldown)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Neutral, gute Lat-Aktivierung"},
+{name:"Maschinenrudern eng (Machine Row Close)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter zusammen"},
+{name:"Maschinenrudern breit (Machine Row Wide)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Oberer Rücken+Rhomboide"},
+{name:"Kabelrudern eng (Seated Cable Row)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"V-Griff, zum Bauchnabel"},
+{name:"Einarm-Kabelrudern (Single Arm Cable Row)",s:3,rn:10,rx:12,rir:2,t:"main",m:"back",note:"Rotation kontrollieren"},
+{name:"Vorgebeugtes Rudern LH (Barbell Row)",s:3,rn:8,rx:10,rir:3,t:"main",m:"back",note:"45° Oberkörper, zum Bauch"},
+{name:"KH Rudern einarmig (DB Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Hand auf Bank, hochziehen"},
+{name:"T-Hantel Rudern (T-Bar Row)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Enger Griff, Brust gegen Pad"},
+{name:"Gestrecktes Armziehen (Straight Arm Pulldown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Arme gestreckt, Lat-Isolation"},
+{name:"Klimmzüge breit (Pull-Ups)",s:3,rn:6,rx:10,rir:2,t:"main",m:"back",note:"Breiter Obergriff"},
+{name:"Klimmzüge eng (Chin-Ups)",s:3,rn:6,rx:10,rir:2,t:"main",m:"back",note:"Enger Untergriff"},
+{name:"Kreuzheben (Deadlift)",s:3,rn:5,rx:8,rir:3,t:"main",m:"back",note:"Hüftbreit, Rücken gerade"},
+{name:"Rückenstrecker (Hyperextensions)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"45° Bank, unterer Rücken"},
+{name:"Gesichtziehen (Face Pulls)",s:3,rn:12,rx:15,rir:2,t:"main",m:"back",note:"Seil Gesichtshöhe, Schultergesundheit"},
+{name:"Schulterheben KH (DB Shrugs)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"KH seitlich, Trapezius"}
 ]},
-{cat:"🏔️ Schultern",items:[
-{name:"Schulterdrücken (LH/OHP)",s:3,rn:6,rx:10,rir:3,t:"main",m:"shoulders",note:"Stehend/sitzend, Stange über Kopf"},
-{name:"KH Schulterdrücken",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Sitzend, KH neben Ohren starten"},
-{name:"Arnold Press",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Start vor Brust, rotierend nach oben"},
-{name:"Schulterdrücken Maschine",s:3,rn:10,rx:12,rir:2,t:"main",m:"shoulders",note:"Geführt, gut bei Schulterproblemen"},
-{name:"KH Seitheben",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Kontrolliert, Pinky-Lead. Seitl. Delts"},
-{name:"KH Frontheben",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Abwechselnd/gleichzeitig. Vordere Delts"},
-{name:"Cable Lateral Raise",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Kabel unten, einarmig. Konstante Spannung"},
-{name:"Cable Front Raise",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Kabel unten, Stange oder Seil"},
-{name:"Reverse Flys (KH)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Vorgebeugt, KH seitlich. Hintere Schulter"},
-{name:"Reverse Flys (Maschine)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Butterfly umgekehrt, hintere Schulter"},
-{name:"Face Pulls (Schulter)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Seil Gesichtshöhe, ext. Rotation"},
-{name:"Upright Rows",s:3,rn:10,rx:12,rir:2,t:"main",m:"shoulders",note:"Stange eng am Körper hoch. Vorsicht Impingement"},
-{name:"Lu Raises",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Seitheben→vorne drehen→über Kopf"},
-{name:"Plate Front Raise",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Hantelscheibe vor Körper hochheben"}
+{cat:"🦵 Beine (Legs)",items:[
+{name:"Kniebeugen (Back Squat)",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, parallel"},
+{name:"Frontkniebeugen (Front Squat)",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange vorne, Quad-Fokus"},
+{name:"Kelchkniebeuge (Goblet Squat)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"KH vor Brust, gut für Mobilität"},
+{name:"Beinpresse (Leg Press)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Hüftbreit, Knie nicht locken"},
+{name:"Hackenschmidt (Hack Squat)",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Maschine, Quad-dominant"},
+{name:"Rumän. Kreuzheben LH (Romanian Deadlift)",s:3,rn:8,rx:12,rir:3,t:"main",m:"legs",note:"Hüftdominant, Stange eng"},
+{name:"Ausfallschritte KH (DB Lunges)",s:3,rn:10,rx:12,rir:2,t:"main",m:"legs",note:"Abwechselnd oder Walking"},
+{name:"Bulgarische Kniebeuge (Bulgarian Split Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Hinterer Fuß auf Bank"},
+{name:"Beinstrecker (Leg Extension)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"1s Squeeze oben. Quad-Iso"},
+{name:"Beinbeuger liegend (Lying Leg Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Volle ROM, 2s Exzentrik"},
+{name:"Beinbeuger sitzend (Seated Leg Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Sitzende Variante"},
+{name:"Hüftstoß LH (Barbell Hip Thrust)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Schultern auf Bank, Gesäß!"},
+{name:"Wadenheben stehend (Standing Calf Raise)",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Volle ROM, Pause oben+unten"},
+{name:"Wadenheben sitzend (Seated Calf Raise)",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Knie 90°, Soleus-Fokus"},
+{name:"Adduktoren Maschine (Adductor Machine)",s:3,rn:12,rx:15,rir:2,t:"main",m:"legs",note:"Innere Oberschenkel"},
+{name:"Abduktoren Maschine (Abductor Machine)",s:3,rn:12,rx:15,rir:2,t:"main",m:"legs",note:"Äußere Hüfte, Glute Med"},
+{name:"Nordische Beinbeuger (Nordic Ham Curl)",s:3,rn:4,rx:8,rir:2,t:"main",m:"legs",note:"Exzentrisch, sehr effektiv"},
+{name:"Sumo-Kreuzheben (Sumo Deadlift)",s:3,rn:5,rx:8,rir:3,t:"main",m:"legs",note:"Breiter Stand, Adduktoren"}
 ]},
-{cat:"💪 Bizeps",items:[
-{name:"KH Curls",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Supination, langsame Exzentrik"},
-{name:"Hammer Curls (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Neutraler Griff, Brachialis"},
-{name:"SZ-Curls (stehend)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"EZ-Bar, schont Handgelenke"},
-{name:"Preacher Curls (SZ)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Scott-Bank, kein Schwung. Isolation"},
-{name:"Preacher Curls (Maschine)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Geführt, konstante Spannung"},
-{name:"Concentration Curls",s:3,rn:10,rx:12,rir:2,t:"main",m:"arms",note:"Sitzend, Ellenbogen an Oberschenkel"},
-{name:"Cable Curls (Stange)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Am Kabelzug, kein Schwung"},
-{name:"Cable Curls (Seil)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil, Hammer oder supiniert"},
-{name:"Incline Curls (KH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Schrägbank 45°, langer Kopf Stretch"},
-{name:"Spider Curls",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Brust auf Schrägbank, Peak Contraction"},
-{name:"Reverse Curls",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Obergriff, Unterarme+Brachioradialis"},
-{name:"21s Curls",s:2,rn:21,rx:21,rir:1,t:"main",m:"arms",note:"7 unten, 7 oben, 7 voll. Metabolischer Stress"},
-{name:"Cross Body Hammer Curls",s:3,rn:10,rx:12,rir:2,t:"main",m:"arms",note:"KH vor Körper zur anderen Schulter"}
+{cat:"🏔️ Schultern (Shoulders)",items:[
+{name:"Schulterdrücken LH (Overhead Press)",s:3,rn:6,rx:10,rir:3,t:"main",m:"shoulders",note:"Stehend/sitzend, über Kopf"},
+{name:"KH Schulterdrücken (DB Shoulder Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"KH neben Ohren starten"},
+{name:"Arnold-Drücken (Arnold Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Rotierend hochdrücken"},
+{name:"Schulterdrücken Maschine (Machine Press)",s:3,rn:10,rx:12,rir:2,t:"main",m:"shoulders",note:"Geführt, schulterschonend"},
+{name:"KH Seitheben (DB Lateral Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Kontrolliert, seitliche Delts"},
+{name:"KH Frontheben (DB Front Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Vordere Delts"},
+{name:"Kabel-Seitheben (Cable Lateral Raise)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Konstante Spannung, einarmig"},
+{name:"Umgekehrte Fliegende KH (Reverse Flys)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Hintere Schulter"},
+{name:"Umgekehrte Fliegende Maschine (Reverse Pec Deck)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Maschine, hintere Schulter"},
+{name:"Gesichtziehen (Face Pulls)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Schultergesundheit"},
+{name:"Aufrechtes Rudern (Upright Row)",s:3,rn:10,rx:12,rir:2,t:"main",m:"shoulders",note:"Vorsicht bei Impingement"},
+{name:"Scheiben-Frontheben (Plate Front Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Hantelscheibe hochheben"}
 ]},
-{cat:"🦾 Trizeps",items:[
-{name:"Trizeps Pushdown (Seil)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil auseinanderziehen am unteren Punkt"},
-{name:"Trizeps Pushdown (V-Bar)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"V-Bar, Ellenbogen eng"},
-{name:"Trizeps Pushdown (gerade)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Gerade Stange, Obergriff. Lateraler Kopf"},
-{name:"Katana Extensions (Kabel)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Kabel überkreuzt, Scapular Plane. Langer Kopf"},
-{name:"Overhead Trizeps (Kabel)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Rücken zum Kabel, Seil über Kopf"},
-{name:"Overhead Trizeps (KH)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Sitzend, KH beidarmig hinter Kopf"},
-{name:"Skullcrusher (SZ)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Liegend, SZ-Bar zur Stirn senken"},
-{name:"French Press",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Wie Skullcrusher, hinter den Kopf senken"},
-{name:"Close Grip Bench",s:3,rn:8,rx:10,rir:3,t:"main",m:"arms",note:"Enger Griff, Compound Trizeps+Brust"},
-{name:"Dips (Trizeps)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Aufrecht, Ellenbogen eng. Trizeps-Fokus"},
-{name:"Trizeps Kickbacks (KH)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Vorgebeugt, Arm strecken. Squeeze!"},
-{name:"Diamond Push-Ups",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Hände eng, Rauten-Form"},
-{name:"JM Press",s:3,rn:8,rx:10,rir:2,t:"main",m:"arms",note:"Mix aus Close Grip Bench + Skullcrusher"}
+{cat:"💪 Bizeps (Biceps)",items:[
+{name:"KH Curls (DB Curls)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Supination, langsam exzentrisch"},
+{name:"Hammercurls KH (Hammer Curls)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Neutral, Brachialis"},
+{name:"SZ-Curls stehend (EZ-Bar Curls)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Schont Handgelenke"},
+{name:"Scott-Curls (Preacher Curls)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Scott-Bank, kein Schwung"},
+{name:"Konzentrationscurls (Concentration Curls)",s:3,rn:10,rx:12,rir:2,t:"main",m:"arms",note:"Ellenbogen an Oberschenkel"},
+{name:"Kabel-Curls (Cable Curls)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Konstante Spannung"},
+{name:"Schrägbank-Curls (Incline DB Curls)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"45°, langer Kopf Stretch"},
+{name:"Spinnencurls (Spider Curls)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Peak Contraction"},
+{name:"21er Curls (21s Curls)",s:2,rn:21,rx:21,rir:1,t:"main",m:"arms",note:"7 unten, 7 oben, 7 voll"}
 ]},
-{cat:"🎯 Core / Bauch",items:[
-{name:"Cable Crunch",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kniend am Kabelzug, einrollen"},
-{name:"Plank",s:3,rn:30,rx:60,rir:null,t:"main",m:"core",note:"Unterarme, Körper gerade. Sekunden"},
-{name:"Hanging Leg Raise",s:3,rn:8,rx:15,rir:2,t:"main",m:"core",note:"An Stange hängend, Beine heben"},
-{name:"Hanging Knee Raise",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Einfachere Variante, Knie anziehen"},
-{name:"Ab Roller",s:3,rn:8,rx:12,rir:2,t:"main",m:"core",note:"Kniend/stehend, weit nach vorne rollen"},
-{name:"Russian Twist",s:3,rn:15,rx:20,rir:2,t:"main",m:"core",note:"Sitzend, Oberkörper rotieren. Obliques"},
-{name:"Woodchoppers (Kabel)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kabel diagonal, Rotation. Obliques"},
-{name:"Pallof Press",s:3,rn:10,rx:12,rir:2,t:"main",m:"core",note:"Kabel seitlich, Arme strecken. Anti-Rotation"},
-{name:"Decline Sit-Ups",s:3,rn:12,rx:20,rir:2,t:"main",m:"core",note:"Negative Bank, aufrollen"},
-{name:"Leg Raises (liegend)",s:3,rn:12,rx:20,rir:2,t:"main",m:"core",note:"Rücken am Boden, Beine heben"},
-{name:"Dead Bug",s:3,rn:10,rx:10,rir:null,t:"main",m:"core",note:"Rücken am Boden, gegengleich strecken"},
-{name:"Side Plank",s:3,rn:30,rx:45,rir:null,t:"main",m:"core",note:"Seitlich auf Unterarm. Sekunden"},
-{name:"Dragon Flag",s:3,rn:5,rx:8,rir:2,t:"main",m:"core",note:"Auf Bank, Körper gerade heben. Fortgeschritten!"},
-{name:"Rückenstrecker (Maschine)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kontrollierte Extension. Unterer Rücken"}
+{cat:"🦾 Trizeps (Triceps)",items:[
+{name:"Trizepsdrücken Seil (Rope Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil auseinanderziehen unten"},
+{name:"Trizepsdrücken V-Bar (V-Bar Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Ellenbogen eng am Körper"},
+{name:"Katana-Strecken (Katana Extensions)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Kabel überkreuzt, langer Kopf"},
+{name:"Überkopf-Strecken Kabel (Overhead Cable Ext.)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil über Kopf strecken"},
+{name:"Überkopf-Strecken KH (Overhead DB Ext.)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"KH beidarmig hinter Kopf"},
+{name:"Stirndrücken SZ (Skullcrusher)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Liegend, SZ-Bar zur Stirn"},
+{name:"Enges Bankdrücken (Close Grip Bench)",s:3,rn:8,rx:10,rir:3,t:"main",m:"arms",note:"Compound Trizeps+Brust"},
+{name:"Dips Trizeps (Tricep Dips)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Aufrecht, Ellenbogen eng"},
+{name:"Trizeps-Kickbacks (DB Kickbacks)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Vorgebeugt, Arm strecken"},
+{name:"Diamant-Liegestütze (Diamond Push-Ups)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Hände eng, Rauten-Form"}
 ]},
-{cat:"🧘 Mobility",items:[
-{name:"Backward Walk Laufband",s:1,rn:5,rx:10,rir:null,t:"mob",m:"legs",note:"Laufband AUS, rückwärts gehen"},
-{name:"Poliquin Step Slantboard",s:3,rn:15,rx:20,rir:null,t:"mob",m:"legs",note:"1 Fuß auf Slantboard, Knie beugen"},
-{name:"Slantboard Calf Raise",s:3,rn:15,rx:15,rir:null,t:"mob",m:"legs",note:"Fersen TIEF sinken, LANGSAM"},
-{name:"Ring Rows",s:3,rn:10,rx:12,rir:null,t:"mob",m:"back",note:"TRX/Ringe zur Brust ziehen"},
-{name:"KH Pullover (Mobility)",s:3,rn:10,rx:10,rir:null,t:"mob",m:"chest",note:"Quer auf Bank, Brustkorb öffnen"},
-{name:"Jefferson Curl (KH)",s:2,rn:5,rx:5,rir:null,t:"mob",m:"back",note:"Auf Box, Wirbel für Wirbel. SUPER LANGSAM"},
-{name:"Incline Pigeon Pose",s:1,rn:60,rx:60,rir:null,t:"mob",m:"legs",note:"60 Sek pro Seite. Hüfte öffnen"},
-{name:"Couch Stretch",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Knie an Wand, Hüftflexor. Sek/Seite"},
-{name:"90/90 Stretch",s:2,rn:30,rx:45,rir:null,t:"mob",m:"legs",note:"Beine 90°, Rotation. Hüftmobilität"},
-{name:"Wall Slides",s:3,rn:10,rx:12,rir:null,t:"mob",m:"shoulders",note:"Rücken an Wand, Arme gleiten"},
-{name:"Thoracic Spine Rotation",s:2,rn:10,rx:10,rir:null,t:"mob",m:"back",note:"Seitlage, Arm öffnen. BWS mobilisieren"},
-{name:"Foam Rolling Quads",s:1,rn:60,rx:90,rir:null,t:"mob",m:"legs",note:"Faszienrolle, Oberschenkel. Sekunden"},
-{name:"Foam Rolling Lats",s:1,rn:60,rx:90,rir:null,t:"mob",m:"back",note:"Seitlich auf Rolle. Sekunden"},
-{name:"Hängen (Passive Hang)",s:2,rn:30,rx:60,rir:null,t:"mob",m:"back",note:"An Stange, Schultern entspannen. Dekompression"}
+{cat:"🎯 Bauch / Core (Abs)",items:[
+{name:"Kabelcrunches (Cable Crunch)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kniend einrollen"},
+{name:"Unterarmstütz (Plank)",s:3,rn:30,rx:60,rir:null,t:"main",m:"core",note:"Körper gerade. Sekunden"},
+{name:"Beinheben hängend (Hanging Leg Raise)",s:3,rn:8,rx:15,rir:2,t:"main",m:"core",note:"An Stange, Beine heben"},
+{name:"Knieheben hängend (Hanging Knee Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Einfachere Variante"},
+{name:"Bauchrad (Ab Roller)",s:3,rn:8,rx:12,rir:2,t:"main",m:"core",note:"Weit nach vorne rollen"},
+{name:"Russische Drehung (Russian Twist)",s:3,rn:15,rx:20,rir:2,t:"main",m:"core",note:"Sitzend rotieren, Obliques"},
+{name:"Holzfäller Kabel (Woodchoppers)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Diagonale Rotation"},
+{name:"Pallof-Drücken (Pallof Press)",s:3,rn:10,rx:12,rir:2,t:"main",m:"core",note:"Anti-Rotation am Kabel"},
+{name:"Beinheben liegend (Lying Leg Raise)",s:3,rn:12,rx:20,rir:2,t:"main",m:"core",note:"Rücken am Boden"},
+{name:"Toter Käfer (Dead Bug)",s:3,rn:10,rx:10,rir:null,t:"main",m:"core",note:"Gegengleich strecken"},
+{name:"Seitl. Unterarmstütz (Side Plank)",s:3,rn:30,rx:45,rir:null,t:"main",m:"core",note:"Seitlich halten. Sekunden"},
+{name:"Rückenstrecker Maschine (Back Extension)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Unterer Rücken"}
+]},
+{cat:"🧘 Mobilität (Mobility)",items:[
+{name:"Rückwärtsgehen Laufband (Backward Treadmill Walk)",s:1,rn:5,rx:10,rir:null,t:"mob",m:"legs",note:"Laufband AUS, rückwärts gehen"},
+{name:"Poliquin-Stufe (Poliquin Step)",s:3,rn:15,rx:20,rir:null,t:"mob",m:"legs",note:"1 Fuß auf Keilbrett, Knie beugen"},
+{name:"Keilbrett Wadenheben (Slantboard Calf Raise)",s:3,rn:15,rx:15,rir:null,t:"mob",m:"legs",note:"Fersen TIEF sinken, LANGSAM"},
+{name:"Ringzüge (Ring Rows)",s:3,rn:10,rx:12,rir:null,t:"mob",m:"back",note:"TRX/Ringe zur Brust"},
+{name:"KH Überzug Mobilität (Pullover Mobility)",s:3,rn:10,rx:10,rir:null,t:"mob",m:"chest",note:"Quer auf Bank, Brustkorb öffnen"},
+{name:"Jefferson Curl KH",s:2,rn:5,rx:5,rir:null,t:"mob",m:"back",note:"Wirbel für Wirbel, SUPER LANGSAM"},
+{name:"Taube auf Schrägbank (Incline Pigeon Pose)",s:1,rn:60,rx:60,rir:null,t:"mob",m:"legs",note:"60 Sek pro Seite"},
+{name:"Couchdehnung (Couch Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Hüftbeuger dehnen. Sek/Seite"},
+{name:"90/90 Hüftdehnung (90/90 Stretch)",s:2,rn:30,rx:45,rir:null,t:"mob",m:"legs",note:"Hüftmobilität"},
+{name:"Wandgleiten (Wall Slides)",s:3,rn:10,rx:12,rir:null,t:"mob",m:"shoulders",note:"Rücken an Wand, Arme gleiten"},
+{name:"BWS-Rotation (Thoracic Rotation)",s:2,rn:10,rx:10,rir:null,t:"mob",m:"back",note:"BWS mobilisieren"},
+{name:"Faszienrolle (Foam Rolling)",s:1,rn:60,rx:90,rir:null,t:"mob",m:"legs",note:"Zielmuskel ausrollen. Sekunden"},
+{name:"Totes Hängen (Passive Hang)",s:2,rn:30,rx:60,rir:null,t:"mob",m:"back",note:"Dekompression, Schultern lockern"}
 ]}
 ];
-
 function openLibrary(){
   renderLib('');document.getElementById('lib-search').value='';
   om('m-lib');setTimeout(()=>document.getElementById('lib-search').focus(),200);
