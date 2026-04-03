@@ -166,6 +166,11 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .bio-entry .be-v{font-family:'JetBrains Mono',monospace;font-weight:600}
 .bio-entry .be-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 6px}
 .plan-mgmt{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;gap:0;width:100%}
+.stepper input{flex:1;border-radius:0;border-left:none;border-right:none;text-align:center}
+.stepper-btn{width:44px;height:44px;background:var(--bg4);border:1.5px solid var(--bg4);color:var(--neon);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.1s;-webkit-tap-highlight-color:transparent}
+.stepper-btn:active{background:var(--neon);color:var(--bg)}
+.stepper-btn.left{border-radius:8px 0 0 8px}.stepper-btn.right{border-radius:0 8px 8px 0}
 .lib-cat{margin-bottom:16px}
 .lib-cat-hdr{display:flex;align-items:center;gap:8px;padding:10px 0;cursor:pointer;font-weight:700;font-size:14px}
 .lib-cat-hdr .lib-ico{font-size:20px}
@@ -326,8 +331,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div id="log-name" style="font-size:14px;color:var(--text2);margin-bottom:4px"></div>
 <div id="log-hint" style="font-size:11px;color:var(--text3);margin-bottom:12px"></div>
 <div class="ir">
-<div class="ig"><label>Gewicht (kg)</label><input type="number" step="0.5" id="log-w" placeholder="0"></div>
-<div class="ig"><label>Wdh</label><input type="number" id="log-r" placeholder="0"></div>
+<div class="ig"><label>Gewicht (kg)</label><div class="stepper"><button class="stepper-btn left" onclick="stepVal('log-w',-2.5)">−</button><input type="number" step="0.5" id="log-w" placeholder="0"><button class="stepper-btn right" onclick="stepVal('log-w',2.5)">+</button></div></div>
+<div class="ig"><label>Wiederholungen</label><div class="stepper"><button class="stepper-btn left" onclick="stepVal('log-r',-1)">−</button><input type="number" id="log-r" placeholder="0"><button class="stepper-btn right" onclick="stepVal('log-r',1)">+</button></div></div>
 </div>
 <div style="margin-bottom:8px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px">RIR (Reps in Reserve)</label>
 <div class="rir-circles" id="log-rir-circles">
@@ -564,28 +569,33 @@ function doLogin(){
   syncCode=code;
   localStorage.setItem('pb_sync',code);
   useFirebase=initFirebase();
-  loadLocal();
   if(useFirebase&&db){
     db.collection('pumpbrah').doc(code).get().then(doc=>{
       if(doc.exists){
-        const remote=doc.data();
-        D={...D,...remote};
+        D=doc.data();
         if(!D.notes)D.notes={};if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};if(!D.bio)D.bio={height:null,weights:[]};
+        if(!D.plan)D.plan={};
         localStorage.setItem('pb_data',JSON.stringify(D));
         startSync();showApp();
-      }else{ startOnboarding(); }
+      }else{ resetDForNewUser();startOnboarding(); }
     }).catch(()=>{
-      if(D.bio&&D.bio.height){showApp()}else{startOnboarding()}
+      loadLocal();
+      if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}
     });
   }else{
-    if(D.bio&&D.bio.height){showApp()}else{startOnboarding()}
+    loadLocal();
+    if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}
   }
+}
+function resetDForNewUser(){
+  D={plan:{},history:[],active:null,settings:{compound:150,isolation:90},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[]}};
+  localStorage.setItem('pb_data',JSON.stringify(D));
 }
 function offlineMode(){
   useFirebase=false;syncCode='offline';
   localStorage.setItem('pb_sync','offline');
   loadLocal();
-  if(D.bio&&D.bio.height){showApp()}else{startOnboarding()}
+  if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}
 }
 function showApp(){
   document.getElementById('login-screen').style.display='none';
@@ -597,7 +607,7 @@ function showApp(){
 
 // ===== ONBOARDING =====
 let obStep=0;
-let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner'};
+let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym'};
 
 function startOnboarding(){
   document.getElementById('login-screen').style.display='none';
@@ -609,91 +619,122 @@ function startOnboarding(){
 function renderObStep(){
   const c=document.getElementById('ob-content');
   const sub=document.getElementById('ob-sub');
+  const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;
+  const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;
+  const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');
   const steps=[
-    // 0: Height
-    {sub:'Schritt 1/5 — Körperdaten',html:`
-      <div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="180" style="font-size:20px;padding:14px;width:100%"></div>
-      <button class="btn" onclick="obNext(0)">WEITER →</button>`},
-    // 1: Weight
-    {sub:'Schritt 2/5 — Körperdaten',html:`
-      <div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="80" style="font-size:20px;padding:14px;width:100%"></div>
-      <button class="btn" onclick="obNext(1)">WEITER →</button>
-      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`},
-    // 2: Days
-    {sub:'Schritt 3/5 — Trainingsplan',html:`
-      <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Wie viele Tage pro Woche trainierst du?</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;min-width:52px;padding:16px;background:var(--bg3);border:2px solid var(--bg4);border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text)${d===3?';border-color:var(--neon)':''}">${d}</div>`).join('')}
-      </div></div>
-      <button class="btn" onclick="obNext(2)">WEITER →</button>
-      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`},
-    // 3: Focus
-    {sub:'Schritt 4/5 — Trainingsfokus',html:`
-      <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Was ist dein Hauptziel?</label>
-      ${[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},
-         {k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},
-         {k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},
-         {k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'}
-      ].map(f=>`<div onclick="document.querySelectorAll('.ob-focus').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.focus='${f.k}'" class="ob-focus" style="padding:14px;background:var(--bg3);border:2px solid ${f.k==='balanced'?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer">
-        <div style="font-weight:700;font-size:15px">${f.l}</div><div style="font-size:12px;color:var(--text2)">${f.d}</div></div>`).join('')}
-      </div>
-      <button class="btn" onclick="obNext(3)">WEITER →</button>
-      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`},
-    // 4: Experience
-    {sub:'Schritt 5/5 — Erfahrung',html:`
-      <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingserfahrung?</label>
-      ${[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},
-         {k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},
-         {k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre, kennt die Basics'}
-      ].map(e=>`<div onclick="document.querySelectorAll('.ob-exp').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.experience='${e.k}'" class="ob-exp" style="padding:14px;background:var(--bg3);border:2px solid ${e.k==='beginner'?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer">
-        <div style="font-weight:700;font-size:15px">${e.l}</div><div style="font-size:12px;color:var(--text2)">${e.d}</div></div>`).join('')}
-      </div>
-      <button class="btn" onclick="finishOnboarding()">🚀 PLAN ERSTELLEN</button>
-      <button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`}
+  // 0: Gender
+  {sub:'Schritt 1/7 — Über dich',html:`
+    <div style="margin-bottom:12px">${obSel('ob-gen',[
+      {k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},
+      {k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}
+    ],'gender','male')}</div>
+    ${obBtn('WEITER →','obNext(0)')}`},
+  // 1: Height
+  {sub:'Schritt 2/7 — Körperdaten',html:`
+    <div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:20px;padding:14px;width:100%"></div>
+    ${obBtn('WEITER →','obNext(1)')}${obBack}`},
+  // 2: Weight
+  {sub:'Schritt 3/7 — Körperdaten',html:`
+    <div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:20px;padding:14px;width:100%"></div>
+    ${obBtn('WEITER →','obNext(2)')}${obBack}`},
+  // 3: Location
+  {sub:'Schritt 4/7 — Trainingsort',html:`
+    <div style="margin-bottom:12px">${obSel('ob-loc',[
+      {k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},
+      {k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'},
+    ],'location','gym')}</div>
+    ${obBtn('WEITER →','obNext(3)')}${obBack}`},
+  // 4: Days
+  {sub:'Schritt 5/7 — Trainingsfrequenz',html:`
+    <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label>
+    <div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===3?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>
+    ${obBtn('WEITER →','obNext(4)')}${obBack}`},
+  // 5: Focus
+  {sub:'Schritt 6/7 — Trainingsziel',html:`
+    <div style="margin-bottom:12px">${obSel('ob-focus',[
+      {k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},
+      {k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},
+      {k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},
+      {k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},
+      ...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])
+    ],'focus','balanced')}</div>
+    ${obBtn('WEITER →','obNext(5)')}${obBack}`},
+  // 6: Experience
+  {sub:'Schritt 7/7 — Erfahrung',html:`
+    <div style="margin-bottom:12px">${obSel('ob-exp',[
+      {k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},
+      {k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},
+      {k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre'}
+    ],'experience','beginner')}</div>
+    ${obBtn('🚀 PLAN ERSTELLEN','finishOnboarding()')}${obBack}`}
   ];
   sub.textContent=steps[obStep].sub;
   c.innerHTML=steps[obStep].html;
 }
 
 function obNext(step){
-  if(step===0){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}
-  if(step===1){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}
+  if(step===1){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}
+  if(step===2){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}
   obStep++;renderObStep();
 }
 
 function finishOnboarding(){
-  // Save bio data
   D.bio.height=obData.height;
+  D.bio.gender=obData.gender;
   if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];
-
-  // Generate plan based on days + focus
   D.plan={};
   const rir=obData.experience==='beginner'?3:obData.experience==='intermediate'?2:2;
-  const dayNames=['Mo','Di','Mi','Do','Fr','Sa','So'];
+  const isHome=obData.location==='home';
+  const isBBP=obData.focus==='bbp';
 
-  if(obData.days<=3){
-    // Full Body Split
-    for(let i=0;i<obData.days;i++){
-      const key='Ganzkörper_'+String.fromCharCode(65+i);
-      const di=i===0?'Di':i===1?'Do':'Sa';
-      D.plan[key]={day:di,exercises:generateFullBody(rir,i)};
+  if(isBBP){
+    // BBP Split
+    if(obData.days<=3){
+      for(let i=0;i<obData.days;i++){
+        D.plan['BBP_'+String.fromCharCode(65+i)]={day:['Di','Do','Sa'][i],exercises:generateBBP(rir,i,isHome)};
+      }
+    }else{
+      D.plan['Unterkörper_A']={day:'Mo',exercises:generateBBP(rir,0,isHome)};
+      D.plan['Oberkörper']={day:'Di',exercises:isHome?generateHomeUpper(rir):generateUpper(rir,'A')};
+      D.plan['Unterkörper_B']={day:'Do',exercises:generateBBP(rir,1,isHome)};
+      D.plan['BBP_Finisher']={day:'Fr',exercises:generateBBP(rir,2,isHome)};
+      if(obData.days>=5)D.plan['Oberkörper_B']={day:'Sa',exercises:isHome?generateHomeUpper(rir):generateUpper(rir,'B')};
     }
-  }else if(obData.days===4){
-    // Upper/Lower
-    D.plan['Oberkörper_A']={day:'Mo',exercises:generateUpper(rir,'A')};
-    D.plan['Unterkörper_A']={day:'Di',exercises:generateLower(rir,'A')};
-    D.plan['Oberkörper_B']={day:'Do',exercises:generateUpper(rir,'B')};
-    D.plan['Unterkörper_B']={day:'Fr',exercises:generateLower(rir,'B')};
+  }else if(isHome){
+    // Home Workout Plans
+    if(obData.days<=3){
+      for(let i=0;i<obData.days;i++){
+        D.plan['Home_GK_'+String.fromCharCode(65+i)]={day:['Di','Do','Sa'][i],exercises:generateHomeFull(rir,i)};
+      }
+    }else{
+      D.plan['Home_Push']={day:'Mo',exercises:generateHomePush(rir)};
+      D.plan['Home_Pull']={day:'Di',exercises:generateHomePull(rir)};
+      D.plan['Home_Beine']={day:'Do',exercises:generateHomeLegs(rir)};
+      D.plan['Home_Push_B']={day:'Fr',exercises:generateHomePush(rir)};
+      if(obData.days>=5)D.plan['Home_Pull_B']={day:'Sa',exercises:generateHomePull(rir)};
+      if(obData.days>=6)D.plan['Home_Beine_B']={day:'So',exercises:generateHomeLegs(rir)};
+    }
   }else{
-    // Push/Pull/Legs
-    D.plan['Push_A']={day:'Mo',exercises:generatePush(rir)};
-    D.plan['Pull_A']={day:'Di',exercises:generatePull(rir)};
-    D.plan['Beine_A']={day:'Mi',exercises:generateLegs(rir)};
-    D.plan['Push_B']={day:'Do',exercises:generatePush(rir)};
-    D.plan['Pull_B']={day:'Fr',exercises:generatePull(rir)};
-    if(obData.days>=6)D.plan['Beine_B']={day:'Sa',exercises:generateLegs(rir)};
+    // Standard Gym Plans
+    if(obData.days<=3){
+      for(let i=0;i<obData.days;i++){
+        D.plan['Ganzkörper_'+String.fromCharCode(65+i)]={day:['Di','Do','Sa'][i],exercises:generateFullBody(rir,i)};
+      }
+    }else if(obData.days===4){
+      D.plan['Oberkörper_A']={day:'Mo',exercises:generateUpper(rir,'A')};
+      D.plan['Unterkörper_A']={day:'Di',exercises:generateLower(rir,'A')};
+      D.plan['Oberkörper_B']={day:'Do',exercises:generateUpper(rir,'B')};
+      D.plan['Unterkörper_B']={day:'Fr',exercises:generateLower(rir,'B')};
+    }else{
+      D.plan['Push_A']={day:'Mo',exercises:generatePush(rir)};
+      D.plan['Pull_A']={day:'Di',exercises:generatePull(rir)};
+      D.plan['Beine_A']={day:'Mi',exercises:generateLegs(rir)};
+      D.plan['Push_B']={day:'Do',exercises:generatePush(rir)};
+      D.plan['Pull_B']={day:'Fr',exercises:generatePull(rir)};
+      if(obData.days>=6)D.plan['Beine_B']={day:'Sa',exercises:generateLegs(rir)};
+    }
   }
-
   save();
   if(useFirebase)startSync();
   setTimeout(()=>save(),1000);
@@ -800,6 +841,121 @@ function generateLegs(rir){return[
   mkEx('Beinstrecker (Leg Extension)',3,10,15,rir-1>0?rir-1:1,'main','legs','Squeeze'),
   mkEx('Beinbeuger liegend (Lying Leg Curl)',3,10,15,rir-1>0?rir-1:1,'main','legs','2s Exzentrik'),
   mkEx('Wadenheben stehend (Standing Calf Raise)',3,12,20,rir,'main','legs','Volle ROM')
+]}
+
+// BBP Plans (Bauch Beine Po)
+function generateBBP(rir,variant,isHome){
+  const r=rir-1>0?rir-1:1;
+  if(isHome){
+    const base=[mkEx('Gesäßbrücke (Glute Bridges)',3,15,20,r,'main','legs','Gesäß oben 2s halten')];
+    if(variant===0){return[...base,
+      mkEx('Bulgarische Kniebeuge (Bulgarian Split Squat)',3,10,12,rir,'main','legs','Fuß auf Stuhl'),
+      mkEx('Rumän. Kreuzheben KH (DB Romanian Deadlift)',3,10,12,rir,'main','legs','KH seitlich'),
+      mkEx('Sumo-Kniebeuge KH (Sumo Goblet Squat)',3,12,15,r,'main','legs','Breit, tief'),
+      mkEx('Einbein-Hüftstoß (Single Leg Hip Thrust)',3,12,15,r,'main','legs','Schulter auf Sofa'),
+      mkEx('Beinheben liegend (Lying Leg Raise)',3,12,20,r,'main','core','Rücken am Boden'),
+      mkEx('Unterarmstütz (Plank)',3,30,60,null,'main','core','Sekunden')]}
+    if(variant===1){return[...base,
+      mkEx('Ausfallschritte KH (DB Lunges)',3,12,15,rir,'main','legs','Walking oder stehend'),
+      mkEx('KH Kniebeugen (DB Squat)',3,10,15,rir,'main','legs','KH seitlich halten'),
+      mkEx('Einbein-Kreuzheben KH (Single Leg RDL)',3,10,12,r,'main','legs','Balance!'),
+      mkEx('Feuerwehrmann (Fire Hydrants)',3,15,20,null,'main','legs','Vierfüßler, Knie seitlich heben'),
+      mkEx('Russische Drehung (Russian Twist)',3,15,20,r,'main','core','Mit KH'),
+      mkEx('Bergsteiger (Mountain Climbers)',3,20,30,null,'main','core','Schnell')]}
+    return[...base,
+      mkEx('Kniebeuge mit Pause (Pause Squat)',3,10,12,rir,'main','legs','2s unten halten'),
+      mkEx('Seitl. Ausfallschritt (Lateral Lunge)',3,10,12,r,'main','legs','Breit zur Seite'),
+      mkEx('Donkey Kicks',3,15,20,null,'main','legs','Vierfüßler, Ferse zur Decke'),
+      mkEx('Beckenheben einbeinig (Single Leg Bridge)',3,12,15,r,'main','legs','Ein Bein gestreckt'),
+      mkEx('Fahrradcrunches (Bicycle Crunches)',3,15,20,null,'main','core','Ellenbogen zum Knie'),
+      mkEx('Seitl. Unterarmstütz (Side Plank)',3,30,45,null,'main','core','Sekunden')]
+  }
+  // Gym BBP
+  const base=[mkEx('Gesäßbrücke (Glute Bridges)',2,15,20,null,'pre','legs','Aktivierung')];
+  if(variant===0){return[...base,
+    mkEx('Hüftstoß LH (Barbell Hip Thrust)',3,8,12,rir,'main','legs','Schultern auf Bank'),
+    mkEx('Bulgarische Kniebeuge (Bulgarian Split Squat)',3,8,12,rir,'main','legs','Einbeinig'),
+    mkEx('Beinpresse breit (Leg Press Wide)',3,10,12,rir,'main','legs','Breit+hoch, Gesäß'),
+    mkEx('Beinbeuger liegend (Lying Leg Curl)',3,10,15,r,'main','legs','2s Exzentrik'),
+    mkEx('Abduktoren Maschine (Abductor Machine)',3,12,15,r,'main','legs','Glute Med'),
+    mkEx('Kabelcrunches (Cable Crunch)',3,12,15,r,'main','core','Einrollen'),
+    mkEx('Beinheben hängend (Hanging Leg Raise)',3,10,15,r,'main','core','Beine heben')]}
+  if(variant===1){return[...base,
+    mkEx('Kniebeugen (Back Squat)',3,8,10,rir,'main','legs','Parallel oder tiefer'),
+    mkEx('Rumän. Kreuzheben LH (Romanian Deadlift)',3,8,12,rir,'main','legs','Hüftdominant'),
+    mkEx('Ausfallschritte KH (DB Lunges)',3,10,12,r,'main','legs','Walking'),
+    mkEx('Adduktoren Maschine (Adductor Machine)',3,12,15,r,'main','legs','Innere Oberschenkel'),
+    mkEx('Wadenheben stehend (Standing Calf Raise)',3,12,20,r,'main','legs','Volle ROM'),
+    mkEx('Unterarmstütz (Plank)',3,30,60,null,'main','core','Sekunden')]}
+  return[...base,
+    mkEx('Hüftstoß Maschine (Hip Thrust Machine)',3,10,15,rir,'main','legs','Gesäß!'),
+    mkEx('Hackenschmidt (Hack Squat)',3,10,12,rir,'main','legs','Fersen hoch'),
+    mkEx('Beinstrecker (Leg Extension)',3,10,15,r,'main','legs','Squeeze'),
+    mkEx('Beinbeuger sitzend (Seated Leg Curl)',3,10,15,r,'main','legs','Volle ROM'),
+    mkEx('Kabel-Kickbacks',3,12,15,r,'main','legs','Am Kabelzug, Bein nach hinten'),
+    mkEx('Russische Drehung (Russian Twist)',3,15,20,r,'main','core','Obliques')]
+}
+
+// Home Workout Generators
+function generateHomeFull(rir,variant){
+  const r=rir-1>0?rir-1:1;
+  const ex=[mkEx('Weltbeste Dehnung (World\'s Greatest Stretch)',2,5,5,null,'pre','legs','Mobilisierung')];
+  if(variant===0){return[...ex,
+    mkEx('Liegestütze (Push-Ups)',3,10,20,rir,'main','chest','Brust zum Boden'),
+    mkEx('KH Rudern einarmig (DB Row)',3,8,12,rir,'main','back','Auf Stuhl gestützt'),
+    mkEx('Kelchkniebeuge (Goblet Squat)',3,10,15,rir,'main','legs','KH vor Brust'),
+    mkEx('KH Schulterdrücken (DB Shoulder Press)',3,8,12,rir,'main','shoulders','Stehend oder sitzend'),
+    mkEx('Gesäßbrücke (Glute Bridges)',3,15,20,r,'main','legs','Hüfte hoch'),
+    mkEx('Unterarmstütz (Plank)',3,30,60,null,'main','core','Sekunden')]}
+  if(variant===1){return[...ex,
+    mkEx('Schrägbank-Liegestütze (Incline Push-Ups)',3,10,20,rir,'main','chest','Hände auf Stuhl/Bank'),
+    mkEx('KH Rudern beidarmig (DB Bent Over Row)',3,8,12,rir,'main','back','Vorgebeugt'),
+    mkEx('Ausfallschritte KH (DB Lunges)',3,10,12,rir,'main','legs','Abwechselnd'),
+    mkEx('KH Seitheben (DB Lateral Raise)',3,10,15,r,'main','shoulders','Kontrolliert'),
+    mkEx('Rumän. Kreuzheben KH (DB Romanian Deadlift)',3,10,12,rir,'main','legs','Hüftbeuge'),
+    mkEx('Bauchrad (Ab Roller)',3,8,12,r,'main','core','Langsam')]}
+  return[...ex,
+    mkEx('Diamant-Liegestütze (Diamond Push-Ups)',3,8,15,rir,'main','chest','Hände eng'),
+    mkEx('Hammercurls KH (Hammer Curls)',3,10,15,r,'main','arms','Neutral'),
+    mkEx('Bulgarische Kniebeuge (Bulgarian Split Squat)',3,8,12,rir,'main','legs','Fuß auf Stuhl'),
+    mkEx('KH Überzug (DB Pullover)',3,10,12,r,'main','chest','Auf Stuhl liegend'),
+    mkEx('Wadenheben stehend (Standing Calf Raise)',3,15,25,r,'main','legs','Auf Treppenstufe'),
+    mkEx('Russische Drehung (Russian Twist)',3,15,20,r,'main','core','Mit KH')]
+}
+function generateHomePush(rir){return[
+  mkEx('Liegestütze (Push-Ups)',4,10,20,rir,'main','chest','Volle ROM'),
+  mkEx('Schrägbank-Liegestütze eng (Close Grip Incline Push-Ups)',3,10,15,rir,'main','chest','Trizeps-Fokus'),
+  mkEx('KH Schulterdrücken (DB Shoulder Press)',3,8,12,rir,'main','shoulders','Stehend'),
+  mkEx('KH Seitheben (DB Lateral Raise)',3,10,15,rir-1>0?rir-1:1,'main','shoulders','Kontrolliert'),
+  mkEx('KH Fliegende (DB Flys)',3,10,15,rir-1>0?rir-1:1,'main','chest','Auf Boden oder Bank'),
+  mkEx('Überkopf-Strecken KH (Overhead DB Ext.)',3,10,15,rir,'main','arms','Hinter Kopf')
+]}
+function generateHomePull(rir){return[
+  mkEx('KH Rudern einarmig (DB Row)',3,8,12,rir,'main','back','Auf Stuhl gestützt'),
+  mkEx('KH Rudern beidarmig (DB Bent Over Row)',3,8,12,rir,'main','back','Vorgebeugt'),
+  mkEx('KH Überzug (DB Pullover)',3,10,12,rir,'main','back','Lat-Stretch'),
+  mkEx('Band-Latziehen (Band Lat Pulldown)',3,12,15,rir,'main','back','Band an Tür oben'),
+  mkEx('KH Curls (DB Curls)',3,10,15,rir-1>0?rir-1:1,'main','arms','Supination'),
+  mkEx('Hammercurls KH (Hammer Curls)',2,10,15,rir,'main','arms','Neutral'),
+  mkEx('Gesichtziehen Band (Band Face Pulls)',3,15,20,rir,'main','shoulders','Schultergesundheit')
+]}
+function generateHomeLegs(rir){return[
+  mkEx('Gesäßbrücke (Glute Bridges)',2,15,20,null,'pre','legs','Aktivierung'),
+  mkEx('Kelchkniebeuge (Goblet Squat)',3,10,15,rir,'main','legs','KH vor Brust'),
+  mkEx('Rumän. Kreuzheben KH (DB Romanian Deadlift)',3,10,12,rir,'main','legs','Hüftdominant'),
+  mkEx('Bulgarische Kniebeuge (Bulgarian Split Squat)',3,8,12,rir,'main','legs','Fuß auf Stuhl'),
+  mkEx('Ausfallschritte KH (DB Lunges)',3,10,12,rir,'main','legs','Abwechselnd'),
+  mkEx('Einbein-Hüftstoß (Single Leg Hip Thrust)',3,12,15,rir-1>0?rir-1:1,'main','legs','Auf Sofa/Stuhl'),
+  mkEx('Wadenheben stehend (Standing Calf Raise)',3,15,25,rir,'main','legs','Treppenstufe')
+]}
+function generateHomeUpper(rir){return[
+  mkEx('Liegestütze (Push-Ups)',3,10,20,rir,'main','chest','Volle ROM'),
+  mkEx('KH Rudern einarmig (DB Row)',3,8,12,rir,'main','back','Auf Stuhl gestützt'),
+  mkEx('KH Schulterdrücken (DB Shoulder Press)',3,8,12,rir,'main','shoulders','Stehend'),
+  mkEx('KH Rudern beidarmig (DB Bent Over Row)',3,8,12,rir,'main','back','Vorgebeugt'),
+  mkEx('KH Seitheben (DB Lateral Raise)',3,10,15,rir-1>0?rir-1:1,'main','shoulders','Seitlich'),
+  mkEx('KH Curls (DB Curls)',2,10,15,rir,'main','arms','Supination'),
+  mkEx('Überkopf-Strecken KH (Overhead DB Ext.)',2,10,15,rir,'main','arms','Trizeps')
 ]}
 function doLogout(){
   if(unsubscribe)unsubscribe();
@@ -1039,6 +1195,7 @@ function renderPL(){
           <button class="btn btn-s btn-g" onclick="event.stopPropagation();openEditEx(${i})">✏️</button>
           <button class="btn btn-s" style="background:var(--purple);color:var(--bg)" onclick="event.stopPropagation();openExNote('${ex.name.replace(/'/g,"\\'")}')">📝</button>
           <button class="btn btn-s btn-g" onclick="event.stopPropagation();showExHist('${ex.name.replace(/'/g,"\\'")}')">📈</button>
+          <button class="btn btn-s btn-g" onclick="event.stopPropagation();showExImg('${ex.name.replace(/'/g,"\\'")}')">📷</button>
           <button class="btn btn-s btn-r" onclick="event.stopPropagation();delEx(${i})">🗑️</button>
           ${i>0?`<button class="btn btn-s btn-g" onclick="event.stopPropagation();mvEx(${i},-1)">↑</button>`:''}
           ${i<p.exercises.length-1?`<button class="btn btn-s btn-g" onclick="event.stopPropagation();mvEx(${i},1)">↓</button>`:''}
@@ -1250,7 +1407,7 @@ function renderLib(q){
     fl.forEach(item=>{
       const oi=cat.items.indexOf(item);
       const rp=item.rn===item.rx?item.rn:item.rn+'–'+item.rx;
-      h+=`<div class="lib-item" onclick="event.stopPropagation();pickLib(${ci},${oi})"><div class="li-name">${item.name}</div><div class="li-info">${item.s}×${rp}</div></div>`;
+      h+=`<div class="lib-item" onclick="event.stopPropagation();pickLib(${ci},${oi})"><div class="li-name">${item.name}</div><div class="li-info">${item.s}×${rp}</div><span onclick="event.stopPropagation();showExImg('${item.name.replace(/'/g,"\\'")}')" style="font-size:14px;padding:4px">📷</span></div>`;
     });
     h+=`</div></div>`;
   });
@@ -1275,6 +1432,13 @@ function pickLib(ci,ii){
 }
 
 // ===== RIR CIRCLE PICKER =====
+function stepVal(id,delta){const el=document.getElementById(id);const v=parseFloat(el.value)||0;el.value=Math.max(0,v+delta)}
+// Exercise image: extract english name from parentheses and search
+function showExImg(name){
+  const m=name.match(/\(([^)]+)\)/);
+  const q=m?m[1]:name;
+  window.open('https://www.google.com/search?tbm=isch&q='+encodeURIComponent(q+' exercise gym form'),'_blank');
+}
 function pickRir(el,v){
   document.querySelectorAll('#log-rir-circles .rir-c').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
@@ -1461,6 +1625,7 @@ function renderWo(){
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="font-size:20px">${ico}</span>
         <div style="flex:1"><div style="font-weight:700;font-size:15px">${ex.name}${skipped?' (skip)':''}</div><div style="font-size:12px;color:var(--text2)">${ex.sets}×${reps(ex)}${ex.rir!==null?' @ RIR '+ex.rir:''}</div></div>
+        <span onclick="showExImg('${ex.name.replace(/'/g,"\\'")}')" style="font-size:16px;cursor:pointer;padding:4px">📷</span>
         ${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}
       </div>`;
 
