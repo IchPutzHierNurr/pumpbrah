@@ -171,16 +171,17 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .stepper-btn{width:44px;height:44px;background:var(--bg4);border:1.5px solid var(--bg4);color:var(--neon);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.1s;-webkit-tap-highlight-color:transparent}
 .stepper-btn:active{background:var(--neon);color:var(--bg)}
 .stepper-btn.left{border-radius:8px 0 0 8px}.stepper-btn.right{border-radius:0 8px 8px 0}
-.picker-wrap{display:flex;gap:12px;justify-content:center;margin-bottom:12px}
-.picker-col{text-align:center}
-.picker-col label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:4px;display:block}
-.picker-scroll{width:90px;height:180px;overflow-y:scroll;scroll-snap-type:y mandatory;border-radius:12px;background:var(--bg3);position:relative;-webkit-overflow-scrolling:touch}
-.picker-scroll::before,.picker-scroll::after{content:'';position:sticky;display:block;height:72px;left:0;right:0;z-index:2;pointer-events:none}
-.picker-scroll::before{top:0;background:linear-gradient(var(--bg3),transparent)}
-.picker-scroll::after{bottom:0;background:linear-gradient(transparent,var(--bg3))}
-.picker-item{height:36px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--text3);transition:color .15s,transform .15s;cursor:pointer}
-.picker-item.center{color:var(--neon);font-size:22px;font-weight:700}
-.picker-highlight{position:absolute;top:50%;left:4px;right:4px;height:36px;transform:translateY(-50%);border:2px solid var(--neon);border-radius:8px;pointer-events:none;z-index:1}
+.picker-wrap{display:flex;gap:12px;justify-content:center;margin-bottom:16px}
+.picker-col{text-align:center;width:100%;max-width:200px}
+.picker-col label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:6px;display:block;font-weight:600}
+.picker-scroll{width:100%;height:220px;overflow-y:scroll;scroll-snap-type:y mandatory;border-radius:14px;background:var(--bg3);position:relative;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.picker-scroll::-webkit-scrollbar{display:none}
+.picker-scroll::before,.picker-scroll::after{content:'';position:sticky;display:block;height:88px;left:0;right:0;z-index:2;pointer-events:none}
+.picker-scroll::before{top:0;background:linear-gradient(var(--bg3) 20%,transparent)}
+.picker-scroll::after{bottom:0;background:linear-gradient(transparent,var(--bg3) 80%)}
+.picker-item{height:44px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-family:'JetBrains Mono',monospace;font-size:20px;color:var(--text3);transition:color .1s;cursor:pointer}
+.picker-item.center{color:var(--neon);font-size:28px;font-weight:700}
+.picker-highlight{position:absolute;top:50%;left:6px;right:6px;height:44px;transform:translateY(-50%);border:2px solid var(--neon);border-radius:10px;pointer-events:none;z-index:1;box-shadow:0 0 15px rgba(200,255,0,.1)}
 .lib-cat{margin-bottom:16px}
 .lib-cat-hdr{display:flex;align-items:center;gap:8px;padding:10px 0;cursor:pointer;font-weight:700;font-size:14px}
 .lib-cat-hdr .lib-ico{font-size:20px}
@@ -280,7 +281,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="ir">
 <div class="ig"><label>Größe (cm)</label><input type="number" id="bio-height" placeholder="180" onchange="saveBioHeight(this.value)"></div>
 <div class="ig"><label>Aktuelles Gewicht</label>
-<div style="display:flex;gap:4px"><input type="number" step="0.1" id="bio-weight-input" placeholder="kg" style="flex:1"><button class="btn btn-s" style="margin:0;padding:8px 12px" onclick="addWeight()">+</button></div>
+<div style="display:flex;gap:4px"><input type="number" inputmode="decimal" step="0.1" id="bio-weight-input" placeholder="kg" style="flex:1"><button class="btn btn-s" style="margin:0;padding:8px 12px" onclick="addWeight()">+</button></div>
 </div>
 </div>
 <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">
@@ -341,8 +342,8 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div id="log-name" style="font-size:14px;color:var(--text2);margin-bottom:4px"></div>
 <div id="log-hint" style="font-size:11px;color:var(--text3);margin-bottom:12px"></div>
 <div class="ir">
-<div class="ig"><label>Gewicht (kg)</label><div class="stepper"><button class="stepper-btn left" onpointerdown="stepHold('log-w',-2.5)">−</button><input type="number" step="0.5" id="log-w" placeholder="0" onclick="openPicker('w')"><button class="stepper-btn right" onpointerdown="stepHold('log-w',2.5)">+</button></div></div>
-<div class="ig"><label>Wiederholungen</label><div class="stepper"><button class="stepper-btn left" onpointerdown="stepHold('log-r',-1)">−</button><input type="number" id="log-r" placeholder="0" onclick="openPicker('r')"><button class="stepper-btn right" onpointerdown="stepHold('log-r',1)">+</button></div></div>
+<div class="ig"><label>Gewicht (kg)</label><div class="stepper"><button class="stepper-btn left" onpointerdown="stepHold('log-w',-2.5)">−</button><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0"><button class="stepper-btn right" onpointerdown="stepHold('log-w',2.5)">+</button></div><div style="text-align:center;margin-top:4px"><button style="background:none;border:1px solid var(--bg4);border-radius:6px;color:var(--text2);font-size:11px;padding:3px 12px;cursor:pointer" onclick="openPicker('w')">⊙ Scrollrad</button></div></div>
+<div class="ig"><label>Wiederholungen</label><div class="stepper"><button class="stepper-btn left" onpointerdown="stepHold('log-r',-1)">−</button><input type="number" inputmode="numeric" id="log-r" placeholder="0"><button class="stepper-btn right" onpointerdown="stepHold('log-r',1)">+</button></div><div style="text-align:center;margin-top:4px"><button style="background:none;border:1px solid var(--bg4);border-radius:6px;color:var(--text2);font-size:11px;padding:3px 12px;cursor:pointer" onclick="openPicker('r')">⊙ Scrollrad</button></div></div>
 </div>
 <div style="margin-bottom:8px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px">RIR (Reps in Reserve)</label>
 <div class="rir-circles" id="log-rir-circles">
@@ -1474,26 +1475,26 @@ function openPicker(type){
   let items=[];
   if(type==='w'){for(let i=0;i<=200;i+=2.5)items.push(i)}
   else{for(let i=0;i<=60;i++)items.push(i)}
-  let h='<div style="height:72px"></div>';
+  let h='<div style="height:88px"></div>';
   items.forEach(v=>{h+=`<div class="picker-item" data-v="${v}">${v}</div>`});
-  h+='<div style="height:72px"></div>';
+  h+='<div style="height:88px"></div>';
   scroll.innerHTML=h;
   const curVal=parseFloat(document.getElementById(type==='w'?'log-w':'log-r').value)||0;
   const closest=items.reduce((p,c)=>Math.abs(c-curVal)<Math.abs(p-curVal)?c:p,0);
   const idx=items.indexOf(closest);
   om('m-picker');
-  setTimeout(()=>{scroll.scrollTop=idx*36;updPicker(scroll)},50);
+  setTimeout(()=>{scroll.scrollTop=idx*44;updPicker(scroll)},80);
   scroll.onscroll=()=>updPicker(scroll);
 }
 function updPicker(s){
-  const c=s.scrollTop+90;
-  s.querySelectorAll('.picker-item').forEach(el=>{el.classList.toggle('center',Math.abs(el.offsetTop+18-c)<20)});
+  const c=s.scrollTop+110;
+  s.querySelectorAll('.picker-item').forEach(el=>{el.classList.toggle('center',Math.abs(el.offsetTop+22-c)<24)});
 }
 function confirmPicker(){
   const s=document.getElementById('picker-scroll');
-  const c=s.scrollTop+90;
+  const c=s.scrollTop+110;
   let best=null,md=999;
-  s.querySelectorAll('.picker-item').forEach(el=>{const d=Math.abs(el.offsetTop+18-c);if(d<md){md=d;best=el}});
+  s.querySelectorAll('.picker-item').forEach(el=>{const d=Math.abs(el.offsetTop+22-c);if(d<md){md=d;best=el}});
   if(best)document.getElementById(pickerTarget==='w'?'log-w':'log-r').value=best.dataset.v;
   cm('m-picker');
 }
