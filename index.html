@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -166,6 +165,9 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .bio-entry .be-v{font-family:'JetBrains Mono',monospace;font-weight:600}
 .bio-entry .be-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:2px 6px}
 .plan-mgmt{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.exr-actions{display:flex;gap:4px;flex-shrink:0;align-items:center}
+.exr-act{width:30px;height:30px;border-radius:6px;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;background:var(--bg3);color:var(--text2);transition:.15s}
+.exr-act:active{transform:scale(.9);background:var(--bg4)}
 .stepper{display:flex;align-items:center;gap:0;width:100%}
 .stepper input{flex:1;border-radius:0;border-left:none;border-right:none;text-align:center}
 .stepper-btn{width:44px;height:44px;background:var(--bg4);border:1.5px solid var(--bg4);color:var(--neon);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.1s;-webkit-tap-highlight-color:transparent}
@@ -226,7 +228,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="screen active" id="s-dash">
 <div class="hdr"><div class="logo">PUMPBRAH</div><div class="pill" id="sync-pill"><div class="dot"></div><span id="sync-status">Synced</span></div></div>
 <div id="sick-area"></div>
-<div class="hero"><div class="hs"><div class="v" id="d-sets">0</div><div class="l">Sätze</div></div><div class="hs"><div class="v" id="d-sess">0</div><div class="l">Sessions</div></div><div class="hs"><div class="v" id="d-str">0</div><div class="l">Streak 🔥</div></div></div>
+<div class="hero"><div class="hs"><div class="v" id="d-sets">0</div><div class="l">Sätze</div></div><div class="hs"><div class="v" id="d-sess">0</div><div class="l">Sessions</div></div><div class="hs"><div class="v" id="d-rest">—</div><div class="l">Ruhetage</div></div></div>
 <div id="deload-area"></div>
 <div class="st">WOCHENANALYSE <div class="ln"></div></div>
 <div id="d-weekly" class="card"></div>
@@ -981,7 +983,9 @@ function resetAll(){
 
 // ===== HELPERS =====
 const EMO={chest:'🫁',back:'🔙',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
-let curTab=null, timerInt=null, timerSec=0, timerTgt=0, logTgt=null, editIdx=null, histFilter='all';
+let curTab=null, timerInt=null, timerStartedAt=0, timerTgt=0, logTgt=null, editIdx=null, histFilter='all';
+function getTimerElapsed(){return timerStartedAt?Math.floor((Date.now()-timerStartedAt)/1000):0}
+function getTimerRemaining(){return Math.max(0,timerTgt-getTimerElapsed())}
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function cm(id){document.getElementById(id).classList.remove('show')}
@@ -1039,16 +1043,18 @@ function renderDash(){
   const totalSets=D.history.reduce((a,s)=>a+s.sets.length,0);
   document.getElementById('d-sets').textContent=totalSets;
   document.getElementById('d-sess').textContent=D.history.length;
-  // Streak
-  let streak=0;
-  const now=new Date();
-  for(let i=D.history.length-1;i>=0;i--){
-    const d=D.history[i].date;
-    const parts=d.split('.');
-    if(parts.length===3){streak++}else{streak++}
+  // Rest days since last workout
+  let restDays='—';
+  if(D.history.length>0){
+    const last=D.history[D.history.length-1].date;
+    const p=last.split('.');
+    if(p.length===3){
+      const ld=new Date(p[2],p[1]-1,p[0]);
+      restDays=Math.floor((Date.now()-ld.getTime())/864e5);
+      if(restDays===0)restDays='Heute';
+    }
   }
-  // Simple: count consecutive weeks with workouts
-  document.getElementById('d-str').textContent=D.history.length>0?Math.min(D.history.length,streak):'0';
+  document.getElementById('d-rest').textContent=restDays;
 
   // Sick banner
   const sa=document.getElementById('sick-area');
@@ -1186,20 +1192,25 @@ function renderPL(){
     const nC=ex.type==='pre'?'pn':ex.type==='mob'?'mn':'';
     const last=getLastW(ex.name);
     const uNote=D.notes[ex.name];
-    h+=`<div class="exr ${cC}" onclick="this.classList.toggle('open')">
-      <div class="exr-h"><div class="exr-ico ${iC}">${ico}</div><div class="exr-b"><div class="exr-n">${ex.name}</div><div class="exr-m">${ex.sets}×${reps(ex)} ${ex.rir!==null?`<span class="rb">RIR ${ex.rir}</span>`:''}</div></div><div class="exr-a">▾</div></div>
+    h+=`<div class="exr ${cC}">
+      <div class="exr-h" onclick="this.parentElement.classList.toggle('open')">
+        <div class="exr-ico ${iC}">${ico}</div>
+        <div class="exr-b"><div class="exr-n">${ex.name}</div><div class="exr-m">${ex.sets}×${reps(ex)} ${ex.rir!==null?`<span class="rb">RIR ${ex.rir}</span>`:''} ${last?`<span style="color:var(--text3)">• ${last.w}kg</span>`:''}</div></div>
+        <div class="exr-actions">
+          ${i>0?`<button class="exr-act" onclick="event.stopPropagation();mvEx(${i},-1)">↑</button>`:''}
+          ${i<p.exercises.length-1?`<button class="exr-act" onclick="event.stopPropagation();mvEx(${i},1)">↓</button>`:''}
+          <button class="exr-act" onclick="event.stopPropagation();openEditEx(${i})">✏️</button>
+          <button class="exr-act" style="color:var(--red)" onclick="event.stopPropagation();delEx(${i})">✕</button>
+        </div>
+      </div>
       <div class="exr-d">
         ${ex.note?`<div class="exr-note ${nC}">${ex.note}</div>`:''}
         ${uNote?`<div class="exr-note" style="border-left-color:var(--purple)">📝 ${uNote}</div>`:''}
         ${last?`<div style="font-size:11px;color:var(--text2);margin-bottom:6px">📊 Letztes Mal: <b style="color:var(--text);font-family:JetBrains Mono,monospace">${last.w}kg × ${last.r}</b></div>`:''}
-        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
-          <button class="btn btn-s btn-g" onclick="event.stopPropagation();openEditEx(${i})">✏️</button>
-          <button class="btn btn-s" style="background:var(--purple);color:var(--bg)" onclick="event.stopPropagation();openExNote('${ex.name.replace(/'/g,"\\'")}')">📝</button>
-          <button class="btn btn-s btn-g" onclick="event.stopPropagation();showExHist('${ex.name.replace(/'/g,"\\'")}')">📈</button>
-          <button class="btn btn-s btn-g" onclick="event.stopPropagation();showExImg('${ex.name.replace(/'/g,"\\'")}')">📷</button>
-          <button class="btn btn-s btn-r" onclick="event.stopPropagation();delEx(${i})">🗑️</button>
-          ${i>0?`<button class="btn btn-s btn-g" onclick="event.stopPropagation();mvEx(${i},-1)">↑</button>`:''}
-          ${i<p.exercises.length-1?`<button class="btn btn-s btn-g" onclick="event.stopPropagation();mvEx(${i},1)">↓</button>`:''}
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="btn btn-s btn-g" onclick="event.stopPropagation();openExNote('${ex.name.replace(/'/g,"\\'")}')">📝 Notiz</button>
+          <button class="btn btn-s btn-g" onclick="event.stopPropagation();showExHist('${ex.name.replace(/'/g,"\\'")}')">📈 Verlauf</button>
+          <button class="btn btn-s btn-g" onclick="event.stopPropagation();showExImg('${ex.name.replace(/'/g,"\\'")}')">📷 Bild</button>
         </div>
       </div>
     </div>`;
@@ -1602,8 +1613,8 @@ function renderWo(){
   if(!D.active){eb.style.display='none';c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;return}
   eb.style.display='';
   const el=Math.floor((Date.now()-D.active.startTime)/60000);
-  const tRem=Math.max(0,timerTgt-timerSec);
-  const tState=timerInt?'run':(timerSec>0&&timerSec>=timerTgt?'done':'');
+  const tRem=getTimerRemaining();
+  const tState=timerInt?'run':(timerStartedAt>0&&tRem<=0?'done':'');
 
   let h=`<div style="text-align:center;padding:4px 0 8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--neon);letter-spacing:2px">${D.active.planKey.replace('_',' ')}</div></div>`;
 
@@ -1630,7 +1641,7 @@ function renderWo(){
     const hist=getAllSets(ex.name).filter(s=>s.w>0);
     const lastSets=hist.slice(-6);
 
-    h+=`<div style="background:var(--bg2);border:1px solid ${done?'rgba(52,211,153,.2)':'var(--bg3)'};border-radius:var(--radius);padding:14px;margin-bottom:10px;${skipped?'opacity:.3':''}">
+    h+=`<div id="wo-ex-${ei}" style="background:var(--bg2);border:1px solid ${done?'rgba(52,211,153,.2)':'var(--bg3)'};border-radius:var(--radius);padding:14px;margin-bottom:10px;${skipped?'opacity:.3':''}">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
         <span style="font-size:20px">${ico}</span>
         <div style="flex:1"><div style="font-weight:700;font-size:15px">${ex.name}${skipped?' (skip)':''}</div><div style="font-size:12px;color:var(--text2)">${ex.sets}×${reps(ex)}${ex.rir!==null?' @ RIR '+ex.rir:''}</div></div>
@@ -1701,10 +1712,12 @@ function confirmLog(){
   // Auto timer
   const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);
   timerTgt=isC?D.settings.compound:D.settings.isolation;
-  timerSec=0;
   if(timerInt){clearInterval(timerInt);timerInt=null}
+  timerStartedAt=0;
   startTmr();
   renderWo();toast(`✓ ${w}kg × ${r} @ RIR ${rir}`);
+  // Auto-scroll to next incomplete exercise
+  if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx);
 }
 
 function redoLast(){
@@ -1714,13 +1727,13 @@ function redoLast(){
   const last=ex.logged[ex.logged.length-1];
   ex.logged.push({...last});
   save();cm('m-log');
-  // Auto timer (same logic as confirmLog)
   const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);
   timerTgt=isC?D.settings.compound:D.settings.isolation;
-  timerSec=0;
   if(timerInt){clearInterval(timerInt);timerInt=null}
+  timerStartedAt=0;
   startTmr();
   renderWo();toast(`↩ Wiederholt: ${last.w}kg × ${last.r}`);
+  if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx);
 }
 
 function skipEx(ei){
@@ -1798,21 +1811,45 @@ function endWorkout(){
   toast('Workout gespeichert! 💪');
 }
 
-// ===== TIMER =====
+// ===== TIMER (timestamp-based, works in background) =====
 function startTmr(){
   if(timerInt){clearInterval(timerInt);timerInt=null;renderWo();return}
   if(timerTgt<=0)timerTgt=D.settings.compound;
+  timerStartedAt=Date.now();
   timerInt=setInterval(()=>{
-    timerSec++;
-    const rem=Math.max(0,timerTgt-timerSec);
+    const rem=getTimerRemaining();
     const d=document.getElementById('td');const c=document.getElementById('tc');
     if(d)d.textContent=fmtT(rem);
-    if(rem<=0){clearInterval(timerInt);timerInt=null;if(c){c.classList.remove('run');c.classList.add('done')}if(navigator.vibrate)navigator.vibrate([200,100,200]);toast('⏰ Pause vorbei!')}
-  },1000);
+    if(rem<=0){
+      clearInterval(timerInt);timerInt=null;
+      if(c){c.classList.remove('run');c.classList.add('done')}
+      if(navigator.vibrate)navigator.vibrate([200,100,200]);
+      try{const a=new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');a.play().catch(()=>{})}catch{}
+      toast('⏰ Pause vorbei!');
+    }
+  },500);
   renderWo();
 }
-function resetTmr(){if(timerInt){clearInterval(timerInt);timerInt=null}timerSec=0;timerTgt=0;const d=document.getElementById('td');if(d)d.textContent='0:00'}
+function resetTmr(){if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;timerTgt=0;const d=document.getElementById('td');if(d)d.textContent='0:00'}
 function adjTmr(s){timerTgt=Math.max(0,timerTgt+s);renderWo()}
+
+// ===== AUTO-SCROLL =====
+function autoScrollNext(currentIdx){
+  if(!D.active)return;
+  setTimeout(()=>{
+    for(let i=currentIdx+1;i<D.active.exercises.length;i++){
+      const ex=D.active.exercises[i];
+      if(!ex.skipped&&ex.logged.length<ex.sets){
+        const cards=document.querySelectorAll('#wo-c > div:not(.sticky-timer):not([style*="text-align:center"])');
+        // +1 because first child is the header, +1 for sticky timer
+        const target=document.querySelectorAll('#wo-c [data-exidx]');
+        const el=document.getElementById('wo-ex-'+i);
+        if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}
+        return;
+      }
+    }
+  },300);
+}
 
 // ===== HISTORY =====
 function renderHist(){
