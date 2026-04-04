@@ -268,9 +268,22 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="hdr"><div class="logo">STATS</div><div class="pill" id="ana-total">0 Sätze</div></div>
 
 <div class="st">KÖRPERDATEN <div class="ln"></div></div>
+<div class="card" id="fitness-age-card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg3));border-color:var(--bg4)">
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:4px">Dein Fitnessalter</div>
+<div style="display:flex;align-items:center;justify-content:center;gap:16px">
+<div><div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--neon);line-height:1" id="fa-value">—</div><div style="font-size:10px;color:var(--text2)">FITNESS</div></div>
+<div style="font-size:24px;color:var(--text3)">vs</div>
+<div><div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--text2);line-height:1" id="fa-real">—</div><div style="font-size:10px;color:var(--text2)">REAL</div></div>
+</div>
+<div style="font-size:13px;margin-top:8px;font-weight:600" id="fa-label">—</div>
+<div style="display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap" id="fa-factors"></div>
+</div>
 <div class="card">
 <div class="ir">
+<div class="ig"><label>Geburtsdatum</label><input type="date" id="bio-birthday" style="font-family:'JetBrains Mono',monospace" onchange="saveBioBirthday(this.value)"></div>
 <div class="ig"><label>Größe (cm)</label><input type="number" id="bio-height" placeholder="180" onchange="saveBioHeight(this.value)"></div>
+</div>
+<div class="ir">
 <div class="ig"><label>Aktuelles Gewicht</label>
 <div style="display:flex;gap:4px"><input type="number" inputmode="decimal" step="0.1" id="bio-weight-input" placeholder="kg" style="flex:1"><button class="btn btn-s" style="margin:0;padding:8px 12px" onclick="addWeight()">+</button></div>
 </div>
@@ -591,7 +604,7 @@ function doLogin(){
   }
 }
 function resetDForNewUser(){
-  D={plan:{},history:[],active:null,settings:{compound:150,isolation:90},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[]}};
+  D={plan:{},history:[],active:null,settings:{compound:150,isolation:90},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[],birthday:null,gender:null}};
   localStorage.setItem('pb_data',JSON.stringify(D));
 }
 function offlineMode(){
@@ -610,7 +623,7 @@ function showApp(){
 
 // ===== ONBOARDING =====
 let obStep=0;
-let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym'};
+let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym',birthday:null};
 
 function startOnboarding(){
   document.getElementById('login-screen').style.display='none';
@@ -627,34 +640,39 @@ function renderObStep(){
   const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');
   const steps=[
   // 0: Gender
-  {sub:'Schritt 1/7 — Über dich',html:`
+  {sub:'Schritt 1/8 — Über dich',html:`
     <div style="margin-bottom:12px">${obSel('ob-gen',[
       {k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},
       {k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}
     ],'gender','male')}</div>
     ${obBtn('WEITER →','obNext(0)')}`},
-  // 1: Height
-  {sub:'Schritt 2/7 — Körperdaten',html:`
-    <div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:20px;padding:14px;width:100%"></div>
+  // 1: Birthday
+  {sub:'Schritt 2/8 — Geburtsdatum',html:`
+    <div class="ig" style="margin-bottom:12px"><label>Wann bist du geboren?</label><input type="date" id="ob-birthday" style="font-size:18px;padding:14px;width:100%;font-family:'JetBrains Mono',monospace"></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Wird für dein Fitnessalter benötigt</div>
     ${obBtn('WEITER →','obNext(1)')}${obBack}`},
-  // 2: Weight
-  {sub:'Schritt 3/7 — Körperdaten',html:`
-    <div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:20px;padding:14px;width:100%"></div>
+  // 2: Height
+  {sub:'Schritt 3/8 — Körperdaten',html:`
+    <div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:20px;padding:14px;width:100%"></div>
     ${obBtn('WEITER →','obNext(2)')}${obBack}`},
-  // 3: Location
-  {sub:'Schritt 4/7 — Trainingsort',html:`
+  // 3: Weight
+  {sub:'Schritt 4/8 — Körperdaten',html:`
+    <div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:20px;padding:14px;width:100%"></div>
+    ${obBtn('WEITER →','obNext(3)')}${obBack}`},
+  // 4: Location
+  {sub:'Schritt 5/8 — Trainingsort',html:`
     <div style="margin-bottom:12px">${obSel('ob-loc',[
       {k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},
       {k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'},
     ],'location','gym')}</div>
-    ${obBtn('WEITER →','obNext(3)')}${obBack}`},
-  // 4: Days
-  {sub:'Schritt 5/7 — Trainingsfrequenz',html:`
+    ${obBtn('WEITER →','obNext(4)')}${obBack}`},
+  // 5: Days
+  {sub:'Schritt 6/8 — Trainingsfrequenz',html:`
     <div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label>
     <div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===3?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>
-    ${obBtn('WEITER →','obNext(4)')}${obBack}`},
-  // 5: Focus
-  {sub:'Schritt 6/7 — Trainingsziel',html:`
+    ${obBtn('WEITER →','obNext(5)')}${obBack}`},
+  // 6: Focus
+  {sub:'Schritt 7/8 — Trainingsziel',html:`
     <div style="margin-bottom:12px">${obSel('ob-focus',[
       {k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},
       {k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},
@@ -662,9 +680,9 @@ function renderObStep(){
       {k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},
       ...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])
     ],'focus','balanced')}</div>
-    ${obBtn('WEITER →','obNext(5)')}${obBack}`},
-  // 6: Experience
-  {sub:'Schritt 7/7 — Erfahrung',html:`
+    ${obBtn('WEITER →','obNext(6)')}${obBack}`},
+  // 7: Experience
+  {sub:'Schritt 8/8 — Erfahrung',html:`
     <div style="margin-bottom:12px">${obSel('ob-exp',[
       {k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},
       {k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},
@@ -677,14 +695,16 @@ function renderObStep(){
 }
 
 function obNext(step){
-  if(step===1){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}
-  if(step===2){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}
+  if(step===1){obData.birthday=document.getElementById('ob-birthday').value||null;if(!obData.birthday){toast('Geburtsdatum eingeben!');return}}
+  if(step===2){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}
+  if(step===3){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}
   obStep++;renderObStep();
 }
 
 function finishOnboarding(){
   D.bio.height=obData.height;
   D.bio.gender=obData.gender;
+  D.bio.birthday=obData.birthday;
   if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];
   D.plan={};
   const rir=obData.experience==='beginner'?3:obData.experience==='intermediate'?2:2;
@@ -1515,6 +1535,117 @@ function saveBioHeight(v){
   D.bio.height=parseFloat(v)||null;
   save();renderBio();
 }
+function saveBioBirthday(v){
+  D.bio.birthday=v||null;
+  save();renderBio();
+}
+function getRealAge(){
+  if(!D.bio.birthday)return null;
+  const bd=new Date(D.bio.birthday);
+  const now=new Date();
+  let age=now.getFullYear()-bd.getFullYear();
+  if(now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))age--;
+  return age;
+}
+function calcFitnessAge(){
+  const realAge=getRealAge();
+  if(!realAge)return null;
+  let fa=realAge;
+  const factors=[];
+
+  // 1. BMI Factor (-3 to +4)
+  const ws=D.bio.weights;
+  const lastW=ws.length?ws[ws.length-1].kg:null;
+  if(lastW&&D.bio.height){
+    const hm=D.bio.height/100;
+    const bmi=lastW/(hm*hm);
+    if(bmi>=20&&bmi<=24.9){fa-=2;factors.push({label:'BMI optimal',val:-2,color:'var(--green)'})}
+    else if(bmi>=18.5&&bmi<20||bmi>=25&&bmi<27){fa-=0;factors.push({label:'BMI okay',val:0,color:'var(--text2)'})}
+    else if(bmi>=27&&bmi<30){fa+=2;factors.push({label:'BMI erhöht',val:+2,color:'var(--orange)'})}
+    else if(bmi>=30){fa+=4;factors.push({label:'BMI hoch',val:+4,color:'var(--red)'})}
+    else{fa+=2;factors.push({label:'BMI niedrig',val:+2,color:'var(--orange)'})}
+  }
+
+  // 2. Training Frequency (last 4 weeks) (-4 to +3)
+  const fourWeeksAgo=Date.now()-28*864e5;
+  const recentSessions=D.history.filter(s=>{
+    const p=s.date.split('.');
+    if(p.length!==3)return false;
+    return new Date(p[2],p[1]-1,p[0]).getTime()>fourWeeksAgo;
+  });
+  const sessPerWeek=recentSessions.length/4;
+  if(sessPerWeek>=4){fa-=4;factors.push({label:'Frequenz top ('+sessPerWeek.toFixed(1)+'/Wo)',val:-4,color:'var(--green)'})}
+  else if(sessPerWeek>=3){fa-=3;factors.push({label:'Frequenz gut ('+sessPerWeek.toFixed(1)+'/Wo)',val:-3,color:'var(--green)'})}
+  else if(sessPerWeek>=2){fa-=1;factors.push({label:'Frequenz okay ('+sessPerWeek.toFixed(1)+'/Wo)',val:-1,color:'var(--neon)'})}
+  else if(sessPerWeek>=1){fa+=0;factors.push({label:'Frequenz mäßig ('+sessPerWeek.toFixed(1)+'/Wo)',val:0,color:'var(--text2)'})}
+  else{fa+=3;factors.push({label:'Kaum Training',val:+3,color:'var(--red)'})}
+
+  // 3. Consistency (last 12 weeks regularity) (-2 to +2)
+  const twelveWeeksAgo=Date.now()-84*864e5;
+  const weekBuckets=new Array(12).fill(0);
+  D.history.forEach(s=>{
+    const p=s.date.split('.');if(p.length!==3)return;
+    const d=new Date(p[2],p[1]-1,p[0]).getTime();
+    if(d>twelveWeeksAgo){
+      const weekIdx=Math.floor((Date.now()-d)/(7*864e5));
+      if(weekIdx<12)weekBuckets[weekIdx]++;
+    }
+  });
+  const activeWeeks=weekBuckets.filter(w=>w>0).length;
+  if(activeWeeks>=10){fa-=2;factors.push({label:'Sehr konsistent',val:-2,color:'var(--green)'})}
+  else if(activeWeeks>=7){fa-=1;factors.push({label:'Konsistent',val:-1,color:'var(--neon)'})}
+  else if(activeWeeks>=4){fa+=0;factors.push({label:'Teils konsistent',val:0,color:'var(--text2)'})}
+  else{fa+=2;factors.push({label:'Inkonsistent',val:+2,color:'var(--orange)'})}
+
+  // 4. Strength Level (-3 to +1) based on compounds
+  const allSets=[];
+  D.history.forEach(s=>s.sets.forEach(set=>{if(set.w>0)allSets.push(set)}));
+  if(allSets.length>0&&lastW){
+    const maxes={};
+    allSets.forEach(s=>{if(!maxes[s.ex]||s.w>maxes[s.ex])maxes[s.ex]=s.w});
+    // Find best compound (bench, squat, deadlift equivalent)
+    const bestCompound=Math.max(...Object.values(maxes));
+    const ratio=bestCompound/lastW;
+    if(ratio>=1.5){fa-=3;factors.push({label:'Kraftniveau stark ('+ratio.toFixed(1)+'x BW)',val:-3,color:'var(--green)'})}
+    else if(ratio>=1.0){fa-=1;factors.push({label:'Kraftniveau gut ('+ratio.toFixed(1)+'x BW)',val:-1,color:'var(--neon)'})}
+    else if(ratio>=0.6){fa+=0;factors.push({label:'Kraftniveau aufbauend ('+ratio.toFixed(1)+'x BW)',val:0,color:'var(--text2)'})}
+    else{fa+=1;factors.push({label:'Kraftniveau Anfänger',val:+1,color:'var(--orange)'})}
+  }
+
+  return{fitnessAge:Math.max(14,Math.round(fa)),realAge,factors};
+}
+
+function renderFitnessAge(){
+  const result=calcFitnessAge();
+  if(!result){
+    document.getElementById('fa-value').textContent='—';
+    document.getElementById('fa-real').textContent='—';
+    document.getElementById('fa-label').textContent='Geburtsdatum eingeben';
+    document.getElementById('fa-factors').innerHTML='';
+    return;
+  }
+  const{fitnessAge,realAge,factors}=result;
+  const diff=fitnessAge-realAge;
+  document.getElementById('fa-value').textContent=fitnessAge;
+  document.getElementById('fa-real').textContent=realAge;
+  document.getElementById('fa-value').style.color=diff<=(-3)?'var(--green)':diff<0?'var(--neon)':diff===0?'var(--text)':diff<=3?'var(--orange)':'var(--red)';
+
+  let label='';
+  if(diff<=-5)label='🏆 Deutlich jünger als dein Alter!';
+  else if(diff<=-2)label='💪 Fitter als der Durchschnitt';
+  else if(diff<=1)label='⚖️ Entspricht deinem Alter';
+  else if(diff<=4)label='⚠️ Etwas über deinem Alter';
+  else label='🔴 Handlungsbedarf — mehr Training!';
+  document.getElementById('fa-label').textContent=label;
+
+  let fh='';
+  factors.forEach(f=>{
+    const sign=f.val>0?'+':'';
+    fh+=`<div style="font-size:10px;padding:3px 8px;border-radius:12px;background:var(--bg4);color:${f.color}">${f.label} (${sign}${f.val})</div>`;
+  });
+  document.getElementById('fa-factors').innerHTML=fh;
+}
+
 function addWeight(){
   const v=parseFloat(document.getElementById('bio-weight-input').value);
   if(!v||v<20||v>300){toast('Gewicht eingeben (20-300kg)');return}
@@ -1531,8 +1662,9 @@ function delWeight(i){
   D.bio.weights.splice(i,1);save();renderBio();
 }
 function renderBio(){
-  // Height + last weight + BMI
   if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
+  if(D.bio.birthday)document.getElementById('bio-birthday').value=D.bio.birthday;
+  renderFitnessAge();
   const ws=D.bio.weights;
   const lastW=ws.length?ws[ws.length-1].kg:null;
   document.getElementById('bio-last-w').textContent=lastW?lastW+' kg':'—';
