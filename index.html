@@ -116,8 +116,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .login-sub{color:var(--text2);font-size:14px;margin-bottom:32px}
 .login-input{width:100%;max-width:300px;padding:14px;background:var(--bg3);border:2px solid var(--bg4);border-radius:12px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:18px;text-align:center;outline:none;margin-bottom:12px;letter-spacing:2px}
 .login-input:focus{border-color:var(--neon)}
-.sticky-timer{position:fixed;top:48px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:45;background:var(--bg);padding:10px 16px 8px;border-bottom:1px solid var(--bg3)}
-.st-inner{display:flex;align-items:center;gap:12px}
+.st-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .st-circle{width:52px;height:52px;border-radius:50%;border:2.5px solid var(--bg4);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .st-circle.run{border-color:var(--neon);box-shadow:0 0 15px rgba(200,255,0,.15)}
 .st-circle.done{border-color:var(--green);box-shadow:0 0 15px rgba(52,211,153,.15)}
@@ -242,12 +241,10 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 
 <!-- WORKOUT -->
 <div class="screen" id="s-wo">
-<div class="hdr"><div class="logo">WORKOUT</div><button class="btn btn-s btn-r" id="wo-end" style="display:none" onclick="endWorkout()">BEENDEN</button></div>
+<div class="hdr" id="wo-hdr"><div class="logo">WORKOUT</div><button class="btn btn-s btn-r" id="wo-end" style="display:none" onclick="endWorkout()">BEENDEN</button></div>
+<div id="wo-timer-bar" style="display:none;position:sticky;top:42px;z-index:40;background:var(--bg);padding:8px 0 8px;border-bottom:1px solid var(--bg3);margin:0 -16px;padding-left:16px;padding-right:16px"></div>
 <div id="wo-c"><div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div></div>
 </div>
-
-<!-- FIXED WORKOUT TIMER (outside scroll) -->
-<div id="wo-timer-fixed" class="sticky-timer" style="display:none"></div>
 
 <!-- PLAN -->
 <div class="screen" id="s-plan">
@@ -1020,7 +1017,7 @@ function go(id){
   document.getElementById('s-'+id).classList.add('active');
   document.querySelectorAll('.ni').forEach((n,i)=>n.classList.toggle('on',['dash','wo','plan','ana','hist','settings'][i]===id));
   // Show timer only on workout screen
-  const tf=document.getElementById('wo-timer-fixed');
+  const tf=document.getElementById('wo-timer-bar');
   if(tf)tf.style.display=(id==='wo'&&D.active)?'':'none';
   window.scrollTo(0,0);
   if(id==='dash')renderDash();if(id==='wo')renderWo();if(id==='plan')renderPlan();if(id==='hist')renderHist();if(id==='settings')renderSettings();if(id==='ana')renderAna();
@@ -1750,7 +1747,7 @@ function startWorkout(pk){
 function renderWo(){
   const c=document.getElementById('wo-c');
   const eb=document.getElementById('wo-end');
-  const tf=document.getElementById('wo-timer-fixed');
+  const tf=document.getElementById('wo-timer-bar');
   if(!D.active){
     eb.style.display='none';tf.style.display='none';
     c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;return;
@@ -1774,8 +1771,8 @@ function renderWo(){
     </div>
   </div>`;
 
-  // Spacer for fixed timer + header
-  let h=`<div style="height:80px"></div>`;
+  // Spacer not needed - timer is sticky in-flow
+  let h='';
 
   // Find first incomplete exercise
   let activeExIdx=-1;
