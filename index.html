@@ -246,6 +246,9 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div id="wo-c"><div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div></div>
 </div>
 
+<!-- FIXED WORKOUT TIMER (outside scroll) -->
+<div id="wo-timer-fixed" class="sticky-timer" style="display:none"></div>
+
 <!-- PLAN -->
 <div class="screen" id="s-plan">
 <div class="hdr"><div class="logo">PLAN</div><button class="btn btn-s btn-o" onclick="openAddEx()">+ ÜBUNG</button></div>
@@ -1016,6 +1019,9 @@ function go(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('s-'+id).classList.add('active');
   document.querySelectorAll('.ni').forEach((n,i)=>n.classList.toggle('on',['dash','wo','plan','ana','hist','settings'][i]===id));
+  // Show timer only on workout screen
+  const tf=document.getElementById('wo-timer-fixed');
+  if(tf)tf.style.display=(id==='wo'&&D.active)?'':'none';
   window.scrollTo(0,0);
   if(id==='dash')renderDash();if(id==='wo')renderWo();if(id==='plan')renderPlan();if(id==='hist')renderHist();if(id==='settings')renderSettings();if(id==='ana')renderAna();
 }
@@ -1744,16 +1750,19 @@ function startWorkout(pk){
 function renderWo(){
   const c=document.getElementById('wo-c');
   const eb=document.getElementById('wo-end');
-  if(!D.active){eb.style.display='none';c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;return}
+  const tf=document.getElementById('wo-timer-fixed');
+  if(!D.active){
+    eb.style.display='none';tf.style.display='none';
+    c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;return;
+  }
   eb.style.display='';
   const el=Math.floor((Date.now()-D.active.startTime)/60000);
   const tRem=getTimerRemaining();
   const tState=timerInt?'run':(timerStartedAt>0&&tRem<=0?'done':'');
 
-  let h='';
-
-  // Fixed timer
-  h+=`<div class="sticky-timer"><div class="st-inner">
+  // Render timer into external fixed div
+  tf.style.display='';
+  tf.innerHTML=`<div class="st-inner">
     <div class="st-circle ${tState}" id="tc"><div class="st-time" id="td">${fmtT(tRem)}</div></div>
     <div class="st-info"><div class="st-label">${D.active.planKey.replace('_',' ')}</div><div class="st-elapsed">⏱ ${el} min</div></div>
     <div class="st-btns">
@@ -1763,9 +1772,10 @@ function renderWo(){
       <button class="st-btn" style="background:var(--bg4);color:var(--text2)" onclick="adjTmr(15)">+15</button>
       <button class="st-btn" style="background:var(--bg4);color:var(--text2)" onclick="adjTmr(30)">+30</button>
     </div>
-  </div></div>`;
-  // Spacer for fixed timer
-  h+=`<div style="height:130px"></div>`;
+  </div>`;
+
+  // Spacer for fixed timer + header
+  let h=`<div style="height:80px"></div>`;
 
   // Find first incomplete exercise
   let activeExIdx=-1;
