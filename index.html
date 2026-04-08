@@ -241,8 +241,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 
 <!-- WORKOUT -->
 <div class="screen" id="s-wo">
-<div class="hdr" id="wo-hdr"><div class="logo">WORKOUT</div><button class="btn btn-s btn-r" id="wo-end" style="display:none" onclick="endWorkout()">BEENDEN</button></div>
-<div id="wo-timer-bar" style="display:none;position:sticky;top:42px;z-index:40;background:var(--bg);padding:8px 0 8px;border-bottom:1px solid var(--bg3);margin:0 -16px;padding-left:16px;padding-right:16px"></div>
+<div id="wo-sticky-top" style="position:sticky;top:0;z-index:40;background:var(--bg);padding-bottom:6px">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top),12px) 0 6px">
+<div class="logo">WORKOUT</div><button class="btn btn-s btn-r" id="wo-end" style="display:none" onclick="endWorkout()">BEENDEN</button>
+</div>
+<div id="wo-timer-bar" style="display:none;border-top:1px solid var(--bg3);padding-top:8px"></div>
+</div>
 <div id="wo-c"><div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div></div>
 </div>
 
