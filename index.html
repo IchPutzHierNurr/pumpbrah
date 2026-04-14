@@ -330,6 +330,25 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="hero" style="margin-top:12px"><div class="hs"><div class="v" id="a-maxw">0</div><div class="l">Max Gewicht</div></div><div class="hs"><div class="v" id="a-avgrir">—</div><div class="l">Ø RIR</div></div><div class="hs"><div class="v" id="a-excount">0</div><div class="l">Übungen</div></div></div>
 <div class="st">MUSKELGRUPPEN <div class="ln"></div></div>
 <div id="ana-muscles"></div>
+<div id="egym-section" style="display:none">
+<div class="st">EGYM BIOAGE <div class="ln"></div></div>
+<div class="card" id="egym-bioage-card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg3))">
+<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:8px">EGYM BioAge</div>
+<div style="font-family:'Bebas Neue',sans-serif;font-size:56px;line-height:1" id="egym-bioage-val">—</div>
+<div style="font-size:13px;color:var(--text2);margin-top:4px" id="egym-bioage-label">Noch keine Messung</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+<div class="card" style="text-align:center;padding:14px 8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--neon)" id="egym-kraft">—</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)">Kraft</div></div>
+<div class="card" style="text-align:center;padding:14px 8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red)" id="egym-kardio">—</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)">Kardio</div></div>
+<div class="card" style="text-align:center;padding:14px 8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--blue)" id="egym-stoffwechsel">—</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)">Stoffwechsel</div></div>
+<div class="card" style="text-align:center;padding:14px 8px"><div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--purple)" id="egym-flex">—</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text2)">Flexibilität</div></div>
+</div>
+<div class="card" id="egym-detail"></div>
+<div id="egym-chart-area"></div>
+<button class="btn" onclick="openEgymEntry()" style="margin-bottom:10px">+ Neue EGYM Messung eintragen</button>
+<div class="st">MESSHISTORIE <div class="ln"></div></div>
+<div id="egym-history"></div>
+</div>
 </div>
 
 <!-- SETTINGS -->
@@ -354,6 +373,18 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div class="card">
 <div class="ir"><div class="ig"><label>Compound (Sek)</label><input type="number" id="set-c" value="150" onchange="saveSetting('compound',this.value)"></div><div class="ig"><label>Isolation (Sek)</label><input type="number" id="set-i" value="90" onchange="saveSetting('isolation',this.value)"></div></div>
 </div>
+<div class="st">EGYM BIOAGE <div class="ln"></div></div>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div><div style="font-weight:600;font-size:14px">EGYM Körperanalyse</div><div style="font-size:11px;color:var(--text2)">BioAge Messung im Studio</div></div>
+<label style="position:relative;width:48px;height:28px;cursor:pointer;display:block">
+<input type="checkbox" id="egym-toggle" onchange="toggleEgym(this.checked)" style="display:none">
+<div style="position:absolute;inset:0;background:var(--bg4);border-radius:14px;transition:.3s"></div>
+<div id="egym-knob" style="position:absolute;top:2px;left:2px;width:24px;height:24px;background:var(--text3);border-radius:50%;transition:.3s"></div>
+</label>
+</div>
+<div style="font-size:11px;color:var(--text3);margin-top:6px">Aktiviere diese Option, wenn du die EGYM Waage im Studio nutzt. Deine Messwerte kannst du dann unter Stats manuell eintragen.</div>
+</div>
 <div class="st">SYNC <div class="ln"></div></div>
 <div class="card">
 <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Sync-Code: <strong style="color:var(--neon);font-family:'JetBrains Mono',monospace" id="show-sync"></strong></div>
@@ -371,6 +402,43 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 </div>
 
 <!-- ===== MODALS ===== -->
+<div class="mbg" id="m-egym"><div class="mdl">
+<div class="mt">EGYM MESSUNG <button class="mc" onclick="cm('m-egym')">✕</button></div>
+<div style="display:flex;gap:8px;margin-bottom:12px">
+<button class="btn btn-g" style="flex:1;font-size:12px" onclick="document.getElementById('egym-cam').click()">📷 Waage fotografieren</button>
+<input type="file" id="egym-cam" accept="image/*" capture="environment" style="display:none" onchange="ocrEgymPhoto(event)">
+</div>
+<div id="egym-ocr-status" style="display:none;padding:8px;background:var(--nd);border-radius:8px;font-size:12px;color:var(--neon);margin-bottom:10px;text-align:center"></div>
+<div class="ig" style="margin-bottom:8px"><label>Datum</label><input type="date" id="egym-date"></div>
+<div class="st" style="margin:10px 0 6px;font-size:12px">BIOAGE WERTE (Alter)</div>
+<div class="ir"><div class="ig"><label>BioAge Gesamt</label><input type="number" inputmode="numeric" id="egym-age" placeholder="z.B. 28"></div></div>
+<div class="ir">
+<div class="ig"><label>Kraft</label><input type="number" inputmode="numeric" id="egym-v-kraft" placeholder="Alter"></div>
+<div class="ig"><label>Kardio</label><input type="number" inputmode="numeric" id="egym-v-kardio" placeholder="Alter"></div>
+</div>
+<div class="ir">
+<div class="ig"><label>Stoffwechsel</label><input type="number" inputmode="numeric" id="egym-v-stoff" placeholder="Alter"></div>
+<div class="ig"><label>Flexibilität</label><input type="number" inputmode="numeric" id="egym-v-flex" placeholder="Alter"></div>
+</div>
+<div class="st" style="margin:10px 0 6px;font-size:12px">KÖRPERANALYSE</div>
+<div class="ir">
+<div class="ig"><label>Körperfett %</label><input type="number" inputmode="decimal" step="0.1" id="egym-bf" placeholder="18.5"></div>
+<div class="ig"><label>Muskelmasse kg</label><input type="number" inputmode="decimal" step="0.1" id="egym-mm" placeholder="35.2"></div>
+</div>
+<div class="ir">
+<div class="ig"><label>Viszeralfett</label><input type="number" inputmode="numeric" id="egym-vf" placeholder="1-59"></div>
+<div class="ig"><label>Wasseranteil %</label><input type="number" inputmode="decimal" step="0.1" id="egym-water" placeholder="55.3"></div>
+</div>
+<div class="ir">
+<div class="ig"><label>Knochenmasse kg</label><input type="number" inputmode="decimal" step="0.1" id="egym-bone" placeholder="3.2"></div>
+<div class="ig"><label>Grundumsatz kcal</label><input type="number" inputmode="numeric" id="egym-bmr" placeholder="1850"></div>
+</div>
+<div class="ir">
+<div class="ig"><label>Gewicht kg</label><input type="number" inputmode="decimal" step="0.1" id="egym-bw" placeholder="82.5"></div>
+<div class="ig"><label>BMI</label><input type="number" inputmode="decimal" step="0.1" id="egym-bmi" placeholder="24.5"></div>
+</div>
+<button class="btn" style="margin-top:10px" onclick="saveEgymEntry()">✓ MESSUNG SPEICHERN</button>
+</div></div>
 <div class="mbg" id="m-log"><div class="mdl">
 <div class="mt">SATZ LOGGEN <button class="mc" onclick="cm('m-log')">✕</button></div>
 <div id="log-name" style="font-size:14px;color:var(--text2);margin-bottom:4px"></div>
@@ -539,6 +607,7 @@ function loadLocal(){
   if(!D.notes)D.notes={};
   if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};if(!D.bio)D.bio={height:null,weights:[]};
   if(!D.bio)D.bio={height:null,weights:[]};
+  if(!D.egym)D.egym={enabled:false,measurements:[]};
 }
 
 // ===== FIREBASE =====
@@ -1030,6 +1099,23 @@ function resetAll(){
   }
   updateSyncPill(useFirebase);
 })();
+
+// Auto-reload when app comes back to foreground
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&syncCode&&syncCode!=='offline'&&useFirebase&&db){
+    db.collection('pumpbrah').doc(syncCode).get().then(doc=>{
+      if(doc.exists){
+        const remote=doc.data();
+        D={...D,...remote};
+        if(!D.notes)D.notes={};if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};
+        if(!D.bio)D.bio={height:null,weights:[]};if(!D.plan)D.plan={};
+        if(!D.egym)D.egym={enabled:false,measurements:[]};
+        localStorage.setItem('pb_data',JSON.stringify(D));
+        renderAll();
+      }
+    }).catch(()=>{});
+  }
+});
 
 // ===== HELPERS =====
 const EMO={chest:'🫁',back:'🔙',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
@@ -2062,7 +2148,7 @@ function renderWo(){
       for(let si=0;si<ex.sets;si++){
         const s=ex.logged[si];
         if(s){
-          h+=`<div class="wsr"><div class="wsn dn">S${si+1}</div><div class="wsv">${s.w}kg × ${s.r}</div><div class="ri ${rc(s.rir)}">RIR ${s.rir}</div>${s.note?`<span style="font-size:10px;color:var(--text3)">📝</span>`:''}</div>`;
+          h+=`<div class="wsr" onpointerdown="setLongPress(${ei},${si},event)" onpointerup="clearLongPress()" onpointercancel="clearLongPress()"><div class="wsn dn">S${si+1}</div><div class="wsv">${s.w}kg × ${s.r}</div><div class="ri ${rc(s.rir)}">RIR ${s.rir}</div>${s.note?`<span style="font-size:10px;color:var(--text3)">📝</span>`:''}</div>`;
         }else{
           h+=`<div class="wsr"><div class="wsn">S${si+1}</div><div class="wsv" style="color:var(--text3)">—</div></div>`;
         }
@@ -2075,6 +2161,47 @@ function renderWo(){
   });
 
   c.innerHTML=h;
+}
+
+// ===== SET LONG-PRESS EDIT/DELETE =====
+let lpTimer=null;
+function setLongPress(ei,si,ev){
+  ev.preventDefault();
+  lpTimer=setTimeout(()=>{
+    lpTimer=null;
+    if(!D.active)return;
+    const ex=D.active.exercises[ei];
+    const s=ex.logged[si];
+    if(!s)return;
+    // Show popup
+    const popup=document.createElement('div');
+    popup.id='set-popup';
+    popup.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center';
+    popup.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:20px;width:90%;max-width:320px">
+      <div style="font-weight:700;font-size:15px;margin-bottom:12px">Satz ${si+1}: ${s.w}kg × ${s.r} @ RIR ${s.rir}</div>
+      <div class="ig" style="margin-bottom:8px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" id="edit-set-w" value="${s.w}"></div>
+      <div class="ig" style="margin-bottom:8px"><label>Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r" value="${s.r}"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn" style="flex:1" onclick="saveEditSet(${ei},${si})">✓ Speichern</button>
+        <button class="btn btn-r" style="flex:1" onclick="deleteSet(${ei},${si})">🗑️ Löschen</button>
+      </div>
+      <button class="btn btn-g" style="margin-top:8px;width:100%" onclick="document.getElementById('set-popup').remove()">Abbrechen</button>
+    </div>`;
+    popup.onclick=(e)=>{if(e.target===popup)popup.remove()};
+    document.body.appendChild(popup);
+  },500);
+}
+function clearLongPress(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}}
+function saveEditSet(ei,si){
+  const w=parseFloat(document.getElementById('edit-set-w').value)||0;
+  const r=parseInt(document.getElementById('edit-set-r').value)||0;
+  D.active.exercises[ei].logged[si].w=w;
+  D.active.exercises[ei].logged[si].r=r;
+  save();document.getElementById('set-popup').remove();renderWo();toast('Satz aktualisiert');
+}
+function deleteSet(ei,si){
+  D.active.exercises[ei].logged.splice(si,1);
+  save();document.getElementById('set-popup').remove();renderWo();toast('Satz gelöscht');
 }
 
 function openLog(ei){
@@ -2359,9 +2486,168 @@ function renderHist(){
 function selectCalDay(d){calSelDay=calSelDay===d?null:d;renderHist()}
 function delSess(i){if(!confirm('Löschen?'))return;D.history.splice(i,1);save();renderHist();toast('Gelöscht')}
 
+// ===== EGYM BIOAGE =====
+function toggleEgym(on){
+  if(!D.egym)D.egym={enabled:false,measurements:[]};
+  D.egym.enabled=on;save();
+  const s=document.getElementById('egym-section');
+  if(s)s.style.display=on?'':'none';
+  const knob=document.getElementById('egym-knob');
+  const toggle=document.getElementById('egym-toggle');
+  if(knob)knob.style.cssText=on?'position:absolute;top:2px;right:2px;left:auto;width:24px;height:24px;background:var(--neon);border-radius:50%;transition:.3s':'position:absolute;top:2px;left:2px;width:24px;height:24px;background:var(--text3);border-radius:50%;transition:.3s';
+  if(toggle)toggle.checked=on;
+}
+function openEgymEntry(){
+  document.getElementById('egym-date').value=new Date().toISOString().split('T')[0];
+  ['egym-age','egym-v-kraft','egym-v-kardio','egym-v-stoff','egym-v-flex','egym-bf','egym-mm','egym-vf','egym-water','egym-bone','egym-bmr','egym-bw','egym-bmi'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  document.getElementById('egym-ocr-status').style.display='none';
+  om('m-egym');
+}
+function saveEgymEntry(){
+  if(!D.egym)D.egym={enabled:true,measurements:[]};
+  const entry={
+    date:document.getElementById('egym-date').value||new Date().toISOString().split('T')[0],
+    bioAge:parseFloat(document.getElementById('egym-age').value)||null,
+    kraft:parseFloat(document.getElementById('egym-v-kraft').value)||null,
+    kardio:parseFloat(document.getElementById('egym-v-kardio').value)||null,
+    stoffwechsel:parseFloat(document.getElementById('egym-v-stoff').value)||null,
+    flex:parseFloat(document.getElementById('egym-v-flex').value)||null,
+    bodyFat:parseFloat(document.getElementById('egym-bf').value)||null,
+    muscleMass:parseFloat(document.getElementById('egym-mm').value)||null,
+    visceralFat:parseFloat(document.getElementById('egym-vf').value)||null,
+    water:parseFloat(document.getElementById('egym-water').value)||null,
+    boneMass:parseFloat(document.getElementById('egym-bone').value)||null,
+    bmr:parseFloat(document.getElementById('egym-bmr').value)||null,
+    weight:parseFloat(document.getElementById('egym-bw').value)||null,
+    bmi:parseFloat(document.getElementById('egym-bmi').value)||null
+  };
+  D.egym.measurements.push(entry);
+  D.egym.measurements.sort((a,b)=>a.date.localeCompare(b.date));
+  save();cm('m-egym');renderEgym();toast('EGYM Messung gespeichert ✓');
+}
+function delEgymEntry(i){if(!confirm('Messung löschen?'))return;D.egym.measurements.splice(i,1);save();renderEgym();toast('Gelöscht')}
+
+async function ocrEgymPhoto(ev){
+  const file=ev.target.files[0];if(!file)return;
+  const status=document.getElementById('egym-ocr-status');
+  status.style.display='';status.textContent='📸 Analysiere Foto...';
+  try{
+    const base64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
+        {type:'text',text:'Extrahiere alle sichtbaren Messwerte von dieser EGYM/Körperanalyse-Waage. Antworte NUR mit JSON, kein anderer Text. Format: {"bioAge":null,"kraft":null,"kardio":null,"stoffwechsel":null,"flex":null,"bodyFat":null,"muscleMass":null,"visceralFat":null,"water":null,"boneMass":null,"bmr":null,"weight":null,"bmi":null}. Setze nur Werte die du klar lesen kannst. Zahlen als Number, nicht String.'}
+      ]}]})
+    });
+    const data=await resp.json();
+    const text=data.content.map(c=>c.text||'').join('');
+    const clean=text.replace(/```json|```/g,'').trim();
+    const vals=JSON.parse(clean);
+    const fieldMap={bioAge:'egym-age',kraft:'egym-v-kraft',kardio:'egym-v-kardio',stoffwechsel:'egym-v-stoff',flex:'egym-v-flex',bodyFat:'egym-bf',muscleMass:'egym-mm',visceralFat:'egym-vf',water:'egym-water',boneMass:'egym-bone',bmr:'egym-bmr',weight:'egym-bw',bmi:'egym-bmi'};
+    let filled=0;
+    Object.entries(fieldMap).forEach(([k,id])=>{if(vals[k]!==null&&vals[k]!==undefined){document.getElementById(id).value=vals[k];filled++}});
+    status.textContent=`✓ ${filled} Werte erkannt und eingetragen`;
+    status.style.background='rgba(52,211,153,.1)';status.style.color='var(--green)';
+  }catch(e){
+    status.textContent='⚠️ Erkennung fehlgeschlagen — bitte manuell eintragen';
+    status.style.background='rgba(255,59,92,.1)';status.style.color='var(--red)';
+  }
+  ev.target.value='';
+}
+
+function renderEgym(){
+  if(!D.egym||!D.egym.enabled){document.getElementById('egym-section').style.display='none';return}
+  document.getElementById('egym-section').style.display='';
+  const ms=D.egym.measurements||[];
+  const last=ms.length?ms[ms.length-1]:null;
+  const realAge=getRealAge();
+
+  // BioAge card
+  if(last&&last.bioAge){
+    const diff=last.bioAge-(realAge||last.bioAge);
+    const col=diff<=-3?'var(--green)':diff<0?'var(--neon)':diff<=2?'var(--orange)':'var(--red)';
+    document.getElementById('egym-bioage-val').textContent=last.bioAge;
+    document.getElementById('egym-bioage-val').style.color=col;
+    document.getElementById('egym-bioage-label').textContent=realAge?`Real: ${realAge} • Differenz: ${diff>0?'+':''}${diff} Jahre`:'Messung vom '+last.date;
+  }else{
+    document.getElementById('egym-bioage-val').textContent='—';
+    document.getElementById('egym-bioage-label').textContent='Noch keine Messung';
+  }
+
+  // 4 category cards
+  const cats=[['egym-kraft','kraft','var(--neon)'],['egym-kardio','kardio','var(--red)'],['egym-stoffwechsel','stoffwechsel','var(--blue)'],['egym-flex','flex','var(--purple)']];
+  cats.forEach(([id,key,col])=>{
+    const el=document.getElementById(id);
+    el.textContent=last&&last[key]?last[key]:'—';
+    el.style.color=col;
+  });
+
+  // Detail card with body composition
+  const dc=document.getElementById('egym-detail');
+  if(last){
+    const params=[
+      {l:'Körperfett',v:last.bodyFat,u:'%',good:v=>v<20?'var(--green)':v<25?'var(--neon)':v<30?'var(--orange)':'var(--red)'},
+      {l:'Muskelmasse',v:last.muscleMass,u:'kg',good:v=>v>40?'var(--green)':v>30?'var(--neon)':'var(--orange)'},
+      {l:'Viszeralfett',v:last.visceralFat,u:'',good:v=>v<10?'var(--green)':v<13?'var(--neon)':v<17?'var(--orange)':'var(--red)'},
+      {l:'Wasseranteil',v:last.water,u:'%',good:v=>v>55?'var(--green)':v>50?'var(--neon)':'var(--orange)'},
+      {l:'Knochenmasse',v:last.boneMass,u:'kg',good:()=>'var(--text)'},
+      {l:'Grundumsatz',v:last.bmr,u:'kcal',good:()=>'var(--text)'},
+      {l:'Gewicht',v:last.weight,u:'kg',good:()=>'var(--text)'},
+      {l:'BMI',v:last.bmi,u:'',good:v=>v>=20&&v<=25?'var(--green)':v>25&&v<30?'var(--orange)':v>=30?'var(--red)':'var(--blue)'}
+    ];
+    let dh='<div style="font-size:12px;font-weight:600;margin-bottom:8px">Körperanalyse — '+last.date+'</div>';
+    params.forEach(p=>{
+      if(p.v===null||p.v===undefined)return;
+      const col=p.good(p.v);
+      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)">
+        <span style="font-size:13px;color:var(--text2)">${p.l}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:${col}">${p.v}${p.u?' '+p.u:''}</span>
+      </div>`;
+    });
+    dc.innerHTML=dh;
+  }else dc.innerHTML='<div style="text-align:center;padding:12px;color:var(--text3);font-size:12px">Noch keine Messung</div>';
+
+  // Charts (BioAge + Body Fat + Muscle Mass over time)
+  const ca=document.getElementById('egym-chart-area');
+  if(ms.length>=2){
+    let ch='';
+    const chartSets=[
+      {label:'BioAge Verlauf',key:'bioAge',color:'var(--neon)'},
+      {label:'Körperfett %',key:'bodyFat',color:'var(--orange)'},
+      {label:'Muskelmasse kg',key:'muscleMass',color:'var(--blue)'}
+    ];
+    chartSets.forEach(cs=>{
+      const pts=ms.filter(m=>m[cs.key]!==null&&m[cs.key]!==undefined).map(m=>({v:m[cs.key],label:m.date.substring(5)}));
+      if(pts.length>=2){
+        const med=pts.map(p=>p.v).sort((a,b)=>a-b)[Math.floor(pts.length/2)];
+        ch+=`<div class="prog" style="margin-bottom:8px"><div class="prog-h">${cs.label}<span>${pts[pts.length-1].v}</span></div>${svgChart(pts,{h:100,color:cs.color,median:med,showGrid:true,colorDots:true,xLabels:pts.length<=10})}</div>`;
+      }
+    });
+    ca.innerHTML=ch;
+  }else ca.innerHTML='';
+
+  // History list
+  const hc=document.getElementById('egym-history');
+  if(!ms.length){hc.innerHTML='<div class="empty">Keine Messungen</div>';return}
+  let hh='';
+  [...ms].reverse().forEach((m,i)=>{
+    const ri=ms.length-1-i;
+    hh+=`<div class="card" style="margin-bottom:6px;padding:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-weight:600;font-size:14px">${m.date}</div>
+        <div style="font-size:11px;color:var(--text2)">BioAge: ${m.bioAge||'—'} • KFA: ${m.bodyFat||'—'}% • Muskeln: ${m.muscleMass||'—'}kg</div></div>
+        <button style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer" onclick="delEgymEntry(${ri})">✕</button>
+      </div>
+    </div>`;
+  });
+  hc.innerHTML=hh;
+}
+
 // ===== ANALYTICS =====
 function renderAna(){
   renderBio();
+  renderEgym();
   const allSets=[];
   D.history.forEach(s=>s.sets.forEach(set=>allSets.push({...set,date:s.date})));
   const totalSets=allSets.length;
@@ -2508,6 +2794,9 @@ function renderSettings(){
   document.getElementById('prof-status').textContent=useFirebase?'🟢 Eingeloggt • Cloud Sync aktiv':'🟡 Offline-Modus • nur lokal gespeichert';
   if(D.health.sick){document.getElementById('sick-label').textContent='Aktiv seit '+new Date(D.health.sickSince).toLocaleDateString('de-DE');document.getElementById('sick-btn').textContent='✓ GESUND MELDEN';document.getElementById('sick-btn').className='btn btn-s btn-green'}
   else{document.getElementById('sick-label').textContent='Nicht aktiv';document.getElementById('sick-btn').textContent='🤒 KRANK MELDEN';document.getElementById('sick-btn').className='btn btn-s btn-orange'}
+  // EGYM toggle
+  if(!D.egym)D.egym={enabled:false,measurements:[]};
+  toggleEgym(D.egym.enabled);
 }
 function saveSetting(k,v){D.settings[k]=parseInt(v)||0;save()}
 
