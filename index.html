@@ -19,7 +19,7 @@ input,textarea,select{-webkit-user-select:text;user-select:text}
 @media(prefers-color-scheme:light){:root{--bg:#f5f5f7;--bg2:#ffffff;--bg3:#e8e8ec;--bg4:#d4d4da;--bg5:#c0c0c8;--neon:#4a9e00;--neon2:#3d8500;--nd:rgba(74,158,0,.12);--red:#e0334e;--orange:#e07530;--blue:#1a8fd4;--purple:#8b5cf6;--green:#22a876;--text:#111116;--text2:#555566;--text3:#888899}}
 html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,sans-serif;overflow-x:hidden;height:100%;-webkit-font-smoothing:antialiased}
 .app{max-width:430px;margin:0 auto;min-height:100vh;position:relative}
-.screen{display:none;padding:0 16px 110px;animation:fu .25s ease}.screen.active{display:block}
+.screen{display:none;padding:0 16px 72px;animation:fu .25s ease}.screen.active{display:block}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .hdr{padding:max(env(safe-area-inset-top),12px) 0 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;background:var(--bg)}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--neon);text-shadow:0 0 20px rgba(200,255,0,.25)}
@@ -27,12 +27,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pu 2s infinite}
 .pill.offline .dot{background:var(--red)}.pill.offline{color:var(--red)}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,12,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);display:flex;padding:6px 0 max(env(safe-area-inset-bottom),6px);z-index:100}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,12,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);display:flex;padding:4px 0 max(env(safe-area-inset-bottom),4px);z-index:100}
 @media(prefers-color-scheme:light){.bnav{background:rgba(245,245,247,.92)}.logo{text-shadow:none}.login-logo{text-shadow:none}.card::before{background:linear-gradient(90deg,transparent,rgba(74,158,0,.1),transparent)}.ni.on svg{filter:none}}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;cursor:pointer}
-.ni svg{width:22px;height:22px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.2s}
-.ni .nl{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);transition:.2s}
-.ni.on svg{stroke:var(--neon);filter:drop-shadow(0 0 6px rgba(200,255,0,.4))}.ni.on .nl{color:var(--neon)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0;cursor:pointer}
+.ni svg{width:20px;height:20px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.2s}
+.ni .nl{font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);transition:.2s}
+.ni.on svg{stroke:var(--neon);filter:drop-shadow(0 0 4px rgba(200,255,0,.3))}.ni.on .nl{color:var(--neon)}
 .card{background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,255,0,.12),transparent)}
 .st{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text2);margin:22px 0 10px;display:flex;align-items:center;gap:8px}
@@ -410,34 +410,31 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 </div>
 <div id="egym-ocr-status" style="display:none;padding:8px;background:var(--nd);border-radius:8px;font-size:12px;color:var(--neon);margin-bottom:10px;text-align:center"></div>
 <div class="ig" style="margin-bottom:8px"><label>Datum</label><input type="date" id="egym-date"></div>
-<div class="st" style="margin:10px 0 6px;font-size:12px">BIOAGE WERTE (Alter)</div>
-<div class="ir"><div class="ig"><label>BioAge Gesamt</label><input type="number" inputmode="numeric" id="egym-age" placeholder="z.B. 28"></div></div>
-<div class="ir">
-<div class="ig"><label>Kraft</label><input type="number" inputmode="numeric" id="egym-v-kraft" placeholder="Alter"></div>
-<div class="ig"><label>Kardio</label><input type="number" inputmode="numeric" id="egym-v-kardio" placeholder="Alter"></div>
-</div>
-<div class="ir">
-<div class="ig"><label>Stoffwechsel</label><input type="number" inputmode="numeric" id="egym-v-stoff" placeholder="Alter"></div>
-<div class="ig"><label>Flexibilität</label><input type="number" inputmode="numeric" id="egym-v-flex" placeholder="Alter"></div>
-</div>
-<div class="st" style="margin:10px 0 6px;font-size:12px">KÖRPERANALYSE</div>
-<div class="ir">
-<div class="ig"><label>Körperfett %</label><input type="number" inputmode="decimal" step="0.1" id="egym-bf" placeholder="18.5"></div>
-<div class="ig"><label>Muskelmasse kg</label><input type="number" inputmode="decimal" step="0.1" id="egym-mm" placeholder="35.2"></div>
-</div>
-<div class="ir">
-<div class="ig"><label>Viszeralfett</label><input type="number" inputmode="numeric" id="egym-vf" placeholder="1-59"></div>
-<div class="ig"><label>Wasseranteil %</label><input type="number" inputmode="decimal" step="0.1" id="egym-water" placeholder="55.3"></div>
-</div>
-<div class="ir">
-<div class="ig"><label>Knochenmasse kg</label><input type="number" inputmode="decimal" step="0.1" id="egym-bone" placeholder="3.2"></div>
-<div class="ig"><label>Grundumsatz kcal</label><input type="number" inputmode="numeric" id="egym-bmr" placeholder="1850"></div>
-</div>
-<div class="ir">
-<div class="ig"><label>Gewicht kg</label><input type="number" inputmode="decimal" step="0.1" id="egym-bw" placeholder="82.5"></div>
-<div class="ig"><label>BMI</label><input type="number" inputmode="decimal" step="0.1" id="egym-bmi" placeholder="24.5"></div>
-</div>
-<button class="btn" style="margin-top:10px" onclick="saveEgymEntry()">✓ MESSUNG SPEICHERN</button>
+<div class="st" style="margin:10px 0 6px;font-size:12px">BIOAGE</div>
+<div class="ir"><div class="ig"><label>BioAge Gesamt</label><input type="number" inputmode="numeric" id="eg-bioage"></div></div>
+<div class="ir"><div class="ig"><label>Kraftalter</label><input type="number" inputmode="numeric" id="eg-kraft"></div><div class="ig"><label>Kardioalter</label><input type="number" inputmode="numeric" id="eg-kardio"></div></div>
+<div class="ir"><div class="ig"><label>Stoffwechselalter</label><input type="number" inputmode="numeric" id="eg-stoff"></div><div class="ig"><label>Flexibilitätsalter</label><input type="number" inputmode="numeric" id="eg-flex"></div></div>
+<div class="st" style="margin:10px 0 6px;font-size:12px">MESSUNGEN</div>
+<div class="ig" style="margin-bottom:6px"><label>BMI (kg/m²)</label><input type="number" inputmode="decimal" step="0.1" id="eg-bmi"></div>
+<div class="ig" style="margin-bottom:6px"><label>Extrazelluläres Wasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-ezw"></div>
+<div class="ig" style="margin-bottom:6px"><label>Fettfreie Masse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-ffm"></div>
+<div class="ig" style="margin-bottom:6px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-gewicht"></div>
+<div class="ig" style="margin-bottom:6px"><label>Grundumsatz (Kcal)</label><input type="number" inputmode="numeric" id="eg-bmr"></div>
+<div class="ig" style="margin-bottom:6px"><label>Intrazelluläres Wasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-izw"></div>
+<div class="ig" style="margin-bottom:6px"><label>Körperfett (%)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kfp"></div>
+<div class="ig" style="margin-bottom:6px"><label>Körperfett (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kfkg"></div>
+<div class="ig" style="margin-bottom:6px"><label>Körperwasser (%)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kwp"></div>
+<div class="ig" style="margin-bottom:6px"><label>Körperwasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kwl"></div>
+<div class="ir"><div class="ig"><label>Magermasse Arm Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmal"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmar"></div></div>
+<div class="ir"><div class="ig"><label>Magermasse Bein Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmbl"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmbr"></div></div>
+<div class="ig" style="margin-bottom:6px"><label>Magermasse Rumpf (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmru"></div>
+<div class="ir"><div class="ig"><label>Muskeln Arm Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mual"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-muar"></div></div>
+<div class="ir"><div class="ig"><label>Muskeln Bein Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mubl"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mubr"></div></div>
+<div class="ig" style="margin-bottom:6px"><label>Muskeln Rumpf (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-muru"></div>
+<div class="ig" style="margin-bottom:6px"><label>Phasenwinkel (°)</label><input type="number" inputmode="decimal" step="0.1" id="eg-pw"></div>
+<div class="ig" style="margin-bottom:6px"><label>Skelettmuskelmasse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-smm"></div>
+<div class="ig" style="margin-bottom:6px"><label>Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
+<button class="btn" style="margin-top:12px" onclick="saveEgymEntry()">✓ MESSUNG SPEICHERN</button>
 </div></div>
 <div class="mbg" id="m-log"><div class="mdl">
 <div class="mt">SATZ LOGGEN <button class="mc" onclick="cm('m-log')">✕</button></div>
@@ -2487,41 +2484,26 @@ function selectCalDay(d){calSelDay=calSelDay===d?null:d;renderHist()}
 function delSess(i){if(!confirm('Löschen?'))return;D.history.splice(i,1);save();renderHist();toast('Gelöscht')}
 
 // ===== EGYM BIOAGE =====
+const EG_FIELDS=['bioage','kraft','kardio','stoff','flex','bmi','gewicht','kfp','kfkg','ffm','smm','kwp','kwl','ezw','izw','bmr','vf','pw','mmal','mmar','mmbl','mmbr','mmru','mual','muar','mubl','mubr','muru'];
 function toggleEgym(on){
   if(!D.egym)D.egym={enabled:false,measurements:[]};
   D.egym.enabled=on;save();
-  const s=document.getElementById('egym-section');
-  if(s)s.style.display=on?'':'none';
-  const knob=document.getElementById('egym-knob');
-  const toggle=document.getElementById('egym-toggle');
+  const s=document.getElementById('egym-section');if(s)s.style.display=on?'':'none';
+  const knob=document.getElementById('egym-knob'),toggle=document.getElementById('egym-toggle');
   if(knob)knob.style.cssText=on?'position:absolute;top:2px;right:2px;left:auto;width:24px;height:24px;background:var(--neon);border-radius:50%;transition:.3s':'position:absolute;top:2px;left:2px;width:24px;height:24px;background:var(--text3);border-radius:50%;transition:.3s';
   if(toggle)toggle.checked=on;
 }
 function openEgymEntry(){
   document.getElementById('egym-date').value=new Date().toISOString().split('T')[0];
-  ['egym-age','egym-v-kraft','egym-v-kardio','egym-v-stoff','egym-v-flex','egym-bf','egym-mm','egym-vf','egym-water','egym-bone','egym-bmr','egym-bw','egym-bmi'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  EG_FIELDS.forEach(k=>{const el=document.getElementById('eg-'+k);if(el)el.value=''});
   document.getElementById('egym-ocr-status').style.display='none';
   om('m-egym');
 }
 function saveEgymEntry(){
   if(!D.egym)D.egym={enabled:true,measurements:[]};
-  const entry={
-    date:document.getElementById('egym-date').value||new Date().toISOString().split('T')[0],
-    bioAge:parseFloat(document.getElementById('egym-age').value)||null,
-    kraft:parseFloat(document.getElementById('egym-v-kraft').value)||null,
-    kardio:parseFloat(document.getElementById('egym-v-kardio').value)||null,
-    stoffwechsel:parseFloat(document.getElementById('egym-v-stoff').value)||null,
-    flex:parseFloat(document.getElementById('egym-v-flex').value)||null,
-    bodyFat:parseFloat(document.getElementById('egym-bf').value)||null,
-    muscleMass:parseFloat(document.getElementById('egym-mm').value)||null,
-    visceralFat:parseFloat(document.getElementById('egym-vf').value)||null,
-    water:parseFloat(document.getElementById('egym-water').value)||null,
-    boneMass:parseFloat(document.getElementById('egym-bone').value)||null,
-    bmr:parseFloat(document.getElementById('egym-bmr').value)||null,
-    weight:parseFloat(document.getElementById('egym-bw').value)||null,
-    bmi:parseFloat(document.getElementById('egym-bmi').value)||null
-  };
-  D.egym.measurements.push(entry);
+  const e={date:document.getElementById('egym-date').value||new Date().toISOString().split('T')[0]};
+  EG_FIELDS.forEach(k=>{const v=parseFloat(document.getElementById('eg-'+k).value);e[k]=isNaN(v)?null:v});
+  D.egym.measurements.push(e);
   D.egym.measurements.sort((a,b)=>a.date.localeCompare(b.date));
   save();cm('m-egym');renderEgym();toast('EGYM Messung gespeichert ✓');
 }
@@ -2530,116 +2512,148 @@ function delEgymEntry(i){if(!confirm('Messung löschen?'))return;D.egym.measurem
 async function ocrEgymPhoto(ev){
   const file=ev.target.files[0];if(!file)return;
   const status=document.getElementById('egym-ocr-status');
-  status.style.display='';status.textContent='📸 Analysiere Foto...';
+  status.style.display='';status.textContent='📸 Analysiere Foto...';status.style.background='var(--nd)';status.style.color='var(--neon)';
   try{
     const base64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file)});
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:[
         {type:'image',source:{type:'base64',media_type:file.type||'image/jpeg',data:base64}},
-        {type:'text',text:'Extrahiere alle sichtbaren Messwerte von dieser EGYM/Körperanalyse-Waage. Antworte NUR mit JSON, kein anderer Text. Format: {"bioAge":null,"kraft":null,"kardio":null,"stoffwechsel":null,"flex":null,"bodyFat":null,"muscleMass":null,"visceralFat":null,"water":null,"boneMass":null,"bmr":null,"weight":null,"bmi":null}. Setze nur Werte die du klar lesen kannst. Zahlen als Number, nicht String.'}
+        {type:'text',text:'Extrahiere alle Messwerte von dieser EGYM Körperanalyse. Antworte NUR mit JSON: {"bioage":null,"kraft":null,"kardio":null,"stoff":null,"flex":null,"bmi":null,"gewicht":null,"kfp":null,"kfkg":null,"ffm":null,"smm":null,"kwp":null,"kwl":null,"ezw":null,"izw":null,"bmr":null,"vf":null,"pw":null,"mmal":null,"mmar":null,"mmbl":null,"mmbr":null,"mmru":null,"mual":null,"muar":null,"mubl":null,"mubr":null,"muru":null}. Felder: bioage=BioAge, kraft=Kraftalter, kardio=Kardioalter, stoff=Stoffwechselalter, flex=Flexibilitätsalter, bmi=BMI, gewicht=Gewicht, kfp=Körperfett%, kfkg=Körperfett kg, ffm=Fettfreie Masse, smm=Skelettmuskelmasse, kwp=Körperwasser%, kwl=Körperwasser l, ezw=Extrazelluläres Wasser, izw=Intrazelluläres Wasser, bmr=Grundumsatz, vf=Viszerales Fett, pw=Phasenwinkel, mmal/mmar=Magermasse Arm L/R, mmbl/mmbr=Magermasse Bein L/R, mmru=Magermasse Rumpf, mual/muar=Muskeln Arm L/R, mubl/mubr=Muskeln Bein L/R, muru=Muskeln Rumpf. Nur Werte die klar lesbar sind. Zahlen als Number.'}
       ]}]})
     });
     const data=await resp.json();
     const text=data.content.map(c=>c.text||'').join('');
-    const clean=text.replace(/```json|```/g,'').trim();
-    const vals=JSON.parse(clean);
-    const fieldMap={bioAge:'egym-age',kraft:'egym-v-kraft',kardio:'egym-v-kardio',stoffwechsel:'egym-v-stoff',flex:'egym-v-flex',bodyFat:'egym-bf',muscleMass:'egym-mm',visceralFat:'egym-vf',water:'egym-water',boneMass:'egym-bone',bmr:'egym-bmr',weight:'egym-bw',bmi:'egym-bmi'};
+    const vals=JSON.parse(text.replace(/```json|```/g,'').trim());
     let filled=0;
-    Object.entries(fieldMap).forEach(([k,id])=>{if(vals[k]!==null&&vals[k]!==undefined){document.getElementById(id).value=vals[k];filled++}});
-    status.textContent=`✓ ${filled} Werte erkannt und eingetragen`;
-    status.style.background='rgba(52,211,153,.1)';status.style.color='var(--green)';
+    EG_FIELDS.forEach(k=>{if(vals[k]!==null&&vals[k]!==undefined){document.getElementById('eg-'+k).value=vals[k];filled++}});
+    status.textContent=`✓ ${filled} Werte erkannt`;status.style.background='rgba(52,211,153,.1)';status.style.color='var(--green)';
   }catch(e){
-    status.textContent='⚠️ Erkennung fehlgeschlagen — bitte manuell eintragen';
-    status.style.background='rgba(255,59,92,.1)';status.style.color='var(--red)';
+    status.textContent='⚠️ Erkennung fehlgeschlagen — manuell eintragen';status.style.background='rgba(255,59,92,.1)';status.style.color='var(--red)';
   }
   ev.target.value='';
+}
+
+function bodyMapSVG(m){
+  if(!m||(!m.mual&&!m.mubl&&!m.muru))return'';
+  // Professional horizontal bar comparison chart
+  const regions=[
+    {label:'Rumpf',l:m.muru,r:null,color:'var(--neon)'},
+    {label:'Arm L',l:m.mual,r:null,color:'var(--blue)'},
+    {label:'Arm R',l:m.muar,r:null,color:'var(--blue)'},
+    {label:'Bein L',l:m.mubl,r:null,color:'var(--purple)'},
+    {label:'Bein R',l:m.mubr,r:null,color:'var(--purple)'}
+  ].filter(r=>r.l);
+  if(!regions.length)return'';
+  const maxVal=Math.max(...regions.map(r=>r.l||0));
+  let h='<div style="margin-top:12px"><div style="font-size:12px;font-weight:600;margin-bottom:8px">Muskelverteilung</div>';
+  regions.forEach(r=>{
+    const pct=maxVal>0?((r.l/maxVal)*100):0;
+    h+=`<div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px">
+        <span style="color:var(--text2)">${r.label}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-weight:600">${r.l} kg</span>
+      </div>
+      <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${r.color};border-radius:3px;transition:width .5s"></div>
+      </div>
+    </div>`;
+  });
+  // L/R Balance check
+  const armDiff=m.mual&&m.muar?Math.abs(m.mual-m.muar):0;
+  const legDiff=m.mubl&&m.mubr?Math.abs(m.mubl-m.mubr):0;
+  if(armDiff>0.3||legDiff>0.3){
+    h+='<div style="margin-top:8px;padding:6px 10px;background:rgba(255,140,66,.08);border-radius:8px;font-size:11px;color:var(--orange)">';
+    if(armDiff>0.3)h+=`⚠️ Arme: ${armDiff.toFixed(1)}kg Differenz (${m.mual>m.muar?'Links':'Rechts'} stärker)<br>`;
+    if(legDiff>0.3)h+=`⚠️ Beine: ${legDiff.toFixed(1)}kg Differenz (${m.mubl>m.mubr?'Links':'Rechts'} stärker)`;
+    h+='</div>';
+  }else if(m.mual&&m.muar){
+    h+='<div style="margin-top:8px;padding:6px 10px;background:rgba(52,211,153,.08);border-radius:8px;font-size:11px;color:var(--green)">✓ Gute L/R Balance</div>';
+  }
+  h+='</div>';
+  return h;
 }
 
 function renderEgym(){
   if(!D.egym||!D.egym.enabled){document.getElementById('egym-section').style.display='none';return}
   document.getElementById('egym-section').style.display='';
   const ms=D.egym.measurements||[];
-  const last=ms.length?ms[ms.length-1]:null;
+  const m=ms.length?ms[ms.length-1]:null;
   const realAge=getRealAge();
-
   // BioAge card
-  if(last&&last.bioAge){
-    const diff=last.bioAge-(realAge||last.bioAge);
+  if(m&&m.bioage){
+    const diff=m.bioage-(realAge||m.bioage);
     const col=diff<=-3?'var(--green)':diff<0?'var(--neon)':diff<=2?'var(--orange)':'var(--red)';
-    document.getElementById('egym-bioage-val').textContent=last.bioAge;
+    document.getElementById('egym-bioage-val').textContent=m.bioage;
     document.getElementById('egym-bioage-val').style.color=col;
-    document.getElementById('egym-bioage-label').textContent=realAge?`Real: ${realAge} • Differenz: ${diff>0?'+':''}${diff} Jahre`:'Messung vom '+last.date;
-  }else{
-    document.getElementById('egym-bioage-val').textContent='—';
-    document.getElementById('egym-bioage-label').textContent='Noch keine Messung';
-  }
-
+    document.getElementById('egym-bioage-label').textContent=realAge?`Real: ${realAge} • Diff: ${diff>0?'+':''}${diff} Jahre`:'Messung vom '+m.date;
+  }else{document.getElementById('egym-bioage-val').textContent='—';document.getElementById('egym-bioage-label').textContent='Noch keine Messung'}
   // 4 category cards
-  const cats=[['egym-kraft','kraft','var(--neon)'],['egym-kardio','kardio','var(--red)'],['egym-stoffwechsel','stoffwechsel','var(--blue)'],['egym-flex','flex','var(--purple)']];
-  cats.forEach(([id,key,col])=>{
-    const el=document.getElementById(id);
-    el.textContent=last&&last[key]?last[key]:'—';
-    el.style.color=col;
+  [['egym-kraft','kraft','var(--neon)'],['egym-kardio','kardio','var(--red)'],['egym-stoffwechsel','stoff','var(--blue)'],['egym-flex','flex','var(--purple)']].forEach(([id,key,col])=>{
+    const el=document.getElementById(id);el.textContent=m&&m[key]?m[key]:'—';el.style.color=col;
   });
-
-  // Detail card with body composition
+  // Detail card
   const dc=document.getElementById('egym-detail');
-  if(last){
-    const params=[
-      {l:'Körperfett',v:last.bodyFat,u:'%',good:v=>v<20?'var(--green)':v<25?'var(--neon)':v<30?'var(--orange)':'var(--red)'},
-      {l:'Muskelmasse',v:last.muscleMass,u:'kg',good:v=>v>40?'var(--green)':v>30?'var(--neon)':'var(--orange)'},
-      {l:'Viszeralfett',v:last.visceralFat,u:'',good:v=>v<10?'var(--green)':v<13?'var(--neon)':v<17?'var(--orange)':'var(--red)'},
-      {l:'Wasseranteil',v:last.water,u:'%',good:v=>v>55?'var(--green)':v>50?'var(--neon)':'var(--orange)'},
-      {l:'Knochenmasse',v:last.boneMass,u:'kg',good:()=>'var(--text)'},
-      {l:'Grundumsatz',v:last.bmr,u:'kcal',good:()=>'var(--text)'},
-      {l:'Gewicht',v:last.weight,u:'kg',good:()=>'var(--text)'},
-      {l:'BMI',v:last.bmi,u:'',good:v=>v>=20&&v<=25?'var(--green)':v>25&&v<30?'var(--orange)':v>=30?'var(--red)':'var(--blue)'}
+  if(m){
+    let dh=`<div style="font-size:12px;font-weight:600;margin-bottom:8px">Messungen — ${m.date}</div>`;
+    const rows=[
+      ['BMI',m.bmi,'kg/m²'],
+      ['Extrazelluläres Wasser',m.ezw,'l'],
+      ['Fettfreie Masse',m.ffm,'kg'],
+      ['Gewicht',m.gewicht,'kg'],
+      ['Grundumsatz',m.bmr,'Kcal'],
+      ['Intrazelluläres Wasser',m.izw,'l'],
+      ['Körperfett',m.kfp,'%'],
+      ['Körperfett',m.kfkg,'kg'],
+      ['Körperwasser',m.kwp,'%'],
+      ['Körperwasser',m.kwl,'l']
     ];
-    let dh='<div style="font-size:12px;font-weight:600;margin-bottom:8px">Körperanalyse — '+last.date+'</div>';
-    params.forEach(p=>{
-      if(p.v===null||p.v===undefined)return;
-      const col=p.good(p.v);
-      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)">
-        <span style="font-size:13px;color:var(--text2)">${p.l}</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:${col}">${p.v}${p.u?' '+p.u:''}</span>
-      </div>`;
+    rows.forEach(([l,v,u])=>{
+      if(v===null||v===undefined)return;
+      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v} ${u}</span></div>`;
     });
+    // Magermasse
+    [['Magermasse Arm',m.mmal,m.mmar,'kg'],['Magermasse Bein',m.mmbl,m.mmbr,'kg'],['Magermasse Rumpf',m.mmru,null,'kg']].forEach(([l,v1,v2,u])=>{
+      if(!v1)return;
+      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v2!==null?'L '+v1+' / R '+v2:v1} ${u}</span></div>`;
+    });
+    // Muskeln
+    [['Muskeln Arm',m.mual,m.muar,'kg'],['Muskeln Bein',m.mubl,m.mubr,'kg'],['Muskeln Rumpf',m.muru,null,'kg']].forEach(([l,v1,v2,u])=>{
+      if(!v1)return;
+      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v2!==null?'L '+v1+' / R '+v2:v1} ${u}</span></div>`;
+    });
+    // Remaining single values
+    [['Phasenwinkel',m.pw,'°'],['Skelettmuskelmasse',m.smm,'kg'],['Viszerales Fett',m.vf,'']].forEach(([l,v,u])=>{
+      if(v===null||v===undefined)return;
+      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v} ${u}</span></div>`;
+    });
+    // Muskelverteilung
+    dh+=bodyMapSVG(m);
     dc.innerHTML=dh;
   }else dc.innerHTML='<div style="text-align:center;padding:12px;color:var(--text3);font-size:12px">Noch keine Messung</div>';
-
-  // Charts (BioAge + Body Fat + Muscle Mass over time)
+  // Charts
   const ca=document.getElementById('egym-chart-area');
   if(ms.length>=2){
     let ch='';
-    const chartSets=[
-      {label:'BioAge Verlauf',key:'bioAge',color:'var(--neon)'},
-      {label:'Körperfett %',key:'bodyFat',color:'var(--orange)'},
-      {label:'Muskelmasse kg',key:'muscleMass',color:'var(--blue)'}
-    ];
-    chartSets.forEach(cs=>{
-      const pts=ms.filter(m=>m[cs.key]!==null&&m[cs.key]!==undefined).map(m=>({v:m[cs.key],label:m.date.substring(5)}));
+    [{l:'BioAge',k:'bioage',c:'var(--neon)'},{l:'Körperfett %',k:'kfp',c:'var(--orange)'},{l:'Skelettmuskelmasse',k:'smm',c:'var(--blue)'},{l:'Körperwasser %',k:'kwp',c:'var(--purple)'}].forEach(cs=>{
+      const pts=ms.filter(x=>x[cs.k]!==null&&x[cs.k]!==undefined).map(x=>({v:x[cs.k],label:x.date.substring(5)}));
       if(pts.length>=2){
         const med=pts.map(p=>p.v).sort((a,b)=>a-b)[Math.floor(pts.length/2)];
-        ch+=`<div class="prog" style="margin-bottom:8px"><div class="prog-h">${cs.label}<span>${pts[pts.length-1].v}</span></div>${svgChart(pts,{h:100,color:cs.color,median:med,showGrid:true,colorDots:true,xLabels:pts.length<=10})}</div>`;
+        ch+=`<div class="prog" style="margin-bottom:8px"><div class="prog-h">${cs.l}<span>${pts[pts.length-1].v}</span></div>${svgChart(pts,{h:100,color:cs.c,median:med,showGrid:true,colorDots:true,xLabels:pts.length<=10})}</div>`;
       }
     });
     ca.innerHTML=ch;
   }else ca.innerHTML='';
-
-  // History list
+  // History
   const hc=document.getElementById('egym-history');
   if(!ms.length){hc.innerHTML='<div class="empty">Keine Messungen</div>';return}
   let hh='';
-  [...ms].reverse().forEach((m,i)=>{
+  [...ms].reverse().forEach((x,i)=>{
     const ri=ms.length-1-i;
-    hh+=`<div class="card" style="margin-bottom:6px;padding:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-weight:600;font-size:14px">${m.date}</div>
-        <div style="font-size:11px;color:var(--text2)">BioAge: ${m.bioAge||'—'} • KFA: ${m.bodyFat||'—'}% • Muskeln: ${m.muscleMass||'—'}kg</div></div>
-        <button style="background:none;border:none;color:var(--red);font-size:13px;cursor:pointer" onclick="delEgymEntry(${ri})">✕</button>
-      </div>
-    </div>`;
+    hh+=`<div class="card" style="margin-bottom:6px;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:600">${x.date}</div><div style="font-size:11px;color:var(--text2)">BioAge: ${x.bioage||'—'} • KFA: ${x.kfp||'—'}% • SMM: ${x.smm||'—'}kg</div></div>
+      <button style="background:none;border:none;color:var(--red);cursor:pointer" onclick="delEgymEntry(${ri})">✕</button>
+    </div></div>`;
   });
   hc.innerHTML=hh;
 }
@@ -2684,7 +2698,7 @@ function renderAna(){
       chest:{ex:/bankdrück|bench|chest press|brustpress/i,levels:[0.5,0.75,1.0,1.25,1.5],label:'Bankdrücken'},
       back:{ex:/rudern|row|latziehn|pulldown|klimmzüg|pull.up/i,levels:[0.4,0.6,0.8,1.0,1.2],label:'Rudern/Latziehen'},
       legs:{ex:/kniebeuge|squat|beinpresse|leg press/i,levels:[0.7,1.0,1.4,1.8,2.2],label:'Kniebeuge'},
-      shoulders:{ex:/schulterdrück|overhead|shoulder press/i,levels:[0.35,0.5,0.65,0.8,1.0],label:'Schulterdrücken'},
+      shoulders:{ex:/schulterdrück|seitheben|lateral|frontheben|arnold|overhead|shoulder|military/i,levels:[0.35,0.5,0.65,0.8,1.0],label:'Schulterdrücken'},
       arms:{ex:/curl|bizep|trizep/i,levels:[0.2,0.3,0.4,0.5,0.6],label:'Curl/Trizeps'},
       core:{ex:/crunch|bauch|plank|leg raise|beinheben/i,levels:[0.15,0.25,0.35,0.45,0.55],label:'Core'}
     },
@@ -2692,7 +2706,7 @@ function renderAna(){
       chest:{ex:/bankdrück|bench|chest press|brustpress|liegestütz/i,levels:[0.25,0.4,0.6,0.75,0.9],label:'Bankdrücken'},
       back:{ex:/rudern|row|latziehn|pulldown/i,levels:[0.2,0.35,0.5,0.65,0.8],label:'Rudern/Latziehen'},
       legs:{ex:/kniebeuge|squat|beinpresse|hüftstoß|hip thrust/i,levels:[0.5,0.75,1.0,1.3,1.6],label:'Kniebeuge/Hip Thrust'},
-      shoulders:{ex:/schulterdrück|overhead|shoulder press/i,levels:[0.2,0.3,0.45,0.55,0.65],label:'Schulterdrücken'},
+      shoulders:{ex:/schulterdrück|seitheben|lateral|frontheben|arnold|overhead|shoulder|military/i,levels:[0.2,0.3,0.45,0.55,0.65],label:'Schulterdrücken'},
       arms:{ex:/curl|bizep|trizep/i,levels:[0.1,0.2,0.3,0.35,0.45],label:'Curl/Trizeps'},
       core:{ex:/crunch|bauch|plank|leg raise|beinheben/i,levels:[0.1,0.2,0.3,0.4,0.5],label:'Core'}
     }
