@@ -2592,42 +2592,139 @@ function renderEgym(){
   [['egym-kraft','kraft','var(--neon)'],['egym-kardio','kardio','var(--red)'],['egym-stoffwechsel','stoff','var(--blue)'],['egym-flex','flex','var(--purple)']].forEach(([id,key,col])=>{
     const el=document.getElementById(id);el.textContent=m&&m[key]?m[key]:'—';el.style.color=col;
   });
-  // Detail card
+  // Detail card with scientific ratings
   const dc=document.getElementById('egym-detail');
   if(m){
-    let dh=`<div style="font-size:12px;font-weight:600;margin-bottom:8px">Messungen — ${m.date}</div>`;
-    const rows=[
-      ['BMI',m.bmi,'kg/m²'],
-      ['Extrazelluläres Wasser',m.ezw,'l'],
-      ['Fettfreie Masse',m.ffm,'kg'],
-      ['Gewicht',m.gewicht,'kg'],
-      ['Grundumsatz',m.bmr,'Kcal'],
-      ['Intrazelluläres Wasser',m.izw,'l'],
-      ['Körperfett',m.kfp,'%'],
-      ['Körperfett',m.kfkg,'kg'],
-      ['Körperwasser',m.kwp,'%'],
-      ['Körperwasser',m.kwl,'l']
-    ];
-    rows.forEach(([l,v,u])=>{
-      if(v===null||v===undefined)return;
-      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v} ${u}</span></div>`;
-    });
-    // Magermasse
-    [['Magermasse Arm',m.mmal,m.mmar,'kg'],['Magermasse Bein',m.mmbl,m.mmbr,'kg'],['Magermasse Rumpf',m.mmru,null,'kg']].forEach(([l,v1,v2,u])=>{
-      if(!v1)return;
-      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v2!==null?'L '+v1+' / R '+v2:v1} ${u}</span></div>`;
-    });
-    // Muskeln
-    [['Muskeln Arm',m.mual,m.muar,'kg'],['Muskeln Bein',m.mubl,m.mubr,'kg'],['Muskeln Rumpf',m.muru,null,'kg']].forEach(([l,v1,v2,u])=>{
-      if(!v1)return;
-      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v2!==null?'L '+v1+' / R '+v2:v1} ${u}</span></div>`;
-    });
-    // Remaining single values
-    [['Phasenwinkel',m.pw,'°'],['Skelettmuskelmasse',m.smm,'kg'],['Viszerales Fett',m.vf,'']].forEach(([l,v,u])=>{
-      if(v===null||v===undefined)return;
-      dh+=`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg3)"><span style="font-size:13px;color:var(--text2)">${l}</span><span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${v} ${u}</span></div>`;
-    });
-    // Muskelverteilung
+    const g=(D.bio&&D.bio.gender)||'male';
+    const isMale=g==='male';
+    const bw=m.gewicht||80;
+    // Rating system based on: Huberman/Galpin (body fat, FFMI), Attia (visceral fat, body comp),
+    // ACE (fitness classification), Barbosa-Silva & Norman (phase angle BIA research)
+    function rate(key,val){
+      if(val===null||val===undefined)return null;
+      if(key==='bmi'){
+        if(val<18.5)return{l:'Untergewicht',c:'var(--blue)',tip:'Attia: BMI allein wenig aussagekräftig, Körperzusammensetzung entscheidend'};
+        if(val<25)return{l:'Normal',c:'var(--green)',tip:'Optimaler Bereich'};
+        if(val<30)return{l:'Übergewicht',c:'var(--orange)',tip:'Bei hoher Muskelmasse oft irreführend (Attia)'};
+        return{l:'Erhöht',c:'var(--red)',tip:'Körperfett% und Viszeralfett prüfen'};
+      }
+      if(key==='kfp'){
+        if(isMale){
+          if(val<6)return{l:'Essentiell niedrig',c:'var(--blue)',tip:'Huberman: Unter 10% kann Testosteron sinken'};
+          if(val<10)return{l:'Wettkampf-Lean',c:'var(--green)',tip:'Sehr niedrig, nicht dauerhaft haltbar'};
+          if(val<15)return{l:'Athletisch',c:'var(--green)',tip:'Huberman/Galpin: 10-15% optimal für Männer'};
+          if(val<20)return{l:'Fitness',c:'var(--neon)',tip:'Huberman: Unter 20% halten für optimales Testosteron'};
+          if(val<25)return{l:'Akzeptabel',c:'var(--orange)',tip:'Huberman: Über 20% KFA beeinträchtigt Testosteron'};
+          return{l:'Erhöht',c:'var(--red)',tip:'Attia: Viszeralfett prüfen, Fettreduktion priorisieren'};
+        }else{
+          if(val<14)return{l:'Essentiell niedrig',c:'var(--blue)',tip:'Zu niedrig für Hormonbalance'};
+          if(val<21)return{l:'Athletisch',c:'var(--green)',tip:'ACE Athletic range für Frauen'};
+          if(val<25)return{l:'Fitness',c:'var(--neon)',tip:'ACE Fitness range'};
+          if(val<32)return{l:'Gesund',c:'var(--orange)',tip:'ACE akzeptabler Bereich'};
+          return{l:'Erhöht',c:'var(--red)',tip:'Über dem empfohlenen Bereich'};
+        }
+      }
+      if(key==='vf'){
+        if(val<=9)return{l:'Normal',c:'var(--green)',tip:'Attia: Viszeralfett niedrig halten ist Priorität Nr. 1'};
+        if(val<=14)return{l:'Erhöht',c:'var(--orange)',tip:'Attia: Selbst moderate Werte erhöhen kardiovaskuläres Risiko deutlich'};
+        return{l:'Hoch',c:'var(--red)',tip:'Attia: "Es braucht nicht viel Viszeralfett um Probleme zu verursachen"'};
+      }
+      if(key==='kwp'){
+        const lo=isMale?50:45,hi=isMale?65:60;
+        if(val>=hi)return{l:'Hoch',c:'var(--blue)',tip:'Sehr gut hydriert'};
+        if(val>=(lo+hi)/2)return{l:'Optimal',c:'var(--green)',tip:'Guter Hydratationsstatus'};
+        if(val>=lo)return{l:'Normal',c:'var(--neon)',tip:'Unteres Normalspektrum'};
+        return{l:'Niedrig',c:'var(--orange)',tip:'Hydratation verbessern'};
+      }
+      // Phase angle — Barbosa-Silva et al. 2005, Norman et al. 2012
+      // Higher = better cellular integrity and nutrition status
+      if(key==='pw'){
+        if(isMale){
+          if(val>=7)return{l:'Exzellent',c:'var(--green)',tip:'Barbosa-Silva: >7° = exzellente Zellgesundheit bei Männern'};
+          if(val>=6)return{l:'Gut',c:'var(--neon)',tip:'Normaler bis guter Bereich'};
+          if(val>=5)return{l:'Normal',c:'var(--orange)',tip:'Unterer Normbereich, Training + Ernährung optimieren'};
+          return{l:'Niedrig',c:'var(--red)',tip:'Norman: Niedrige Phasenwinkel korrelieren mit schlechterem Ernährungszustand'};
+        }else{
+          if(val>=6.5)return{l:'Exzellent',c:'var(--green)',tip:'Barbosa-Silva: >6.5° exzellent bei Frauen'};
+          if(val>=5.5)return{l:'Gut',c:'var(--neon)',tip:'Guter Bereich'};
+          if(val>=4.5)return{l:'Normal',c:'var(--orange)',tip:'Unterer Normbereich'};
+          return{l:'Niedrig',c:'var(--red)',tip:'Auf Ernährung und Zellgesundheit achten'};
+        }
+      }
+      // Skelettmuskelmasse relativ zum Körpergewicht
+      if(key==='smm'&&bw>0){
+        const pct=val/bw*100;
+        if(isMale){
+          if(pct>=42)return{l:'Überdurchschnittlich',c:'var(--green)',tip:'Huberman/Galpin: FFMI 20+ anstreben'};
+          if(pct>=38)return{l:'Gut',c:'var(--neon)',tip:'Guter Muskelanteil'};
+          if(pct>=35)return{l:'Normal',c:'var(--orange)',tip:'Huberman: Muskelaufbau priorisieren'};
+          return{l:'Niedrig',c:'var(--red)',tip:'Attia: Muskelmasse ist der stärkste Longevity-Hebel'};
+        }else{
+          if(pct>=35)return{l:'Überdurchschnittlich',c:'var(--green)',tip:'Sehr guter Muskelanteil'};
+          if(pct>=30)return{l:'Gut',c:'var(--neon)',tip:'Guter Bereich'};
+          if(pct>=25)return{l:'Normal',c:'var(--orange)',tip:'Kraft- und Muskelaufbau empfohlen'};
+          return{l:'Niedrig',c:'var(--red)',tip:'Muskelaufbau priorisieren'};
+        }
+      }
+      // FFM relative to weight
+      if(key==='ffm'&&bw>0){
+        const pct=val/bw*100;
+        if(isMale){
+          if(pct>=82)return{l:'Sehr gut',c:'var(--green)',tip:'Hoher fettfreier Masseanteil'};
+          if(pct>=75)return{l:'Gut',c:'var(--neon)',tip:'Normaler Bereich für trainierte Männer'};
+          return{l:'Ausbaufähig',c:'var(--orange)',tip:'Fettfreie Masse durch Training steigern'};
+        }else{
+          if(pct>=75)return{l:'Sehr gut',c:'var(--green)',tip:'Hoher fettfreier Masseanteil'};
+          if(pct>=68)return{l:'Gut',c:'var(--neon)',tip:'Normaler Bereich'};
+          return{l:'Ausbaufähig',c:'var(--orange)',tip:'Krafttraining empfohlen'};
+        }
+      }
+      return null;
+    }
+
+    let dh=`<div style="font-size:12px;font-weight:600;margin-bottom:10px">Messungen — ${m.date}</div>`;
+    function addRow(label,val,unit,rateKey){
+      if(val===null||val===undefined)return;
+      const r=rateKey?rate(rateKey,val):null;
+      dh+=`<div style="padding:8px 0;border-bottom:1px solid var(--bg3)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:var(--text2)">${label}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${r?`<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:${r.c}22;color:${r.c};font-weight:600">${r.l}</span>`:''}
+            <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">${val} ${unit}</span>
+          </div>
+        </div>
+        ${r&&r.tip?`<div style="font-size:10px;color:var(--text3);margin-top:3px">${r.tip}</div>`:''}
+      </div>`;
+    }
+    function addPairRow(label,vl,vr,unit){
+      if(!vl)return;
+      dh+=`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg3)">
+        <span style="font-size:13px;color:var(--text2)">${label}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600">L ${vl} / R ${vr} ${unit}</span>
+      </div>`;
+    }
+
+    addRow('BMI',m.bmi,'kg/m²','bmi');
+    addRow('Extrazelluläres Wasser',m.ezw,'l',null);
+    addRow('Fettfreie Masse',m.ffm,'kg','ffm');
+    addRow('Gewicht',m.gewicht,'kg',null);
+    addRow('Grundumsatz',m.bmr,'Kcal',null);
+    addRow('Intrazelluläres Wasser',m.izw,'l',null);
+    addRow('Körperfett',m.kfp,'%','kfp');
+    addRow('Körperfett',m.kfkg,'kg',null);
+    addRow('Körperwasser',m.kwp,'%','kwp');
+    addRow('Körperwasser',m.kwl,'l',null);
+    addPairRow('Magermasse Arm',m.mmal,m.mmar,'kg');
+    addPairRow('Magermasse Bein',m.mmbl,m.mmbr,'kg');
+    addRow('Magermasse Rumpf',m.mmru,'kg',null);
+    addPairRow('Muskeln Arm',m.mual,m.muar,'kg');
+    addPairRow('Muskeln Bein',m.mubl,m.mubr,'kg');
+    addRow('Muskeln Rumpf',m.muru,'kg',null);
+    addRow('Phasenwinkel',m.pw,'°','pw');
+    addRow('Skelettmuskelmasse',m.smm,'kg','smm');
+    addRow('Viszerales Fett',m.vf,'','vf');
+
     dh+=bodyMapSVG(m);
     dc.innerHTML=dh;
   }else dc.innerHTML='<div style="text-align:center;padding:12px;color:var(--text3);font-size:12px">Noch keine Messung</div>';
