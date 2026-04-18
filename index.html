@@ -19,7 +19,7 @@ input,textarea,select{-webkit-user-select:text;user-select:text}
 @media(prefers-color-scheme:light){:root{--bg:#f5f5f7;--bg2:#ffffff;--bg3:#e8e8ec;--bg4:#d4d4da;--bg5:#c0c0c8;--neon:#4a9e00;--neon2:#3d8500;--nd:rgba(74,158,0,.12);--red:#e0334e;--orange:#e07530;--blue:#1a8fd4;--purple:#8b5cf6;--green:#22a876;--text:#111116;--text2:#555566;--text3:#888899}}
 html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,sans-serif;overflow-x:hidden;height:100%;-webkit-font-smoothing:antialiased}
 .app{max-width:430px;margin:0 auto;min-height:100vh;position:relative}
-.screen{display:none;padding:0 16px 72px;animation:fu .25s ease}.screen.active{display:block}
+.screen{display:none;padding:0 16px 58px;animation:fu .25s ease}.screen.active{display:block}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .hdr{padding:max(env(safe-area-inset-top),12px) 0 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;background:var(--bg)}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--neon);text-shadow:0 0 20px rgba(200,255,0,.25)}
@@ -27,12 +27,12 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pu 2s infinite}
 .pill.offline .dot{background:var(--red)}.pill.offline{color:var(--red)}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,12,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);display:flex;padding:4px 0 max(env(safe-area-inset-bottom),4px);z-index:100}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,12,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);display:flex;padding:2px 0 max(env(safe-area-inset-bottom),2px);z-index:100}
 @media(prefers-color-scheme:light){.bnav{background:rgba(245,245,247,.92)}.logo{text-shadow:none}.login-logo{text-shadow:none}.card::before{background:linear-gradient(90deg,transparent,rgba(74,158,0,.1),transparent)}.ni.on svg{filter:none}}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0;cursor:pointer}
-.ni svg{width:20px;height:20px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.2s}
-.ni .nl{font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);transition:.2s}
-.ni.on svg{stroke:var(--neon);filter:drop-shadow(0 0 4px rgba(200,255,0,.3))}.ni.on .nl{color:var(--neon)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:0;padding:2px 0;cursor:pointer}
+.ni svg{width:18px;height:18px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.2s}
+.ni .nl{font-size:8px;text-transform:uppercase;letter-spacing:.3px;color:var(--text3);transition:.2s;line-height:1}
+.ni.on svg{stroke:var(--neon);filter:drop-shadow(0 0 3px rgba(200,255,0,.3))}.ni.on .nl{color:var(--neon)}
 .card{background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,255,0,.12),transparent)}
 .st{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text2);margin:22px 0 10px;display:flex;align-items:center;gap:8px}
@@ -1472,22 +1472,59 @@ function renderDash(){
   const vol=getWeeklyVolume();
   const muscleNames={chest:'Brust',back:'Rücken',legs:'Beine',shoulders:'Schultern',arms:'Arme',core:'Core'};
   const muscleColors={chest:'var(--neon)',back:'var(--blue)',legs:'var(--purple)',shoulders:'var(--orange)',arms:'var(--red)',core:'var(--green)'};
-  const volEntries=Object.entries(vol).filter(([k])=>muscleNames[k]).sort((a,b)=>b[1].volume-a[1].volume);
+  // Mike Israetel (Renaissance Periodization) Volume Landmarks per week
+  // MEV = Minimum Effective Volume, MAV = Maximum Adaptive Volume, MRV = Maximum Recoverable Volume
+  const RP={
+    chest:{mev:8,mav:16,mrv:22},
+    back:{mev:8,mav:16,mrv:23},
+    legs:{mev:6,mav:14,mrv:20},
+    shoulders:{mev:6,mav:14,mrv:20},
+    arms:{mev:4,mav:12,mrv:18},
+    core:{mev:0,mav:8,mrv:16}
+  };
+  const volEntries=Object.entries(vol).filter(([k])=>muscleNames[k]).sort((a,b)=>b[1].sets-a[1].sets);
   if(!volEntries.length){
     volDiv.innerHTML='<div style="text-align:center;color:var(--text3);padding:12px;font-size:13px">Diese Woche noch kein Training</div>';
   }else{
-    const maxVol=Math.max(...volEntries.map(([,v])=>v.volume));
-    let vh='<div style="font-size:12px;font-weight:600;margin-bottom:10px">Letzte 7 Tage</div>';
-    volEntries.forEach(([m,d])=>{
-      const pct=maxVol>0?(d.volume/maxVol)*100:0;
+    let vh='<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Wöchentliches Volumen vs. Israetel MEV/MAV/MRV</div>';
+    // Also show muscles with 0 sets if they have RP targets
+    const allMuscles=new Set([...volEntries.map(([k])=>k),...Object.keys(RP)]);
+    const sorted=[...allMuscles].filter(k=>muscleNames[k]).sort((a,b)=>{
+      const sa=(vol[a]?vol[a].sets:0),sb=(vol[b]?vol[b].sets:0);
+      return sb-sa;
+    });
+    sorted.forEach(m=>{
+      const d=vol[m]||{sets:0,volume:0};
+      const rp=RP[m];
+      if(!rp)return;
+      const sets=d.sets;
       const col=muscleColors[m]||'var(--text2)';
-      vh+=`<div style="margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
-          <span style="font-weight:600">${muscleNames[m]||m}</span>
-          <span style="color:var(--text2)">${d.sets} Sätze • ${Math.round(d.volume/1000)}t</span>
+      // Status label
+      let status,statusCol;
+      if(sets===0){status='Kein Training';statusCol='var(--text3)'}
+      else if(sets<rp.mev){status='Unter MEV';statusCol='var(--red)'}
+      else if(sets<=rp.mav){status='Im MAV ✓';statusCol='var(--green)'}
+      else if(sets<=rp.mrv){status='Hohes Volumen';statusCol='var(--orange)'}
+      else{status='Über MRV ⚠️';statusCol='var(--red)'}
+      // Bar position: scale to MRV
+      const pct=Math.min(100,(sets/rp.mrv)*100);
+      const mevPct=(rp.mev/rp.mrv)*100;
+      const mavPct=(rp.mav/rp.mrv)*100;
+      vh+=`<div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:3px">
+          <span style="font-weight:600">${muscleNames[m]}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${statusCol}22;color:${statusCol};font-weight:600">${status}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)">${sets}/${rp.mev}-${rp.mrv}</span>
+          </div>
         </div>
-        <div style="height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${col};border-radius:4px;transition:width .5s"></div>
+        <div style="position:relative;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden">
+          <div style="position:absolute;left:${mevPct}%;top:0;bottom:0;width:1px;background:var(--text3);opacity:.5"></div>
+          <div style="position:absolute;left:${mavPct}%;top:0;bottom:0;width:1px;background:var(--text3);opacity:.5"></div>
+          <div style="height:100%;width:${pct}%;background:${sets<rp.mev?'var(--red)':sets<=rp.mav?col:'var(--orange)'};border-radius:4px;transition:width .5s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text3);margin-top:1px;padding:0 2px">
+          <span>0</span><span style="margin-left:${mevPct-5}%">MEV ${rp.mev}</span><span>MAV ${rp.mav}</span><span>MRV ${rp.mrv}</span>
         </div>
       </div>`;
     });
