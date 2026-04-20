@@ -19,7 +19,7 @@ input,textarea,select{-webkit-user-select:text;user-select:text}
 @media(prefers-color-scheme:light){:root{--bg:#f5f5f7;--bg2:#ffffff;--bg3:#e8e8ec;--bg4:#d4d4da;--bg5:#c0c0c8;--neon:#4a9e00;--neon2:#3d8500;--nd:rgba(74,158,0,.12);--red:#e0334e;--orange:#e07530;--blue:#1a8fd4;--purple:#8b5cf6;--green:#22a876;--text:#111116;--text2:#555566;--text3:#888899}}
 html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',system-ui,sans-serif;overflow-x:hidden;height:100%;-webkit-font-smoothing:antialiased}
 .app{max-width:430px;margin:0 auto;min-height:100vh;position:relative}
-.screen{display:none;padding:0 16px calc(44px + env(safe-area-inset-bottom,4px));animation:fu .25s ease}.screen.active{display:block}
+.screen{display:none;padding:0 16px calc(46px + env(safe-area-inset-bottom,0px));animation:fu .25s ease}.screen.active{display:block}
 @keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .hdr{padding:max(env(safe-area-inset-top),12px) 0 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;background:var(--bg)}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--neon);text-shadow:0 0 20px rgba(200,255,0,.25)}
@@ -27,11 +27,13 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pu 2s infinite}
 .pill.offline .dot{background:var(--red)}.pill.offline{color:var(--red)}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,12,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);display:flex;padding:4px 0 env(safe-area-inset-bottom,4px);z-index:100;transition:transform .25s ease}
-@media(prefers-color-scheme:light){.bnav{background:rgba(245,245,247,.92)}.logo{text-shadow:none}.login-logo{text-shadow:none}.card::before{background:linear-gradient(90deg,transparent,rgba(74,158,0,.1),transparent)}.ni.on svg{filter:none}}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:2px 0;cursor:pointer}
-.ni svg{width:20px;height:20px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.2s}
-.ni .nl{font-size:8px;text-transform:uppercase;letter-spacing:.3px;color:var(--text3);transition:.2s;line-height:1}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:100;display:flex;flex-direction:column}
+.bnav-inner{display:flex;background:rgba(10,10,12,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);padding:4px 0}
+.bnav-safe{height:env(safe-area-inset-bottom,0px);background:linear-gradient(rgba(10,10,12,.7),transparent)}
+@media(prefers-color-scheme:light){.bnav-inner{background:rgba(245,245,247,.92)}.bnav-safe{background:linear-gradient(rgba(245,245,247,.5),transparent)}.logo{text-shadow:none}.login-logo{text-shadow:none}.card::before{background:linear-gradient(90deg,transparent,rgba(74,158,0,.1),transparent)}.ni.on svg{filter:none}}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0;cursor:pointer}
+.ni svg{width:22px;height:22px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.2s}
+.ni .nl{font-size:9px;text-transform:uppercase;letter-spacing:.3px;color:var(--text3);transition:.2s;line-height:1}
 .ni.on svg{stroke:var(--neon);filter:drop-shadow(0 0 3px rgba(200,255,0,.3))}.ni.on .nl{color:var(--neon)}
 .card{background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden}
 .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,255,0,.12),transparent)}
@@ -223,11 +225,14 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 <div id="main-app" style="display:none">
 
 <nav class="bnav">
+<div class="bnav-inner">
 <div class="ni on" data-tab="dash" onclick="go('dash')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Home</span></div>
 <div class="ni" id="nav-aktiv" data-tab="wo" onclick="go('wo')" style="display:none"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="nl">Aktiv</span></div>
 <div class="ni" data-tab="hist" onclick="go('hist')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Historie</span></div>
 <div class="ni" data-tab="ana" onclick="go('ana')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nl">Stats</span></div>
 <div class="ni" data-tab="settings" onclick="go('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="nl">Setup</span></div>
+</div>
+<div class="bnav-safe"></div>
 </nav>
 
 <!-- DASHBOARD / HOME -->
@@ -1113,17 +1118,6 @@ document.addEventListener('visibilitychange',()=>{
     }).catch(()=>{});
   }
 });
-
-// Auto-hide nav on scroll down, show on scroll up (iOS touch-based)
-let navHidden=false,touchStartY=0,lastKnownScroll=0;
-function showNav(){const nav=document.querySelector('.bnav');if(nav&&navHidden){nav.style.transform='translateX(-50%) translateY(0)';navHidden=false}}
-function hideNav(){const nav=document.querySelector('.bnav');if(nav&&!navHidden&&window.scrollY>60){nav.style.transform='translateX(-50%) translateY(100%)';navHidden=true}}
-document.addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY},{passive:true});
-document.addEventListener('touchmove',e=>{
-  const diff=touchStartY-e.touches[0].clientY;
-  if(diff>15)hideNav(); // finger moves up = page scrolls down
-  else if(diff<-15)showNav(); // finger moves down = page scrolls up
-},{passive:true});
 
 // ===== HELPERS =====
 const EMO={chest:'🫁',back:'🔙',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
