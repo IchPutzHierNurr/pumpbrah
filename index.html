@@ -1114,20 +1114,15 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 
-// Auto-hide nav on scroll down, show on scroll up (Instagram-style)
-let lastScrollY=0,navHidden=false;
-window.addEventListener('scroll',()=>{
-  const y=window.scrollY;
-  const nav=document.querySelector('.bnav');
-  if(!nav)return;
-  if(y>lastScrollY&&y>60&&!navHidden){
-    nav.style.transform='translateX(-50%) translateY(100%)';
-    navHidden=true;
-  }else if(y<lastScrollY&&navHidden){
-    nav.style.transform='translateX(-50%) translateY(0)';
-    navHidden=false;
-  }
-  lastScrollY=y;
+// Auto-hide nav on scroll down, show on scroll up (iOS touch-based)
+let navHidden=false,touchStartY=0,lastKnownScroll=0;
+function showNav(){const nav=document.querySelector('.bnav');if(nav&&navHidden){nav.style.transform='translateX(-50%) translateY(0)';navHidden=false}}
+function hideNav(){const nav=document.querySelector('.bnav');if(nav&&!navHidden&&window.scrollY>60){nav.style.transform='translateX(-50%) translateY(100%)';navHidden=true}}
+document.addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY},{passive:true});
+document.addEventListener('touchmove',e=>{
+  const diff=touchStartY-e.touches[0].clientY;
+  if(diff>15)hideNav(); // finger moves up = page scrolls down
+  else if(diff<-15)showNav(); // finger moves down = page scrolls up
 },{passive:true});
 
 // ===== HELPERS =====
