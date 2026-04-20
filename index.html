@@ -27,7 +27,7 @@ html,body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sys
 .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--neon);animation:pu 2s infinite}
 .pill.offline .dot{background:var(--red)}.pill.offline{color:var(--red)}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.3}}
-.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,12,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);display:flex;padding:4px 0 env(safe-area-inset-bottom,4px);z-index:100}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:rgba(10,10,12,.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bg3);display:flex;padding:4px 0 env(safe-area-inset-bottom,4px);z-index:100;transition:transform .25s ease}
 @media(prefers-color-scheme:light){.bnav{background:rgba(245,245,247,.92)}.logo{text-shadow:none}.login-logo{text-shadow:none}.card::before{background:linear-gradient(90deg,transparent,rgba(74,158,0,.1),transparent)}.ni.on svg{filter:none}}
 .ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:2px 0;cursor:pointer}
 .ni svg{width:20px;height:20px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.2s}
@@ -1113,6 +1113,22 @@ document.addEventListener('visibilitychange',()=>{
     }).catch(()=>{});
   }
 });
+
+// Auto-hide nav on scroll down, show on scroll up (Instagram-style)
+let lastScrollY=0,navHidden=false;
+window.addEventListener('scroll',()=>{
+  const y=window.scrollY;
+  const nav=document.querySelector('.bnav');
+  if(!nav)return;
+  if(y>lastScrollY&&y>60&&!navHidden){
+    nav.style.transform='translateX(-50%) translateY(100%)';
+    navHidden=true;
+  }else if(y<lastScrollY&&navHidden){
+    nav.style.transform='translateX(-50%) translateY(0)';
+    navHidden=false;
+  }
+  lastScrollY=y;
+},{passive:true});
 
 // ===== HELPERS =====
 const EMO={chest:'🫁',back:'🔙',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
