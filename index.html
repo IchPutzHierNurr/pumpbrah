@@ -1830,6 +1830,72 @@ html.theme-light .k-value{
   .hist-calendar{border-radius:24px!important}
 }
 </style>
+<style>
+html,body{
+  width:100%;
+  min-height:100%;
+}
+body{
+  min-height:100dvh;
+}
+.app{
+  width:100%;
+  max-width:none!important;
+  min-height:100dvh;
+  margin:0;
+}
+.screen{
+  padding-left:16px!important;
+  padding-right:16px!important;
+  padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important;
+}
+.bnav{
+  left:0!important;
+  right:0!important;
+  bottom:0!important;
+  width:100%!important;
+  max-width:none!important;
+  transform:none!important;
+  padding-left:0!important;
+  padding-right:0!important;
+}
+.bnav-inner{
+  width:100%;
+  max-width:none!important;
+  border-radius:0!important;
+  padding:8px 10px 6px!important;
+}
+.bnav-safe{
+  width:100%;
+}
+.hdr,
+#wo-sticky-top{
+  margin-left:-16px;
+  margin-right:-16px;
+  padding-left:16px!important;
+  padding-right:16px!important;
+}
+.mdl{
+  width:100%!important;
+  max-width:none!important;
+  border-radius:24px 24px 0 0!important;
+}
+@media (min-width:700px){
+  .app{
+    max-width:520px!important;
+    margin:0 auto;
+  }
+  .bnav{
+    max-width:520px!important;
+    left:50%!important;
+    right:auto!important;
+    transform:translateX(-50%)!important;
+  }
+  .bnav-inner{
+    border-radius:28px 28px 0 0!important;
+  }
+}
+</style>
 </head>
 <body>
 <div class="app" id="app">
