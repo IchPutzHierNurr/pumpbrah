@@ -1928,6 +1928,45 @@ body{
   border:2px solid rgba(255,255,255,.08);
 }
 </style>
+<style>
+#d-muscle-volume{margin:0 0 14px}
+.muscle-volume-card{padding:18px;border-radius:28px;background:#17181f;border:1px solid rgba(255,255,255,.06);box-shadow:0 18px 40px rgba(0,0,0,.28)}
+.muscle-volume-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.muscle-volume-title{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);font-weight:700}
+.muscle-volume-link{font-size:12px;color:var(--accent);font-weight:700;background:#20222b;border:1px solid rgba(255,255,255,.06);border-radius:999px;padding:8px 12px;line-height:1;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.home-name-row{display:flex;align-items:center;gap:12px}
+.home-avatar{width:48px;height:48px;border-radius:50%;flex:0 0 48px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#0b0c10;font-family:'Bebas Neue',sans-serif;font-size:24px;overflow:hidden;border:1px solid rgba(255,255,255,.08);box-shadow:0 10px 24px rgba(0,0,0,.22)}
+.home-avatar.has-image{background-size:cover;background-position:center;background-repeat:no-repeat;color:transparent}
+.home-name-text{display:block}
+.mv-list{display:flex;flex-direction:column;gap:14px}
+.mv-row{padding:2px 0}
+.mv-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.mv-name{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700}
+.mv-state{font-size:12px;font-weight:700}
+.mv-state.low{color:#ffb020}
+.mv-state.mid{color:#34d058}
+.mv-state.high{color:#ff4d73}
+.mv-bar{position:relative;height:10px;border-radius:999px;background:#22242d;overflow:hidden}
+.mv-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px}
+.mv-fill.low{background:#ffb020}
+.mv-fill.mid{background:#34d058}
+.mv-fill.high{background:#ff4d73}
+.mv-mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(255,255,255,.16);border-radius:999px}
+.mv-zero{font-size:11px;color:var(--text3);margin-top:4px}
+.plan-drawer{padding:12px 14px 14px;border-radius:24px}
+.plan-drawer-toggle{width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;color:var(--text);padding:2px 2px 8px;cursor:pointer}
+.plan-drawer-toggle span:first-child{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);font-weight:700}
+.plan-drawer-toggle #plan-drawer-meta{margin-left:auto;font-size:12px;color:var(--text3);font-weight:600}
+.plan-drawer-arrow{font-size:18px;color:var(--text2);transition:transform .2s ease}
+.plan-drawer.open .plan-drawer-arrow{transform:rotate(180deg)}
+.plan-drawer-content{display:none;padding-top:10px}
+.plan-drawer.open .plan-drawer-content{display:block}
+.plan-drawer .plan-mgmt{margin-top:0!important}
+@media (max-width:430px){
+  .muscle-volume-card{padding:16px;border-radius:24px}
+  .mv-name{font-size:14px}
+}
+</style>
 </head>
 <body>
 <div class="app" id="app">
@@ -1969,10 +2008,17 @@ body{
 <div id="d-week-card"></div>
 <div id="d-kpi-row"></div>
 <div id="d-next-card"></div>
+<div id="d-muscle-volume"></div>
 <div class="st">DIESE WOCHE <div class="ln"></div></div>
 <div class="hero"><div class="hs"><div class="v" id="d-sess">0</div><div class="l">Sessions</div></div><div class="hs"><div class="v" id="d-sets">0</div><div class="l">Sätze</div></div><div class="hs"><div class="v" id="d-rest">—</div><div class="l">Ruhetage</div></div></div>
 <div id="deload-area"></div>
-<div class="st">TRAININGSPLAN <div class="ln"></div></div>
+<div class="plan-drawer card" id="dash-plan-drawer">
+<button class="plan-drawer-toggle" id="plan-drawer-toggle" onclick="togglePlanDrawer()">
+<span>Trainingsplan</span>
+<span id="plan-drawer-meta">Tippen zum Aufklappen</span>
+<span class="plan-drawer-arrow" id="plan-drawer-arrow">▾</span>
+</button>
+<div class="plan-drawer-content" id="dash-plan-content">
 <div class="plan-mgmt">
 <button class="btn btn-s btn-g" onclick="addPlanDay()">+ Tag</button>
 <button class="btn btn-s btn-g" onclick="renamePlanDay()">✏️ Umbenennen</button>
@@ -1981,12 +2027,13 @@ body{
 </div>
 <div class="dtabs" id="pt"></div>
 <div id="pl"></div>
+</div>
+</div>
 <div class="st">TOP PROGRESSION <div class="ln"></div></div>
 <div id="d-prog"></div>
 <div class="st">PERSÖNLICHE REKORDE 🏆 <div class="ln"></div></div>
 <div id="d-prs"></div>
-<div class="st">VOLUMEN PRO MUSKELGRUPPE <div class="ln"></div></div>
-<div id="d-volume" class="card"></div>
+<div id="d-volume" class="card" style="display:none"></div>
 </div>
 <div class="screen" id="s-wo">
 <div id="wo-sticky-top" style="position:sticky;top:0;z-index:40;background:var(--bg);padding-bottom:6px">
@@ -2912,6 +2959,107 @@ function renderSettings(){
     }
     actions.innerHTML=`<button class="profile-pic-btn" onclick="document.getElementById('profile-pic-input').click()">Bild wählen</button>${D.ui.avatar?'<button class="profile-pic-btn" onclick="clearProfileImage()">Bild entfernen</button>':''}`;
   }
+}
+function ensureHomeUIState(){
+  if(!D.ui)D.ui={accent:'whoop',mode:'dark',avatar:''};
+  if(D.ui.avatar===undefined)D.ui.avatar='';
+  if(D.ui.homePlanOpen===undefined)D.ui.homePlanOpen=false;
+}
+function togglePlanDrawer(){
+  ensureHomeUIState();
+  D.ui.homePlanOpen=!D.ui.homePlanOpen;
+  save();
+  syncPlanDrawerUI();
+}
+function syncPlanDrawerUI(){
+  ensureHomeUIState();
+  const drawer=document.getElementById('dash-plan-drawer');
+  const meta=document.getElementById('plan-drawer-meta');
+  if(!drawer||!meta)return;
+  drawer.classList.toggle('open',!!D.ui.homePlanOpen);
+  meta.textContent=D.ui.homePlanOpen?'Tippen zum Einklappen':'Tippen zum Aufklappen';
+}
+function renderMuscleVolumeCard(){
+  const mount=document.getElementById('d-muscle-volume');
+  if(!mount)return;
+  const vol=getWeeklyVolume();
+  const muscleNames={chest:'Brust',back:'Rücken',legs:'Beine',shoulders:'Schultern',arms:'Arme',core:'Core'};
+  const muscleIcons={chest:'🫁',back:'⬅️',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
+  const RP={chest:{mev:8,mav:16,mrv:22},back:{mev:8,mav:16,mrv:23},legs:{mev:6,mav:14,mrv:20},shoulders:{mev:6,mav:14,mrv:20},arms:{mev:4,mav:12,mrv:18},core:{mev:0,mav:8,mrv:16}};
+  mount.innerHTML=`<div class="muscle-volume-card"><div class="muscle-volume-head"><div class="muscle-volume-title">Volumen · Muskelgruppe</div><button class="muscle-volume-link" onclick="go('ana')">Alles ansehen →</button></div><div class="mv-list">${Object.keys(RP).map(key=>{const sets=(vol[key]&&vol[key].sets)||0;const rp=RP[key];const state=sets<rp.mev?{label:'unter MEV',cls:'low'}:sets<=rp.mav?{label:'im MAV',cls:'mid'}:{label:'über MRV',cls:'high'};const displayMax=sets<rp.mev?rp.mev:sets<=rp.mav?rp.mav:rp.mrv;const fillPct=Math.max(0,Math.min(100,(sets/Math.max(rp.mrv,1))*100));const mevPct=(rp.mev/Math.max(rp.mrv,1))*100;const mavPct=(rp.mav/Math.max(rp.mrv,1))*100;return`<div class="mv-row"><div class="mv-top"><div class="mv-name"><span>${muscleIcons[key]}</span><span>${muscleNames[key]}</span></div><div class="mv-state ${state.cls}">${state.label} <span style="margin-left:6px;color:var(--text2)">${sets}/${displayMax}</span></div></div><div class="mv-bar"><div class="mv-fill ${state.cls}" style="width:${fillPct}%"></div><span class="mv-mark" style="left:${mevPct}%"></span><span class="mv-mark" style="left:${mavPct}%"></span><span class="mv-mark" style="left:99.5%"></span></div><div class="mv-zero">0</div></div>`}).join('')}</div></div>`;
+}
+function renderDash(){
+  ensureHomeUIState();
+  document.getElementById('d-greeting').textContent=getLooseGreeting();
+  const displayName=syncCode?syncCode.charAt(0).toUpperCase()+syncCode.slice(1):'Ben';
+  const usernameEl=document.getElementById('d-username');
+  if(D.ui.avatar){
+    usernameEl.classList.add('home-name-row');
+    usernameEl.innerHTML=`<span class="home-avatar has-image" style="background-image:url('${D.ui.avatar}')">.</span><span class="home-name-text">${displayName}</span>`;
+  }else{
+    usernameEl.classList.remove('home-name-row');
+    usernameEl.textContent=displayName;
+  }
+  document.getElementById('d-date').textContent='';
+  document.getElementById('d-quote').style.display='none';
+  const week=weeklyHistorySeries(6);
+  const currentWeek=week[week.length-1]||[];
+  const weekSets=currentWeek.reduce((a,s)=>a+s.sets.length,0);
+  document.getElementById('d-week-card').innerHTML=buildWeekGauge(weekSets);
+  document.getElementById('d-sets').textContent=weekSets;
+  document.getElementById('d-sess').textContent=currentWeek.length;
+  let restDays='—';
+  if(D.history.length){
+    const last=D.history[D.history.length-1].date;
+    const p=String(last).split('.');
+    if(p.length===3){
+      const ld=new Date(p[2],p[1]-1,p[0]);
+      const diff=Math.floor((Date.now()-ld.getTime())/864e5);
+      restDays=diff===0?'Heute':diff;
+    }
+  }
+  document.getElementById('d-rest').textContent=restDays;
+  const workoutsCurrent=currentWeek.length;
+  const workoutsPrev=(week[week.length-2]||[]).length;
+  const tonnage=(sessions)=>sessions.reduce((sum,s)=>sum+s.sets.reduce((acc,x)=>acc+(x.w||0)*(x.r||0),0),0);
+  const tonCur=tonnage(currentWeek);
+  const tonPrev=tonnage(week[week.length-2]||[]);
+  const rirAvg=(sessions)=>{const vals=[];sessions.forEach(s=>s.sets.forEach(x=>{if(x.rir!==undefined)vals.push(x.rir)}));return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};
+  const rirCur=rirAvg(currentWeek);
+  const rirPrev=rirAvg(week[week.length-2]||[]);
+  const workoutTrend=workoutsPrev?Math.round(((workoutsCurrent-workoutsPrev)/workoutsPrev)*100):0;
+  const tonTrend=tonPrev?Math.round(((tonCur-tonPrev)/tonPrev)*100):0;
+  const rirTrend=rirPrev?Math.round(((rirCur-rirPrev)/rirPrev)*100):0;
+  const workoutSeries=week.map(s=>s.length);
+  const tonSeries=week.map(s=>Math.round(tonnage(s)/1000*10)/10);
+  const rirSeries=week.map(s=>+rirAvg(s).toFixed(1));
+  document.getElementById('d-kpi-row').innerHTML=`<div class="dash-kpis"><div class="dash-kpi"><div><div class="k-label">WORKOUTS</div><div class="k-value">${workoutsCurrent}<span class="k-unit">/ ${Math.max(3,Object.keys(D.plan||{}).length)}</span></div><div class="k-trend ${workoutTrend<0?'down':''}">${workoutTrend>=0?'+':''}${workoutTrend}%</div></div>${miniSpark(workoutSeries,'#ff2959')}</div><div class="dash-kpi"><div><div class="k-label">TONNAGE</div><div class="k-value">${(tonCur/1000).toFixed(1)}<span class="k-unit">t</span></div><div class="k-trend ${tonTrend<0?'down':''}">${tonTrend>=0?'+':''}${tonTrend}%</div></div>${miniSpark(tonSeries,'#ff2959')}</div><div class="dash-kpi"><div><div class="k-label">Ø RIR</div><div class="k-value">${rirCur?rirCur.toFixed(1):'—'}</div><div class="k-trend ${rirTrend>0?'down':''}">${rirTrend>=0?'-':''}${Math.abs(rirTrend)}%</div></div>${miniSpark(rirSeries,'#ff2959')}</div></div>`;
+  const dayMap={0:'So',1:'Mo',2:'Di',3:'Mi',4:'Do',5:'Fr',6:'Sa'};
+  const now=new Date();
+  const planKeys=Object.keys(D.plan||{});
+  let nk=null;
+  for(let i=0;i<7;i++){
+    const dShort=dayMap[(now.getDay()+i)%7];
+    const match=planKeys.find(k=>D.plan[k].day===dShort||String(D.plan[k].day).includes(dShort));
+    if(match){nk={key:match,offset:i};break}
+  }
+  const nc=document.getElementById('d-next-card');
+  if(!nk&&planKeys.length)nk={key:planKeys[0],offset:0};
+  if(!nk){
+    nc.innerHTML='<div class="empty">Kein nächstes Workout gefunden.</div>';
+  }else{
+    const p=D.plan[nk.key];
+    const mains=p.exercises.filter(e=>e.type==='main').map(e=>e.muscle==='chest'?'Brust':e.muscle==='shoulders'?'Schultern':e.muscle==='arms'?'Trizeps':e.muscle==='back'?'Rücken':e.muscle==='legs'?'Beine':e.muscle).slice(0,3).join(' · ');
+    const dayLabel=nk.offset===0?'Heute':nk.offset===1?'Morgen':'Plan';
+    nc.innerHTML=`<div class="next-card-shot"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="eyebrow2">Nächstes Workout</div><div style="display:flex;gap:6px;align-items:center"><span style="width:26px;height:8px;border-radius:999px;background:var(--red);display:inline-block"></span><span style="width:8px;height:8px;border-radius:999px;background:#3a3b48;display:inline-block"></span><span style="width:8px;height:8px;border-radius:999px;background:#3a3b48;display:inline-block"></span><span style="width:8px;height:8px;border-radius:999px;background:#3a3b48;display:inline-block"></span></div></div><div class="row"><div><div class="planline">${dayLabel} • ${p.day}</div><div class="big">${nk.key.replace(/_.*/,m=>m).replace(/_/g,' ').split(' ')[0].toUpperCase()}</div><div class="small">${mains||'Workout bereit'}</div></div><button class="play" onclick="startWorkout('${nk.key}');go('wo')">▶</button></div></div>`;
+  }
+  renderMuscleVolumeCard();
+  syncPlanDrawerUI();
+  const sa=document.getElementById('sick-area');
+  if(D.health.sick){
+    const days=D.health.sickSince?Math.ceil((Date.now()-new Date(D.health.sickSince).getTime())/864e5):0;
+    sa.innerHTML=`<div class="sick-banner"><div class="si">🤒</div><div><div class="st2">Krank gemeldet</div><div class="sd">Tag ${days} — Training pausiert</div></div><button class="btn btn-s btn-green" style="margin-left:auto" onclick="toggleSick()">✓ Gesund</button></div>`;
+  }else sa.innerHTML='';
 }
 ensureUIState();
 if(D.ui.avatar===undefined)D.ui.avatar='';
