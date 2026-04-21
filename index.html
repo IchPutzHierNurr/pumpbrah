@@ -1896,6 +1896,38 @@ body{
   }
 }
 </style>
+<style>
+.next-card-shot{
+  margin-bottom:18px!important;
+}
+.plan-mgmt{
+  margin-top:6px!important;
+  margin-bottom:18px!important;
+}
+.profile-actions{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.profile-pic-btn{
+  padding:9px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.08);
+  background:#191b23;
+  color:#e7ebf5;
+  font-size:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+#prof-avatar.has-image{
+  background-size:cover!important;
+  background-position:center!important;
+  color:transparent!important;
+  border:2px solid rgba(255,255,255,.08);
+}
+</style>
 </head>
 <body>
 <div class="app" id="app">
@@ -2718,7 +2750,171 @@ function renderEgym(){
   });
   hc.innerHTML=hh;
 }
+function getLooseGreeting(){
+  const hour=new Date().getHours();
+  const morning=['Was geht, Champion?','Let\'s get after it.','Ready to move heute?'];
+  const day=['What\'s poppin?','Auf geht\'s, Maschine.','Heute wird abgeliefert.'];
+  const evening=['Noch Energie im Tank?','Abend-Session incoming.','Let\'s finish strong.'];
+  const late=['Spät dran, aber wir nehmen\'s mit.','Night shift, Gym edition.','Late grind zählt auch.'];
+  const pool=hour<11?morning:hour<18?day:hour<23?evening:late;
+  const idx=Math.floor(Date.now()/36e5)%pool.length;
+  return pool[idx].toUpperCase();
+}
+function saveProfileImage(ev){
+  const file=ev&&ev.target&&ev.target.files&&ev.target.files[0];
+  if(!file)return;
+  if(!D.ui)D.ui={accent:'whoop',mode:'dark',avatar:''};
+  const reader=new FileReader();
+  reader.onload=()=>{
+    D.ui.avatar=String(reader.result||'');
+    save();
+    renderSettings();
+    toast('Profilbild gespeichert');
+  };
+  reader.readAsDataURL(file);
+  ev.target.value='';
+}
+function clearProfileImage(){
+  if(!D.ui)D.ui={accent:'whoop',mode:'dark',avatar:''};
+  D.ui.avatar='';
+  save();
+  renderSettings();
+  toast('Profilbild entfernt');
+}
+function buildWeekGauge(totalSets){
+  const mev=Math.max(24,Math.round(totalSets*.66)||24);
+  const mav=Math.max(mev+12,Math.round(totalSets*1.24)||48);
+  const mrv=Math.max(mav+18,Math.round(totalSets*1.56)||72);
+  const end=Math.max(mrv,1);
+  const capped=Math.min(totalSets,end);
+  const cx=180,cy=180,r=126,start=135,endAng=405;
+  const toPoint=(deg)=>{const rad=(deg-90)*Math.PI/180;return{x:cx+r*Math.cos(rad),y:cy+r*Math.sin(rad)}};
+  const arc=(a1,a2)=>{const p1=toPoint(a1),p2=toPoint(a2),large=a2-a1>180?1:0;return`M ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} A ${r} ${r} 0 ${large} 1 ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`};
+  const pA=start+(mev/end)*(endAng-start);
+  const pB=start+(mav/end)*(endAng-start);
+  const pC=start+(capped/end)*(endAng-start);
+  const status=totalSets<mev?'Unter MEV':totalSets<=mav?'Im MAV':'Über MRV';
+  const state=totalSets<mev?'UNTER MEV':totalSets<=mav?'IM MAV':'ÜBER MRV';
+  const progressColor=totalSets<mev?'#ffb020':totalSets<=mav?'#34d058':'#ff4d73';
+  const progressGlow=totalSets<mev?'rgba(255,176,32,.45)':totalSets<=mav?'rgba(52,208,88,.45)':'rgba(255,77,115,.45)';
+  const markerA=toPoint(pA);
+  const markerB=toPoint(pB);
+  const markerMid=toPoint(start+((mav+((mrv-mav)*.45))/end)*(endAng-start));
+  return`<div class="week-ring-card"><div class="week-ring-top"><div class="week-ring-label">Diese Woche</div><div class="week-ring-badge" style="color:${progressColor}"><span style="width:12px;height:12px;border-radius:50%;display:inline-block;background:${progressColor};box-shadow:0 0 12px ${progressGlow};margin-right:6px"></span>${status}</div></div><div class="week-ring-wrap"><svg class="week-ring-svg" viewBox="0 0 360 360"><path d="${arc(start,endAng)}" stroke="#23252f" stroke-width="22" fill="none" stroke-linecap="round"/><path d="${arc(start,pA)}" stroke="#6a5320" stroke-width="22" fill="none" stroke-linecap="round"/><path d="${arc(pA,pB)}" stroke="#254532" stroke-width="22" fill="none" stroke-linecap="round"/><path d="${arc(pB,endAng)}" stroke="#5a2b37" stroke-width="22" fill="none" stroke-linecap="round"/><path d="${arc(start,pC)}" stroke="${progressColor}" stroke-width="22" fill="none" stroke-linecap="round" style="filter:drop-shadow(0 0 10px ${progressGlow})"/><line x1="${markerA.x-10}" y1="${markerA.y-10}" x2="${markerA.x+10}" y2="${markerA.y+10}" stroke="#0c0d11" stroke-width="2.5"/><line x1="${markerB.x-10}" y1="${markerB.y-10}" x2="${markerB.x+10}" y2="${markerB.y+10}" stroke="#0c0d11" stroke-width="2.5"/><line x1="${markerMid.x-10}" y1="${markerMid.y-10}" x2="${markerMid.x+10}" y2="${markerMid.y+10}" stroke="#0c0d11" stroke-width="2.5"/></svg><div class="week-ring-center"><div class="week-ring-state" style="color:${progressColor}">${state}</div><div class="week-ring-value">${totalSets}</div><div class="week-ring-sub">SÄTZE</div></div></div><div class="week-range-grid"><div class="week-range-card"><div class="week-range-key"><i style="color:#ffb020">●</i>MEV</div><div class="week-range-value">${mev}</div><div class="week-range-sub">Minimum</div></div><div class="week-range-card"><div class="week-range-key"><i style="color:#34d058">●</i>MAV</div><div class="week-range-value">${mav}</div><div class="week-range-sub">Optimum</div></div><div class="week-range-card"><div class="week-range-key"><i style="color:#ff4d73">●</i>MRV</div><div class="week-range-value">${mrv}</div><div class="week-range-sub">Maximum</div></div></div></div>`;
+}
+function renderDash(){
+  document.getElementById('d-greeting').textContent=getLooseGreeting();
+  document.getElementById('d-username').textContent=syncCode?syncCode.charAt(0).toUpperCase()+syncCode.slice(1):'Ben';
+  document.getElementById('d-date').textContent='';
+  document.getElementById('d-quote').style.display='none';
+  const week=weeklyHistorySeries(6);
+  const currentWeek=week[week.length-1]||[];
+  const weekSets=currentWeek.reduce((a,s)=>a+s.sets.length,0);
+  document.getElementById('d-week-card').innerHTML=buildWeekGauge(weekSets);
+  const workoutsCurrent=currentWeek.length;
+  const workoutsPrev=(week[week.length-2]||[]).length;
+  const tonnage=(sessions)=>sessions.reduce((sum,s)=>sum+s.sets.reduce((acc,x)=>acc+(x.w||0)*(x.r||0),0),0);
+  const tonCur=tonnage(currentWeek);
+  const tonPrev=tonnage(week[week.length-2]||[]);
+  const rirAvg=(sessions)=>{const vals=[];sessions.forEach(s=>s.sets.forEach(x=>{if(x.rir!==undefined)vals.push(x.rir)}));return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};
+  const rirCur=rirAvg(currentWeek);
+  const rirPrev=rirAvg(week[week.length-2]||[]);
+  const workoutTrend=workoutsPrev?Math.round(((workoutsCurrent-workoutsPrev)/workoutsPrev)*100):0;
+  const tonTrend=tonPrev?Math.round(((tonCur-tonPrev)/tonPrev)*100):0;
+  const rirTrend=rirPrev?Math.round(((rirCur-rirPrev)/rirPrev)*100):0;
+  const workoutSeries=week.map(s=>s.length);
+  const tonSeries=week.map(s=>Math.round(tonnage(s)/1000*10)/10);
+  const rirSeries=week.map(s=>+rirAvg(s).toFixed(1));
+  document.getElementById('d-kpi-row').innerHTML=`<div class="dash-kpis"><div class="dash-kpi"><div><div class="k-label">WORKOUTS</div><div class="k-value">${workoutsCurrent}<span class="k-unit">/ ${Math.max(3,Object.keys(D.plan||{}).length)}</span></div><div class="k-trend ${workoutTrend<0?'down':''}">${workoutTrend>=0?'+':''}${workoutTrend}%</div></div>${miniSpark(workoutSeries,'#ff2959')}</div><div class="dash-kpi"><div><div class="k-label">TONNAGE</div><div class="k-value">${(tonCur/1000).toFixed(1)}<span class="k-unit">t</span></div><div class="k-trend ${tonTrend<0?'down':''}">${tonTrend>=0?'+':''}${tonTrend}%</div></div>${miniSpark(tonSeries,'#ff2959')}</div><div class="dash-kpi"><div><div class="k-label">Ø RIR</div><div class="k-value">${rirCur?rirCur.toFixed(1):'—'}</div><div class="k-trend ${rirTrend>0?'down':''}">${rirTrend>=0?'-':''}${Math.abs(rirTrend)}%</div></div>${miniSpark(rirSeries,'#ff2959')}</div></div>`;
+  const dayMap={0:'So',1:'Mo',2:'Di',3:'Mi',4:'Do',5:'Fr',6:'Sa'};
+  const now=new Date();
+  const planKeys=Object.keys(D.plan||{});
+  let nk=null;
+  for(let i=0;i<7;i++){
+    const dShort=dayMap[(now.getDay()+i)%7];
+    const match=planKeys.find(k=>D.plan[k].day===dShort||String(D.plan[k].day).includes(dShort));
+    if(match){nk={key:match,offset:i};break}
+  }
+  if(!nk&&planKeys.length)nk={key:planKeys[0],offset:0};
+  const nc=document.getElementById('d-next-card');
+  if(!nk){
+    nc.innerHTML='<div class="empty">Kein nächstes Workout gefunden.</div>';
+  }else{
+    const p=D.plan[nk.key];
+    const mains=p.exercises.filter(e=>e.type==='main').map(e=>e.muscle==='chest'?'Brust':e.muscle==='shoulders'?'Schultern':e.muscle==='arms'?'Trizeps':e.muscle==='back'?'Rücken':e.muscle==='legs'?'Beine':e.muscle).slice(0,3).join(' · ');
+    const dayLabel=nk.offset===0?'Heute':nk.offset===1?'Morgen':'Plan';
+    nc.innerHTML=`<div class="next-card-shot"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="eyebrow2">Nächstes Workout</div><div style="display:flex;gap:6px;align-items:center"><span style="width:26px;height:8px;border-radius:999px;background:var(--red);display:inline-block"></span><span style="width:8px;height:8px;border-radius:999px;background:#3a3b48;display:inline-block"></span><span style="width:8px;height:8px;border-radius:999px;background:#3a3b48;display:inline-block"></span><span style="width:8px;height:8px;border-radius:999px;background:#3a3b48;display:inline-block"></span></div></div><div class="row"><div><div class="planline">${dayLabel} • ${p.day}</div><div class="big">${nk.key.replace(/_.*/,m=>m).replace(/_/g,' ').split(' ')[0].toUpperCase()}</div><div class="small">${mains||'Workout bereit'}</div></div><button class="play" onclick="startWorkout('${nk.key}');go('wo')">▶</button></div></div>`;
+  }
+  const sa=document.getElementById('sick-area');
+  if(D.health.sick){
+    const days=D.health.sickSince?Math.ceil((Date.now()-new Date(D.health.sickSince).getTime())/864e5):0;
+    sa.innerHTML=`<div class="sick-banner"><div class="si">🤒</div><div><div class="st2">Krank gemeldet</div><div class="sd">Tag ${days} — Training pausiert</div></div><button class="btn btn-s btn-green" style="margin-left:auto" onclick="toggleSick()">✓ Gesund</button></div>`;
+  }else sa.innerHTML='';
+}
+function renderSettings(){
+  applyVisualTheme();
+  document.getElementById('set-c').value=D.settings.compound;
+  document.getElementById('set-i').value=D.settings.isolation;
+  document.getElementById('show-sync').textContent=syncCode;
+  const displayName=syncCode.charAt(0).toUpperCase()+syncCode.slice(1);
+  const avatarEl=document.getElementById('prof-avatar');
+  document.getElementById('prof-name').textContent=displayName.toUpperCase();
+  if(!D.ui)D.ui={accent:'whoop',mode:'dark',avatar:''};
+  if(D.ui.avatar){
+    avatarEl.classList.add('has-image');
+    avatarEl.style.backgroundImage=`url(${D.ui.avatar})`;
+    avatarEl.textContent='';
+  }else{
+    avatarEl.classList.remove('has-image');
+    avatarEl.style.backgroundImage='';
+    avatarEl.textContent=syncCode.charAt(0).toUpperCase();
+  }
+  document.getElementById('prof-code').textContent=syncCode;
+  document.getElementById('prof-status').textContent=useFirebase?'🟢 Eingeloggt • Cloud Sync aktiv':'🟡 Offline-Modus • nur lokal gespeichert';
+  if(D.health.sick){
+    document.getElementById('sick-label').textContent='Aktiv seit '+new Date(D.health.sickSince).toLocaleDateString('de-DE');
+    document.getElementById('sick-btn').textContent='✓ GESUND MELDEN';
+    document.getElementById('sick-btn').className='btn btn-s btn-green';
+  }else{
+    document.getElementById('sick-label').textContent='Nicht aktiv';
+    document.getElementById('sick-btn').textContent='🤒 KRANK MELDEN';
+    document.getElementById('sick-btn').className='btn btn-s btn-orange';
+  }
+  if(!D.egym)D.egym={enabled:false,measurements:[]};
+  toggleEgym(D.egym.enabled);
+  let holder=document.getElementById('theme-settings-card');
+  if(!holder){
+    holder=document.createElement('div');
+    holder.id='theme-settings-card';
+    const setupScreen=document.getElementById('s-settings');
+    const syncSection=[...setupScreen.querySelectorAll('.st')].find(el=>el.textContent.includes('SYNC'));
+    if(syncSection)setupScreen.insertBefore(holder,syncSection);
+    else setupScreen.appendChild(holder);
+  }
+  holder.innerHTML=`<div class="st">DESIGN <div class="ln"></div></div>${renderThemeControls()}`;
+  const profileCard=avatarEl.closest('.card');
+  if(profileCard){
+    let input=document.getElementById('profile-pic-input');
+    if(!input){
+      input=document.createElement('input');
+      input.type='file';
+      input.accept='image/*';
+      input.id='profile-pic-input';
+      input.style.display='none';
+      input.onchange=saveProfileImage;
+      profileCard.appendChild(input);
+    }
+    let actions=profileCard.querySelector('.profile-actions');
+    if(!actions){
+      actions=document.createElement('div');
+      actions.className='profile-actions';
+      profileCard.appendChild(actions);
+    }
+    actions.innerHTML=`<button class="profile-pic-btn" onclick="document.getElementById('profile-pic-input').click()">Bild wählen</button>${D.ui.avatar?'<button class="profile-pic-btn" onclick="clearProfileImage()">Bild entfernen</button>':''}`;
+  }
+}
 ensureUIState();
+if(D.ui.avatar===undefined)D.ui.avatar='';
 applyVisualTheme();
 </script>
 </body>
