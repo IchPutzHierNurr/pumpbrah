@@ -2314,7 +2314,10 @@ body{
 <div class="ig"><label>Muskelgruppe</label><select id="libe-muscle"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div>
 </div>
 <div class="ir"><div class="ig"><label>Notiz</label><input id="libe-note" type="text" placeholder="Ausführung, Gerät, Setup"></div></div>
-<button class="btn" onclick="addLibraryExercise()">+ Übung speichern</button>
+<div style="display:flex;gap:8px;align-items:center">
+<button class="btn" id="libe-save" style="flex:1" onclick="addLibraryExercise()">+ Übung speichern</button>
+<button class="btn btn-g" id="libe-cancel" style="display:none;flex:.55" onclick="resetLibraryEditorForm()">Abbrechen</button>
+</div>
 </div>
 <input class="lib-search" id="libe-search" placeholder="Bibliothek suchen..." oninput="renderLibraryEditor(this.value)">
 <div id="libe-list"></div>
@@ -3361,6 +3364,24 @@ function ensureLibraryState(){
   if(!Array.isArray(D.library.deleted))D.library.deleted=[];
 }
 function libKey(name){return String(name||'').trim().toLowerCase();}
+function isBaseLibraryName(name){
+  const key=libKey(name);
+  return EXLIB.some(cat=>cat.items.some(item=>libKey(item.name)===key));
+}
+function planExerciseToLibraryItem(ex){
+  return{
+    name:ex.name,
+    s:ex.sets||3,
+    rn:ex.rmin||8,
+    rx:ex.rmax||ex.rmin||12,
+    rir:ex.rir===undefined?2:ex.rir,
+    t:ex.type||'main',
+    m:ex.muscle||'chest',
+    note:ex.note||'',
+    custom:false,
+    planSource:true
+  };
+}
 function allLibraryCategories(){
   ensureLibraryState();
   const deleted=new Set(D.library.deleted.map(libKey));
@@ -3371,6 +3392,17 @@ function allLibraryCategories(){
   if(D.library.custom.length){
     base.push({cat:'⭐ Eigene Übungen',items:D.library.custom.map(item=>({...item,custom:true}))});
   }
+  const seen=new Set(base.flatMap(cat=>cat.items).map(item=>libKey(item.name)));
+  const planItems=[];
+  Object.entries(D.plan||{}).forEach(([planKey,day])=>{
+    (day.exercises||[]).forEach(ex=>{
+      const key=libKey(ex.name);
+      if(!key||seen.has(key)||deleted.has(key))return;
+      seen.add(key);
+      planItems.push({...planExerciseToLibraryItem(ex),catHint:planKey.replace(/_/g,' ')});
+    });
+  });
+  if(planItems.length)base.push({cat:'📋 Aus Trainingsplänen',items:planItems});
   return base;
 }
 function openLibrary(){
@@ -3414,11 +3446,50 @@ function pickLibraryItem(encodedName){
   om('m-add');
   toast('Bibliothek: '+item.name);
 }
+let libEditOriginal=null;
+function jsStr(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+function resetLibraryEditorForm(){
+  libEditOriginal=null;
+  document.getElementById('libe-name').value='';
+  document.getElementById('libe-sets').value=3;
+  document.getElementById('libe-rmin').value=8;
+  document.getElementById('libe-rmax').value=12;
+  document.getElementById('libe-type').value='main';
+  document.getElementById('libe-muscle').value='chest';
+  document.getElementById('libe-note').value='';
+  const saveBtn=document.getElementById('libe-save');
+  const cancelBtn=document.getElementById('libe-cancel');
+  if(saveBtn)saveBtn.textContent='+ Übung speichern';
+  if(cancelBtn)cancelBtn.style.display='none';
+}
 function openLibraryEditor(){
   ensureLibraryState();
+  resetLibraryEditorForm();
   document.getElementById('libe-search').value='';
   renderLibraryEditor('');
   om('m-lib-edit');
+}
+function findLibraryEditorItem(name){
+  return allLibraryCategories().flatMap(cat=>cat.items.map(item=>({...item,cat:cat.cat}))).find(item=>item.name===name);
+}
+function editLibraryExercise(name){
+  ensureLibraryState();
+  const item=findLibraryEditorItem(name);
+  if(!item)return;
+  libEditOriginal={name:item.name,custom:!!item.custom,planSource:!!item.planSource};
+  document.getElementById('libe-name').value=item.name;
+  document.getElementById('libe-sets').value=item.s||3;
+  document.getElementById('libe-rmin').value=item.rn||8;
+  document.getElementById('libe-rmax').value=item.rx||item.rn||12;
+  document.getElementById('libe-type').value=item.t||'main';
+  document.getElementById('libe-muscle').value=item.m||'chest';
+  document.getElementById('libe-note').value=item.note||'';
+  const saveBtn=document.getElementById('libe-save');
+  const cancelBtn=document.getElementById('libe-cancel');
+  if(saveBtn)saveBtn.textContent='✓ Änderungen speichern';
+  if(cancelBtn)cancelBtn.style.display='';
+  document.getElementById('libe-name').focus();
+  toast(item.custom?'Eigene Übung bearbeiten':item.planSource?'Planübung als Bibliotheksversion bearbeiten':'Standardübung als eigene Version bearbeiten');
 }
 function addLibraryExercise(){
   ensureLibraryState();
@@ -3435,13 +3506,26 @@ function addLibraryExercise(){
     note:document.getElementById('libe-note').value.trim()
   };
   const key=libKey(name);
-  D.library.custom=D.library.custom.filter(ex=>libKey(ex.name)!==key);
-  D.library.deleted=D.library.deleted.filter(x=>libKey(x)!==key);
+  const wasEditing=!!libEditOriginal;
+  if(libEditOriginal){
+    const oldKey=libKey(libEditOriginal.name);
+    D.library.custom=D.library.custom.filter(ex=>libKey(ex.name)!==oldKey&&libKey(ex.name)!==key);
+    if(!libEditOriginal.custom&&!D.library.deleted.map(libKey).includes(oldKey))D.library.deleted.push(libEditOriginal.name);
+  }else{
+    D.library.custom=D.library.custom.filter(ex=>libKey(ex.name)!==key);
+  }
+  if(isBaseLibraryName(name)){
+    if(!D.library.deleted.map(libKey).includes(key))D.library.deleted.push(name);
+  }else if(wasEditing&&libEditOriginal&&!libEditOriginal.custom){
+    if(!D.library.deleted.map(libKey).includes(key))D.library.deleted.push(name);
+  }else{
+    D.library.deleted=D.library.deleted.filter(x=>libKey(x)!==key);
+  }
   D.library.custom.push(item);
   save();
-  ['libe-name','libe-note'].forEach(id=>document.getElementById(id).value='');
+  resetLibraryEditorForm();
   renderLibraryEditor(document.getElementById('libe-search').value);
-  toast('Übung gespeichert');
+  toast(wasEditing?'Übung aktualisiert':'Übung gespeichert');
 }
 function deleteLibraryExercise(name,isCustom){
   ensureLibraryState();
@@ -3449,6 +3533,7 @@ function deleteLibraryExercise(name,isCustom){
   const key=libKey(name);
   if(isCustom)D.library.custom=D.library.custom.filter(ex=>libKey(ex.name)!==key);
   else if(!D.library.deleted.map(libKey).includes(key))D.library.deleted.push(name);
+  if(libEditOriginal&&libKey(libEditOriginal.name)===key)resetLibraryEditorForm();
   save();
   renderLibraryEditor(document.getElementById('libe-search').value);
   renderLib(document.getElementById('lib-search')?document.getElementById('lib-search').value:'');
@@ -3462,7 +3547,9 @@ function renderLibraryEditor(q){
   if(!list.length){box.innerHTML='<div class="empty">Keine Übungen gefunden</div>';return}
   box.innerHTML=list.map(item=>{
     const range=item.rn===item.rx?item.rn:`${item.rn}–${item.rx}`;
-    return `<div class="alt-item"><span class="alt-ico">${item.t==='pre'?'🔥':item.t==='mob'?'🧘':EMO[item.m]||'💪'}</span><span style="flex:1"><div class="alt-name">${item.name}</div><div class="alt-meta">${item.cat} · ${item.s}×${range} · ${muscleName(item.m)}</div>${item.note?`<div class="alt-note">${item.note}</div>`:''}</span><button class="wo-icon-btn" style="color:var(--red)" onclick="deleteLibraryExercise('${item.name.replace(/'/g,"\\'")}',${item.custom?'true':'false'})">✕</button></div>`;
+    const safe=jsStr(item.name);
+    const source=item.catHint?`${item.cat} · ${item.catHint}`:item.cat;
+    return `<div class="alt-item" onclick="editLibraryExercise('${safe}')" style="cursor:pointer"><span class="alt-ico">${item.t==='pre'?'🔥':item.t==='mob'?'🧘':EMO[item.m]||'💪'}</span><span style="flex:1"><div class="alt-name">${item.name}</div><div class="alt-meta">${source} · ${item.s}×${range} · ${muscleName(item.m)} · antippen zum Bearbeiten</div>${item.note?`<div class="alt-note">${item.note}</div>`:''}</span><button class="wo-icon-btn" title="Bearbeiten" onclick="event.stopPropagation();editLibraryExercise('${safe}')">✎</button><button class="wo-icon-btn" style="color:var(--red)" title="Löschen" onclick="event.stopPropagation();deleteLibraryExercise('${safe}',${item.custom?'true':'false'})">✕</button></div>`;
   }).join('');
 }
 function getAlternativeExercises(current){
