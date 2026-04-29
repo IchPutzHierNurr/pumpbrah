@@ -2049,6 +2049,7 @@ body{
 <button class="btn btn-s btn-g" onclick="renamePlanDay()">✏️ Umbenennen</button>
 <button class="btn btn-s btn-r" style="font-size:12px" onclick="deletePlanDay()">🗑️ Tag</button>
 <button class="btn btn-s btn-o" onclick="openAddEx()">+ Übung</button>
+<button class="btn btn-s btn-g" onclick="openLibraryEditor()">Bibliothek</button>
 </div>
 <div class="dtabs" id="pt"></div>
 <div id="pl"></div>
@@ -2298,6 +2299,25 @@ body{
 <div class="mt"><span id="alt-title">Alternative wählen</span> <button class="mc" onclick="cm('m-alt')">✕</button></div>
 <div id="alt-sub" style="font-size:12px;color:var(--text2);margin-bottom:12px"></div>
 <div id="alt-list"></div>
+</div></div>
+<div class="mbg" id="m-lib-edit"><div class="mdl" style="max-height:92vh">
+<div class="mt">ÜBUNGSBIBLIOTHEK <button class="mc" onclick="cm('m-lib-edit')">✕</button></div>
+<div class="card" style="padding:12px;margin-bottom:12px">
+<div class="ir"><div class="ig"><label>Name</label><input id="libe-name" type="text" placeholder="z.B. StairMaster"></div></div>
+<div class="ir">
+<div class="ig"><label>Sätze</label><input id="libe-sets" type="number" value="3"></div>
+<div class="ig"><label>Min</label><input id="libe-rmin" type="number" value="8"></div>
+<div class="ig"><label>Max</label><input id="libe-rmax" type="number" value="12"></div>
+</div>
+<div class="ir">
+<div class="ig"><label>Typ</label><select id="libe-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
+<div class="ig"><label>Muskelgruppe</label><select id="libe-muscle"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div>
+</div>
+<div class="ir"><div class="ig"><label>Notiz</label><input id="libe-note" type="text" placeholder="Ausführung, Gerät, Setup"></div></div>
+<button class="btn" onclick="addLibraryExercise()">+ Übung speichern</button>
+</div>
+<input class="lib-search" id="libe-search" placeholder="Bibliothek suchen..." oninput="renderLibraryEditor(this.value)">
+<div id="libe-list"></div>
 </div></div>
 </div>
 <script>
@@ -3334,6 +3354,128 @@ function swapActiveExercise(ei,altIndex){
   cm('m-alt');
   renderWo();
   toast('Alternative eingesetzt: '+picked.name);
+}
+function ensureLibraryState(){
+  if(!D.library)D.library={custom:[],deleted:[]};
+  if(!Array.isArray(D.library.custom))D.library.custom=[];
+  if(!Array.isArray(D.library.deleted))D.library.deleted=[];
+}
+function libKey(name){return String(name||'').trim().toLowerCase();}
+function allLibraryCategories(){
+  ensureLibraryState();
+  const deleted=new Set(D.library.deleted.map(libKey));
+  const base=EXLIB.map(cat=>({
+    cat:cat.cat,
+    items:cat.items.filter(item=>!deleted.has(libKey(item.name))).map(item=>({...item,custom:false}))
+  })).filter(cat=>cat.items.length);
+  if(D.library.custom.length){
+    base.push({cat:'⭐ Eigene Übungen',items:D.library.custom.map(item=>({...item,custom:true}))});
+  }
+  return base;
+}
+function openLibrary(){
+  renderLib('');
+  document.getElementById('lib-search').value='';
+  om('m-lib');
+  setTimeout(()=>document.getElementById('lib-search').focus(),200);
+}
+function renderLib(q){
+  q=String(q||'').toLowerCase().trim();
+  const c=document.getElementById('lib-content');
+  let h='';
+  allLibraryCategories().forEach((cat,ci)=>{
+    const fl=q?cat.items.filter(i=>i.name.toLowerCase().includes(q)||String(i.note||'').toLowerCase().includes(q)):cat.items;
+    if(!fl.length)return;
+    h+=`<div class="lib-cat${q?' open':''}" onclick="this.classList.toggle('open')"><div class="lib-cat-hdr"><span class="lib-ico">${cat.cat.split(' ')[0]}</span>${cat.cat.split(' ').slice(1).join(' ')}<span class="lib-cnt">${fl.length}</span><span class="lib-arr">▸</span></div><div class="lib-items">`;
+    fl.forEach(item=>{
+      const rp=item.rn===item.rx?item.rn:item.rn+'–'+item.rx;
+      h+=`<div class="lib-item" onclick="event.stopPropagation();pickLibraryItem('${encodeURIComponent(item.name)}')"><div class="li-name">${item.name}</div><div class="li-info">${item.s}×${rp}</div><span onclick="event.stopPropagation();showExImg('${item.name.replace(/'/g,"\\'")}')" style="font-size:14px;padding:4px">📷</span></div>`;
+    });
+    h+=`</div></div>`;
+  });
+  c.innerHTML=h||'<div class="empty">Keine Übung gefunden</div>';
+}
+function pickLibraryItem(encodedName){
+  const name=decodeURIComponent(encodedName);
+  const item=allLibraryCategories().flatMap(cat=>cat.items).find(ex=>ex.name===name);
+  if(!item)return;
+  cm('m-lib');
+  editIdx=null;
+  document.getElementById('a-name').value=item.name;
+  document.getElementById('a-sets').value=item.s;
+  document.getElementById('a-rmin').value=item.rn;
+  document.getElementById('a-rmax').value=item.rx;
+  setAddRir(item.rir||0);
+  document.getElementById('a-type').value=item.t;
+  document.getElementById('a-mus').value=item.m;
+  document.getElementById('a-note').value=item.note||'';
+  document.getElementById('a-target').textContent='Wird zu: '+(curTab||'').replace('_',' ');
+  document.getElementById('a-btn').textContent='+ HINZUFÜGEN';
+  om('m-add');
+  toast('Bibliothek: '+item.name);
+}
+function openLibraryEditor(){
+  ensureLibraryState();
+  document.getElementById('libe-search').value='';
+  renderLibraryEditor('');
+  om('m-lib-edit');
+}
+function addLibraryExercise(){
+  ensureLibraryState();
+  const name=document.getElementById('libe-name').value.trim();
+  if(!name){toast('Name eingeben');return}
+  const item={
+    name,
+    s:parseInt(document.getElementById('libe-sets').value)||3,
+    rn:parseInt(document.getElementById('libe-rmin').value)||8,
+    rx:parseInt(document.getElementById('libe-rmax').value)||12,
+    rir:2,
+    t:document.getElementById('libe-type').value,
+    m:document.getElementById('libe-muscle').value,
+    note:document.getElementById('libe-note').value.trim()
+  };
+  const key=libKey(name);
+  D.library.custom=D.library.custom.filter(ex=>libKey(ex.name)!==key);
+  D.library.deleted=D.library.deleted.filter(x=>libKey(x)!==key);
+  D.library.custom.push(item);
+  save();
+  ['libe-name','libe-note'].forEach(id=>document.getElementById(id).value='');
+  renderLibraryEditor(document.getElementById('libe-search').value);
+  toast('Übung gespeichert');
+}
+function deleteLibraryExercise(name,isCustom){
+  ensureLibraryState();
+  if(!confirm('Übung aus der Bibliothek entfernen?'))return;
+  const key=libKey(name);
+  if(isCustom)D.library.custom=D.library.custom.filter(ex=>libKey(ex.name)!==key);
+  else if(!D.library.deleted.map(libKey).includes(key))D.library.deleted.push(name);
+  save();
+  renderLibraryEditor(document.getElementById('libe-search').value);
+  renderLib(document.getElementById('lib-search')?document.getElementById('lib-search').value:'');
+  toast('Übung entfernt');
+}
+function renderLibraryEditor(q){
+  ensureLibraryState();
+  q=String(q||'').toLowerCase().trim();
+  const list=allLibraryCategories().flatMap(cat=>cat.items.map(item=>({...item,cat:cat.cat}))).filter(item=>!q||item.name.toLowerCase().includes(q)||String(item.note||'').toLowerCase().includes(q));
+  const box=document.getElementById('libe-list');
+  if(!list.length){box.innerHTML='<div class="empty">Keine Übungen gefunden</div>';return}
+  box.innerHTML=list.map(item=>{
+    const range=item.rn===item.rx?item.rn:`${item.rn}–${item.rx}`;
+    return `<div class="alt-item"><span class="alt-ico">${item.t==='pre'?'🔥':item.t==='mob'?'🧘':EMO[item.m]||'💪'}</span><span style="flex:1"><div class="alt-name">${item.name}</div><div class="alt-meta">${item.cat} · ${item.s}×${range} · ${muscleName(item.m)}</div>${item.note?`<div class="alt-note">${item.note}</div>`:''}</span><button class="wo-icon-btn" style="color:var(--red)" onclick="deleteLibraryExercise('${item.name.replace(/'/g,"\\'")}',${item.custom?'true':'false'})">✕</button></div>`;
+  }).join('');
+}
+function getAlternativeExercises(current){
+  const byName=new Map();
+  const add=(item,source)=>{
+    const ex=normalizeAltItem(item,source);
+    if(ex.muscle!==current.muscle)return;
+    if(ex.name===current.name)return;
+    if(!byName.has(ex.name.toLowerCase()))byName.set(ex.name.toLowerCase(),ex);
+  };
+  allLibraryCategories().forEach(cat=>cat.items.forEach(item=>add(item,cat.cat)));
+  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(item=>add(item,'Trainingsplan')));
+  return [...byName.values()].sort((a,b)=>{const ta=(a.type===current.type?0:1),tb=(b.type===current.type?0:1);return ta-tb||a.name.localeCompare(b.name,'de')});
 }
 ensureUIState();
 if(D.ui.avatar===undefined)D.ui.avatar='';
