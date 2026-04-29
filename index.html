@@ -1955,6 +1955,14 @@ body{
 .wo-compare-stat .delta.up{color:#34d058}
 .wo-compare-stat .delta.down{color:#ff4d73}
 .wo-compare-stat .delta.flat{color:#a8adbb}
+.wo-action-row{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.wo-icon-btn{min-width:36px;height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:#20222b;color:var(--text);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer}
+.wo-alt-btn{height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.06);background:#20222b;color:var(--accent);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;padding:0 10px;cursor:pointer}
+.alt-item{display:flex;align-items:center;gap:12px;width:100%;border:1px solid rgba(255,255,255,.06);background:#171920;color:var(--text);border-radius:14px;padding:12px;margin-bottom:8px;text-align:left;cursor:pointer}
+.alt-ico{width:38px;height:38px;border-radius:10px;background:#20222b;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
+.alt-name{font-weight:800;font-size:14px}
+.alt-meta{font-size:11px;color:var(--text2);margin-top:2px}
+.alt-note{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.35}
 .mv-list{display:flex;flex-direction:column;gap:14px}
 .mv-row{padding:2px 0}
 .mv-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
@@ -2285,6 +2293,11 @@ body{
 <div id="exn-name" style="font-size:14px;color:var(--text2);margin-bottom:8px"></div>
 <div class="ir"><div class="ig"><label>Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
 <button class="btn" onclick="saveExNote()">💾 SPEICHERN</button>
+</div></div>
+<div class="mbg" id="m-alt"><div class="mdl">
+<div class="mt"><span id="alt-title">Alternative wählen</span> <button class="mc" onclick="cm('m-alt')">✕</button></div>
+<div id="alt-sub" style="font-size:12px;color:var(--text2);margin-bottom:12px"></div>
+<div id="alt-list"></div>
 </div></div>
 </div>
 <script>
@@ -3245,7 +3258,7 @@ function renderWo(){
     const hist=getAllSets(ex.name).filter(s=>s.w>0||s.r>0);
     const lastSets=hist.slice(-6);
     const series=lastSets.map(s=>isCardioExercise(ex)?(s.r||0):(s.w||0));
-    h+=`<div id="wo-ex-${ei}" class="${isActive?'wo-active-ex':''}" style="background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:10px;${done?'border:1px solid rgba(52,211,153,.2);':''}${!done&&!isActive?'border:1px solid var(--bg3);':''}${skipped?'opacity:.3':''}"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:20px">${ico}</span><div style="flex:1"><div style="font-weight:700;font-size:15px">${ex.name}${skipped?' (skip)':''}</div><div style="font-size:12px;color:var(--text2)">${ex.sets}×${reps(ex)}${ex.rir!==null?' @ RIR '+ex.rir:''}${isCardioExercise(ex)?' • Cardio':''}</div></div><span onclick="showExImg('${ex.name.replace(/'/g,"\\'")}')" style="font-size:16px;cursor:pointer;padding:4px">📷</span>${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}</div>`;
+    h+=`<div id="wo-ex-${ei}" class="${isActive?'wo-active-ex':''}" style="background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:10px;${done?'border:1px solid rgba(52,211,153,.2);':''}${!done&&!isActive?'border:1px solid var(--bg3);':''}${skipped?'opacity:.3':''}"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px"><span style="font-size:20px">${ico}</span><div style="flex:1"><div style="font-weight:700;font-size:15px">${ex.name}${skipped?' (skip)':''}</div><div style="font-size:12px;color:var(--text2)">${ex.sets}×${reps(ex)}${ex.rir!==null?' @ RIR '+ex.rir:''}${isCardioExercise(ex)?' • Cardio':''}</div></div><div class="wo-action-row"><button class="wo-alt-btn" onclick="openAlternative(${ei})">Alternative</button><button class="wo-icon-btn" onclick="showExImg('${ex.name.replace(/'/g,"\\'")}')">📷</button>${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}</div></div>`;
     if(D.notes[ex.name])h+=`<div style="font-size:11px;color:var(--purple);margin-bottom:6px;padding:4px 8px;background:rgba(180,126,255,.08);border-radius:6px">📝 ${D.notes[ex.name]}</div>`;
     if(lastSets.length&&!skipped){
       h+=`<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'#ff2959'):''}</div>${lastSets.map(s=>`<div class="mini-hist-row"><span class="mh-d">${s.date||''}</span><span class="mh-v">${formatLoggedSetLine(ex,s)}${isCardioExercise(ex)&&s.w?` • Stufe ${s.w}`:''}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${s.rir}</span></div>`).join('')}</div>`;
@@ -3261,6 +3274,66 @@ function renderWo(){
     h+='</div>';
   });
   c.innerHTML=h;
+}
+function normalizeAltItem(item,source){
+  return{
+    id:Date.now()+Math.random()*1000|0,
+    name:item.name,
+    sets:item.s||item.sets||3,
+    rmin:item.rn||item.rmin||8,
+    rmax:item.rx||item.rmax||12,
+    rir:item.rir===undefined?2:item.rir,
+    type:item.t||item.type||'main',
+    muscle:item.m||item.muscle||'chest',
+    note:item.note||'',
+    source
+  };
+}
+function getAlternativeExercises(current){
+  const byName=new Map();
+  const add=(item,source)=>{
+    const ex=normalizeAltItem(item,source);
+    if(ex.muscle!==current.muscle)return;
+    if(ex.name===current.name)return;
+    if(!byName.has(ex.name.toLowerCase()))byName.set(ex.name.toLowerCase(),ex);
+  };
+  EXLIB.forEach(cat=>cat.items.forEach(item=>add(item,'Bibliothek')));
+  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(item=>add(item,'Trainingsplan')));
+  return [...byName.values()].sort((a,b)=>{
+    const ta=(a.type===current.type?0:1),tb=(b.type===current.type?0:1);
+    return ta-tb||a.name.localeCompare(b.name,'de');
+  });
+}
+function openAlternative(ei){
+  if(!D.active||!D.active.exercises[ei])return;
+  const current=D.active.exercises[ei];
+  const list=getAlternativeExercises(current);
+  document.getElementById('alt-title').textContent='Alternative wählen';
+  document.getElementById('alt-sub').textContent=`${current.name} ersetzen · ${muscleName(current.muscle)}`;
+  const box=document.getElementById('alt-list');
+  if(!list.length){
+    box.innerHTML='<div class="empty">Keine Alternative für diese Muskelgruppe gefunden.</div>';
+  }else{
+    box.innerHTML=list.map((ex,i)=>{
+      const ico=ex.type==='pre'?'🔥':ex.type==='mob'?'🧘':EMO[ex.muscle]||'💪';
+      const range=ex.rmin===ex.rmax?ex.rmin:`${ex.rmin}–${ex.rmax}`;
+      return `<button class="alt-item" onclick="swapActiveExercise(${ei},${i})"><span class="alt-ico">${ico}</span><span style="flex:1"><div class="alt-name">${ex.name}</div><div class="alt-meta">${ex.sets}×${range}${ex.rir!==null?` · RIR ${ex.rir}`:''} · ${ex.source}</div>${ex.note?`<div class="alt-note">${ex.note}</div>`:''}</span><span style="color:var(--accent);font-weight:800">Tauschen</span></button>`;
+    }).join('');
+  }
+  window.__altCache=list;
+  om('m-alt');
+}
+function swapActiveExercise(ei,altIndex){
+  if(!D.active||!D.active.exercises[ei]||!window.__altCache)return;
+  const old=D.active.exercises[ei];
+  if(old.logged&&old.logged.length&&!confirm('Diese Übung hat schon geloggte Sätze. Trotzdem tauschen?'))return;
+  const picked=window.__altCache[altIndex];
+  if(!picked)return;
+  D.active.exercises[ei]={...picked,id:Date.now(),logged:[]};
+  save();
+  cm('m-alt');
+  renderWo();
+  toast('Alternative eingesetzt: '+picked.name);
 }
 ensureUIState();
 if(D.ui.avatar===undefined)D.ui.avatar='';
