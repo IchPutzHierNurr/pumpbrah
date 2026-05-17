@@ -2330,14 +2330,15 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 </div>
 <script>
 const FIREBASE_CONFIG={apiKey:"AIzaSyCaWvytYF7RnkX8ouIlsDiBRy0MP4pZW-g",authDomain:"pumpbrah-9e21e.firebaseapp.com",projectId:"pumpbrah-9e21e",storageBucket:"pumpbrah-9e21e.firebasestorage.app",messagingSenderId:"190452878389",appId:"1:190452878389:web:eac735f8031f68eb8df57c"};
-let db=null,useFirebase=false,syncCode='',unsubscribe=null;
+let db=null,useFirebase=false,syncCode='',unsubscribe=null,cloudWriteQueue=Promise.resolve();
 let D={plan:null,history:[],active:null,settings:{compound:150,isolation:90},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[]}};
 const DEFAULT_PLAN={"FullBody_A":{day:"Di + Sa",exercises:[{id:1,name:"ATG: Tibialis Raise",sets:1,rmin:25,rmax:25,rir:null,note:"PRE-WORKOUT | Wand-Version, Zehen hochziehen 1s halten",type:"pre",muscle:"legs"},{id:2,name:"ATG: Split Squat Slantboard",sets:3,rmin:5,rmax:5,rir:null,note:"PRE-WORKOUT | Slantboard, Knie weit vor, LANGSAM",type:"pre",muscle:"legs"},{id:3,name:"ATG: Seated Good Morning KH",sets:3,rmin:10,rmax:10,rir:null,note:"PRE-WORKOUT | Auf Bank, Hohlkreuz, Brust zwischen Beine",type:"pre",muscle:"back"},{id:4,name:"Bankdrücken",sets:3,rmin:8,rmax:10,rir:3,note:"Ellenbogen 45°, kontrollierte Exzentrik 2-3s",type:"main",muscle:"chest"},{id:5,name:"Maschinenrudern eng neutral",sets:3,rmin:8,rmax:12,rir:3,note:"Schulterblätter zusammen",type:"main",muscle:"back"},{id:6,name:"Beinpresse",sets:3,rmin:10,rmax:12,rir:3,note:"Hüftbreit-mittig, Knie nicht locken",type:"main",muscle:"legs"},{id:7,name:"KH Seitheben",sets:3,rmin:10,rmax:15,rir:2,note:"Kontrolliert, leichter Pinky-Lead",type:"main",muscle:"shoulders"},{id:8,name:"Leg Extension",sets:2,rmin:10,rmax:15,rir:2,note:"1s Squeeze oben",type:"main",muscle:"legs"},{id:9,name:"Face Pulls",sets:2,rmin:12,rmax:15,rir:2,note:"Seil auf Gesichtshöhe, ext. Rotation",type:"main",muscle:"shoulders"}]},"FullBody_B":{day:"Do",exercises:[{id:10,name:"ATG: Tibialis Raise",sets:1,rmin:25,rmax:25,rir:null,note:"PRE-WORKOUT | Wand-Version",type:"pre",muscle:"legs"},{id:11,name:"ATG: Split Squat Slantboard",sets:3,rmin:5,rmax:5,rir:null,note:"PRE-WORKOUT | Slantboard",type:"pre",muscle:"legs"},{id:12,name:"ATG: Seated Good Morning KH",sets:3,rmin:10,rmax:10,rir:null,note:"PRE-WORKOUT | Auf Bank",type:"pre",muscle:"back"},{id:13,name:"Schrägbankdrücken",sets:3,rmin:8,rmax:10,rir:3,note:"Winkel 30°, kontrolliert",type:"main",muscle:"chest"},{id:14,name:"Latziehen breit Obergriff",sets:3,rmin:8,rmax:12,rir:3,note:"Schulterblätter runter, Brust raus",type:"main",muscle:"back"},{id:15,name:"Rumänisches Kreuzheben",sets:3,rmin:8,rmax:12,rir:3,note:"Hüftdominant, Stange eng",type:"main",muscle:"legs"},{id:16,name:"Brustpresse Maschine",sets:2,rmin:10,rmax:12,rir:2,note:"Stretch unten, kein Lockout",type:"main",muscle:"chest"},{id:17,name:"Leg Curl",sets:3,rmin:10,rmax:15,rir:2,note:"Volle ROM, 2s Exzentrik",type:"main",muscle:"legs"},{id:18,name:"Katana Extensions Kabel",sets:2,rmin:10,rmax:15,rir:2,note:"Kabel überkreuzt, Scapular Plane",type:"main",muscle:"arms"},{id:19,name:"KH Curls",sets:2,rmin:10,rmax:15,rir:2,note:"Supination, langsame Exzentrik",type:"main",muscle:"arms"}]},"Mobility_B":{day:"Mi",exercises:[{id:20,name:"Backward Walk Laufband",sets:1,rmin:5,rmax:10,rir:null,note:"MOBILITY | Laufband AUS, rückwärts gehen",type:"mob",muscle:"legs"},{id:21,name:"Poliquin Step Slantboard",sets:3,rmin:15,rmax:20,rir:null,note:"MOBILITY | 1 Fuß auf Slantboard, Knie beugen",type:"mob",muscle:"legs"},{id:22,name:"Slantboard Calf Raise",sets:3,rmin:15,rmax:15,rir:null,note:"MOBILITY | Fersen TIEF sinken, LANGSAM",type:"mob",muscle:"legs"},{id:23,name:"Ring Rows",sets:3,rmin:10,rmax:12,rir:null,note:"MOBILITY | Turnringe/TRX zur Brust",type:"mob",muscle:"back"},{id:24,name:"KH Pullover",sets:3,rmin:10,rmax:10,rir:null,note:"MOBILITY | Rücken quer über Bank",type:"mob",muscle:"chest"},{id:25,name:"Jefferson Curl KH",sets:2,rmin:5,rmax:5,rir:null,note:"MOBILITY | Wirbel für Wirbel, SUPER LANGSAM",type:"mob",muscle:"back"},{id:26,name:"Incline Pigeon Pose",sets:1,rmin:60,rmax:60,rir:null,note:"MOBILITY | 60 Sek pro Seite",type:"mob",muscle:"legs"},{id:27,name:"Face Pulls",sets:3,rmin:15,rmax:15,rir:null,note:"MOBILITY | Kabel Augenhöhe, Schultergesundheit",type:"mob",muscle:"shoulders"}]}};
-function cloudSafeData(){
-  const copy=JSON.parse(JSON.stringify(D));
+function cloudSafeSnapshot(data){
+  const copy=cloneData(data);
   if(copy.ui&&copy.ui.avatar)delete copy.ui.avatar;
   return copy;
 }
+function cloudSafeData(){return cloudSafeSnapshot(D)}
 function mergeLocalOnlyFields(next){
   const localAvatar=D&&D.ui&&D.ui.avatar?D.ui.avatar:'';
   const merged={...next};
@@ -2350,6 +2351,89 @@ function shouldApplyRemote(remote){
   const remoteStamp=dataStamp(remote),localStamp=dataStamp(D);
   if(remoteStamp||localStamp)return remoteStamp>=localStamp;
   return !!(remote&&remote.history&&remote.history.length>=(D.history||[]).length);
+}
+function cloneData(data){
+  try{return JSON.parse(JSON.stringify(data||{}))}catch{return{}}
+}
+function isSetValue(v){return v!==undefined&&v!==null&&v!==''}
+function dateKey(v){
+  const s=String(v||'').trim();
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+  if(m)return`${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  return s.toLowerCase();
+}
+function pickValue(preferred,fallback){return isSetValue(preferred)?preferred:fallback}
+function mergeArrayByKey(localArr,remoteArr,keyFn,mergeFn,preferRemote){
+  const map=new Map();
+  (Array.isArray(localArr)?localArr:[]).forEach(item=>{
+    const key=keyFn(item);
+    if(key)map.set(key,cloneData(item));
+  });
+  (Array.isArray(remoteArr)?remoteArr:[]).forEach(item=>{
+    const key=keyFn(item);
+    if(!key)return;
+    const existing=map.get(key);
+    map.set(key,existing?mergeFn(existing,cloneData(item),preferRemote):cloneData(item));
+  });
+  return [...map.values()];
+}
+function mergeWeights(localWeights,remoteWeights,preferRemote){
+  return mergeArrayByKey(localWeights,remoteWeights,w=>dateKey(w&&w.date),(local,remote,useRemote)=>{
+    const first=useRemote?remote:local;
+    const second=useRemote?local:remote;
+    return{...second,...first,kg:pickValue(first.kg,second.kg),date:pickValue(first.date,second.date)};
+  },preferRemote).sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
+}
+function mergeEgymMeasurements(localMeasurements,remoteMeasurements,preferRemote){
+  return mergeArrayByKey(localMeasurements,remoteMeasurements,m=>dateKey(m&&m.date),(local,remote,useRemote)=>{
+    const first=useRemote?remote:local;
+    const second=useRemote?local:remote;
+    const merged={...second,...first};
+    Object.keys({...second,...first}).forEach(k=>{merged[k]=pickValue(first[k],second[k])});
+    return merged;
+  },preferRemote).sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
+}
+function mergeLibraryCustom(localCustom,remoteCustom,preferRemote){
+  return mergeArrayByKey(localCustom,remoteCustom,item=>String(item&&item.name||'').trim().toLowerCase(),(local,remote,useRemote)=>useRemote?{...local,...remote}:{...remote,...local},preferRemote)
+}
+function mergeHistory(localHistory,remoteHistory){
+  const key=s=>`${s&&s.date||''}|${s&&s.planKey||''}|${s&&s.duration||0}|${JSON.stringify((s&&s.sets)||[])}`;
+  return mergeArrayByKey(localHistory,remoteHistory,key,(local)=>local,true);
+}
+function mergeSyncedData(remote){
+  const local=cloneData(D);
+  const incoming=cloneData(remote);
+  const preferRemote=shouldApplyRemote(incoming);
+  const merged=mergeLocalOnlyFields(preferRemote?{...local,...incoming}:{...incoming,...local});
+  const localBio=local.bio||{},remoteBio=incoming.bio||{};
+  const primaryBio=preferRemote?remoteBio:localBio;
+  const fallbackBio=preferRemote?localBio:remoteBio;
+  merged.bio={...fallbackBio,...primaryBio};
+  ['height','birthday','gender'].forEach(k=>{merged.bio[k]=pickValue(primaryBio[k],fallbackBio[k])});
+  merged.bio.weights=mergeWeights(localBio.weights,remoteBio.weights,preferRemote);
+
+  const localEgym=local.egym||{},remoteEgym=incoming.egym||{};
+  const primaryEgym=preferRemote?remoteEgym:localEgym;
+  const fallbackEgym=preferRemote?localEgym:remoteEgym;
+  merged.egym={...fallbackEgym,...primaryEgym};
+  merged.egym.enabled=!!(localEgym.enabled||remoteEgym.enabled);
+  merged.egym.measurements=mergeEgymMeasurements(localEgym.measurements,remoteEgym.measurements,preferRemote);
+
+  const localLibrary=local.library||{},remoteLibrary=incoming.library||{};
+  merged.library={...(preferRemote?localLibrary:remoteLibrary),...(preferRemote?remoteLibrary:localLibrary)};
+  merged.library.custom=mergeLibraryCustom(localLibrary.custom,remoteLibrary.custom,preferRemote);
+  merged.library.deleted=[...new Set([...(localLibrary.deleted||[]),...(remoteLibrary.deleted||[])])];
+  merged.history=mergeHistory(local.history,remote.history);
+  merged.meta={...(local.meta||{}),...(incoming.meta||{}),updatedAt:Math.max(dataStamp(local),dataStamp(incoming))};
+  return merged;
+}
+function mergeSyncedSnapshot(localSnapshot,remote){
+  const previous=D;
+  D=cloneData(localSnapshot);
+  try{return mergeSyncedData(remote)}
+  finally{D=previous}
 }
 function normalizeExercise(ex){
   if(!ex||typeof ex!=='object')ex={};
@@ -2410,9 +2494,22 @@ function save(){
   D.meta.updatedAt=Date.now();
   try{localStorage.setItem('pb_data',JSON.stringify(D))}
   catch(e){console.error('PUMPBRAH: Lokales Speichern fehlgeschlagen',e);toast('⚠️ Lokaler Speicher voll')}
-  if(useFirebase&&db&&syncCode){
-    db.collection('pumpbrah').doc(syncCode).set(cloudSafeData()).then(()=>{updateSyncPill(true)}).catch(e=>{console.error('PUMPBRAH: Sync fehlgeschlagen',e);updateSyncPill(false);toast('⚠️ Sync fehlgeschlagen')})
-  }
+  queueCloudSave();
+}
+function queueCloudSave(){
+  if(!useFirebase||!db||!syncCode)return;
+  const ref=db.collection('pumpbrah').doc(syncCode);
+  const localSnapshot=cloneData(D);
+  cloudWriteQueue=cloudWriteQueue.catch(()=>{}).then(()=>ref.get()).then(doc=>{
+    const merged=doc.exists?mergeSyncedSnapshot(localSnapshot,doc.data()):localSnapshot;
+    if(!merged.meta)merged.meta={};
+    merged.meta.updatedAt=Math.max(dataStamp(localSnapshot),Date.now());
+    return ref.set(cloudSafeSnapshot(merged));
+  }).then(()=>updateSyncPill(true)).catch(e=>{
+    console.error('PUMPBRAH: Sync fehlgeschlagen',e);
+    updateSyncPill(false);
+    toast('⚠️ Sync fehlgeschlagen');
+  });
 }
 function loadLocal(){try{const s=localStorage.getItem('pb_data');if(s)D=JSON.parse(s)}catch{}normalizeData()}
 function initFirebase(){try{if(FIREBASE_CONFIG.apiKey==='DEIN_API_KEY')return false;firebase.initializeApp(FIREBASE_CONFIG);db=firebase.firestore();return true}catch{return false}}
@@ -2423,11 +2520,11 @@ function startSync(){
   ref.get().then(doc=>{
     if(doc.exists){
       const remote=doc.data();
-      if(shouldApplyRemote(remote)){
-        D=mergeLocalOnlyFields({...D,...remote});
-        normalizeData();
-        localStorage.setItem('pb_data',JSON.stringify(D));
-      }
+      const before=JSON.stringify(D);
+      D=mergeSyncedData(remote);
+      normalizeData();
+      localStorage.setItem('pb_data',JSON.stringify(D));
+      if(JSON.stringify(D)!==before)ref.set(cloudSafeData()).catch(()=>{});
     }else{
       normalizeData();
       ref.set(cloudSafeData()).catch(()=>{});
@@ -2438,10 +2535,8 @@ function startSync(){
   unsubscribe=ref.onSnapshot(doc=>{
     if(doc.exists){
       const remote=doc.data();
-      if(!shouldApplyRemote(remote)){updateSyncPill(true);return}
-      const next=mergeLocalOnlyFields({...D,...remote});
       const before=JSON.stringify(D);
-      D=next;
+      D=mergeSyncedData(remote);
       normalizeData();
       if(JSON.stringify(D)!==before){
         localStorage.setItem('pb_data',JSON.stringify(D));
@@ -2567,6 +2662,58 @@ function adjTmr(s){timerTgt=Math.max(0,timerTgt+s);renderWo()}
 function autoScrollNext(currentIdx){if(!D.active)return;setTimeout(()=>{for(let i=currentIdx+1;i<D.active.exercises.length;i++){const ex=D.active.exercises[i];if(!ex.skipped&&ex.logged.length<ex.sets){const el=document.getElementById('wo-ex-'+i);if(el){el.scrollIntoView({behavior:'smooth',block:'center'})}return}}},300)}
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear(),calSelDay=null;
 function calNav(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++}if(calMonth<0){calMonth=11;calYear--}calSelDay=null;renderHist()}
+function parseGermanDate(s){
+  const p=String(s||'').split('.');
+  if(p.length!==3)return null;
+  const d=new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0]));
+  return isNaN(d.getTime())?null:d;
+}
+function histDateKey(day,month,year){
+  return String(day).padStart(2,'0')+'.'+String(month+1).padStart(2,'0')+'.'+year;
+}
+function selectCalDay(d){calSelDay=calSelDay===d?null:d;renderHist()}
+function delSess(i){if(!confirm('Session löschen?'))return;D.history.splice(i,1);save();renderHist();renderDash();renderAna();toast('Session gelöscht')}
+function renderHist(){
+  const cnt=document.getElementById('h-cnt'),title=document.getElementById('cal-title'),grid=document.getElementById('cal-grid'),list=document.getElementById('hl');
+  if(!cnt||!title||!grid||!list)return;
+  const months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+  cnt.textContent=(D.history||[]).length+' Sessions';
+  title.textContent=months[calMonth]+' '+calYear;
+  const trainDates={};
+  (D.history||[]).forEach((s,i)=>{
+    const d=parseGermanDate(s.date);
+    if(!d)return;
+    const key=histDateKey(d.getDate(),d.getMonth(),d.getFullYear());
+    if(!trainDates[key])trainDates[key]=[];
+    trainDates[key].push(i);
+  });
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const offset=firstDay===0?6:firstDay-1;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date();
+  let gh=['MO','DI','MI','DO','FR','SA','SO'].map(d=>`<div style="font-size:10px;color:var(--text3);font-weight:700;padding:4px 0">${d}</div>`).join('');
+  for(let i=0;i<offset;i++)gh+='<div></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const key=histDateKey(d,calMonth,calYear);
+    const has=!!trainDates[key];
+    const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
+    const isSel=calSelDay===d;
+    gh+=`<button onclick="selectCalDay(${d})" style="border:none;border-radius:12px;padding:7px 0;background:${isSel?'var(--accent)':isToday?'var(--nd)':'transparent'};color:${isSel?'#fff':isToday?'var(--neon)':'var(--text)'};cursor:pointer"><div style="font-size:13px;font-weight:${has||isToday?'800':'500'}">${d}</div>${has?`<span style="display:block;width:6px;height:6px;border-radius:50%;background:${isSel?'#fff':'var(--accent)'};margin:2px auto 0"></span>`:''}</button>`;
+  }
+  grid.innerHTML=gh;
+  let sessions=(D.history||[]).map((s,i)=>({...s,__i:i})).filter(s=>{
+    const d=parseGermanDate(s.date);
+    if(!d)return false;
+    if(calSelDay!==null)return d.getFullYear()===calYear&&d.getMonth()===calMonth&&d.getDate()===calSelDay;
+    return d.getFullYear()===calYear&&d.getMonth()===calMonth;
+  }).sort((a,b)=>(parseGermanDate(b.date)||0)-(parseGermanDate(a.date)||0));
+  if(!sessions.length){list.innerHTML='<div class="empty">Keine Sessions in dieser Auswahl.</div>';return}
+  list.innerHTML=sessions.map(s=>{
+    const vol=(s.sets||[]).reduce((a,x)=>a+(parseFloat(x.w)||0)*(parseInt(x.r)||0),0);
+    const exNames=[...new Set((s.sets||[]).map(x=>x.ex))];
+    return`<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px">${s.date}</div><div style="font-size:12px;color:var(--text2)">${(s.sets||[]).length} Sätze · ${(vol/1000).toFixed(1)}t Volumen</div></div><div style="display:flex;align-items:center;gap:8px"><button class="pill" style="border:none" onclick="event.stopPropagation()">${String(s.planKey||'Workout').replace(/_/g,' ')}</button><button style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer" onclick="delSess(${s.__i})">×</button></div></div><div style="margin-top:10px;border-top:1px solid var(--bg3);padding-top:8px">${exNames.map(ex=>{const rows=(s.sets||[]).filter(x=>x.ex===ex);const maxW=Math.max(...rows.map(x=>parseFloat(x.w)||0));return`<div onclick="showExHist('${String(ex).replace(/'/g,"\\'")}')" style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg3);cursor:pointer"><span style="font-size:13px;font-weight:700">${ex}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${maxW}kg · ${rows.length} Sätze</span></div>`}).join('')}</div></div>`;
+  }).join('');
+}
 function renderBio(){
   if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
   if(D.bio.birthday)document.getElementById('bio-birthday').value=D.bio.birthday;
@@ -2752,7 +2899,7 @@ function importData(e){
   r.onload=function(ev){
     try{
       const d=JSON.parse(ev.target.result);
-      D=mergeLocalOnlyFields({...D,...d});
+      D=mergeSyncedData(d);
       normalizeData();
       save();
       toast('Importiert!');
@@ -2789,8 +2936,16 @@ function saveEgymEntry(){
   const e={date:document.getElementById('egym-date').value||new Date().toISOString().split('T')[0]};
   EG_FIELDS.forEach(k=>{const el=document.getElementById('eg-'+k);const v=el?parseFloat(el.value):NaN;e[k]=isNaN(v)?null:v});
   D.egym.enabled=true;
-  D.egym.measurements.push(e);
-  D.egym.measurements.sort((a,b)=>a.date.localeCompare(b.date));
+  const idx=D.egym.measurements.findIndex(m=>dateKey(m.date)===dateKey(e.date));
+  if(idx>=0){
+    const prev=D.egym.measurements[idx];
+    const merged={...prev,...e};
+    Object.keys(e).forEach(k=>{merged[k]=pickValue(e[k],prev[k])});
+    D.egym.measurements[idx]=merged;
+  }else{
+    D.egym.measurements.push(e);
+  }
+  D.egym.measurements.sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
   save();
   cm('m-egym');
   renderEgym();
@@ -2904,6 +3059,42 @@ function renderEgym(){
     hh+=`<div class="card" style="margin-bottom:6px;padding:12px"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-weight:600">${x.date}</div><div style="font-size:11px;color:var(--text2)">BioAge: ${x.bioage||'—'} • KFA: ${x.kfp||'—'}% • SMM: ${x.smm||'—'}kg</div></div><button style="background:none;border:none;color:var(--red);cursor:pointer" onclick="delEgymEntry(${ri})">✕</button></div></div>`;
   });
   hc.innerHTML=hh;
+}
+function renderAna(){
+  normalizeData();
+  renderBio();
+  renderEgym();
+  const allSets=[];
+  (D.history||[]).forEach(session=>(session.sets||[]).forEach(set=>allSets.push({...set,date:session.date})));
+  const totalSets=allSets.length;
+  const weightedSets=allSets.filter(s=>(parseFloat(s.w)||0)>0);
+  const maxW=weightedSets.length?Math.max(...weightedSets.map(s=>parseFloat(s.w)||0)):0;
+  const avgRir=allSets.length?(allSets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/allSets.length).toFixed(1):'—';
+  const exNames=[...new Set(allSets.map(s=>s.ex))].filter(Boolean);
+  const totalEl=document.getElementById('ana-total');if(totalEl)totalEl.textContent=totalSets+' Sätze total';
+  const maxEl=document.getElementById('a-maxw');if(maxEl)maxEl.textContent=maxW;
+  const rirEl=document.getElementById('a-avgrir');if(rirEl)rirEl.textContent=avgRir;
+  const exEl=document.getElementById('a-excount');if(exEl)exEl.textContent=exNames.length;
+  const muscles={chest:{emoji:'🫁',name:'Brust',sets:[],ex:new Set()},back:{emoji:'⬅️',name:'Rücken',sets:[],ex:new Set()},legs:{emoji:'🦵',name:'Beine',sets:[],ex:new Set()},shoulders:{emoji:'🏔️',name:'Schultern',sets:[],ex:new Set()},arms:{emoji:'💪',name:'Arme',sets:[],ex:new Set()},core:{emoji:'🎯',name:'Core',sets:[],ex:new Set()}};
+  const exMuscleMap={};
+  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{exMuscleMap[ex.name]=ex.muscle}));
+  if(typeof allLibraryCategories==='function')allLibraryCategories().forEach(cat=>(cat.items||[]).forEach(item=>{if(!exMuscleMap[item.name])exMuscleMap[item.name]=item.m}));
+  allSets.forEach(set=>{
+    const m=set.muscle||exMuscleMap[set.ex]||'chest';
+    if(!muscles[m])return;
+    muscles[m].sets.push(set);
+    if(set.ex)muscles[m].ex.add(set.ex);
+  });
+  const mc=document.getElementById('ana-muscles');
+  if(mc){
+    const rows=Object.entries(muscles).filter(([k,m])=>m.sets.length);
+    if(!rows.length){mc.innerHTML='<div class="empty">Noch keine Trainingsdaten. Log dein erstes Workout.</div>'}
+    else mc.innerHTML=rows.map(([key,m])=>{
+      const byEx={};
+      m.sets.forEach(s=>{if(!byEx[s.ex])byEx[s.ex]=[];byEx[s.ex].push(s)});
+      return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><div class="ana-muscle-ico">${m.emoji}</div><div class="ana-muscle-name">${m.name}</div><div class="ana-muscle-cnt">${m.ex.size} Übungen · ${m.sets.length} Sätze</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=sets.filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length).toFixed(1):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExHist('${String(ex).replace(/'/g,"\\'")}')" style="font-weight:700;font-size:13px;cursor:pointer">${ex}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${max}kg</span></div><div style="font-size:11px;color:var(--text2);margin:4px 0">${sets.length} Sätze · Ø RIR ${avg}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true}):'<div style="font-size:11px;color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
+    }).join('');
+  }
 }
 function getLooseGreeting(){
   const hour=new Date().getHours();
