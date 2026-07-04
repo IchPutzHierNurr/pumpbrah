@@ -977,10 +977,12 @@ function mergeEgymMeasurements(localMeasurements,remoteMeasurements,preferRemote
 function mergeLibraryCustom(localCustom,remoteCustom,preferRemote){
   return mergeArrayByKey(localCustom,remoteCustom,item=>String(item&&item.name||'').trim().toLowerCase(),(local,remote,useRemote)=>useRemote?{...local,...remote}:{...remote,...local},preferRemote)
 }
-function histSessionKey(s){return `${s&&s.date||''}|${s&&s.planKey||''}|${s&&s.duration||0}|${JSON.stringify((s&&s.sets)||[])}`}
+function histSetKey(x){x=x||{};return [String(x.ex||''),parseInt(x.nr)||1,parseFloat(x.w)||0,parseInt(x.r)||0,parseInt(x.rir)||0,String(x.note||''),String(x.muscle||'chest'),String(x.type||'main'),String(x.mode||'')].join('§')}
+function histSessionKey(s){s=s||{};const sets=Array.isArray(s.sets)?s.sets.map(histSetKey).sort():[];return 'v2|'+dateKey(s.date)+'|'+String(s.planKey||'')+'|'+(parseInt(s.duration)||0)+'|'+sets.join('¦')}
 function ensureTombstoneState(){
   if(!D.deleted||typeof D.deleted!=='object')D.deleted={};
   ['history','weights','egym','libraryCustom'].forEach(k=>{if(!Array.isArray(D.deleted[k]))D.deleted[k]=[]});
+  D.deleted.history=D.deleted.history.filter(k=>String(k).indexOf('v2|')===0);
 }
 function addTombstone(kind,key){
   ensureTombstoneState();
@@ -1074,6 +1076,9 @@ function normalizeData(){
       mode:set.mode||''
     }));
   });
+  const seenSessions=new Set();
+  D.history=D.history.filter(sess=>{const k=histSessionKey(sess);if(seenSessions.has(k))return false;seenSessions.add(k);return true});
+  D.history.sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
   if(!D.settings)D.settings={compound:150,isolation:90};
   D.settings.compound=Math.max(0,parseInt(D.settings.compound)||150);
   D.settings.isolation=Math.max(0,parseInt(D.settings.isolation)||90);
@@ -1083,6 +1088,7 @@ function normalizeData(){
   if(!Array.isArray(D.bio.weights))D.bio.weights=[];
   if(!D.egym)D.egym={enabled:false,measurements:[]};
   if(!Array.isArray(D.egym.measurements))D.egym.measurements=[];
+  if(D.active&&(!D.active.startTime||Date.now()-D.active.startTime>24*3600e3))D.active=null;
   if(D.active){
     if(!Array.isArray(D.active.exercises)){D.active=null}
     else D.active.exercises=D.active.exercises.map(ex=>{const n=normalizeExercise(ex);if(!Array.isArray(n.logged))n.logged=[];return n});
