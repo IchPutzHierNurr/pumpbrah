@@ -655,6 +655,97 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-033', title: 'Spezifische Bewegungsmuster schlagen allgemeine',
+    run: async () => {
+      // "Leg Curl" enthält "curl" und wurde als Bizeps-Curl erkannt: die
+      // Animation zeigte einen stehenden Hantelcurl statt der Beinmaschine.
+      // Die Reihenfolge der Regeln IST die Bedeutung.
+      const r = await page.evaluate(() => {
+        const cases = [
+          ['Leg Curl', 'legcurl'], ['Beinbeuger sitzend', 'legcurl'],
+          ['Leg Extension', 'legext'], ['Beinstrecker', 'legext'],
+          ['KH Curls', 'curl'], ['Preacher Curl', 'curl'], ['Hammer Curls', 'curl'],
+          ['Bankdrücken', 'push'], ['Schulterdrücken', 'pushh'],
+          ['Latziehen breit', 'pulld'], ['Maschinenrudern eng', 'row'],
+          ['Rumänisches Kreuzheben', 'hinge'], ['Kniebeugen', 'squat'],
+          ['KH Seitheben', 'raise'], ['Trizepsdrücken Seil', 'triext'],
+          ['Wadenheben stehend', 'calf'], ['Kabelcrunches', 'core'],
+          ['Laufband', 'cardio'], ['Incline Pigeon Pose', 'mobility']
+        ];
+        return cases.filter(([n, want]) => detectMovePattern(n, 'chest', 'main') !== want)
+                    .map(([n, want]) => `${n}: erwartet ${want}, ist ${detectMovePattern(n, 'chest', 'main')}`);
+      });
+      return [r.length === 0, r.join(' | ')];
+    }
+  },
+  {
+    id: 'PB-034', title: 'Illustration: Last hängt an der Hand, nicht daneben',
+    run: async () => {
+      // Beim Einbau der Heldenpose wurde nur die Figur auf die neue Startpose
+      // gesetzt, Hantel und Kabel nicht - beides lief eine halbe Phase versetzt
+      // und schwebte neben dem Arm.
+      const r = await page.evaluate(() => {
+        const bad = [];
+        Object.keys(POSES).forEach(k => {
+          const spec = POSES[k];
+          if (!spec.load || spec.load === 'none') return;
+          const host = document.createElement('div');
+          host.style.cssText = 'position:absolute;left:-9999px;width:320px';
+          host.innerHTML = exerciseAnimSVG('Test', 'chest', 'main', { kind: k, speed: 3 });
+          document.body.appendChild(host);
+          const svg = host.querySelector('svg');
+          svg.pauseAnimations(); svg.setCurrentTime(0);
+          const limbs = [...svg.querySelectorAll('polyline.lmb')];
+          const bar = svg.querySelector('.bar') || svg.querySelector('.plate');
+          if (!bar) { host.remove(); bad.push(k + ': keine Last gezeichnet'); return; }
+          const bb = bar.getBBox();
+          const bx = bb.x + bb.width / 2, by = bb.y + bb.height / 2;
+          // kürzester Abstand der Last zu irgendeinem Gliedmaßen-Endpunkt
+          let best = 1e9;
+          limbs.forEach(l => {
+            const pts = l.getAttribute('points').trim().split(/\s+/).map(s => s.split(',').map(Number));
+            pts.forEach(([x, y]) => { best = Math.min(best, Math.hypot(x - bx, y - by)); });
+          });
+          host.remove();
+          if (best > 26) bad.push(`${k}: Last ${best.toFixed(0)}px vom nächsten Gelenk entfernt`);
+        });
+        return bad;
+      });
+      return [r.length === 0, r.join(' | ')];
+    }
+  },
+  {
+    id: 'PB-035', title: 'Illustration: Figur bleibt im sichtbaren Bereich',
+    run: async () => {
+      // Beim Wadenheben schwebte die Figur ausserhalb des Bildausschnitts,
+      // weil die Wurzelposition angehoben wurde, um die Ferse zu senken.
+      const r = await page.evaluate(() => {
+        const bad = [];
+        Object.keys(POSES).forEach(k => {
+          ['a', 'b'].forEach(which => {
+            const spec = POSES[k], orig = spec.hero;
+            spec.hero = which;
+            const host = document.createElement('div');
+            host.style.cssText = 'position:absolute;left:-9999px;width:320px';
+            host.innerHTML = exerciseAnimSVG('Test', 'chest', 'main', { kind: k, speed: 3 });
+            spec.hero = orig;
+            document.body.appendChild(host);
+            const svg = host.querySelector('svg');
+            svg.pauseAnimations(); svg.setCurrentTime(0);
+            [...svg.querySelectorAll('polyline.lmb,circle.hd')].forEach(el => {
+              const b = el.getBBox();
+              if (b.x < 2 || b.y < 2 || b.x + b.width > 318 || b.y + b.height > 208)
+                bad.push(`${k}/${which}: ausserhalb (${b.x.toFixed(0)},${b.y.toFixed(0)} ${b.width.toFixed(0)}x${b.height.toFixed(0)})`);
+            });
+            host.remove();
+          });
+        });
+        return [...new Set(bad)];
+      });
+      return [r.length === 0, r.slice(0, 4).join(' | ')];
+    }
+  },
+  {
     id: 'PB-017', title: 'Wochenring zählt dieselben Sätze wie seine Landmarks',
     run: async () => {
       const r = await page.evaluate(() => {
@@ -823,6 +914,8 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
     }],
     ['avatar', () => { if (rnd() < 0.5) clearProfileImage(); else { D.ui.avatar = 'data:image/png;base64,iVBORw0KGgo='; save(); renderSettings(); renderDash(); } }],
     ['exerciseMenu', () => { if (D.active && D.active.exercises.length) openExerciseMenu(int(0, D.active.exercises.length - 1)); }],
+    ['planExMenu', () => { const p = D.plan[curTab]; if (p && p.exercises.length) openPlanExMenu(int(0, p.exercises.length - 1)); }],
+    ['icons', () => { hydrateIcons(); Object.keys(ICON_PATHS).forEach(k => icon(k, int(12, 28))); exIcon(pick(['main','pre','mob']), pick(['chest','back','legs','arms','core','shoulders','unbekannt'])); }],
     ['jumpActive', () => jumpToActiveExercise()],
     ['openLibraries', () => { openLibrary(); openLibraryEditor(); resetLibraryEditorForm(); }],
     ['savePlan', () => savePlanChanges()],

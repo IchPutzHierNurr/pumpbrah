@@ -26,6 +26,7 @@ Vanilla JS ohne Build-Schritt, Firestore als Sync-Backend.
 12. [Was richtig gut gemacht war](#12-was-richtig-gut-gemacht-war)
 13. [Checkliste zum Mitnehmen](#13-checkliste-zum-mitnehmen)
 14. [Nachtrag: der Plattform-Pass](#14-nachtrag-der-plattform-pass)
+15. [Nachtrag: wenn die Darstellung inhaltlich falsch ist](#15-nachtrag-wenn-die-darstellung-inhaltlich-falsch-ist)
 
 ---
 
@@ -976,6 +977,113 @@ bewusst nur in die Workout-Kopie, nie in `D.plan`.
 
 ---
 
+## 15. Nachtrag: wenn die Darstellung inhaltlich falsch ist
+
+Ein dritter Durchgang, ausgelöst durch eine schlichte Rückmeldung: *„Die Bilder
+der Übungen spiegeln überhaupt nicht die Übungen wider."* Sie war berechtigt,
+und der Grund ist eine Fehlerklasse, die in Reviews selten vorkommt: **Code,
+der korrekt läuft und trotzdem etwas Falsches aussagt.**
+
+### Die Abstraktion war zu schwach für die Aufgabe
+
+Die erste Fassung hatte *eine* stehende Strichfigur, deren Gliedmaßen per
+CSS-Transform rotiert wurden:
+
+```css
+.gArm { animation: mv-arm 3s infinite alternate; transform-origin: 150px 68px }
+```
+
+Damit lässt sich genau eines darstellen: eine stehende Person, die die Arme
+bewegt. Bankdrücken (liegend), Latziehen (sitzend), Beinbeuger (Maschine) und
+Crunches (am Boden) waren mit dieser Abstraktion **prinzipiell** nicht
+darstellbar. Jede einzelne Animation lief fehlerfrei — und zeigte die falsche
+Übung.
+
+Der Ausweg war ein Modellwechsel, keine Parameterkorrektur: Vorwärtskinematik.
+Posen geben Gelenkwinkel an, daraus werden Koordinaten gerechnet, animiert wird
+per SMIL zwischen zwei Endposen. Damit ist jede Körperlage möglich, plus eine
+Geräte-Kulisse.
+
+> **Lektion 30:** Wenn du eine Sache nach der anderen nachbessern musst und
+> nichts davon richtig wird, liegt es meist nicht an den Werten, sondern am
+> Modell. Frag: *Kann meine Abstraktion das Gewünschte überhaupt ausdrücken?*
+> Wenn nein, ist jede weitere Justierung verlorene Zeit.
+
+### Ein Kontaktbogen ersetzt zwanzig Einzelprüfungen
+
+Nach dem Umbau brauchte es eine Möglichkeit, **alle** Muster gleichzeitig zu
+beurteilen. Ein generiertes Übersichtsbild mit allen 15 Bewegungsmustern
+nebeneinander deckte in einem einzigen Blick auf:
+
+- „Leg Curl" wurde als **Bizeps**-Curl gerendert (PB-033)
+- die Hantel schwebte 50px neben der Hand (PB-034)
+- die Figur beim Wadenheben stand halb außerhalb des Bildes (PB-035)
+
+Keiner dieser drei wäre in der App aufgefallen — man sieht dort immer nur eine
+Übung, und jede sieht für sich plausibel aus. Erst der Vergleich nebeneinander
+macht Ausreißer sichtbar.
+
+Zwei Details, die den Bogen erst brauchbar machten:
+
+**Animationen einfrieren.** Die ersten Bögen zeigten zufällige
+Zwischenphasen — mal die halbe Kniebeuge, mal fast Stehen. `svg.pauseAnimations()`
+plus `setCurrentTime(0)` friert alles auf denselben Zeitpunkt.
+
+**Eine „Heldenpose" definieren.** Die Animation startet jetzt auf der Haltung,
+an der man die Übung erkennt (Kniebeuge unten, Latziehen gezogen), nicht auf
+einer beliebigen. Das half nicht nur dem Bogen: auch in 44px-Thumbnails sieht
+man jetzt die charakteristische Position.
+
+> **Lektion 31:** Für alles Visuelle: bau dir eine Übersicht, die *alle* Fälle
+> nebeneinander zeigt. Einzeln betrachtet sieht fast jeder Fehler plausibel aus.
+
+### Geometrie ist testbar
+
+Der Reflex bei Grafik ist „das kann man nur ansehen". Stimmt nicht — zwei der
+drei Fehler oben lassen sich hart prüfen:
+
+```js
+// PB-034: Abstand zwischen Last und nächstem Gelenkpunkt
+if (minDistance(loadCenter, jointPoints) > 26)
+  bad.push(`${pattern}: Last ${d}px vom nächsten Gelenk entfernt`);
+
+// PB-035: liegt jede Gliedmaße im Sichtbereich?
+if (b.x < 2 || b.y < 2 || b.x + b.width > 318) bad.push(...);
+```
+
+Beide gegen den nicht-gefixten Zustand rot verifiziert. Was übrig bleibt —
+„sieht das aus wie Bankdrücken?" — braucht weiterhin ein Augenpaar. Aber der
+mechanische Teil muss nicht bei jedem Umbau neu angeschaut werden.
+
+> **Lektion 32:** Bei Visuellem trennen: Was ist *Geometrie* (messbar) und was
+> ist *Gestaltung* (nur beurteilbar)? Den messbaren Teil automatisieren, damit
+> das Augenpaar für den Rest frei wird.
+
+### Und die Hintergründe
+
+Die zweite Hälfte der Rückmeldung — *„Hintergrundfarbe passt nie zum Design"* —
+hatte eine banale Ursache: Jedes Illustrationskästchen brachte einen eigenen
+Verlauf mit (`bg3 → bg4`), im Trainingsplan zusätzlich noch einen
+muskelgruppenabhängigen Farbstich. Auf einer `bg2`-Karte schwammen dadurch
+überall hellere Rechtecke in leicht unterschiedlichen Tönen.
+
+Behoben, indem die Illustration **keine eigene Fläche** mehr hat, sondern auf
+dem Untergrund sitzt, an dem sie hängt. Dazu kam ein Icon-Set, das Emoji
+ersetzt: `🔙` (ein Richtungspfeil) stand für „Rücken", `🏔️` (ein Berg) für
+„Schultern". Emoji rendern zudem auf jedem System anders, mit eigenen Farben,
+die mit dem Akzent kollidieren. Strich-Icons erben `currentColor` und sehen
+überall gleich aus.
+
+> **Lektion 33:** Ein Element, das eine eigene Hintergrundfläche mitbringt,
+> obwohl es auf einer definierten Fläche sitzt, wirkt immer aufgeklebt.
+> Im Zweifel: transparent, und den Untergrund durchscheinen lassen.
+
+> **Lektion 34:** Emoji sind keine Icons. Sie sind plattformabhängig gestaltet,
+> farbig, unterschiedlich groß — und ihre Bedeutung passt selten genau
+> (`🔙` ist „zurück", nicht „Rücken").
+
+---
+
 ## Anhang: Der Diff in Zahlen
 
 | Kategorie | Befunde | behoben |
@@ -986,7 +1094,7 @@ bewusst nur in die Workout-Kopie, nie in `D.plan`.
 | Zustandsfehler (Timer, Async-Guards, Index-Referenzen) | 6 | 6 |
 | Plattformfehler (iOS) | 2 | 2 |
 | Stille Fehlbedienung (UX) | 5 | 5 |
-| Darstellung | 3 | 3 |
+| Darstellung | 6 | 6 |
 | Dokumentierte Restrisiken (Backend nötig) | 3 | 0 |
 | Bewusst aufgeschoben (Performance) | 2 | 0 |
 

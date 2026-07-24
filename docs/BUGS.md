@@ -79,11 +79,14 @@
 | [PB-030](#pb-030) | Deload musste den Plan unberührt lassen | mittel | Datenintegrität | ✅ |
 | [PB-031](#pb-031) | Indirektes Volumen mit Rundungsartefakten | niedrig | Berechnung | ✅ |
 | [PB-032](#pb-032) | `overflow-x:hidden` bricht `position:sticky` | mittel | Darstellung | ✅ |
+| [PB-033](#pb-033) | „Leg Curl" wurde als Bizeps-Curl erkannt | hoch | Darstellung | ✅ |
+| [PB-034](#pb-034) | Hantel lief eine halbe Phase neben der Hand | mittel | Darstellung | ✅ |
+| [PB-035](#pb-035) | Figur schwebte aus dem Bildausschnitt | mittel | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**29 von 29 im Frontend behebbaren Fehlern sind behoben.**
+**32 von 32 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -1163,6 +1166,120 @@ werden") tatsächlich durchgeführt wurde. Genau dafür steht dieser Schritt in
 
 ---
 
+### PB-033
+
+**„Leg Curl" wurde als Bizeps-Curl erkannt**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Darstellung / Mustererkennung |
+| **Gefunden** | **Kontaktbogen aller 15 Bewegungsmuster** |
+| **Status** | ✅ behoben |
+
+**Symptom.** Die Übungsanimation für „Leg Curl" zeigte eine stehende Figur mit
+Kurzhantel-Curl statt der Beinbeuger-Maschine. Ein Nutzer, der die Ausführung
+nachschlägt, bekam die falsche Übung gezeigt.
+
+**Ursache.** `detectMovePattern()` läuft eine Regelliste durch und nimmt den
+**ersten** Treffer. Die Liste stand so:
+
+```js
+{k:'curl',    re:/(curl|bizeps|...)/i},   // ← trifft "Leg Curl"
+...
+{k:'legcurl', re:/(beinbeuger|leg ?curl|...)/i},   // wird nie erreicht
+```
+
+„Leg Curl" enthält „curl", also gewann die allgemeine Regel. Die spezifische
+kam nie zum Zug.
+
+**Fix.** `legext` und `legcurl` vor `curl` gezogen. Die Reihenfolge der Regeln
+ist in einem First-Match-System kein Stilfrage, sondern Logik.
+
+**Lektion.** Bei First-Match-Regelwerken gilt: **spezifisch vor allgemein.**
+Das ist dieselbe Regel wie bei `switch`-Fallgruppen, CSS-Spezifität und
+Routing-Tabellen — und wird genauso oft übersehen, weil beide Regeln einzeln
+betrachtet korrekt aussehen.
+
+**Test.** `PB-033` — 19 Übungsnamen mit erwartetem Muster, darunter alle
+Kollisionskandidaten („Leg Curl" vs. „Preacher Curl", „Beinstrecker" vs.
+„Trizepsdrücken").
+
+---
+
+### PB-034
+
+**Hantel lief eine halbe Phase neben der Hand**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Darstellung |
+| **Gefunden** | **Kontaktbogen** (Seitheben: Hantel schwebte 50px neben dem Arm) |
+| **Status** | ✅ behoben |
+
+**Symptom.** Bei Latziehen, Rudern und Seitheben schwebte das Gerät neben der
+Figur statt in der Hand.
+
+**Ursache.** Nachträglich wurde eine „Heldenpose" eingeführt: Die Animation
+startet auf der Haltung, an der man die Übung erkennt, statt auf einer
+beliebigen. Umgesetzt wurde das durch Vertauschen der Start- und Endpose —
+aber **nur für die Figur**. Hantel und Kabel behielten ihre alte
+Startreihenfolge und liefen dadurch exakt eine halbe Phase versetzt.
+
+```js
+const [p1,p2] = heroFirst ? [b,a] : [a,b];   // Figur ✓
+const A = anchor(pa), B = anchor(pb);        // Last ✗ — kennt heroFirst nicht
+```
+
+**Fix.** `heroFirst` an `loadSVG()` und die Kabelberechnung durchgereicht.
+
+**Lektion.** Wenn du eine Konvention änderst (hier: welche Pose zuerst kommt),
+such **alle** Stellen, die auf der alten Konvention aufbauen. Dasselbe Muster
+wie PB-004: dort war es ein Feld mit zwei Bedeutungen, hier eine Reihenfolge —
+beide Male wurde nur die Hälfte der Leser angepasst.
+
+**Test.** `PB-034` — für jedes Bewegungsmuster mit Gerät wird bei `t=0` der
+Abstand zwischen Last und nächstem Gelenkpunkt gemessen; über 26px gilt als
+abgekoppelt. Gegen den nicht-gefixten Zustand verifiziert rot (48–50px).
+
+---
+
+### PB-035
+
+**Figur schwebte aus dem Bildausschnitt**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Darstellung |
+| **Gefunden** | **Kontaktbogen** (Wadenheben) |
+| **Status** | ✅ behoben |
+
+**Symptom.** Beim Wadenheben stand die Figur mit dem Kopf halb außerhalb des
+sichtbaren Bereichs, die Füße hingen in der Luft neben der Stufe.
+
+**Ursache.** Ein Denkfehler im Bewegungsmodell. Die Kinematikkette geht
+Becken → Knie → Knöchel → Zeh, der Fuß dreht also um den **Knöchel**. Beim
+Wadenheben bleibt aber der **Ballen** auf der Stufe stehen und die Ferse hebt
+sich — der Drehpunkt liegt am anderen Ende. Der Versuch, das über den
+Fußwinkel zu lösen, ließ den Zeh mitwandern; um das auszugleichen, wurde die
+Wurzel angehoben, und die ganze Figur rutschte nach oben aus dem Bild.
+
+**Fix.** Wurzelposition und Fußwinkel beider Posen so gewählt, dass der Zeh
+rechnerisch auf derselben Stelle bleibt (~163,185). Der Drehpunkt liegt damit
+faktisch am Ballen, ohne die Kette umbauen zu müssen.
+
+**Lektion.** Wenn eine Bewegung um ein anderes Gelenk dreht, als das Modell
+vorsieht, hilft kein Nachjustieren einzelner Winkel — man muss entweder das
+Modell ändern oder die Randbedingung („Zeh bleibt fix") explizit lösen.
+
+**Test.** `PB-035` — für alle Muster und beide Posen muss jede Gliedmaße und
+der Kopf innerhalb des Sichtbereichs liegen. Gegen den nicht-gefixten Zustand
+verifiziert rot (`calf/b: ausserhalb (139,-12)`).
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1289,7 +1406,8 @@ gestellt werden sollten:
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
 | 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030 | Was geht hier verloren, und weiß der Nutzer es? |
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
-| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren? |
+| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
+| 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
