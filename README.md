@@ -116,14 +116,13 @@ wenn der betroffene Code längst umgeschrieben wurde.
 Drei Befunde sind **nicht im Frontend lösbar** und in
 [`docs/BUGS.md`](docs/BUGS.md) mit Lösungsweg dokumentiert:
 
-- **PB-021 (kritisch):** Firestore ohne Authentifizierung. Der Sync-Code ist
-  der Vorname; wer ihn kennt, liest und schreibt alle Daten. Braucht
-  Firebase Auth + Security Rules.
+- **PB-021 (kritisch):** Firestore ohne Authentifizierung. Braucht Firebase
+  Auth plus Security Rules. Vom Betreiber als bekanntes Risiko akzeptiert.
 - **PB-022:** Read-Modify-Write ohne Transaktion beim Cloud-Speichern.
 - **PB-023:** Die gesamte App liegt in einem Firestore-Dokument (1-MB-Limit,
   erreicht bei etwa 1.000 Sessions).
 
-Bis PB-021 behoben ist, gilt: **keine Daten in dieser App, die nicht
+Solange PB-021 offen ist, gilt: **keine Daten in dieser App, die nicht
 öffentlich sein dürfen.**
 
 ---

@@ -114,11 +114,10 @@ interpolierten Nutzerdaten ohne Escaping. Die einzige „Absicherung" war
 `.replace(/'/g,"\\'")` — Escaping für ein einzelnes Zeichen in einem
 einzigen Kontext.
 
-Verschärfend: Die Daten kommen über `onSnapshot` aus Firestore. In Kombination
-mit [PB-021](#pb-021) (keine Auth) kann **jeder** Fremde diese Nutzlast in
-dein Dokument schreiben. Der Impact ist dann nicht „ein Alert-Fenster", sondern
-Auslesen von `localStorage.pb_data`: komplette Trainingshistorie, Geburtsdatum,
-Gewichtsverlauf, EGYM-Körperanalyse und das Profilfoto.
+Verschärfend: Die Daten kommen über `onSnapshot` aus Firestore, sind also
+nicht zwingend selbst getippt. Der Impact wäre nicht „ein Alert-Fenster",
+sondern Zugriff auf den lokalen Speicher der App — Trainingshistorie,
+Geburtsdatum, Gewichtsverlauf, Körperanalyse und Profilfoto.
 
 **Fix.** Drei kontextspezifische Escaper und deren konsequenter Einsatz an
 allen 14 Renderstellen:
@@ -1402,22 +1401,21 @@ Firebase-Konfiguration und stehen hier, damit sie nicht vergessen werden.
 | **Klasse** | Sicherheit |
 | **Status** | ⚠️ offen — braucht Firebase-Konfiguration |
 
-**Symptom.** Der „Sync-Code" ist der kleingeschriebene Vorname. Wer `chris`
-errät, liest und überschreibt alle Daten unter `pumpbrah/chris`.
+**Befund.** Der Zugriff auf die gesyncten Daten ist nicht authentifiziert.
+Ein Identifikator, den ein Nutzer selbst wählt, dient zugleich als einziger
+Zugangsweg — er wird nirgends gegen ein Geheimnis geprüft.
 
-**Ursache.** Kein Passwort, kein Token, keine Firebase Authentication. Der Code
-funktioniert nur unter Security-Rules, die im Kern `allow read, write: if true`
-lauten. Der öffentliche API-Key ist dabei **nicht** das Problem —
-Web-API-Keys identifizieren das Projekt, sie autorisieren nicht. Das Problem ist
-das Fehlen von Regeln dahinter.
+*Die konkrete Ausnutzbarkeit ist hier bewusst nicht beschrieben, solange der
+Punkt offen und die App öffentlich erreichbar ist. Ein akzeptiertes Risiko zu
+dokumentieren ist sinnvoll; eine Anleitung dazu zu veröffentlichen nicht.*
 
-**Verstärkt** [PB-001](#pb-001)/[PB-018](#pb-018): Fremde können Nutzlasten in
-dein Dokument schreiben, die dein Browser rendert.
+**Status.** Vom Betreiber als bekanntes Risiko akzeptiert (Stand: Juli 2026).
+Der Eintrag bleibt offen, damit er nicht in Vergessenheit gerät.
 
-**Lösungsweg.**
+**Lösungsweg.** Firebase Authentication einführen und die Dokument-ID an die
+Auth-Identität binden, statt an eine frei wählbare Eingabe:
 
 ```js
-// Client: anonyme Auth, Dokument-ID = uid statt Vorname
 firebase.auth().signInAnonymously();
 ```
 
@@ -1428,9 +1426,9 @@ match /pumpbrah/{uid} {
 }
 ```
 
-Preis: Der „gleicher Name = gleiche Daten"-Trick über Geräte hinweg entfällt
-und braucht einen echten Kopplungsmechanismus (E-Mail-Link, Custom Token oder
-einen einmalig generierten Gerätecode).
+Preis: Der bisherige geräteübergreifende Abgleich über eine gemeinsame Eingabe
+entfällt und braucht einen echten Kopplungsmechanismus (E-Mail-Link, Custom
+Token oder einen einmalig erzeugten Gerätecode).
 
 **Lektion.** Ein Identifikator ist kein Berechtigungsnachweis. Und
 clientseitige Sicherheit gibt es nicht — die Regeln müssen dort liegen, wo der

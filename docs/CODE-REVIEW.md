@@ -151,8 +151,9 @@ unsubscribe = ref.onSnapshot(doc => {
 });
 ```
 
-Alles, was in dem Firestore-Dokument steht, wird gerendert. Und wer in dieses
-Dokument schreiben darf, siehe nächster Abschnitt: **jeder.**
+Alles, was in dem Firestore-Dokument steht, wird gerendert — die Daten sind
+also nicht zwingend selbst getippt. Zur Frage, wer dort schreiben darf, siehe
+den nächsten Abschnitt.
 
 **c) Der Impact ist nicht „ein Alert-Fenster".** Ein Skript im Seitenkontext
 liest `localStorage.pb_data` (deine komplette Trainingshistorie, Geburtsdatum,
@@ -227,41 +228,37 @@ function doLogin(){
 }
 ```
 
-Der „Sync-Code" ist der **Vorname**, kleingeschrieben. Kein Passwort, keine
-Firebase Authentication, kein Token. Das Firestore-Dokument heißt schlicht
-`pumpbrah/chris`.
+Der Zugriff auf die gesyncten Daten ist **nicht authentifiziert**. Ein
+Identifikator, den der Nutzer selbst wählt, ist zugleich der einzige Zugangsweg
+— er wird nirgends gegen ein Geheimnis geprüft.
 
-Damit gilt: Wer `chris` errät, bekommt alle Daten — und **kann sie überschreiben**,
-sofern die Firestore-Security-Rules auf „offen" stehen. Und das tun sie
-per Default in einem Projekt, das ohne Auth arbeitet: eine Regel wie
-`allow read, write: if true;` ist die einzige, unter der dieser Code überhaupt
-funktioniert.
+*Die konkrete Ausnutzbarkeit steht hier bewusst nicht, solange der Punkt offen
+und die App öffentlich erreichbar ist.*
 
 Der API-Key im Quelltext ist dabei **nicht** das Problem — Firebase-Web-API-Keys
-sind öffentlich by design, sie identifizieren das Projekt, sie autorisieren nicht.
-Das Problem ist das **Fehlen von Regeln dahinter.**
+sind öffentlich by design, sie identifizieren das Projekt, sie autorisieren
+nicht. Das Problem ist das **Fehlen von Regeln dahinter**.
 
-**Das lässt sich nicht im Frontend reparieren.** Deshalb steht es hier als
-dokumentierter Befund mit konkretem Weg:
+**Das lässt sich nicht im Frontend reparieren.** Der Weg führt über Firebase
+Authentication plus Security Rules, die die Dokument-ID an die Auth-Identität
+binden:
 
 ```js
-// Minimalinvasiv, ohne Login-UI-Umbau: anonyme Firebase-Auth,
-// Dokument-ID = auth.uid statt Vorname.
 firebase.auth().signInAnonymously();
+```
 
+```javascript
 // firestore.rules
 match /pumpbrah/{uid} {
   allow read, write: if request.auth != null && request.auth.uid == uid;
 }
 ```
 
-Der Preis: Der „gleicher Name = gleiche Daten"-Trick über Geräte hinweg fällt weg
-und muss durch einen echten Kopplungsmechanismus ersetzt werden (E-Mail-Link,
-Custom Token, oder ein einmalig generierter Geräte-Kopplungscode).
+Der Preis: Der geräteübergreifende Abgleich über eine gemeinsame Eingabe
+entfällt und braucht einen echten Kopplungsmechanismus.
 
-> **Lektion 5:** Ein Identifikator ist kein Berechtigungsnachweis.
-> „Wer den Namen kennt, darf rein" ist Autorisierung durch Obskurität —
-> und Vornamen sind nicht obskur.
+> **Lektion 5:** Ein Identifikator ist kein Berechtigungsnachweis. Etwas, das
+> der Nutzer selbst wählt und frei weitergibt, ist eine Adresse — kein Schlüssel.
 
 > **Lektion 6:** Client-seitige Sicherheit gibt es nicht. Die Regeln müssen
 > dort liegen, wo der Angreifer sie nicht editieren kann: auf dem Server.
