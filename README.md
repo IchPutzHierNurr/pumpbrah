@@ -80,6 +80,7 @@ Entwicklungsbranch
 [`claude/fitness-app-review-overhaul-iwee5t`](https://github.com/IchPutzHierNurr/pumpbrah/tree/claude/fitness-app-review-overhaul-iwee5t)
 unter `docs/` und `test/`.
 
-**Bekannte offene Punkte:** Der Firestore-Sync hat derzeit keine
-Authentifizierung. Bis das geändert ist, gehören keine Daten in die App, die
-nicht öffentlich sein dürfen.
+**Hinweis zu deinen Daten:** Die Synchronisation ist derzeit nicht
+zugriffsgeschützt. Nutze die App deshalb nicht für Angaben, die vertraulich
+bleiben müssen. Die App funktioniert auch vollständig im Offline-Modus, dann
+bleiben alle Daten auf dem Gerät.
