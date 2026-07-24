@@ -25,6 +25,7 @@ Vanilla JS ohne Build-Schritt, Firestore als Sync-Backend.
 11. [UX-Schulden, die wie Code-Schulden wirken](#11-ux-schulden-die-wie-code-schulden-wirken)
 12. [Was richtig gut gemacht war](#12-was-richtig-gut-gemacht-war)
 13. [Checkliste zum Mitnehmen](#13-checkliste-zum-mitnehmen)
+14. [Nachtrag: der Plattform-Pass](#14-nachtrag-der-plattform-pass)
 
 ---
 
@@ -855,8 +856,123 @@ Die 24 Lektionen, verdichtet auf das, was man beim nächsten Review wirklich fra
 - [ ] Beziffert jede Löschabfrage, was verloren geht?
 - [ ] Verschluckt eine Funktion ihre Parameter in einem Sonderfall?
 
+**Plattform**
+- [ ] Erzwingt die Plattform hier ein Verhalten — und kennst du die *Bedingung* dafür?
+- [ ] Sind Formularfelder ≥ 16px (sonst zoomt iOS)?
+- [ ] Kollidiert eine eigene Geste mit einer System-Geste (Langdrücken, Wischen, Pull-to-Refresh)?
+- [ ] Macht eine neu eingebaute Browser-API eine bisher synchrone Funktion asynchron?
+
 **Und die eine Frage über allem:**
 - [ ] *Welche Annahme trifft diese Funktion über eine andere, ohne sie durchzusetzen?*
+
+---
+
+## 14. Nachtrag: der Plattform-Pass
+
+Nach dem ersten Durchgang kam ein zweiter, der ausschließlich auf iOS und
+Darstellung geschaut hat. Er brachte eine Fehlerklasse zutage, die im ersten
+Review komplett gefehlt hat — weil sie im Code korrekt aussieht und erst auf
+dem Gerät auffällt.
+
+### Der Schalter, der nichts tut
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+```
+
+`user-scalable=no` steht in vielen Web-Apps. Der Grund ist meistens dieser:
+Beim Antippen eines Eingabefelds zoomt iOS Safari hinein und zoomt nicht
+zurück. Das sieht kaputt aus, also schaltet man Zoomen ab.
+
+Zwei Probleme damit:
+
+1. **Es funktioniert nicht.** iOS ignoriert `user-scalable=no` seit iOS 10,
+   weil Apple das Zoom-Verbot als Barriere einstuft.
+2. **Es kostet trotzdem etwas.** Auf Android und in manchen In-App-Browsern
+   greift es sehr wohl — dort können Nutzer mit Sehschwäche dann nicht mehr
+   zoomen.
+
+Die eigentliche Bedingung ist eine andere: **Safari zoomt genau dann, wenn ein
+Formularfeld mit weniger als 16px gerendert wird.** Die App hatte 15px, 14px
+und 13px. Alle auf 16px gesetzt → das Verhalten ist weg, und Zoomen von Hand
+funktioniert wieder.
+
+> **Lektion 25:** Wenn eine Plattform ein Verhalten erzwingt, such nach der
+> **Bedingung**, unter der sie es tut — nicht nach dem Schalter, der es abstellen
+> soll. Der Schalter ist oft wirkungslos und hat Nebenwirkungen, die schlimmer
+> sind als das Problem.
+
+### Zwei Eigenschaften, die verwandt aussehen
+
+Das Bearbeiten eines geloggten Satzes läuft über langes Drücken. Auf dem
+iPhone kam stattdessen das System-Kontextmenü. Die App setzte:
+
+```css
+* { -webkit-user-select: none; user-select: none }   /* verhindert Markieren */
+```
+
+Was fehlte:
+
+```css
+* { -webkit-touch-callout: none }                    /* verhindert das Callout */
+```
+
+Das sind zwei verschiedene Dinge. `user-select` steuert Textmarkierung,
+`-webkit-touch-callout` das Langdrück-Menü. Die Kernfunktion der Workout-Ansicht
+war auf dem Hauptzielgerät faktisch nicht erreichbar — und im Code sah alles
+richtig aus.
+
+> **Lektion 26:** Plattformspezifische Gesten kann man nicht durch Lesen
+> verifizieren. Entweder auf dem Gerät testen oder die Deklaration durch einen
+> Test festnageln — und dann ehrlich dokumentieren, dass der Test schwächer ist
+> als ein Gerätetest.
+
+### Die moderne API, die den Vertrag ändert
+
+Für weichere Screenwechsel lag die View-Transitions-API nahe:
+
+```js
+function withViewTransition(fn){ document.startViewTransition(fn) }
+```
+
+Sieht harmlos aus. Ist es nicht: `startViewTransition()` ruft seinen Callback
+**nicht sofort** auf, sondern erst nachdem der Browser den alten Zustand
+erfasst hat. Damit war `go()` von synchron auf asynchron gewechselt — ohne
+`async`, ohne geänderte Signatur, ohne dass irgendetwas im Aufrufcode danach
+aussah.
+
+Gefunden hat das ein bestehender Regressionstest zu einem **völlig anderen**
+Fehler (PB-024, unsichtbare Volumen-Balken): Er maß Balkenhöhen und bekam
+plötzlich 0, weil der Screen zum Messzeitpunkt noch gar nicht sichtbar war.
+
+Rückbau auf synchron; der visuelle Effekt kommt jetzt aus einer CSS-Animation
+und funktioniert obendrein in älteren Safari-Versionen.
+
+> **Lektion 27:** Eine API, die deine Funktion asynchron macht, ändert deren
+> Vertrag — auch ohne `async`-Schlüsselwort. Frag vor dem Einbau: *Wann genau
+> läuft mein Code, und wer verlässt sich auf den bisherigen Zeitpunkt?*
+
+> **Lektion 28:** Der beste Beleg für den Nutzen einer Regressionssuite ist
+> nicht, dass sie alte Fehler fängt. Es ist, dass sie **neue** fängt, die mit
+> dem ursprünglichen Fehler nichts zu tun haben.
+
+### Und einmal andersherum: Tests vor dem Fehler
+
+Beim Bau der Aufwärmrampe war die Frage nicht „funktioniert das", sondern:
+*Welches bekannte Muster aus dem Register könnte hier zuschlagen?*
+
+Muster 4 — „neuer Datentyp in alte Rechenwege" — passte sofort. Genau so war
+PB-004 entstanden (Cardio als Kilogramm-Tonnage). Vier Aufwärmsätze pro Übung
+hätten die MEV/MAV-Einordnung gesprengt.
+
+Also wurde die Rampe von vornherein als reine Anzeige gebaut, die keinen
+Zustand schreibt — und der Test dazu (PB-029) sichert das ab, obwohl der
+Fehler nie passiert ist. Dasselbe bei PB-030: Der Deload-Modus schreibt
+bewusst nur in die Workout-Kopie, nie in `D.plan`.
+
+> **Lektion 29:** Ein Fehlerregister ist nur halb so viel wert, wenn man daraus
+> nur rückwärts lernt. Die andere Hälfte ist die Frage vor jedem neuen Feature:
+> *Welches Muster hier drin könnte auf das zutreffen, was ich gerade baue?*
 
 ---
 
@@ -864,13 +980,20 @@ Die 24 Lektionen, verdichtet auf das, was man beim nächsten Review wirklich fra
 
 | Kategorie | Befunde | behoben |
 |---|---:|---:|
-| Sicherheit (XSS-Vektoren) | 14 Renderstellen | 14 |
-| Datenverlust | 4 | 4 |
-| Falsche Berechnungen | 6 | 6 |
-| Zustandsfehler (Timer, Async-Guards) | 5 | 5 |
+| Sicherheit (XSS-Vektoren) | 26 Renderstellen | 26 |
+| Datenverlust | 5 | 5 |
+| Falsche Berechnungen | 10 | 10 |
+| Zustandsfehler (Timer, Async-Guards, Index-Referenzen) | 6 | 6 |
+| Plattformfehler (iOS) | 2 | 2 |
 | Stille Fehlbedienung (UX) | 5 | 5 |
+| Darstellung | 3 | 3 |
 | Dokumentierte Restrisiken (Backend nötig) | 3 | 0 |
 | Bewusst aufgeschoben (Performance) | 2 | 0 |
+
+Davon entstanden **vier Fehler beim Beheben oder Verbessern anderer Dinge**
+(PB-018, PB-020, PB-024, PB-025). Zwei weitere Einträge (PB-029, PB-030) sind
+Tests für Fehler, die durch die Frage „welches bekannte Muster trifft hier zu?"
+gar nicht erst passiert sind.
 
 Die drei offenen Punkte — fehlende Firestore-Auth, Read-Modify-Write ohne
 Transaktion, 1-MB-Dokumentgrenze — sind **nicht im Frontend lösbar** und in

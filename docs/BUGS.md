@@ -71,11 +71,19 @@
 | [PB-019](#pb-019) | Apostroph zerstört Inline-Handler | mittel | Zustand | ✅ |
 | [PB-020](#pb-020) | Veralteter logTgt-Index stürzt ab | mittel | Zustand | ✅ |
 | [PB-024](#pb-024) | Volumen-Balken ohne sichtbare Füllung | mittel | Darstellung | ✅ |
+| [PB-025](#pb-025) | View Transition machte `go()` asynchron | hoch | Zustand | ✅ |
+| [PB-026](#pb-026) | Formularfelder unter 16px → iOS zoomt hinein | hoch | Plattform | ✅ |
+| [PB-027](#pb-027) | iOS-Systemmenü überlagert den Satz-Editor | hoch | Plattform | ✅ |
+| [PB-028](#pb-028) | Aufwärmrampe konnte Arbeitslast überschreiten | mittel | Berechnung | ✅ |
+| [PB-029](#pb-029) | Aufwärmsätze durften Volumen nicht verfälschen | mittel | Berechnung | ✅ |
+| [PB-030](#pb-030) | Deload musste den Plan unberührt lassen | mittel | Datenintegrität | ✅ |
+| [PB-031](#pb-031) | Indirektes Volumen mit Rundungsartefakten | niedrig | Berechnung | ✅ |
+| [PB-032](#pb-032) | `overflow-x:hidden` bricht `position:sticky` | mittel | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**21 von 21 im Frontend behebbaren Fehlern sind behoben.**
+**29 von 29 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -830,6 +838,331 @@ Höhe > 0. Gegen den nicht-gefixten Zustand verifiziert rot.
 
 ---
 
+### PB-025
+
+**View Transition machte `go()` asynchron**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Zustand |
+| **Gefunden** | **Regressionstest PB-024**, direkt nach dem Einbau |
+| **Status** | ✅ behoben |
+
+**Symptom.** Nach dem Umstellen des Screenwechsels auf die View-Transitions-API
+schlug PB-024 fehl: Die Volumen-Balken hatten Breite und Höhe 0. Ursache war
+aber nicht die Darstellung — der Screen war zum Messzeitpunkt schlicht noch
+nicht sichtbar.
+
+**Ursache.**
+
+```js
+function withViewTransition(fn){ document.startViewTransition(fn) }   // ✗
+```
+
+`startViewTransition()` ruft seinen Callback **nicht sofort** auf. Der Browser
+fotografiert erst den alten Zustand, dann läuft der Callback in einem späteren
+Task. Damit war `go()` von einer synchronen zu einer asynchronen Funktion
+geworden — ohne dass sich ihre Signatur geändert hätte. Jeder Aufrufer, der
+danach ins DOM greift, sieht den alten Screen.
+
+**Fix.** Rückbau auf einen synchronen Wechsel; der visuelle Effekt kommt jetzt
+aus einer reinen CSS-Animation auf `.screen.active` (Blur + Versatz + Skalierung).
+Das sieht praktisch identisch aus, bleibt synchron und funktioniert zusätzlich
+in älteren Safari-Versionen, die View Transitions noch nicht unterstützen.
+
+**Lektion.** Eine API, die eine Funktion async macht, ändert deren Vertrag —
+auch wenn kein `async`-Schlüsselwort auftaucht und der Rückgabewert gleich
+bleibt. Vor dem Einbau einer neuen Browser-API die Frage stellen: *Wann genau
+läuft mein Code, und was hängt an diesem Zeitpunkt?*
+
+Zweite Lektion, die hier den Ausschlag gab: **Ein bestehender Regressionstest
+hat einen ganz anderen neuen Fehler gefangen.** Genau dafür lohnt sich das
+Register — PB-024 prüft Balkenhöhen und fand eine Timing-Änderung.
+
+**Test.** `PB-025` — `go()` wird für alle vier Screens aufgerufen und der
+Zustand **ohne** `await` und **ohne** `requestAnimationFrame` geprüft.
+
+---
+
+### PB-026
+
+**Formularfelder unter 16px → iOS zoomt hinein**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Plattform (iOS) |
+| **Gefunden** | iOS-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Auf dem iPhone zoomt Safari beim Antippen eines Eingabefeldes
+automatisch hinein — und **zoomt danach nicht zurück**. Der Nutzer bleibt auf
+einer vergrößerten, seitlich verschobenen Seite zurück und muss von Hand
+herauszoomen. Betroffen war praktisch jedes Feld: Gewicht, Wiederholungen,
+Übungssuche, Notizen.
+
+**Ursache.** Safari auf iOS zoomt grundsätzlich auf ein Formularfeld, dessen
+gerenderte Schriftgröße unter 16px liegt. Die App hatte 15px (`.ig input`),
+13px (`.ig select`) und 14px (`.lib-search`, Notiz-Textarea).
+
+Der übliche „Fix" dafür ist `user-scalable=no` im Viewport-Tag — und der stand
+auch drin. Er hilft aber nicht: **iOS ignoriert `user-scalable=no` seit iOS 10**,
+weil es Nutzern mit Sehschwäche das Zoomen verbietet. Die Direktive kostete
+also Barrierefreiheit, ohne das Problem zu lösen.
+
+**Fix.** Alle Formularfelder auf mindestens 16px. `user-scalable=no` entfernt —
+manuelles Zoomen funktioniert wieder, automatisches passiert nicht mehr. Da
+`appearance:none` den nativen `<select>`-Pfeil entfernt, ist er als
+CSS-Gradient nachgebaut.
+
+**Lektion.** Wenn eine Plattform ein Verhalten erzwingt, such nach der
+**Bedingung**, unter der sie es tut — nicht nach dem Schalter, der es abstellen
+soll. Der Schalter ist oft wirkungslos oder hat Nebenwirkungen, die schlimmer
+sind als das Problem.
+
+**Test.** `PB-026` — alle sichtbaren `input`/`select`/`textarea`, auch die in
+geschlossenen Modals, müssen ≥ 16px gerendert werden.
+
+---
+
+### PB-027
+
+**iOS-Systemmenü überlagert den Satz-Editor**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Plattform (iOS) |
+| **Gefunden** | iOS-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Das Bearbeiten eines geloggten Satzes läuft über ein langes
+Drücken auf die Satzzeile. Auf dem iPhone kam stattdessen das
+System-Kontextmenü („Kopieren / Nachschlagen / Teilen"). Die Funktion war auf
+dem Hauptzielgerät faktisch nicht erreichbar.
+
+**Ursache.** iOS blendet beim Langdrücken auf Text sein eigenes Menü ein,
+solange nicht `-webkit-touch-callout: none` gesetzt ist. Die App setzte zwar
+`user-select: none`, aber das ist eine andere Eigenschaft: Sie verhindert das
+Markieren, nicht das Callout.
+
+**Fix.** `-webkit-touch-callout:none` global, mit expliziter Rücknahme auf
+`input, textarea, select` — dort will man das Systemmenü behalten (Einfügen,
+Ersetzen, Diktat).
+
+**Lektion.** `user-select` und `-webkit-touch-callout` sehen verwandt aus und
+sind es nicht. Bei plattformspezifischen Gesten hilft nur Testen auf der
+Plattform — oder ein Test, der die Deklaration festnagelt.
+
+**Nachtrag zur Testbarkeit:** `getComputedStyle` liefert für
+`-webkit-touch-callout` in Chromium einen leeren String, die Eigenschaft ist
+Safari-spezifisch. Der Regressionstest prüft deshalb die Deklaration im
+Stylesheet plus das, was Chromium tatsächlich berichtet. Das ist schwächer als
+ein echter Gerätetest — und genau so ist es im Test dokumentiert, statt eine
+Sicherheit vorzutäuschen, die er nicht hat.
+
+**Test.** `PB-027`
+
+---
+
+### PB-028
+
+**Aufwärmrampe konnte die Arbeitslast überschreiten**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falsche Berechnung |
+| **Gefunden** | Regressionstest beim Bau der Funktion |
+| **Status** | ✅ behoben |
+
+**Symptom.** Bei sehr leichten Arbeitsgewichten konnte eine Aufwärmstufe
+schwerer sein als der Arbeitssatz — oder zwei Stufen fielen nach dem Runden auf
+denselben Wert.
+
+**Ursache.** Die Rampe rechnet Prozentsätze und rundet auf einstellbare
+Scheibengrößen (2,5 kg / 1 kg / 0,5 kg). Bei 6 kg Arbeitslast ergibt
+`Math.round(6*0.88/1)*1 = 5` — bei 2 kg jedoch `Math.round(2*0.88/0.5)*0.5 = 2`,
+also gleich der Arbeitslast. Runden **nach** dem Prozentrechnen kann eine
+Ordnung umkehren, die vorher galt.
+
+**Fix.** Nach dem Runden filtern statt vorher zu hoffen: Stufen `>= Arbeitslast`
+fliegen raus, Dubletten ebenfalls. Ungültige Eingaben (0, negativ, `NaN`)
+liefern `null` statt einer kaputten Liste.
+
+**Lektion.** Runden ist keine ordnungserhaltende Operation. Wenn eine
+Invariante („streng aufsteigend, kleiner als X") nach einer Rundung gelten
+soll, muss sie **nach** der Rundung geprüft und durchgesetzt werden.
+
+**Test.** `PB-028` — sieben Arbeitslasten × fünf Bewegungsmuster, alle Stufen
+aufsteigend und unter der Arbeitslast; ungültige Eingaben liefern nichts.
+
+---
+
+### PB-029
+
+**Aufwärmsätze durften Volumen nicht verfälschen**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falsche Berechnung |
+| **Gefunden** | Vorbeugend beim Bau (Lehre aus PB-004) |
+| **Status** | ✅ behoben |
+
+**Symptom.** Keiner — dieser Eintrag steht hier, weil der Fehler **verhindert**
+wurde und der Test das dauerhaft absichert.
+
+**Hintergrund.** PB-004 (Cardio als Tonnage) entstand genau so: Ein neuer
+Datentyp wurde in bestehende Rechenwege eingespeist, ohne alle Leser
+anzupassen. Aufwärmsätze sind der nächste Kandidat — vier zusätzliche „Sätze"
+pro Übung würden die MEV/MAV-Einordnung sprengen und die Tonnage aufblähen.
+
+**Umsetzung.** Die Rampe ist reine Anzeige. Sie erzeugt keinen Eintrag in
+`logged`, verändert keinen Zustand und ist damit für jede Statistik unsichtbar.
+Im UI steht das auch dran: „zählt nicht ins Volumen".
+
+**Lektion.** Wenn ein bekanntes Fehlermuster (hier: Muster 4 aus der Tabelle
+unten) auf ein neues Feature zutreffen *könnte*, schreib den Test **bevor** der
+Fehler passiert. Ein Register ist nur dann etwas wert, wenn man daraus auch
+vorwärts lernt und nicht nur rückwärts.
+
+**Test.** `PB-029` — das Rendern der Rampe verändert weder Wochenvolumen noch
+geloggte Sätze.
+
+---
+
+### PB-030
+
+**Deload musste den Trainingsplan unberührt lassen**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Datenintegrität |
+| **Gefunden** | Vorbeugend beim Bau |
+| **Status** | ✅ behoben |
+
+**Symptom-Risiko.** Der Deload-Modus senkt Satzzahlen auf ~60 % und hebt die
+RIR-Vorgabe. Der naheliegende Weg wäre, das direkt in `D.plan` zu schreiben.
+Dann wäre nach der Deload-Woche der Plan dauerhaft kastriert — und niemand
+wüsste mehr, wie er vorher aussah.
+
+**Umsetzung.** `applyDeloadToExercises()` greift ausschließlich auf die Kopie,
+die beim Start eines Workouts in `D.active.exercises` landet. `D.plan` wird nie
+angefasst. Der Modus endet nach sieben Tagen von selbst
+(`deloadActive()` prüft `until` bei jedem Aufruf), lässt sich aber auch
+vorzeitig beenden.
+
+**Lektion.** Temporäre Anpassungen gehören in die temporäre Struktur. Sobald
+ein Modus in den dauerhaften Zustand schreibt, brauchst du einen Rückweg — und
+den vergisst man.
+
+**Test.** `PB-030` — Sätze sind reduziert, RIR angehoben, `D.plan`
+byte-identisch, und ein abgelaufener Deload deaktiviert sich selbst.
+
+---
+
+### PB-031
+
+**Indirektes Volumen mit Rundungsartefakten**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Falsche Berechnung |
+| **Gefunden** | Regressionstest beim Bau |
+| **Status** | ✅ behoben |
+
+**Symptom.** Indirekt beteiligte Muskeln zählen mit 0,5 Sätzen. Bei genügend
+Additionen erzeugt binäre Gleitkommaarithmetik Werte wie `12.499999999999998`,
+die im UI so auch erschienen wären.
+
+**Fix.** Nach dem Aufsummieren einmal auf eine Nachkommastelle runden.
+
+**Lektion.** Sobald Zähler nicht mehr ganzzahlig sind, kommt Gleitkomma ins
+Spiel. Entweder in Halbschritten als Ganzzahl rechnen (alles ×2) oder an genau
+einer Stelle — am Ende — runden. Nicht mittendrin, sonst summieren sich die
+Rundungsfehler auf.
+
+**Test.** `PB-031` — 3 Sätze Drücken ergeben exakt 1,5 Sätze Trizeps, alle
+Werte haben höchstens eine Nachkommastelle.
+
+---
+
+### PB-032
+
+**`overflow-x:hidden` bricht `position:sticky`**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Darstellung |
+| **Gefunden** | **Screenshot im iPhone-Viewport** |
+| **Status** | ✅ behoben |
+
+**Symptom.** Die neue Large-Title-Kopfzeile sollte beim Scrollen oben kleben
+und zu einer kompakten Glasleiste zusammenschrumpfen. Sie scrollte stattdessen
+komplett weg. Gemessen: `top: -376px` bei 377px Scrollposition — also exakt
+mitgewandert, als wäre `position:sticky` gar nicht gesetzt.
+
+**Ursache.** Ganz woanders im Stylesheet, seit Jahren unverändert:
+
+```css
+html, body { overflow-x: hidden; }
+```
+
+`overflow-x: hidden` erzwingt für die andere Achse den berechneten Wert `auto`.
+Damit wird das Element zu einem **Scroll-Container**. Ein `position: sticky`-Kind
+klebt immer an seinem nächsten Scroll-Container — hier also an `<body>`, das
+selbst gar nicht scrollt. Ergebnis: Es klebt an nichts.
+
+Das Tückische daran: Die Regel war nicht falsch, als sie geschrieben wurde. Sie
+wurde es erst durch ein Feature, das Jahre später dazukam.
+
+**Fix.**
+
+```css
+html, body { overflow-x: hidden; }                        /* Fallback */
+@supports (overflow: clip) { html, body { overflow-x: clip } }
+```
+
+`clip` schneidet Überhang genauso ab, erzeugt aber **keinen** Scroll-Container.
+Safari kann es seit 16.0; ältere Versionen fallen auf `hidden` zurück — dort ist
+die Kopfzeile dann nicht sticky, das Layout stimmt aber weiterhin.
+
+**Lektion.** Manche CSS-Eigenschaften haben Fernwirkung auf Nachfahren, die man
+beim Schreiben nicht sieht: `overflow`, `transform`, `filter`, `contain`,
+`will-change` und `perspective` erzeugen alle Container, an denen sich
+`position: fixed`/`sticky` neu ausrichten. Wenn Sticky oder Fixed „einfach nicht
+funktioniert", steht die Ursache fast nie an der Stelle, an der man sucht —
+sondern bei einem Vorfahren.
+
+**Nachtrag zum Test — und der eigentliche Lerneffekt.** Die erste Fassung des
+Regressionstests prüfte:
+
+```js
+const ok = r.collapsedTop <= 1;      // ✗
+```
+
+Das bestand **auch ohne den Fix**: eine weggescrollte Kopfzeile hat
+`top = -376`, und `-376 <= 1` ist wahr. Ein Test, der die Vorzeichenrichtung
+nicht prüft, prüft in Wahrheit nichts. Richtig ist der Betrag:
+
+```js
+const ok = r.scrolled > 100 && Math.abs(r.collapsedTop) <= 1 && r.t > 0.9
+        && r.collapsedH < r.expandedH;
+```
+
+Aufgefallen ist das nur, weil die Gegenprobe („Fix rausnehmen, Test muss rot
+werden") tatsächlich durchgeführt wurde. Genau dafür steht dieser Schritt in
+`/check` Phase 4.
+
+**Test.** `PB-032` — gegen den nicht-gefixten Zustand verifiziert rot.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -951,22 +1284,38 @@ gestellt werden sollten:
 | 1 | **Kontextverwechslung beim Escaping** | PB-001, PB-018, PB-019 | In welchem Kontext landet dieser String — und in wie vielen gleichzeitig? |
 | 2 | **Identität aus Inhalt abgeleitet** | PB-002, PB-003, PB-016, PB-020 | Was ist die stabile Identität dieses Objekts, unabhängig von seinem Inhalt und seiner Position? |
 | 3 | **Zwei Quellen für dieselbe Wahrheit** | PB-005, PB-013, PB-017, PB-024 | Gibt es diese Tabelle/Definition/CSS-Regel schon woanders? |
-| 4 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render und Nebenläufigkeit? |
-| 5 | **Stille Datenvernichtung** | PB-010, PB-011, PB-012, PB-002 | Was geht hier verloren, und weiß der Nutzer es? |
+| 3b | **Fernwirkung auf Nachfahren** | PB-024, PB-032 | Welche Vorfahren-Eigenschaft (overflow, transform, filter, Spezifität) wirkt hier hinein? |
+| 4 | **Neuer Datentyp in alte Rechenwege** | PB-004, PB-029, PB-031 | Wer alles liest dieses Feld — und stimmt die Rechnung für den neuen Fall? |
+| 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
+| 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030 | Was geht hier verloren, und weiß der Nutzer es? |
+| 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
+| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren? |
 
-Bemerkenswert: **Drei Fehler entstanden beim Beheben anderer Fehler.**
+Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
-Dimension, und PB-024 wurde beim Ergänzen einer Animation eingebaut. Keiner
-davon wurde durch Nachdenken gefunden — PB-018 und PB-020 fand der Fuzzer,
-PB-024 fiel beim Ansehen eines Screenshots auf.
+Dimension, PB-024 wurde beim Ergänzen einer Animation eingebaut, PB-025 beim
+Modernisieren des Screenwechsels. Keiner davon wurde durch Nachdenken gefunden:
 
-Daraus folgen die zwei Regeln, die `/check` durchsetzt:
+| Fehler | Gefunden durch |
+|---|---|
+| PB-018, PB-020 | Fuzzer |
+| PB-024 | Screenshot angesehen |
+| PB-025 | **ein bestehender Regressionstest zu einem anderen Fehler** |
 
-1. **Jeder Fix ist selbst ein Änderungsrisiko.** Nach dem Beheben nochmal
-   volle Runde, nicht nur den einen Test.
+PB-025 ist dabei der beste Beleg für den Nutzen des Registers: Der Test zu
+PB-024 prüft Balkenhöhen und hat damit eine völlig unabhängige Timing-Änderung
+gefangen.
+
+Daraus folgen die drei Regeln, die `/check` durchsetzt:
+
+1. **Jeder Fix und jede Verbesserung ist selbst ein Änderungsrisiko.** Nach
+   dem Umbau volle Runde, nicht nur den einen Test.
 2. **Verhaltenstests und Sichtprüfung finden verschiedene Fehlerklassen.**
    Ein Assert sieht keine unsichtbaren Balken; ein Screenshot sieht keine
    Race Condition. Es braucht beides.
+3. **Aus dem Register vorwärts lernen, nicht nur rückwärts.** PB-029 und
+   PB-030 sind Tests für Fehler, die nie passiert sind — sie entstanden aus
+   der Frage, welches bekannte Muster auf das neue Feature zutreffen könnte.
 
 > Das ist die eigentliche Begründung für dieses Register: Nicht die Fehler
 > sind das Wertvolle, sondern die Muster dahinter — und der Beweis, dass ein

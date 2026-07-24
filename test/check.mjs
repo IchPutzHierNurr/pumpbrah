@@ -457,6 +457,204 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-025', title: 'go() wechselt den Screen synchron',
+    run: async () => {
+      // Gefunden vom Regressionstest PB-024, nachdem go() versuchsweise in
+      // document.startViewTransition() gewickelt wurde: dessen Callback läuft
+      // asynchron, damit sah jeder Aufrufer direkt nach go() noch den alten
+      // Screen. Diese Eigenschaft muss ein Test festnageln, sonst schleicht
+      // sie sich beim nächsten "modernen" Umbau wieder ein.
+      const r = await page.evaluate(() => {
+        const out = {};
+        ['dash', 'hist', 'ana', 'settings'].forEach(id => {
+          go(id);
+          // KEIN await, kein rAF — genau das ist der Punkt.
+          const scr = document.getElementById('s-' + id);
+          out[id] = scr.classList.contains('active')
+            && scr.getBoundingClientRect().height > 0
+            && document.querySelector(`.ni[data-tab="${id}"]`).classList.contains('on');
+        });
+        return out;
+      });
+      return [Object.values(r).every(Boolean), JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-026', title: 'Kein Formularfeld unter 16px (iOS-Zoom)',
+    run: async () => {
+      // iOS Safari zoomt beim Fokussieren automatisch hinein, sobald ein
+      // Formularfeld kleiner als 16px gerendert wird - und zoomt nicht zurück.
+      const r = await page.evaluate(() => {
+        document.querySelectorAll('.mbg').forEach(m => m.classList.add('show'));
+        const small = [...document.querySelectorAll('input,select,textarea')]
+          .filter(el => el.type !== 'hidden' && el.type !== 'file' && el.offsetParent !== null)
+          .map(el => ({ id: el.id || el.className, size: parseFloat(getComputedStyle(el).fontSize) }))
+          .filter(x => x.size < 16);
+        document.querySelectorAll('.mbg').forEach(m => m.classList.remove('show'));
+        return small;
+      });
+      return [r.length === 0, r.length ? JSON.stringify(r).slice(0, 200) : ''];
+    }
+  },
+  {
+    id: 'PB-027', title: 'Long-Press-Ziele haben kein iOS-Systemmenü',
+    run: async () => {
+      // Ohne -webkit-touch-callout:none blendet iOS beim Langdrücken sein
+      // eigenes Menü ein - genau auf der Geste, die den Satz-Editor öffnet.
+      //
+      // getComputedStyle taugt hier nicht: -webkit-touch-callout ist eine
+      // Safari-Eigenschaft, Chromium liefert dafür einen leeren String. Der
+      // Test prüft deshalb die Deklaration im Stylesheet plus das, was
+      // Chromium tatsächlich berichtet (user-select) und dass die Geste
+      // überhaupt an der Zeile hängt.
+      const r = await page.evaluate(() => {
+        const css = [...document.querySelectorAll('style')].map(s => s.textContent).join('\n');
+        const declared = /\*\s*\{[^}]*-webkit-touch-callout\s*:\s*none/s.test(css);
+        const inputsExempt = /input,textarea,select\s*\{[^}]*-webkit-touch-callout\s*:\s*default/s.test(css);
+        D.active = null; startWorkout('FullBody_A');
+        D.active.exercises[0].logged = [{ w: 20, r: 10, rir: 2, note: '' }];
+        renderWo(); go('wo');
+        const row = document.querySelector('#wo-c .wsr');
+        const cs = row ? getComputedStyle(row) : null;
+        const select = cs ? (cs.userSelect || cs.webkitUserSelect) : '';
+        const hasGesture = !!(row && row.getAttribute('onpointerdown') || '').includes('setLongPress');
+        D.active = null; save();
+        return { declared, inputsExempt, select, hasGesture, found: !!row };
+      });
+      return [r.found && r.declared && r.inputsExempt && r.select === 'none' && r.hasGesture,
+              JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-028', title: 'Aufwärmrampe bleibt unter der Arbeitslast',
+    run: async () => {
+      const r = await page.evaluate(() => {
+        const bad = [];
+        [20, 40, 60, 82.5, 100, 140, 200].forEach(w => {
+          ['squat', 'push', 'pulld', 'curl', 'legext'].forEach(k => {
+            const plan = warmupPlan(w, 'chest', k) || [];
+            plan.forEach(s => {
+              if (s.kg >= w) bad.push(`${k}@${w}: Stufe ${s.kg} >= Arbeitslast`);
+              if (s.kg <= 0 || !Number.isFinite(s.kg)) bad.push(`${k}@${w}: ${s.kg}`);
+            });
+            // aufsteigend und ohne Dubletten
+            for (let i = 1; i < plan.length; i++)
+              if (plan[i].kg <= plan[i - 1].kg) bad.push(`${k}@${w}: nicht aufsteigend`);
+          });
+        });
+        // Ungültige Eingaben liefern nichts statt zu werfen
+        const nulls = [0, -5, NaN, null, undefined, 'abc'].map(v => warmupPlan(v, 'chest', 'push'));
+        return { bad, nullsOk: nulls.every(x => x === null || x.length === 0) };
+      });
+      return [r.bad.length === 0 && r.nullsOk, JSON.stringify(r).slice(0, 220)];
+    }
+  },
+  {
+    id: 'PB-029', title: 'Aufwärmsätze zählen nicht ins Volumen',
+    run: async () => {
+      // Die Rampe wird angezeigt, aber nie geloggt - sie darf weder in
+      // Tonnage noch in die MEV/MAV-Einordnung einfließen.
+      const r = await page.evaluate(() => {
+        D.active = null; startWorkout('FullBody_A');
+        const ei = D.active.exercises.findIndex(e => e.type === 'main');
+        renderWo();
+        const shown = document.querySelectorAll('#wo-c .warmup-step').length >= 0;
+        const volBefore = Object.values(getWeeklyVolume(false)).reduce((a, v) => a + v.sets, 0);
+        // Rampe rendern ändert keinen Zustand
+        renderWarmup(D.active.exercises[ei]);
+        const volAfter = Object.values(getWeeklyVolume(false)).reduce((a, v) => a + v.sets, 0);
+        const loggedAny = D.active.exercises.some(e => e.logged.length);
+        D.active = null; save();
+        return { shown, same: volBefore === volAfter, loggedAny };
+      });
+      return [r.same && !r.loggedAny, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-030', title: 'Deload reduziert Sätze, lässt den Plan aber unberührt',
+    run: async () => {
+      const r = await page.evaluate(() => {
+        const planBefore = JSON.stringify(D.plan['FullBody_A'].exercises);
+        D.ui.deload = { active: true, since: Date.now(), until: Date.now() + 7 * 864e5 };
+        D.active = null; startWorkout('FullBody_A');
+        const mains = D.active.exercises.filter(e => e.type === 'main');
+        const planMains = D.plan['FullBody_A'].exercises.filter(e => e.type === 'main');
+        const reduced = mains.every((e, i) => e.sets <= planMains[i].sets);
+        const anyReduced = mains.some((e, i) => e.sets < planMains[i].sets);
+        const rirRaised = mains.every(e => e.rir === null || e.rir >= 3);
+        const planUnchanged = JSON.stringify(D.plan['FullBody_A'].exercises) === planBefore;
+        // Ablauf nach 7 Tagen schaltet sich selbst ab
+        D.ui.deload.until = Date.now() - 1000;
+        const expired = deloadActive() === false;
+        endDeload(); D.active = null; save();
+        return { reduced, anyReduced, rirRaised, planUnchanged, expired };
+      });
+      return [r.reduced && r.anyReduced && r.rirRaised && r.planUnchanged && r.expired, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-031', title: 'Indirektes Volumen ist additiv und rundet sauber',
+    run: async () => {
+      const r = await page.evaluate(() => {
+        D.history = [{
+          id: 'SEC1', updatedAt: Date.now(), date: new Date().toLocaleDateString('de-DE'),
+          planKey: 'FullBody_A', duration: 40,
+          sets: Array.from({ length: 3 }, (_, i) => ({
+            ex: 'Bankdrücken', nr: i + 1, w: 80, r: 8, rir: 2, note: '',
+            muscle: 'chest', type: 'main', mode: '' }))
+        }];
+        const direct = getWeeklyVolume(false);
+        const total = getWeeklyVolume(true);
+        return {
+          chestSame: direct.chest.sets === 3 && total.chest.sets === 3,
+          armsDirect: (direct.arms && direct.arms.sets) || 0,
+          armsTotal: (total.arms && total.arms.sets) || 0,
+          // 3 Sätze Drücken -> 1,5 Sätze Trizeps, sauber gerundet
+          clean: Object.values(total).every(v =>
+            Number.isFinite(v.sets) && Math.abs(v.sets * 10 - Math.round(v.sets * 10)) < 1e-9)
+        };
+      });
+      return [r.chestSame && r.armsDirect === 0 && r.armsTotal === 1.5 && r.clean, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-032', title: 'Large-Title-Kopfzeile bleibt beim Scrollen kleben',
+    run: async () => {
+      // overflow-x:hidden auf html/body macht das Element zum Scroll-Container.
+      // position:sticky orientiert sich dann daran statt am Viewport - die
+      // Kopfzeile scrollte einfach weg. overflow-x:clip schneidet genauso ab,
+      // erzeugt aber keinen Scroll-Container.
+      const r = await page.evaluate(async () => {
+        go('dash');
+        window.scrollTo(0, 0);
+        await new Promise(res => setTimeout(res, 120));
+        const el = document.querySelector('#s-dash .ltitle');
+        const expandedH = Math.round(el.getBoundingClientRect().height);
+        window.scrollTo(0, 400);
+        await new Promise(res => requestAnimationFrame(() => setTimeout(res, 160)));
+        const box = el.getBoundingClientRect();
+        const t = parseFloat(el.style.getPropertyValue('--t') || '0');
+        const scrolled = window.scrollY;
+        window.scrollTo(0, 0);
+        return {
+          expandedH,
+          collapsedTop: Math.round(box.top),
+          collapsedH: Math.round(box.height),
+          scrolled: Math.round(scrolled),
+          t,
+          overflow: getComputedStyle(document.body).overflowX
+        };
+      });
+      // ACHTUNG: `top <= 1` wäre hier falsch — eine weggescrollte Kopfzeile
+      // hat top = -377 und würde die Prüfung bestehen. Es muss der Betrag sein.
+      const ok = r.scrolled > 100                 // es wurde wirklich gescrollt
+        && Math.abs(r.collapsedTop) <= 1          // Kopfzeile klebt oben
+        && r.t > 0.9                              // Scrollfortschritt kommt an
+        && r.collapsedH < r.expandedH;            // und sie ist geschrumpft
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-017', title: 'Wochenring zählt dieselben Sätze wie seine Landmarks',
     run: async () => {
       const r = await page.evaluate(() => {
@@ -577,6 +775,27 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
     ['deload', () => { detectDeload(); renderDeload(); if (rnd() < 0.3) snoozeDeload(); }],
     ['renderAll', () => { renderAll(); renderHist(); renderAna(); renderSettings(); }],
     ['closeModals', () => document.querySelectorAll('.mbg.show').forEach(m => cm(m.id))],
+    // --- Neue Funktionen: Deload, Volumenmodus, Aufwärmrampe, Plattform ---
+    ['deload', () => { if (rnd() < 0.5) startDeload(); else endDeload(); }],
+    ['volMode', () => setVolumeMode(pick(['direct', 'total', 'quatsch']))],
+    ['warmup', () => {
+      // Grenzwerte: 0, negativ, winzig, riesig, NaN
+      [0, -20, 0.5, 2, 20, 60, 82.5, 500, NaN, Infinity].forEach(w =>
+        ['squat', 'push', 'curl', 'calf'].forEach(k => {
+          const plan = warmupPlan(w, 'chest', k);
+          if (plan && plan.some(s => !Number.isFinite(s.kg) || s.kg <= 0 || s.kg >= w))
+            throw new Error(`warmupPlan(${w},${k}) liefert ungültige Stufe: ${JSON.stringify(plan)}`);
+        }));
+    }],
+    ['secondary', () => {
+      const names = [...new Set(D.history.flatMap(s => s.sets.map(x => x.ex)))];
+      names.slice(0, 6).forEach(n => {
+        const sec = secondaryContribution(n, 'chest', 'main');
+        Object.values(sec).forEach(v => { if (!(v > 0 && v <= 1)) throw new Error('Sekundäranteil außerhalb 0..1'); });
+      });
+      getWeeklyVolume(true); getWeeklyVolume(false);
+    }],
+    ['platform', () => { attachReveals(); attachSheetGestures(); segmentedControl('t', [{ key: 'a', label: 'A' }, { key: 'b', label: pick(NASTY) }], 'a', 'setVolumeMode'); }],
     // --- Lücken aus dem Coverage-Audit (grep Funktionen vs. ACTIONS) ---
     ['editLoggedSet', () => {
       if (!D.active) return;

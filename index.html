@@ -4,10 +4,22 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<!-- user-scalable=no war hier drin. iOS ignoriert es seit iOS 10 ohnehin und
+     es kostet Nutzer mit Sehschwäche das Zoomen. Der eigentliche Grund, aus dem
+     man es einbaut — das automatische Reinzoomen beim Fokussieren eines Feldes —
+     ist kein Viewport-Problem: iOS zoomt nur bei Formularfeldern unter 16px.
+     Die sind jetzt alle >= 16px, damit ist das Verhalten weg und Zoomen bleibt. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PUMPBRAH">
+<meta name="format-detection" content="telephone=no">
+<meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#0a0b0e">
+<meta name="description" content="Trainings-Tracker mit RIR-Steuerung, Volumen-Landmarks und animierten Übungsdemos.">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
 <title>PUMPBRAH</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -59,8 +71,23 @@
   --line2:rgba(255,255,255,.04);
 }
 
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-input,textarea,select{-webkit-user-select:text;user-select:text}
+*{
+  margin:0;padding:0;box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;
+  /* Ohne touch-callout blendet iOS beim Langdrücken sein eigenes Menü
+     (Kopieren / Nachschlagen / Teilen) ein. Genau darauf liegt aber die
+     Geste zum Bearbeiten eines geloggten Satzes — auf dem iPhone kam
+     deshalb das System-Menü statt des Satz-Editors. */
+  -webkit-touch-callout:none;
+}
+input,textarea,select{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+html{
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;
+  /* Verhindert, dass ein Wisch nach unten mitten im Workout die Seite neu lädt
+     (Pull-to-Refresh) und dass das Gummiband den Seitenhintergrund freilegt. */
+  overscroll-behavior-y:none;
+}
 html,body{
   background:
     radial-gradient(120% 60% at 50% -10%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%),
@@ -68,18 +95,26 @@ html,body{
   background-attachment:fixed;
   color:var(--text);
   font-family:'Space Grotesk',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  /* overflow-x:hidden macht das Element zu einem Scroll-Container. Ein
+     position:sticky-Kind orientiert sich dann an diesem Container statt am
+     Viewport — die Large-Title-Leiste scrollte dadurch einfach weg, statt
+     oben kleben zu bleiben. `clip` schneidet genauso ab, erzeugt aber
+     keinen Scroll-Container. Der hidden-Wert bleibt als Fallback für
+     Safari < 16 stehen; dort ist die Kopfzeile dann nicht sticky, das
+     Layout stimmt aber. */
   overflow-x:hidden;
   min-height:100%;
   min-height:100dvh;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
-body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+@supports (overflow:clip){html,body{overflow-x:clip}}
+body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-behavior-y:none}
 
 .app{width:100%;max-width:480px;margin:0 auto;min-height:100dvh;position:relative}
 .screen{display:none;padding:0 15px calc(96px + env(safe-area-inset-bottom,0px))}
-.screen.active{display:block;animation:screenIn .34s var(--ease)}
-@keyframes screenIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.screen.active{display:block;animation:screenIn .38s var(--ease)}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px) scale(.994);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 @keyframes riseIn{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
 
 /* header */
@@ -215,12 +250,31 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
 .ir{display:flex;gap:9px;align-items:flex-end;margin-bottom:10px}
 .ig{flex:1}
 .ig label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px;font-weight:700}
+/* ============================================================
+   FORMULARFELDER — 16px ist auf iOS keine Geschmacksfrage.
+   Safari zoomt beim Fokussieren automatisch hinein, sobald ein
+   Formularfeld kleiner als 16px gerendert wird — und zoomt danach
+   nicht von allein zurück. Der Nutzer landet auf einer vergrößerten,
+   horizontal verschobenen Seite. Vorher: 15px, 13px und 14px.
+   ============================================================ */
 .ig input,.ig select,textarea{
   width:100%;padding:12px;background:var(--bg3);border:1.5px solid var(--line);border-radius:13px;
-  color:var(--text);font-family:'JetBrains Mono',monospace;font-size:15px;text-align:center;outline:none;transition:.2s var(--ease);
+  color:var(--text);font-family:'JetBrains Mono',monospace;font-size:16px;text-align:center;outline:none;transition:.2s var(--ease);
+  -webkit-appearance:none;appearance:none;
 }
-.ig select{font-family:'Space Grotesk',sans-serif;font-size:13px}
-textarea{font-family:'Space Grotesk',sans-serif;text-align:left;resize:vertical}
+.ig select{
+  font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;
+  /* eigener Pfeil, weil appearance:none den nativen entfernt */
+  background-image:linear-gradient(45deg,transparent 50%,var(--text3) 50%),linear-gradient(135deg,var(--text3) 50%,transparent 50%);
+  background-position:calc(100% - 17px) 52%,calc(100% - 12px) 52%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+  padding-right:34px;
+}
+.ig input[type="date"]{text-align:left}
+textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;resize:vertical}
+/* Sichtbarer Fokus für Tastatur- und Schalterzugriff — :active allein
+   reicht dafür nicht. */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ig input:focus,.ig select:focus,textarea:focus{border-color:color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent)}
 .stepper{display:flex;align-items:center;gap:0;width:100%}
 .stepper input{flex:1;border-radius:0;border-left:none;border-right:none;text-align:center}
@@ -401,7 +455,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .lib-item:active{transform:scale(.98);background:var(--bg4)}
 .lib-item .li-name{font-size:13px;font-weight:600;flex:1}
 .lib-item .li-info{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
-.lib-search{width:100%;padding:12px 15px;background:var(--bg3);border:1.5px solid var(--line);border-radius:14px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;transition:.2s}
+.lib-search{width:100%;padding:12px 15px;background:var(--bg3);border:1.5px solid var(--line);border-radius:14px;color:var(--text);font-size:16px;-webkit-appearance:none;appearance:none;outline:none;margin-bottom:12px;transition:.2s}
 .lib-search:focus{border-color:color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent)}
 .lib-search::placeholder{color:var(--text3)}
 
@@ -472,7 +526,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .mv-fill.mid{background:linear-gradient(90deg,#22b657,var(--green))}
 .mv-fill.high{background:linear-gradient(90deg,#d02a46,var(--red))}
 .mv-mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(255,255,255,.18);border-radius:999px}
-.mv-zero{font-size:11px;color:var(--text3);margin-top:4px}
+.mv-zero{font-size:10.5px;color:var(--text3);margin-top:5px;font-family:'JetBrains Mono',monospace}
+.mv-zero:empty{display:none}
 
 /* dashboard: home name + avatar */
 .home-name-row{display:flex;align-items:center;gap:12px}
@@ -571,9 +626,191 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .deload-banner .dl-ico{font-size:24px}
 .deload-banner .dl-title{font-weight:800;font-size:14px;color:var(--orange);letter-spacing:1.4px;text-transform:uppercase}
 .deload-banner .dl-reason{font-size:12.5px;color:var(--text2);padding:3px 0 3px 15px;position:relative;line-height:1.45}
-.deload-banner .dl-reason::before{content:'•';position:absolute;left:3px;color:var(--orange)}
+.deload-banner .dl-reason::before{content:'•';position:absolute;left:3px;color:var(--dot,var(--orange))}
 .deload-banner .dl-tip{margin-top:10px;padding:11px 13px;background:var(--bg3);border-radius:13px;font-size:12.5px;color:var(--text);line-height:1.5}
 .deload-banner .dl-actions{display:flex;gap:8px;margin-top:12px}
+
+/* ============================================================================
+   MATERIAL-SYSTEM
+   Statt überall einzeln `background: var(--bg2); border: 1px solid ...` zu
+   schreiben, gibt es vier Materialstufen. Jede kombiniert Fläche, Rand,
+   Innenkante und Schatten zu einer konsistenten Tiefe. Der obere Innen-
+   Highlight (inset 0 1px 0 rgba(255,255,255,...)) ist der Trick, der eine
+   Fläche auf dunklem Grund physisch wirken lässt — ohne ihn sehen Karten
+   flach und aufgeklebt aus.
+   ============================================================================ */
+:root{
+  --mat-1:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.012));
+  --mat-2:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.008));
+  --edge:inset 0 1px 0 rgba(255,255,255,.07);
+  --edge-strong:inset 0 1px 0 rgba(255,255,255,.11);
+  --shadow-1:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.22);
+  --shadow-2:0 2px 6px rgba(0,0,0,.34),0 18px 44px rgba(0,0,0,.3);
+  --shadow-3:0 4px 12px rgba(0,0,0,.4),0 30px 70px rgba(0,0,0,.42);
+  --blur:saturate(180%) blur(22px);
+  --r-sm:14px; --r-md:18px; --r-lg:24px; --r-xl:30px;
+}
+.mat{
+  background:var(--mat-1),var(--bg2);
+  border:1px solid var(--line);
+  box-shadow:var(--edge),var(--shadow-1);
+}
+.mat-2{background:var(--mat-2),var(--bg3);border:1px solid var(--line);box-shadow:var(--edge)}
+/* Glas: nur dort, wo wirklich etwas dahinter durchscrollt. Backdrop-Filter
+   auf jeder Karte kostet auf dem iPhone spürbar Bildrate. */
+.glass{
+  background:rgba(16,18,23,.72);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:var(--edge-strong),var(--shadow-2);
+}
+/* iOS "Transparenz reduzieren" und "Kontrast erhöhen" ernst nehmen:
+   Glas wird undurchsichtig, Ränder werden deutlich. */
+@media (prefers-reduced-transparency:reduce){
+  .glass,.bnav-inner,.mdl,.hdr,.toast{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .glass,.bnav-inner,.toast{background:#14161b!important}
+  .mdl{background:var(--bg2)!important}
+}
+@media (prefers-contrast:more){
+  :root{--line:rgba(255,255,255,.22);--line2:rgba(255,255,255,.14);--text2:#c3c9d6;--text3:#9aa1b2}
+  .mat,.mat-2,.glass,.card{border-width:1.5px}
+}
+
+/* --- Karten auf das Materialsystem heben --- */
+.card{
+  background:var(--mat-1),var(--bg2);
+  border-radius:var(--r-lg);
+  box-shadow:var(--edge),var(--shadow-1);
+}
+
+/* ============================================================================
+   LARGE TITLE — die iOS-Kopfzeile
+   Groß beim Seitenanfang, schrumpft beim Scrollen in eine kompakte Leiste mit
+   Glasfläche. Umgesetzt über eine CSS-Variable --t (0..1), die JS aus der
+   Scrollposition setzt: keine Layout-Sprünge, kein Umschalten von Klassen.
+   ============================================================================ */
+.ltitle{
+  position:sticky;top:0;z-index:60;
+  padding:max(env(safe-area-inset-top),10px) 2px 8px;
+  margin:0 -15px 6px;padding-left:15px;padding-right:15px;
+  /* Beim Ausklappen ein weicher Verlauf, der ins Layout übergeht; beim
+     Einklappen eine geschlossene Fläche, sonst scrollt der Inhalt lesbar
+     durch die Kopfzeile hindurch. Der Endpunkt des Verlaufs wandert mit --t
+     von 60 % auf 100 %. */
+  background:linear-gradient(180deg,
+    rgba(10,11,14,calc(.5 + var(--t,0) * .44)) calc(58% + var(--t,0) * 42%),
+    transparent);
+  backdrop-filter:blur(calc(var(--t,0) * 26px)) saturate(calc(100% + var(--t,0) * 80%));
+  -webkit-backdrop-filter:blur(calc(var(--t,0) * 26px)) saturate(calc(100% + var(--t,0) * 80%));
+  border-bottom:1px solid rgba(255,255,255,calc(var(--t,0) * .08));
+  transition:border-color .2s linear;
+}
+.ltitle-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.ltitle-eyebrow{
+  font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:var(--accent);
+  opacity:calc(1 - var(--t,0));max-height:calc(18px * (1 - var(--t,0)));overflow:hidden;
+  transition:opacity .15s linear;
+}
+.ltitle-h{
+  font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;line-height:1;color:var(--text);
+  font-size:calc(38px - var(--t,0) * 15px);
+  transform-origin:left bottom;
+  will-change:font-size;
+}
+.ltitle-sub{
+  font-size:13px;color:var(--text2);margin-top:3px;
+  opacity:calc(1 - var(--t,0));max-height:calc(20px * (1 - var(--t,0)));overflow:hidden;
+}
+.ltitle-slot{flex-shrink:0;display:flex;align-items:center;gap:8px;padding-bottom:2px}
+
+/* ============================================================================
+   SEGMENTED CONTROL — iOS-Umschalter mit gleitendem Hintergrund
+   Ersetzt die frei scrollende Chip-Reihe dort, wo es um "genau eine Auswahl
+   aus wenigen" geht. Der gleitende Indikator ist ein einzelnes Element, das
+   per transform verschoben wird (GPU, kein Reflow).
+   ============================================================================ */
+.seg{
+  position:relative;display:flex;padding:3px;border-radius:13px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.3);
+}
+.seg-thumb{
+  position:absolute;top:3px;bottom:3px;left:3px;border-radius:10px;
+  background:var(--mat-1),var(--bg4);box-shadow:var(--edge),0 2px 8px rgba(0,0,0,.36);
+  transition:transform .32s var(--sp),width .32s var(--sp);pointer-events:none;
+}
+.seg button{
+  position:relative;z-index:1;flex:1;border:none;background:none;cursor:pointer;
+  padding:9px 6px;font-size:13px;font-weight:700;color:var(--text2);
+  font-family:'Space Grotesk',sans-serif;transition:color .22s var(--ease);white-space:nowrap;
+}
+.seg button.on{color:var(--text)}
+
+/* ============================================================================
+   SHEETS — Bottom-Sheet mit Ziehgriff und Wisch-zum-Schließen
+   Auf iOS erwartet man, ein Sheet nach unten wegwischen zu können. Vorher gab
+   es nur das ✕. Der Griff ist zusätzlich die Ziehfläche.
+   ============================================================================ */
+.mdl{
+  background:var(--mat-2),rgba(19,21,25,.94);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  box-shadow:var(--edge-strong),0 -24px 70px rgba(0,0,0,.55);
+  will-change:transform;
+}
+.mdl::before{
+  content:'';display:block;width:38px;height:5px;border-radius:5px;
+  background:rgba(255,255,255,.2);margin:-10px auto 14px;
+  cursor:grab;
+}
+.mdl.dragging{transition:none!important}
+.mdl.settling{transition:transform .3s var(--ease)!important}
+.mbg{background:rgba(4,5,8,.5)}
+.mbg.show{backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+/* Tastatur-Ausweichraum: JS setzt --kb auf die Höhe der eingeblendeten
+   Tastatur (visualViewport), damit Eingabefelder nicht darunter verschwinden. */
+.mdl{padding-bottom:calc(max(env(safe-area-inset-bottom),18px) + var(--kb,0px))}
+
+/* --- Buttons: Tiefe statt Fläche --- */
+.btn{
+  box-shadow:var(--edge-strong),0 8px 22px var(--accent-glow);
+  border-radius:16px;
+}
+.btn-g,.btn-o{box-shadow:var(--edge)}
+.btn:active{transform:scale(.975)}
+
+/* --- Bottom-Nav als schwebende Glasleiste --- */
+.bnav-inner{
+  background:rgba(14,15,19,.7);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  box-shadow:var(--edge-strong),0 -8px 30px rgba(0,0,0,.4);
+}
+.ni.on{background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:var(--edge)}
+.ni .nl{font-size:10.5px}
+
+/* --- Toast als Material --- */
+.toast{
+  background:rgba(22,24,30,.9);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  box-shadow:var(--edge-strong),var(--shadow-2);
+  border-radius:16px;
+  top:calc(max(env(safe-area-inset-top),12px) + 46px);
+}
+
+/* --- Scroll-Reveal: Karten blenden beim Hereinscrollen ein --- */
+.reveal{opacity:0;transform:translateY(16px)}
+.reveal.in{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
+
+/* --- Auf iPad/Desktop: Inhalt zentriert, aber nicht ausgefranst --- */
+@media (min-width:820px){
+  .app{max-width:560px}
+  .bnav-inner{max-width:560px;border-radius:22px;margin-bottom:10px;border:1px solid var(--line)}
+  .bnav{padding:0 12px}
+}
+/* Querformat auf dem iPhone: die Notch liegt seitlich. */
+@media (orientation:landscape){
+  .screen{padding-left:max(15px,env(safe-area-inset-left));padding-right:max(15px,env(safe-area-inset-right))}
+}
 
 /* ============================================================
    MOTION LAYER — dynamische Diagramme, Übungs-Animationen,
@@ -681,6 +918,15 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .wo-cmd:active{transform:scale(.94);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
 .wo-cmd.accent{background:color-mix(in srgb,var(--accent) 12%,var(--bg2));border-color:color-mix(in srgb,var(--accent) 32%,transparent);color:var(--accent)}
 
+/* --- Aufwärmrampe --- */
+.warmup{margin:8px 0 2px;padding:11px 13px;border-radius:var(--r-sm);background:var(--mat-2),var(--bg3);border:1px solid color-mix(in srgb,var(--orange) 20%,var(--line));box-shadow:var(--edge)}
+.warmup-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--orange);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.warmup-note{font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--text3);background:var(--bg4);padding:3px 8px;border-radius:999px;text-transform:none}
+.warmup-steps{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.warmup-step{flex:1;min-width:62px;text-align:center;padding:8px 6px;border-radius:11px;background:var(--bg2);border:1px solid var(--line)}
+.warmup-step b{display:block;font-family:'Bebas Neue',sans-serif;font-size:21px;line-height:1;color:var(--text)}
+.warmup-step span{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+
 /* --- Ziel-/Beat-Last-Time-Hinweis --- */
 .target-hint{display:flex;align-items:center;gap:9px;margin:8px 0 2px;padding:10px 12px;border-radius:13px;background:color-mix(in srgb,var(--accent) 8%,var(--bg3));border:1px solid color-mix(in srgb,var(--accent) 22%,transparent)}
 .target-hint .th-ico{font-size:17px}
@@ -736,11 +982,15 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 <div class="bnav-safe"></div>
 </nav>
 <div class="screen active" id="s-dash">
-<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:max(env(safe-area-inset-top),14px) 0 0">
-<div><div id="d-greeting" style="font-size:12px;color:var(--neon);text-transform:uppercase;letter-spacing:1px">• GUTEN TAG</div>
-<div id="d-username" style="font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1.1;letter-spacing:1px"></div>
-<div id="d-date" style="font-size:13px;color:var(--text2)"></div></div>
-<div class="pill" id="sync-pill"><div class="dot"></div><span id="sync-status">Synced</span></div>
+<div class="ltitle">
+<div class="ltitle-row">
+<div style="min-width:0">
+<div class="ltitle-eyebrow" id="d-greeting">GUTEN TAG</div>
+<div class="ltitle-h" id="d-username"></div>
+<div class="ltitle-sub" id="d-date"></div>
+</div>
+<div class="ltitle-slot"><div class="pill" id="sync-pill"><div class="dot"></div><span id="sync-status">Synced</span></div></div>
+</div>
 </div>
 <div id="d-quote" style="display:none;margin:14px 0;padding:12px 16px;background:var(--bg2);border:1px solid var(--bg3);border-radius:14px;font-size:13px;color:var(--text2);font-style:italic;line-height:1.5"></div>
 <div id="sick-area"></div>
@@ -772,19 +1022,22 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 </div>
 </div>
 <div class="screen" id="s-wo">
-<div id="wo-sticky-top" style="position:sticky;top:0;z-index:40;background:var(--bg);padding-bottom:6px">
-<div style="display:flex;align-items:center;justify-content:space-between;padding:max(env(safe-area-inset-top),12px) 0 6px">
-<div class="logo">WORKOUT</div><button class="btn btn-s btn-r" id="wo-end" style="display:none" onclick="endWorkout()">BEENDEN</button>
+<div id="wo-sticky-top" class="ltitle" style="z-index:45">
+<div class="ltitle-row">
+<div style="min-width:0"><div class="ltitle-eyebrow">AKTIVE SESSION</div><div class="ltitle-h">Workout</div></div>
+<div class="ltitle-slot"><button class="btn btn-s btn-r" id="wo-end" style="display:none;margin:0" onclick="endWorkout()">BEENDEN</button></div>
 </div>
-<div id="wo-timer-bar" style="display:none;border-top:1px solid var(--bg3);padding-top:8px"></div>
+<div id="wo-timer-bar" style="display:none;border-top:1px solid var(--line);padding-top:8px;margin-top:8px"></div>
 </div>
 <div id="wo-c"><div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div></div>
 </div>
 <div class="screen" id="s-hist">
-<div style="padding:max(env(safe-area-inset-top),14px) 0 0">
-<div style="font-size:12px;color:var(--neon);text-transform:uppercase;letter-spacing:1px">• ARCHIV</div>
-<div style="font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1.1">Historie</div>
-<div style="font-size:13px;color:var(--text2)" id="h-cnt">0 Sessions</div>
+<div class="ltitle">
+<div class="ltitle-row"><div style="min-width:0">
+<div class="ltitle-eyebrow">ARCHIV</div>
+<div class="ltitle-h">Historie</div>
+<div class="ltitle-sub" id="h-cnt">0 Sessions</div>
+</div></div>
 </div>
 <div class="card" style="margin-top:12px;padding:12px">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -798,7 +1051,12 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 <div id="hl"></div>
 </div>
 <div class="screen" id="s-ana">
-<div class="hdr"><div class="logo">STATS</div><div class="pill" id="ana-total">0 Sätze</div></div>
+<div class="ltitle">
+<div class="ltitle-row"><div style="min-width:0">
+<div class="ltitle-eyebrow">ANALYSE</div>
+<div class="ltitle-h">Stats</div>
+</div><div class="ltitle-slot"><div class="pill" id="ana-total">0 Sätze</div></div></div>
+</div>
 <div class="st">KÖRPERDATEN <div class="ln"></div></div>
 <div class="card" id="fitness-age-card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg3));border-color:var(--bg4)">
 <div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:4px">Dein Fitnessalter</div>
@@ -851,7 +1109,12 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 </div>
 </div>
 <div class="screen" id="s-settings">
-<div class="hdr"><div class="logo">SETUP</div></div>
+<div class="ltitle">
+<div class="ltitle-row"><div style="min-width:0">
+<div class="ltitle-eyebrow">EINSTELLUNGEN</div>
+<div class="ltitle-h">Setup</div>
+</div></div>
+</div>
 <div class="st">PROFIL <div class="ln"></div></div>
 <div class="card" style="text-align:center;padding:24px 16px">
 <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--neon),var(--neon2));display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--bg)" id="prof-avatar">?</div>
@@ -997,7 +1260,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 <div class="mbg" id="m-exnote"><div class="mdl">
 <div class="mt">NOTIZ <button class="mc" onclick="cm('m-exnote')">✕</button></div>
 <div id="exn-name" style="font-size:14px;color:var(--text2);margin-bottom:8px"></div>
-<div class="ir"><div class="ig"><label>Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
+<div class="ir"><div class="ig"><label>Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
 <button class="btn" onclick="saveExNote()">💾 SPEICHERN</button>
 </div></div>
 <div class="mbg" id="m-alt"><div class="mdl">
@@ -1353,7 +1616,10 @@ function doLogin(){
 }
 function resetDForNewUser(){D={plan:{},history:[],active:null,settings:{compound:150,isolation:90},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[],birthday:null,gender:null},egym:{enabled:false,measurements:[]},library:{custom:[],deleted:[]},ui:{accent:'volt',mode:'dark',avatar:'',homePlanOpen:false}};normalizeData();localStorage.setItem('pb_data',JSON.stringify(D))}
 function offlineMode(){useFirebase=false;syncCode='offline';localStorage.setItem('pb_sync','offline');loadLocal();if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}}
-function showApp(){normalizeData();document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';document.getElementById('show-sync').textContent=syncCode;restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock()}
+function showApp(){normalizeData();document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';document.getElementById('show-sync').textContent=syncCode;restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
+  attachLargeTitles();attachKeyboardAvoidance();attachSheetGestures();attachReveals();
+  if(IS_STANDALONE)document.documentElement.classList.add('standalone');
+}
 let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym',birthday:null};
 function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';obStep=0;renderObStep()}
 function renderObStep(){const c=document.getElementById('ob-content');const sub=document.getElementById('ob-sub');const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');const steps=[{sub:'Schritt 1/8 — Über dich',html:`<div style="margin-bottom:12px">${obSel('ob-gen',[{k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}],'gender','male')}</div>${obBtn('WEITER →','obNext(0)')}`},{sub:'Schritt 2/8 — Geburtsdatum',html:`<div class="ig" style="margin-bottom:12px"><label>Wann bist du geboren?</label><input type="date" id="ob-birthday" style="font-size:18px;padding:14px;width:100%;font-family:'JetBrains Mono',monospace"></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px">Wird für dein Fitnessalter benötigt</div>${obBtn('WEITER →','obNext(1)')}${obBack}`},{sub:'Schritt 3/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(2)')}${obBack}`},{sub:'Schritt 4/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(3)')}${obBack}`},{sub:'Schritt 5/8 — Trainingsort',html:`<div style="margin-bottom:12px">${obSel('ob-loc',[{k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}],'location','gym')}</div>${obBtn('WEITER →','obNext(4)')}${obBack}`},{sub:'Schritt 6/8 — Trainingsfrequenz',html:`<div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label><div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===3?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>${obBtn('WEITER →','obNext(5)')}${obBack}`},{sub:'Schritt 7/8 — Trainingsziel',html:`<div style="margin-bottom:12px">${obSel('ob-focus',[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},{k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},{k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},{k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])],'focus','balanced')}</div>${obBtn('WEITER →','obNext(6)')}${obBack}`},{sub:'Schritt 8/8 — Erfahrung',html:`<div style="margin-bottom:12px">${obSel('ob-exp',[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},{k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},{k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre'}],'experience','beginner')}</div>${obBtn('🚀 PLAN ERSTELLEN','finishOnboarding()')}${obBack}`}];sub.textContent=steps[obStep].sub;c.innerHTML=steps[obStep].html}
@@ -1388,7 +1654,29 @@ document.addEventListener('click',e=>{
   const bg=e.target.classList&&e.target.classList.contains('mbg')?e.target:null;
   if(bg)cm(bg.id);
 });
-function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('s-'+id).classList.add('active');document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.tab===id));const tf=document.getElementById('wo-timer-bar');if(tf)tf.style.display=(id==='wo'&&D.active)?'':'none';updateNavAktiv();window.scrollTo(0,0);if(id==='dash'){renderDash();renderPlan()}if(id==='wo')renderWo();if(id==='hist')renderHist();if(id==='settings')renderSettings();if(id==='ana')renderAna()}
+function go(id){
+  const target=document.getElementById('s-'+id);
+  if(!target)return;
+  withViewTransition(()=>{
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    target.classList.add('active');
+    document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.tab===id));
+    const tf=document.getElementById('wo-timer-bar');
+    if(tf)tf.style.display=(id==='wo'&&D.active)?'':'none';
+    updateNavAktiv();
+    window.scrollTo(0,0);
+    if(id==='dash'){renderDash();renderPlan()}
+    if(id==='wo')renderWo();
+    if(id==='hist')renderHist();
+    if(id==='settings')renderSettings();
+    if(id==='ana')renderAna();
+  });
+  haptic(6);
+  /* Large Title zurücksetzen: der neue Screen startet oben, ohne das wäre
+     die Kopfzeile beim Wechsel kurz im eingeklappten Zustand eingefroren. */
+  document.querySelectorAll('.ltitle').forEach(el=>el.style.setProperty('--t','0'));
+  setTimeout(()=>attachReveals(target),40);
+}
 function updateNavAktiv(){const nav=document.getElementById('nav-aktiv');if(nav)nav.style.display=D.active?'':'none'}
 function renderAll(){updateNavAktiv();renderDash();renderPlan();renderWo()}
 function reps(e){return e.rmin===e.rmax?e.rmin:e.rmin+'–'+e.rmax}
@@ -1438,6 +1726,176 @@ function runCountUps(root){
     });
   });
 }
+
+/* ==========================================================================
+   1b. PLATTFORM-SCHICHT (iOS)
+   Alles, was mit dem Gerät zu tun hat statt mit Training: Large-Title-Header,
+   Sheet-Gesten, Tastatur, Installation als Home-Screen-App.
+   ========================================================================== */
+const IS_IOS=/iP(hone|ad|od)/.test(navigator.platform||'')||
+  (navigator.userAgent.includes('Mac')&&'ontouchend'in document);
+const IS_STANDALONE=window.navigator.standalone===true||
+  (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+
+/* Manifest zur Laufzeit als Blob — die App ist bewusst eine einzelne Datei,
+   also kann keine separate manifest.json daneben liegen. iOS nutzt ohnehin
+   die apple-*-Metatags; das hier ist für Android/Chrome. */
+(function installManifest(){
+  try{
+    const icon=document.querySelector('link[rel="apple-touch-icon"]');
+    const manifest={
+      name:'PUMPBRAH',short_name:'PUMPBRAH',start_url:'.',scope:'.',
+      display:'standalone',orientation:'portrait',
+      background_color:'#0a0b0e',theme_color:'#0a0b0e',
+      description:'Trainings-Tracker mit RIR-Steuerung und animierten Übungsdemos.',
+      icons:icon?[{src:icon.href,sizes:'180x180',type:'image/png',purpose:'any maskable'}]:[]
+    };
+    const url=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/manifest+json'}));
+    const link=document.createElement('link');
+    link.rel='manifest';link.href=url;
+    document.head.appendChild(link);
+  }catch{}
+})();
+
+/* --- Large Title: --t geht beim Scrollen von 0 auf 1 --------------------- */
+function attachLargeTitles(){
+  const update=()=>{
+    const y=window.scrollY||document.documentElement.scrollTop||0;
+    const t=Math.min(1,Math.max(0,y/56));
+    document.querySelectorAll('.ltitle').forEach(el=>el.style.setProperty('--t',t.toFixed(3)));
+  };
+  let ticking=false;
+  window.addEventListener('scroll',()=>{
+    /* rAF-Drosselung: Scroll feuert auf iOS bis zu 120×/s, ein direktes
+       Schreiben von Stilen darin ruckelt sichtbar. */
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(()=>{update();ticking=false});
+  },{passive:true});
+  update();
+}
+
+/* --- Tastatur: Sheets weichen aus, statt Felder zu verdecken -------------- */
+function attachKeyboardAvoidance(){
+  const vv=window.visualViewport;
+  if(!vv)return;
+  const apply=()=>{
+    /* Differenz zwischen Layout- und visuellem Viewport = Tastaturhöhe. */
+    const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
+    document.documentElement.style.setProperty('--kb',kb>80?kb+'px':'0px');
+    if(kb>80){
+      const focused=document.activeElement;
+      if(focused&&focused.closest&&focused.closest('.mdl')){
+        requestAnimationFrame(()=>{
+          try{focused.scrollIntoView({block:'center',behavior:'smooth'})}catch{}
+        });
+      }
+    }
+  };
+  vv.addEventListener('resize',apply);
+  vv.addEventListener('scroll',apply);
+}
+
+/* --- Sheets nach unten wegwischen ---------------------------------------- */
+function attachSheetGestures(){
+  document.querySelectorAll('.mbg').forEach(bg=>{
+    const sheet=bg.querySelector('.mdl');
+    if(!sheet||sheet.dataset.gest)return;
+    sheet.dataset.gest='1';
+    let startY=0,dy=0,dragging=false,fromTop=false;
+    sheet.addEventListener('pointerdown',e=>{
+      /* Nur ziehen, wenn das Sheet oben steht — sonst kollidiert die Geste
+         mit dem Scrollen des Inhalts. Auf dem Griff immer. */
+      const onGrip=e.clientY-sheet.getBoundingClientRect().top<28;
+      if(!onGrip&&sheet.scrollTop>0)return;
+      if(e.target.closest('input,textarea,select,button'))return;
+      startY=e.clientY;dy=0;dragging=true;fromTop=onGrip;
+      sheet.classList.add('dragging');
+    },{passive:true});
+    sheet.addEventListener('pointermove',e=>{
+      if(!dragging)return;
+      dy=e.clientY-startY;
+      if(dy<0){dy=0;return}
+      if(!fromTop&&sheet.scrollTop>0){dragging=false;sheet.style.transform='';sheet.classList.remove('dragging');return}
+      sheet.style.transform=`translateY(${dy}px)`;
+      bg.style.opacity=String(Math.max(.25,1-dy/420));
+    },{passive:true});
+    const release=()=>{
+      if(!dragging)return;
+      dragging=false;
+      sheet.classList.remove('dragging');
+      sheet.classList.add('settling');
+      const height=sheet.getBoundingClientRect().height||1;
+      if(dy>Math.min(150,height*0.28)){
+        sheet.style.transform=`translateY(${height}px)`;
+        setTimeout(()=>{
+          cm(bg.id);
+          sheet.style.transform='';bg.style.opacity='';
+          sheet.classList.remove('settling');
+        },240);
+        haptic(10);
+      }else{
+        sheet.style.transform='';bg.style.opacity='';
+        setTimeout(()=>sheet.classList.remove('settling'),320);
+      }
+      dy=0;
+    };
+    sheet.addEventListener('pointerup',release);
+    sheet.addEventListener('pointercancel',release);
+  });
+}
+
+/* --- Scroll-Reveal -------------------------------------------------------
+   Nur Elemente, die beim Rendern UNTER dem Falz liegen, werden versteckt und
+   eingeblendet. Alles, was sofort sichtbar ist, bekommt direkt `.in` — sonst
+   flackert der halbe Bildschirm bei jedem Re-Render einmal auf.            */
+const REVEAL_TARGETS='.prog,.ana-muscle,.ana-radar,.muscle-volume-card,.wa-card,.hist-calendar';
+let revealObserver=null;
+function attachReveals(root){
+  const scope=root||document;
+  if(prefersReducedMotion()||!('IntersectionObserver'in window)){
+    scope.querySelectorAll(REVEAL_TARGETS).forEach(el=>el.classList.add('in'));
+    return;
+  }
+  if(!revealObserver){
+    revealObserver=new IntersectionObserver(entries=>{
+      entries.forEach(en=>{
+        if(!en.isIntersecting)return;
+        en.target.classList.add('in');
+        revealObserver.unobserve(en.target);   // einmalig, dann loslassen
+      });
+    },{rootMargin:'0px 0px -6% 0px',threshold:.04});
+  }
+  const fold=window.innerHeight||800;
+  scope.querySelectorAll(REVEAL_TARGETS).forEach(el=>{
+    if(el.dataset.rv)return;
+    el.dataset.rv='1';
+    if(el.getBoundingClientRect().top<fold*0.95){el.classList.add('in');return}
+    el.classList.add('reveal');
+    revealObserver.observe(el);
+  });
+}
+
+/* --- Segmented Control --------------------------------------------------- */
+function segmentedControl(id,items,activeKey,onPick){
+  const idx=Math.max(0,items.findIndex(i=>i.key===activeKey));
+  const pct=100/Math.max(1,items.length);
+  return `<div class="seg" id="${attr(id)}" data-seg-count="${items.length}">`+
+    `<div class="seg-thumb" style="width:calc(${pct}% - 2px);transform:translateX(calc(${idx*100}% + ${idx*2}px))"></div>`+
+    items.map(i=>`<button type="button" class="${i.key===activeKey?'on':''}" onclick="${onPick}('${jsStr(i.key)}')">${esc(i.label)}</button>`).join('')+
+    `</div>`;
+}
+
+/* --- Screenwechsel -------------------------------------------------------
+   Hier stand kurzzeitig document.startViewTransition(). Sieht gut aus, hat
+   aber eine Eigenschaft, die man leicht übersieht: der Callback läuft
+   ASYNCHRON, erst nachdem der Browser den alten Zustand fotografiert hat.
+   Damit war go() plötzlich nicht mehr synchron — jeder Aufrufer, der danach
+   sofort ins DOM greift, sah den alten Screen. Der eigene Regressionstest
+   ist genau darüber gestolpert (PB-025).
+   Eine reine CSS-Übergangsanimation liefert praktisch denselben Effekt,
+   bleibt synchron und funktioniert auch in älteren Safari-Versionen.       */
+function withViewTransition(fn){fn()}
 
 /* ==========================================================================
    2. ÜBUNGS-ANIMATIONEN
@@ -1628,9 +2086,14 @@ function checkPR(exName,w,r){const prev=getAllSets(exName).filter(s=>s.w>0);if(!
 /* Volumen zählt nur echte Arbeitssätze: Cardio, Mobility und Pre-Workout
    sind kein Hypertrophie-Reiz und dürfen die MEV/MAV/MRV-Einordnung nicht
    nach oben treiben. */
-function getWeeklyVolume(){
+function getWeeklyVolume(includeSecondary){
   const weekAgo=Date.now()-7*864e5;
   const vol={};
+  const bump=(m,sets,volume)=>{
+    if(!vol[m])vol[m]={sets:0,direct:0,indirect:0,volume:0};
+    vol[m].sets+=sets;
+    vol[m].volume+=volume;
+  };
   (D.history||[]).forEach(s=>{
     const d=parseGermanDate(s.date);
     if(!d||d.getTime()<weekAgo)return;
@@ -1639,14 +2102,23 @@ function getWeeklyVolume(){
       if(set.type&&set.type!=='main')return;
       if(!set.r)return;
       const m=set.muscle||'other';
-      if(!vol[m])vol[m]={sets:0,volume:0};
-      vol[m].sets++;
-      vol[m].volume+=setVolume(set);
+      bump(m,1,setVolume(set));
+      if(vol[m])vol[m].direct+=1;
+      if(includeSecondary){
+        const sec=secondaryContribution(set.ex,m,set.type);
+        Object.entries(sec).forEach(([sm,w])=>{
+          bump(sm,w,0);
+          if(vol[sm])vol[sm].indirect+=w;
+        });
+      }
     });
   });
+  /* Halbe Sätze auf eine Nachkommastelle runden, sonst stehen im UI
+     Werte wie 12.499999999999998. */
+  Object.values(vol).forEach(v=>{v.sets=Math.round(v.sets*10)/10;v.indirect=Math.round(v.indirect*10)/10});
   return vol;
 }
-function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Gute Besserung vorbei — back to grind! 💪')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank gemeldet — gute Besserung! 🤒')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?(sets.reduce((a,s)=>a+s.rir,0)/sets.length).toFixed(1):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tClass=trend==='up'?'trend-up':trend==='down'?'trend-down':'trend-flat';const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv" style="color:var(--orange)">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv ${tClass}">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;const chartData=sets.map(s=>({v:s.w,label:''}));h+=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span>Median: ${median}kg</span></div>${svgChart(chartData,{h:130,color:'var(--blue)',median:median,colorDots:true,showGrid:true})}</div>`;h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(s.w)}kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
+function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Gute Besserung vorbei — back to grind! 💪')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank gemeldet — gute Besserung! 🤒')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?(sets.reduce((a,s)=>a+s.rir,0)/sets.length).toFixed(1):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tClass=trend==='up'?'trend-up':trend==='down'?'trend-down':'trend-flat';const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv" style="color:var(--orange)">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv ${tClass}">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;const chartData=sets.map(s=>({v:s.w,label:''}));h+=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span>Median: ${median}kg</span></div>${svgChart(chartData,{h:130,color:'var(--blue)',median:median,colorDots:true,showGrid:true,unit:' kg'})}</div>`;const rmSeries=sets.filter(s=>s.w>0&&s.r>0&&s.r<=15).map(s=>({v:calc1RM(s.w,s.r),label:s.date||''}));if(rmSeries.length>=3){const firstRm=rmSeries[0].v,lastRm=rmSeries[rmSeries.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const cls=delta>1?'trend-up':delta<-1?'trend-down':'trend-flat';h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span class="${cls}">${delta>0?'+':''}${delta.toFixed(1)}% seit Beginn</span></div>${svgChart(rmSeries,{h:120,color:'var(--orange)',showGrid:true,unit:' kg'})}<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(s.w)}kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
 let planDirty=false;
 function renderPlanSaveState(){
   const btn=document.getElementById('plan-save-btn');
@@ -1912,7 +2384,8 @@ function startWorkout(pk){
     return;
   }
   if(!D.plan[pk]){toast('Trainingstag nicht gefunden');return}
-  D.active={planKey:pk,startTime:Date.now(),exercises:cloneData(D.plan[pk].exercises||[]).map(e=>{const n=normalizeExercise(e);n.logged=[];return n}),compact:false};
+  const base=cloneData(D.plan[pk].exercises||[]).map(e=>{const n=normalizeExercise(e);n.logged=[];return n});
+  D.active={planKey:pk,startTime:Date.now(),exercises:applyDeloadToExercises(base),compact:false,deload:deloadActive()};
   save();go('wo');renderWo();requestWakeLock();
   toast('Let\'s go! 🔥');haptic([15,50,15]);
 }
@@ -2249,6 +2722,8 @@ function ensureUIState(){
   if(D.ui.avatar===undefined)D.ui.avatar='';
   if(D.ui.homePlanOpen===undefined)D.ui.homePlanOpen=false;
   if(D.ui.deloadSnoozedUntil===undefined)D.ui.deloadSnoozedUntil=0;
+  if(D.ui.volMode!=='direct'&&D.ui.volMode!=='total')D.ui.volMode='total';
+  if(!D.ui.deload||typeof D.ui.deload!=='object')D.ui.deload={active:false,since:0,until:0};
 }
 function accentPresets(){
   return{
@@ -2324,6 +2799,41 @@ function miniSpark(values,color='var(--accent)'){
    im Plan tatsächlich trainierten Muskelgruppen aufsummiert.
    ========================================================================== */
 const MUSCLE_LANDMARKS={chest:{mev:8,mav:16,mrv:22},back:{mev:10,mav:18,mrv:25},legs:{mev:8,mav:16,mrv:22},shoulders:{mev:6,mav:14,mrv:20},arms:{mev:6,mav:14,mrv:20},core:{mev:4,mav:10,mrv:16}};
+/* --------------------------------------------------------------------------
+   SEKUNDÄRE MUSKELBETEILIGUNG
+   Bankdrücken ist nicht nur Brust: Trizeps und vordere Schulter leisten
+   erhebliche Arbeit mit. Wer 20 Sätze Drückbewegungen macht und in der
+   Statistik "6 Sätze Arme" liest, unterschätzt seine Ellenbogenbelastung
+   massiv — der häufigste Grund für Beschwerden, die scheinbar aus dem
+   Nichts kommen.
+   Zählweise nach gängiger Praxis: ein direkter Satz zählt 1,0, ein
+   indirekt beteiligter Muskel 0,5. Basis ist das Bewegungsmuster, nicht
+   der Übungsname — dadurch greift es auch bei eigenen Übungen.
+   -------------------------------------------------------------------------- */
+const SECONDARY_BY_PATTERN={
+  push:   {arms:.5,shoulders:.5},
+  pushh:  {arms:.5,chest:.25},
+  pulld:  {arms:.5,back:0},
+  row:    {arms:.5,shoulders:.25},
+  hinge:  {back:.5,legs:0},
+  squat:  {core:.25},
+  triext: {chest:.25},
+  curl:   {back:.25},
+  raise:  {},
+  legext: {},
+  legcurl:{},
+  calf:   {},
+  core:   {},
+  cardio: {},
+  mobility:{},
+  generic:{}
+};
+function secondaryContribution(name,muscle,type){
+  const map=SECONDARY_BY_PATTERN[detectMovePattern(name,muscle,type)]||{};
+  const out={};
+  Object.entries(map).forEach(([m,w])=>{if(w>0&&m!==muscle)out[m]=w});
+  return out;
+}
 function plannedMuscleGroups(){
   const set=new Set();
   Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{
@@ -2732,14 +3242,26 @@ function syncPlanDrawerUI(){
 function renderMuscleVolumeCard(){
   const mount=document.getElementById('d-muscle-volume');
   if(!mount)return;
-  const vol=getWeeklyVolume();
+  ensureUIState();
+  const withSec=D.ui.volMode!=='direct';
+  const vol=getWeeklyVolume(withSec);
   const muscleNames={chest:'Brust',back:'Rücken',legs:'Beine',shoulders:'Schultern',arms:'Arme',core:'Core'};
   const muscleIcons={chest:'🫁',back:'⬅️',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
   /* Eine einzige Quelle für die Landmarks statt einer zweiten, abweichenden
      Tabelle. Vorher stand hier core.mev = 0 — dadurch galten 0 Core-Sätze
      als „im MAV“, weil 0 < 0 falsch ist. */
   const RP=MUSCLE_LANDMARKS;
-  mount.innerHTML=`<div class="muscle-volume-card"><div class="muscle-volume-head"><div class="muscle-volume-title">Volumen · Muskelgruppe</div><button class="muscle-volume-link" onclick="go('ana')">Alles ansehen →</button></div><div class="mv-list">${Object.keys(RP).map(key=>{const sets=(vol[key]&&vol[key].sets)||0;const rp=RP[key];const state=sets<rp.mev?{label:'unter MEV',cls:'low'}:sets<=rp.mav?{label:'im MAV',cls:'mid'}:{label:'über MRV',cls:'high'};const displayMax=sets<rp.mev?rp.mev:sets<=rp.mav?rp.mav:rp.mrv;const fillPct=Math.max(0,Math.min(100,(sets/Math.max(rp.mrv,1))*100));const mevPct=(rp.mev/Math.max(rp.mrv,1))*100;const mavPct=(rp.mav/Math.max(rp.mrv,1))*100;return`<div class="mv-row"><div class="mv-top"><div class="mv-name"><span>${esc(muscleIcons[key])}</span><span>${esc(muscleNames[key])}</span></div><div class="mv-state ${state.cls}">${state.label} <span style="margin-left:6px;color:var(--text2)">${sets}/${displayMax}</span></div></div><div class="mv-bar"><div class="mv-fill ${state.cls}" style="width:${fillPct}%"></div><span class="mv-mark" style="left:${mevPct}%"></span><span class="mv-mark" style="left:${mavPct}%"></span><span class="mv-mark" style="left:99.5%"></span></div><div class="mv-zero">0</div></div>`}).join('')}</div></div>`;
+  mount.innerHTML=`<div class="muscle-volume-card"><div class="muscle-volume-head"><div class="muscle-volume-title">Volumen · Muskelgruppe</div><button class="muscle-volume-link" onclick="go('ana')">Alles ansehen →</button></div>`+
+    segmentedControl('vol-seg',[{key:'total',label:'Inkl. indirekt'},{key:'direct',label:'Nur direkt'}],withSec?'total':'direct','setVolumeMode')+
+    `<div style="font-size:11px;color:var(--text3);margin:8px 2px 12px;line-height:1.45">${withSec
+      ?'Indirekt beteiligte Muskeln zählen mit 0,5 Sätzen. Drücken belastet auch Trizeps und vordere Schulter.'
+      :'Nur Sätze, bei denen der Muskel die Zielmuskulatur war.'}</div>`+
+    `<div class="mv-list">${Object.keys(RP).map(key=>{const entry=vol[key]||{};const sets=entry.sets||0;const indirect=entry.indirect||0;const rp=RP[key];const state=sets<rp.mev?{label:'unter MEV',cls:'low'}:sets<=rp.mav?{label:'im MAV',cls:'mid'}:{label:'über MRV',cls:'high'};const displayMax=sets<rp.mev?rp.mev:sets<=rp.mav?rp.mav:rp.mrv;const fillPct=Math.max(0,Math.min(100,(sets/Math.max(rp.mrv,1))*100));const mevPct=(rp.mev/Math.max(rp.mrv,1))*100;const mavPct=(rp.mav/Math.max(rp.mrv,1))*100;return`<div class="mv-row"><div class="mv-top"><div class="mv-name"><span>${esc(muscleIcons[key])}</span><span>${esc(muscleNames[key])}</span></div><div class="mv-state ${state.cls}">${state.label} <span style="margin-left:6px;color:var(--text2)">${sets}/${displayMax}</span></div></div><div class="mv-bar"><div class="mv-fill ${state.cls}" style="width:${fillPct}%"></div><span class="mv-mark" style="left:${mevPct}%"></span><span class="mv-mark" style="left:${mavPct}%"></span><span class="mv-mark" style="left:99.5%"></span></div><div class="mv-zero">${indirect>0?`${esc(entry.direct||0)} direkt + ${esc(indirect)} indirekt`:''}</div></div>`}).join('')}</div></div>`;
+}
+function setVolumeMode(mode){
+  ensureUIState();
+  D.ui.volMode=mode==='direct'?'direct':'total';
+  save();renderMuscleVolumeCard();renderAna();haptic(8);
 }
 function detectDeload(){
   if(!D.history.length)return null;
@@ -2776,10 +3298,20 @@ function renderDeload(){
   const el=document.getElementById('deload-area');
   if(!el)return;
   ensureUIState();
+  if(renderDeloadActive())return;
   if(D.health.sick||(D.ui.deloadSnoozedUntil&&Date.now()<D.ui.deloadSnoozedUntil)){el.innerHTML='';return}
   const d=detectDeload();
   if(!d){el.innerHTML='';return}
-  el.innerHTML=`<div class="deload-banner"><div class="dl-head"><span class="dl-ico">🪫</span><span class="dl-title">Deload empfohlen</span></div>${d.reasons.map(r=>`<div class="dl-reason">${r}</div>`).join('')}<div class="dl-tip">💡 Empfehlung: 1 Woche mit ~50–60% des gewohnten Volumens, gleiche Übungen, RIR 4–5. Danach greifst du wieder voll an.</div><div class="dl-actions"><button class="btn btn-s btn-g" onclick="snoozeDeload()">7 Tage ausblenden</button></div></div>`;
+  el.innerHTML=`<div class="deload-banner"><div class="dl-head"><span class="dl-ico">🪫</span><span class="dl-title">Deload empfohlen</span></div>${d.reasons.map(r=>`<div class="dl-reason">${esc(r)}</div>`).join('')}<div class="dl-tip">💡 Eine Woche mit rund 60 % der Sätze bei RIR 4. Die App stellt deine Workouts automatisch um — dein Trainingsplan bleibt unverändert.</div><div class="dl-actions"><button class="btn btn-s btn-orange" style="margin:0" onclick="startDeload()">🪫 Deload starten</button><button class="btn btn-s btn-g" style="margin:0" onclick="snoozeDeload()">7 Tage ausblenden</button></div></div>`;
+}
+/* Läuft ein Deload, ersetzt sein Statusbanner die Empfehlung. */
+function renderDeloadActive(){
+  const el=document.getElementById('deload-area');
+  if(!el)return false;
+  if(!deloadActive())return false;
+  const left=deloadDaysLeft();
+  el.innerHTML=`<div class="deload-banner" style="border-color:color-mix(in srgb,var(--blue) 32%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 12%,var(--bg2)),var(--bg2))"><div class="dl-head"><span class="dl-ico">🪫</span><span class="dl-title" style="color:var(--blue)">Deload läuft</span></div><div class="dl-reason" style="--dot:var(--blue)">Noch ${esc(left)} ${left===1?'Tag':'Tage'} · Sätze auf ~60 %, RIR-Vorgabe 4</div><div class="dl-tip">Workouts, die du jetzt startest, sind automatisch reduziert. Gewichte bewusst leicht lassen — der Sinn ist Erholung, nicht Sparflamme mit vollem Gewicht.</div><div class="dl-actions"><button class="btn btn-s btn-g" style="margin:0" onclick="endDeload()">Deload beenden</button></div></div>`;
+  return true;
 }
 function renderDash(){
   ensureHomeUIState();
@@ -3085,6 +3617,7 @@ function renderWo(){
     if(!skipped&&!done){
       const tgt=nextSetTarget(ex);
       if(tgt)h+=`<div class="target-hint"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`;
+      h+=renderWarmup(ex);
     }
     if(lastSets.length&&!skipped){
       h+=`<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'var(--accent)'):''}</div>${lastSets.map(s=>`<div class="mini-hist-row"><span class="mh-d">${esc(s.date||'')}</span><span class="mh-v">${esc(formatLoggedSetLine(ex,s))}${cardio&&s.w?` • Stufe ${esc(s.w)}`:''}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${esc(s.rir)}</span></div>`).join('')}</div>`;
@@ -3269,9 +3802,108 @@ function applyWorkoutSwitch(key,strategy){
   toast('Gewechselt zu '+planDisplayName(target));
   haptic([12,40,12]);
 }
+/* ==========================================================================
+   AUFWÄRMSÄTZE
+   Vor einem schweren Arbeitssatz gehören Rampensätze — nicht aus Vorsicht,
+   sondern weil die ersten Arbeitssätze sonst Leistung kosten. Die Rampe
+   richtet sich nach der geplanten Arbeitslast und wird bewusst NICHT als
+   Satz geloggt: sie ist kein Hypertrophie-Reiz und hätte in Volumen und
+   Tonnage nichts verloren.
+   ========================================================================== */
+function warmupPlan(workWeight,muscle,kind){
+  const w=parseFloat(workWeight)||0;
+  if(w<=0)return null;
+  /* Kleine Isolationsübungen brauchen keine vierstufige Rampe. */
+  const heavy=['squat','hinge','push','pushh','pulld','row'].includes(kind);
+  const steps=heavy
+    ?[{pct:.40,reps:8},{pct:.60,reps:5},{pct:.75,reps:3},{pct:.88,reps:1}]
+    :[{pct:.50,reps:10},{pct:.75,reps:5}];
+  /* Auf die kleinste sinnvolle Scheibe runden: 2,5 kg an der Langhantel,
+     1 kg bei leichten Hanteln. Krumme Zahlen kann man im Studio nicht
+     einstellen und sie werden dann sowieso ignoriert. */
+  const grain=w>=60?2.5:w>=20?1:0.5;
+  const seen=new Set();
+  return steps.map(s=>{
+    const raw=w*s.pct;
+    const kg=Math.max(grain,Math.round(raw/grain)*grain);
+    return{kg:+kg.toFixed(1),reps:s.reps};
+  }).filter(s=>{
+    if(s.kg>=w)return false;               // nie schwerer als der Arbeitssatz
+    if(seen.has(s.kg))return false;        // Dubletten nach dem Runden
+    seen.add(s.kg);return true;
+  });
+}
+function renderWarmup(ex){
+  if(!ex||isCardioExercise(ex)||ex.type!=='main')return '';
+  if((ex.logged||[]).length)return '';     // nur vor dem ersten Satz
+  const last=getLastW(ex.name);
+  const target=last&&last.w>0?last.w:0;
+  const plan=warmupPlan(target,ex.muscle,detectMovePattern(ex.name,ex.muscle,ex.type));
+  if(!plan||!plan.length)return '';
+  return `<div class="warmup"><div class="warmup-h">🔥 Aufwärmrampe auf ${esc(target)} kg`+
+    `<span class="warmup-note">zählt nicht ins Volumen</span></div>`+
+    `<div class="warmup-steps">${plan.map(s=>`<div class="warmup-step"><b>${esc(s.kg)}</b><span>kg × ${esc(s.reps)}</span></div>`).join('')}</div></div>`;
+}
+
+/* ==========================================================================
+   DELOAD, DER AUCH ETWAS TUT
+   Vorher gab es nur ein Banner mit einer Empfehlung. Eine Empfehlung, die
+   man selbst umsetzen muss, setzt fast niemand um. Der Deload-Modus senkt
+   die Satzzahlen aller Hauptübungen auf ~60 % und hebt die RIR-Vorgabe auf
+   4 — für sieben Tage, danach schaltet er sich selbst wieder ab.
+   ========================================================================== */
+function deloadActive(){
+  ensureUIState();
+  const d=D.ui.deload;
+  if(!d.active)return false;
+  if(d.until&&Date.now()>d.until){d.active=false;return false}
+  return true;
+}
+function deloadDaysLeft(){
+  ensureUIState();
+  if(!deloadActive())return 0;
+  return Math.max(0,Math.ceil((D.ui.deload.until-Date.now())/864e5));
+}
+function startDeload(){
+  ensureUIState();
+  if(!confirm('Deload-Woche starten?\n\nFür 7 Tage: Satzzahlen auf ~60 %, RIR-Vorgabe 4.\nDein Trainingsplan bleibt unverändert — die Anpassung gilt nur für die Workouts dieser Woche.'))return;
+  D.ui.deload={active:true,since:Date.now(),until:Date.now()+7*864e5};
+  D.ui.deloadSnoozedUntil=0;
+  save();renderDash();if(D.active)renderWo();
+  toast('🪫 Deload aktiv für 7 Tage');
+  haptic([12,40,12]);
+}
+function endDeload(){
+  ensureUIState();
+  D.ui.deload={active:false,since:0,until:0};
+  save();renderDash();if(D.active)renderWo();
+  toast('Deload beendet — back to work 💪');
+}
+/* Wird beim Start eines Workouts auf die Übungsliste angewendet, nicht auf
+   den Plan selbst. Der Plan bleibt unangetastet. */
+function applyDeloadToExercises(list){
+  if(!deloadActive())return list;
+  return list.map(ex=>{
+    if(ex.type!=='main')return ex;
+    return{...ex,
+      sets:Math.max(1,Math.round((parseInt(ex.sets)||3)*0.6)),
+      rir:ex.rir===null?null:Math.max(3,(parseInt(ex.rir)||2)+2),
+      deloaded:true};
+  });
+}
+
 /* „Schlag das letzte Mal“ — konkrete Zielvorgabe statt nur Historie.
    Doppelte Progression: erst Wiederholungen bis rmax, dann Gewicht rauf. */
 function nextSetTarget(ex){
+  if(deloadActive()&&!isCardioExercise(ex)){
+    const last=getLastW(ex.name);
+    if(last&&last.w>0){
+      const grain=last.w>=60?2.5:1;
+      const target=Math.round((last.w*0.65)/grain)*grain;
+      return{icon:'🪫',text:`Deload: <b>${esc(target)}kg</b> statt ${esc(last.w)}kg, locker bei RIR 4. Nicht ausbelasten.`};
+    }
+    return{icon:'🪫',text:'Deload-Woche: deutlich leichter, RIR 4. Technik statt Last.'};
+  }
   if(isCardioExercise(ex))return null;
   const setNr=ex.logged.length;
   const prevInSession=setNr>0?ex.logged[setNr-1]:null;

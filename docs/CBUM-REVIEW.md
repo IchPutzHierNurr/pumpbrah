@@ -311,40 +311,114 @@ Töne mit Hüllkurve, ohne Datei, ohne Netzwerk.
 
 ---
 
-## 9. Was ich als Nächstes bauen würde
+## 9. Die vier Punkte von der Wunschliste, die jetzt drin sind
 
-Ehrliche Priorisierung. Nicht alles ist gleich wichtig.
+Im ersten Durchgang standen sie unter „was ich als Nächstes bauen würde".
+Sie sind inzwischen gebaut.
 
-**Hoch — echter Trainingsnutzen:**
+### Aufwärmrampe
 
-1. **Aufwärmsatz-Rechner.** Vor 100 kg Bankdrücken gehören 4×20, 60×8, 80×5,
-   90×2. Das rechnet die App aus der Arbeitslast aus und logt es getrennt,
-   ohne das Arbeitsvolumen zu verfälschen.
-2. **Sekundäre Muskeln im Volumen.** Bankdrücken ist nicht nur Brust — es sind
-   ~0,5 Sätze Trizeps und ~0,5 Sätze vordere Schulter. Wer 20 Sätze Drücken
-   macht und dann „nur 6 Sätze Trizeps" sieht, unterschätzt seine Armbelastung
-   massiv. Das ist der häufigste Grund für Ellenbogenprobleme.
-3. **e1RM-Verlauf statt Maximalgewicht.** Das All-Time-Max ist ein einzelner
-   guter Tag. Der geschätzte 1RM über die Zeit ist der ehrliche Kraftverlauf —
-   und zeigt Stagnation Wochen früher.
-4. **Deload, der auch etwas tut.** Das Banner erkennt den Bedarf richtig,
-   empfiehlt aber nur. Ein Knopf „Deload-Woche starten", der alle Zielgewichte
-   auf 60 % setzt und RIR auf 4–5 anhebt, wird tatsächlich benutzt.
+Vor einem schweren Arbeitssatz gehören Rampensätze — nicht aus Vorsicht,
+sondern weil die ersten Arbeitssätze sonst Leistung kosten. Die App rechnet
+sie jetzt aus deiner letzten Arbeitslast:
 
-**Mittel — Datenqualität:**
+```
+🔥 AUFWÄRMRAMPE AUF 82,5 KG          zählt nicht ins Volumen
+   32,5 kg × 8    50 kg × 5    62,5 kg × 3    72,5 kg × 1
+```
 
-5. **Supersätze.** Zwei Übungen mit gemeinsamem Timer. Verändert die
+Zwei Details, die den Unterschied machen:
+
+**Gerundet auf einstellbare Scheiben.** 2,5 kg ab 60 kg, 1 kg ab 20 kg, 0,5 kg
+darunter. Eine Vorgabe von „33,7 kg" ignoriert man, weil man sie an keiner
+Hantel einstellen kann.
+
+**Kurze Rampe bei Isolation.** Vier Stufen vor Kniebeugen sind richtig, vor
+Seitheben absurd. Isolationsübungen bekommen zwei.
+
+Und das Wichtigste steht direkt dran: **zählt nicht ins Volumen.** Wären die
+vier Rampensätze mitgezählt worden, hätte das die komplette MEV/MAV-Einordnung
+gesprengt — genau der Fehler, der bei Cardio schon einmal passiert ist.
+
+### Sekundäre Muskelbeteiligung
+
+Das ist die Änderung, die im Alltag am meisten verändert.
+
+Bankdrücken ist nicht nur Brust. Trizeps und vordere Schulter leisten
+erhebliche Arbeit mit. Wer 20 Sätze Drückbewegungen macht und in der Statistik
+„6 Sätze Arme" liest, unterschätzt seine Ellenbogenbelastung massiv — und
+wundert sich, warum die Ellenbogen zwicken, obwohl er „kaum Trizeps trainiert".
+
+Die Volumenkarte hat jetzt einen Umschalter:
+
+| | Brust | Arme | Schultern |
+|---|---:|---:|---:|
+| **Nur direkt** | 12 | 6 | 12 |
+| **Inkl. indirekt** | 12 | 15 | 16,5 |
+
+Rechts steht die Wahrheit. Indirekt beteiligte Muskeln zählen mit 0,5 Sätzen,
+abgeleitet aus dem Bewegungsmuster — funktioniert also auch bei eigenen
+Übungen, ohne dass jemand eine Tabelle pflegen muss.
+
+Im Screenshot springt genau das ins Auge: Schultern rutschen von „im MAV" auf
+**„über MRV"**, sobald indirektes Volumen mitzählt. Das ist keine Kosmetik,
+das ist der Unterschied zwischen „läuft" und „du überziehst gerade".
+
+### e1RM-Verlauf
+
+Das All-Time-Max ist ein einzelner guter Tag. Der geschätzte 1RM über die Zeit
+ist der ehrliche Kraftverlauf — er normalisiert Gewicht **und** Wiederholungen:
+
+```
+80 kg × 8   →  e1RM ≈ 101 kg
+85 kg × 5   →  e1RM ≈ 99 kg      ← im Rohgewicht ein "Sprung", real ein Rückschritt
+```
+
+Im reinen Gewichtsverlauf sieht die zweite Session nach Fortschritt aus. Der
+e1RM-Verlauf zeigt die Stagnation — Wochen früher, als man sie sonst merkt.
+Sätze über 15 Wiederholungen sind ausgenommen, dort wird Epley unzuverlässig.
+
+### Deload, der auch etwas tut
+
+Vorher: ein Banner mit einer Empfehlung. Eine Empfehlung, die man selbst
+umsetzen muss, setzt fast niemand um — schon gar nicht in der Woche, in der
+man müde ist.
+
+Jetzt ist da ein Knopf. Sieben Tage lang werden alle Workouts, die du startest,
+automatisch reduziert: Satzzahlen auf ~60 %, RIR-Vorgabe auf 4. Die Zielvorgabe
+pro Satz schaltet mit um:
+
+> 🪫 Deload: **55 kg** statt 82,5 kg, locker bei RIR 4. Nicht ausbelasten.
+
+Danach schaltet er sich von selbst ab. Und — der Punkt, der mir wichtig war —
+**dein Trainingsplan bleibt unangetastet.** Die Reduktion lebt nur in den
+Workouts dieser Woche. Nach dem Deload steht dein Plan da, wie er war.
+
+---
+
+## 10. Was ich als Nächstes bauen würde
+
+**Hoch:**
+
+1. **Supersätze.** Zwei Übungen mit gemeinsamem Timer. Verändert die
    Pausenlogik komplett und wird in fast jedem Armtraining gebraucht.
-6. **Tempo-Erfassung.** 3-1-1-0 als Feld. Wer Tempo vorgibt, sollte es messen.
-7. **Wöchentlicher Check-in.** Schlaf, Stress, Muskelkater als drei Regler.
+2. **Wöchentlicher Check-in.** Schlaf, Stress, Muskelkater als drei Regler.
    Ohne diesen Kontext ist jede Stagnations-Analyse Kaffeesatzleserei —
    schlechter Schlaf erklärt mehr Leistungseinbrüche als jedes Trainingsdetail.
+3. **Tempo-Erfassung.** 3-1-1-0 als Feld. Wer Tempo vorgibt, sollte es messen.
+
+**Mittel:**
+
+4. Aufwärmrampe auch für den Arbeitssatz **dieser** Session, nicht nur für die
+   letzte Last — wer heute mehr vorhat, will die Rampe darauf.
+5. Sekundäranteile pro Übung überschreibbar. Die Muster-Heuristik trifft 90 %,
+   für den Rest will man selbst korrigieren können.
 
 **Niedrig, aber schön:**
 
-8. Fotoverlauf mit gleicher Pose und gleichem Licht — der ehrlichste Gradmesser.
-9. Übungsvideo pro Übung selbst aufnehmen, lokal gespeichert.
-10. Plan-Export als Bild zum Teilen.
+6. Fotoverlauf mit gleicher Pose und gleichem Licht — der ehrlichste Gradmesser.
+7. Übungsvideo pro Übung selbst aufnehmen, lokal gespeichert.
+8. Plan-Export als Bild zum Teilen.
 
 ---
 
@@ -354,11 +428,10 @@ Die App hatte das Richtige im Kopf und Fehler in den Details, die genau dort
 weh tun, wo es zählt: bei den Zahlen, denen du dein Training anvertraust,
 und bei der Reibung zwischen zwei Sätzen.
 
-Die Zahlen stimmen jetzt. Die Reibung ist weg. Der Rest — Aufwärmsätze,
-sekundäre Muskeln, echter Deload — ist die nächste Runde.
+Die Zahlen stimmen jetzt — inklusive der unbequemen Wahrheit über indirektes
+Volumen. Die Reibung ist weg. Aufwärmen, Deload und Kraftverlauf sind drin.
 
-Zum Schluss der einzige Satz, der wirklich zählt, und den keine App für dich
-erledigt:
+Was bleibt, ist der Teil, den keine App abnimmt:
 
 > **Das beste Trackingsystem der Welt ersetzt keinen einzigen Satz.
 > Es sorgt nur dafür, dass du den nächsten besser machst als den letzten.**

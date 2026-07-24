@@ -19,7 +19,9 @@ docs/BUGS.md        Register aller je gefundenen Fehler + Regressionstests
 **Training**
 Mehrere Trainingstage mit Wochentagszuordnung · Übungsbibliothek mit eigenen
 Übungen · RIR-basierte Satzerfassung · Pausentimer mit Compound-/Isolations-
-Voreinstellung · Cardio getrennt in Minuten · persönliche Notizen pro Übung
+Voreinstellung · Cardio getrennt in Minuten · persönliche Notizen pro Übung ·
+Aufwärmrampe je Hauptübung (zählt nicht ins Volumen) · Deload-Modus, der die
+Workouts sieben Tage lang automatisch reduziert und den Plan unberührt lässt
 
 **Im laufenden Workout**
 Trainingstag wechseln (anhängen / nur Geloggtes behalten / ersetzen) ·
@@ -28,8 +30,9 @@ Trainingstag wechseln (anhängen / nur Geloggtes behalten / ersetzen) ·
 Ziel für den nächsten Satz nach doppelter Progression · Wake Lock
 
 **Auswertung**
-Wochenvolumen gegen MEV/MAV/MRV · Volumen-Radar über sechs Muskelgruppen ·
-Tonnage- und RIR-Trends · geschätzter 1RM (Epley) · PR-Erkennung ·
+Wochenvolumen gegen MEV/MAV/MRV, wahlweise inklusive indirekt beteiligter
+Muskeln (0,5 Sätze) · Volumen-Radar über sechs Muskelgruppen · Tonnage- und
+RIR-Trends · e1RM-Verlauf pro Übung statt nur Rohgewicht · PR-Erkennung ·
 Deload-Empfehlung aus Trend, RIR und Volumen · Fitnessalter · Gewichtsverlauf ·
 optionale EGYM-Körperanalyse · Kalenderhistorie
 
@@ -41,6 +44,16 @@ und Tempo-Umschalter (2 s / 3 s / 5 s betonte Exzentrik).
 **Sync**
 Firestore mit Merge-Verfahren über alle Datentypen, Tombstones für Löschungen,
 Konfliktauflösung über Zeitstempel. JSON-Export/-Import.
+
+**iOS**
+Als Home-Screen-App installierbar (Icon und Manifest sind in die Datei
+eingebettet) · Large-Title-Kopfzeilen, die beim Scrollen zu einer Glasleiste
+kollabieren · Bottom-Sheets mit Ziehgriff und Wisch-zum-Schließen ·
+Tastatur-Ausweichen über `visualViewport` · Safe-Area in Hoch- und Querformat ·
+kein Auto-Zoom beim Fokussieren, Zoomen von Hand bleibt erlaubt ·
+Pull-to-Refresh mitten im Workout deaktiviert · Wake Lock ·
+respektiert „Bewegung reduzieren", „Transparenz reduzieren" und
+„Kontrast erhöhen"
 
 ---
 
@@ -61,15 +74,14 @@ Drei Stufen:
 |---|---|
 | **Smoke** | Start, Onboarding, jeder Screen rendert |
 | **Regression** | Ein Test pro Eintrag in `docs/BUGS.md` — wächst mit jedem Fund |
-| **Fuzz** | N zufällige Aktionen über 58 Operationen, 16 Invarianten nach **jeder** Aktion |
+| **Fuzz** | N zufällige Aktionen über 63 Operationen, 16 Invarianten nach **jeder** Aktion |
 
 Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **33 Prüfungen grün**, verifiziert über acht unabhängige
-Kampagnen (u. a. 1 × 10.000 und 4 × 2.500 Iterationen, zusammen >30.000
-Aktionen und >400.000 Invariantenprüfungen).
+Aktueller Stand: **41 Prüfungen grün** — 32 Regressionstests plus Fuzzing über
+63 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
 
@@ -114,6 +126,11 @@ Bis PB-021 behoben ist, gilt: **keine Daten in dieser App, die nicht
 
 ## Barrierefreiheit
 
-Sämtliche Animationen respektieren `prefers-reduced-motion`. Bei aktivierter
-Bewegungsreduktion läuft die App ohne einen einzigen Effekt — inklusive der
-Übungs-Demonstrationen, Chart-Animationen und der PR-Feier.
+- `prefers-reduced-motion` — bei aktivierter Bewegungsreduktion läuft die App
+  ohne einen einzigen Effekt, inklusive Übungsdemos, Chart-Animationen und
+  PR-Feier.
+- `prefers-reduced-transparency` — Glasflächen werden undurchsichtig.
+- `prefers-contrast` — Ränder und Sekundärtext werden deutlicher.
+- Zoomen ist erlaubt (`user-scalable` nicht gesperrt), Formularfelder sind
+  groß genug, dass iOS nicht von selbst hineinzoomt.
+- Sichtbarer Fokusring über `:focus-visible` für Tastatur- und Schalterzugriff.
