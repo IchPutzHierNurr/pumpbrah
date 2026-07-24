@@ -227,6 +227,14 @@ Fitnessalter · Deload-Erkennung und Snooze · Krank-Modus · Alle Diagramme mit
 `mergeSyncedData` mit leerem/älterem/neuerem Remote · Tombstones ·
 Konflikt bei gleicher Session-ID · Merge-Idempotenz: zweimal mergen == einmal
 
+**Übungsbilder**
+Zuordnung deutscher Namen → Datenbank-ID stimmt (Stichproben aus `EXPHOTO_MAP`) ·
+erfundene Übungen liefern **kein** Foto (sonst zeigt die App eine falsche Übung) ·
+alle referenzierten Dateien unter `assets/ex/` existieren · Fallback-Kette
+lokal → GitHub-Raw → Zeichnung greift in dieser Reihenfolge · gezeichnete Figur
+bleibt für alle 15 Bewegungsmuster im Bildausschnitt und die Last hängt am
+richtigen Gelenk
+
 **Sicherheit** — für **jedes** Freitextfeld
 `<img src=x onerror=…>` · `"><svg onload=…>` · `'; alert(1); //` ·
 `{{7*7}}` · `${…}` · Backslash · Emoji · 300 Zeichen · leer · nur Leerzeichen
@@ -267,6 +275,15 @@ Bei neuen Features: Was muss hier immer gelten? Rein damit.
 - **Die App muss nach dem Fuzzing noch bedienbar sein.** Der Harness prüft das
   am Ende — sonst maskiert ein früher Totalausfall alle folgenden Prüfungen.
 - **Ein grüner Lauf beweist nichts.** Immer mehrere Seeds.
+- **Keine Ausnahme für den eigenen Code.** Wenn eine Invariante beim eigenen
+  Feature anschlägt (etwa ein Inline-`onerror` gegen die XSS-Prüfung), ist die
+  erste Frage nicht „wie nehme ich mich aus?", sondern „warum brauche ich, was
+  ich verbiete?". Eine Regel mit Selbstausnahme prüft nur noch, dass man sich
+  selbst nicht überrascht. Ist die Regel wirklich zu breit, macht man sie
+  **präziser** — nicht löchriger.
+- **Für alles Visuelle: Kontaktbogen.** Alle Fälle nebeneinander rendern und
+  Animationen einfrieren (`svg.pauseAnimations(); svg.setCurrentTime(0)`).
+  Einzeln betrachtet sieht fast jeder Darstellungsfehler plausibel aus.
 
 ---
 

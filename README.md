@@ -5,6 +5,7 @@ läuft per `file://` und offline. Optionaler Cloud-Sync über Firestore.
 
 ```
 index.html          Die komplette App (HTML + CSS + JS)
+assets/ex/          Übungsfotos, 560px WebP (Public Domain, siehe unten)
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Fuzzing
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
 docs/CBUM-REVIEW.md Dieselbe App aus Trainingssicht bewertet
@@ -37,9 +38,12 @@ Deload-Empfehlung aus Trend, RIR und Volumen · Fitnessalter · Gewichtsverlauf 
 optionale EGYM-Körperanalyse · Kalenderhistorie
 
 **Übungsausführung**
-Animierte Inline-SVG-Demonstration pro Bewegungsmuster, aus dem Übungsnamen
-erkannt. Kein Netzwerk, kein Tab-Wechsel. Mit Zielmuskulatur, Ausführungs-Cue
-und Tempo-Umschalter (2 s / 3 s / 5 s betonte Exzentrik).
+Echte Fotos der Start- und Endposition, überblendet zur Bewegung. Quelle:
+[Free Exercise DB](https://github.com/yuhonas/free-exercise-db) (Unlicense,
+Public Domain), lokal unter `assets/ex/` in 560px-WebP. Dreistufige
+Rückfallebene: lokale Datei → GitHub-Raw → gezeichnete Strichfigur aus der
+eigenen Pose-Engine. Dazu Zielmuskulatur, Ausführungs-Cue und Tempo-Umschalter
+(2 s / 3 s / 5 s betonte Exzentrik).
 
 **Sync**
 Firestore mit Merge-Verfahren über alle Datentypen, Tombstones für Löschungen,
@@ -80,7 +84,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **44 Prüfungen grün** — 35 Regressionstests plus Fuzzing über
+Aktueller Stand: **46 Prüfungen grün** — 37 Regressionstests plus Fuzzing über
 65 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
@@ -121,6 +125,21 @@ Drei Befunde sind **nicht im Frontend lösbar** und in
 
 Bis PB-021 behoben ist, gilt: **keine Daten in dieser App, die nicht
 öffentlich sein dürfen.**
+
+---
+
+## Bildmaterial
+
+Die Übungsfotos stammen aus der
+[Free Exercise DB](https://github.com/yuhonas/free-exercise-db) und stehen unter
+der **Unlicense** (Public Domain, keine Namensnennungspflicht). Sie sind auf
+560px Breite verkleinert und als WebP in `assets/ex/` abgelegt — zusammen
+rund 0,9 MB für 26 Übungen.
+
+Fehlt eine Datei, lädt die App das Bild von `raw.githubusercontent.com` nach.
+Klappt auch das nicht — offline, oder die Übung steht nicht in der Datenbank —
+zeichnet sie eine animierte Strichfigur aus dem erkannten Bewegungsmuster.
+Die App funktioniert damit in jedem Fall, nur unterschiedlich hübsch.
 
 ---
 

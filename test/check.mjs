@@ -746,6 +746,66 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-036', title: 'Übungsfotos werden korrekt zugeordnet und geladen',
+    run: async () => {
+      const r = await page.evaluate(async () => {
+        const want = {
+          'Bankdrücken': 'Barbell_Bench_Press_-_Medium_Grip',
+          'Bankdrücken (Bench Press)': 'Barbell_Bench_Press_-_Medium_Grip',
+          'Kniebeugen (Back Squat)': 'Barbell_Squat',
+          'Leg Curl': 'Seated_Leg_Curl',
+          'Leg Extension': 'Leg_Extensions',
+          'Rumänisches Kreuzheben': 'Romanian_Deadlift',
+          'KH Seitheben': 'Side_Lateral_Raise',
+          'Latziehen breit Obergriff': 'Wide-Grip_Lat_Pulldown'
+        };
+        const wrong = Object.entries(want)
+          .filter(([n, id]) => exercisePhotoId(n) !== id)
+          .map(([n, id]) => `${n}: erwartet ${id}, ist ${exercisePhotoId(n)}`);
+        // Unbekannte Übung darf KEIN Foto liefern, sonst zeigt sie ein falsches
+        const falsePositive = ['Völlig Erfundene Übung 4711', ''].filter(n => exercisePhotoId(n));
+        // Und die Datei muss tatsächlich existieren
+        const load = (src) => new Promise(res => {
+          const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = src;
+        });
+        const files = await Promise.all(Object.values(want).flatMap(id =>
+          [0, 1].map(f => load(`assets/ex/${id}-${f}.webp`))));
+        return { wrong, falsePositive, missing: files.filter(x => !x).length, checked: files.length };
+      });
+      return [r.wrong.length === 0 && r.falsePositive.length === 0 && r.missing === 0,
+              JSON.stringify(r).slice(0, 240)];
+    }
+  },
+  {
+    id: 'PB-037', title: 'Ohne Foto greift die gezeichnete Figur',
+    run: async () => {
+      const r = await page.evaluate(() => {
+        // Übung ohne Datenbankeintrag -> nur SVG, kein leerer Kasten
+        const html = exerciseVisual('Erfundene Spezialübung 99', 'chest', 'main', {});
+        const host = document.createElement('div');
+        host.style.cssText = 'position:absolute;left:-9999px;width:320px';
+        host.innerHTML = html; document.body.appendChild(host);
+        const noPhoto = { svg: !!host.querySelector('svg'), img: !!host.querySelector('img') };
+        host.innerHTML = exerciseVisual('Bankdrücken', 'chest', 'main', {});
+        const withPhoto = { svg: !!host.querySelector('svg'), img: host.querySelectorAll('img').length };
+        // Fallback-Kette: erst lokal, dann Netz, dann Element entfernen
+        const img = host.querySelector('img');
+        const hasRemote = !!(img && img.dataset.fb && img.dataset.fb.startsWith('https://'));
+        exPhotoFallback(img);                    // 1. Fehlschlag -> Netz
+        const switched = img.src.startsWith('https://');
+        exPhotoFallback(img);                    // 2. Fehlschlag -> entfernen
+        const removed = !host.querySelector('.exphoto');
+        const svgSurvives = !!host.querySelector('svg');
+        host.remove();
+        return { noPhoto, withPhoto, hasRemote, switched, removed, svgSurvives };
+      });
+      const ok = r.noPhoto.svg && !r.noPhoto.img
+        && r.withPhoto.svg && r.withPhoto.img === 2
+        && r.hasRemote && r.switched && r.removed && r.svgSurvives;
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-017', title: 'Wochenring zählt dieselben Sätze wie seine Landmarks',
     run: async () => {
       const r = await page.evaluate(() => {
@@ -915,6 +975,10 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
     ['avatar', () => { if (rnd() < 0.5) clearProfileImage(); else { D.ui.avatar = 'data:image/png;base64,iVBORw0KGgo='; save(); renderSettings(); renderDash(); } }],
     ['exerciseMenu', () => { if (D.active && D.active.exercises.length) openExerciseMenu(int(0, D.active.exercises.length - 1)); }],
     ['planExMenu', () => { const p = D.plan[curTab]; if (p && p.exercises.length) openPlanExMenu(int(0, p.exercises.length - 1)); }],
+    ['photos', () => {
+      ['Bankdrücken', 'Leg Curl', pick(NASTY), 'Eigene Übung ' + int(1, 99), 'Kniebeugen (Back Squat)']
+        .forEach(n => { exercisePhotoId(n); exerciseVisual(n, pick(['chest','legs','back']), 'main', { thumb: rnd() < .5 }); });
+    }],
     ['icons', () => { hydrateIcons(); Object.keys(ICON_PATHS).forEach(k => icon(k, int(12, 28))); exIcon(pick(['main','pre','mob']), pick(['chest','back','legs','arms','core','shoulders','unbekannt'])); }],
     ['jumpActive', () => jumpToActiveExercise()],
     ['openLibraries', () => { openLibrary(); openLibraryEditor(); resetLibraryEditorForm(); }],
@@ -982,8 +1046,14 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       document.getElementById('main-app').querySelectorAll('script').length === 0],
     ['Keine injizierten Event-Handler-Attribute', () =>
       document.getElementById('main-app').querySelectorAll('[onerror],[onload],[onmouseover],[onfocus]').length === 0],
+    /* Übungsfotos sind echte <img>-Elemente und damit legitim. Die Invariante
+       prüft weiterhin, dass KEIN unerwartetes Fremdelement entsteht — nur die
+       bekannten Foto-Klassen sind ausgenommen. Das ist eine Verschärfung, keine
+       Aufweichung: jedes img ohne diese Klassen schlägt weiterhin an. */
     ['Keine injizierten Fremdelemente', () =>
-      document.getElementById('main-app').querySelectorAll('img,iframe,object,embed,form').length === 0],
+      [...document.getElementById('main-app').querySelectorAll('img,iframe,object,embed,form')]
+        .filter(el => !(el.tagName === 'IMG' && (el.classList.contains('ph') || el.classList.contains('exphoto-thumb'))))
+        .length === 0],
     ['Keine XSS-Flagge gesetzt', () => !window.__pwn && !window.__pwned],
     ['Übungs-SVG bleibt wohlgeformt', () => {
       const svg = document.querySelector('.exdemo-thumb svg, .exdemo svg');

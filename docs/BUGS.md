@@ -82,11 +82,13 @@
 | [PB-033](#pb-033) | „Leg Curl" wurde als Bizeps-Curl erkannt | hoch | Darstellung | ✅ |
 | [PB-034](#pb-034) | Hantel lief eine halbe Phase neben der Hand | mittel | Darstellung | ✅ |
 | [PB-035](#pb-035) | Figur schwebte aus dem Bildausschnitt | mittel | Darstellung | ✅ |
+| [PB-036](#pb-036) | Zeichnungen statt echter Übungsfotos | hoch | Darstellung | ✅ |
+| [PB-037](#pb-037) | Inline-`onerror` verletzte die eigene XSS-Invariante | mittel | Sicherheit | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**32 von 32 im Frontend behebbaren Fehlern sind behoben.**
+**34 von 34 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -1277,6 +1279,111 @@ Modell ändern oder die Randbedingung („Zeh bleibt fix") explizit lösen.
 **Test.** `PB-035` — für alle Muster und beide Posen muss jede Gliedmaße und
 der Kopf innerhalb des Sichtbereichs liegen. Gegen den nicht-gefixten Zustand
 verifiziert rot (`calf/b: ausserhalb (139,-12)`).
+
+---
+
+### PB-036
+
+**Zeichnungen statt echter Übungsfotos**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Darstellung |
+| **Gefunden** | Nutzerrückmeldung |
+| **Status** | ✅ behoben |
+
+**Symptom.** Auch nach dem Umbau auf eine Pose-Engine blieben es Strichfiguren.
+Sie zeigen das Bewegungsmuster korrekt — aber keine Ausführung, keine Technik,
+keine Griffbreite, kein Gerät im Detail. Für „wie geht diese Übung?" reicht das
+nicht.
+
+**Ursache.** Kein Fehler im engeren Sinn, sondern eine zu niedrig angesetzte
+Lösung. Ich hatte den Anspruch „funktioniert offline, kein Netzwerk" über den
+Anspruch „zeigt die Übung" gestellt und dabei nicht geprüft, ob es
+frei verwendbares Bildmaterial gibt.
+
+**Fix.** Fotos aus der [Free Exercise DB](https://github.com/yuhonas/free-exercise-db)
+— 873 Übungen, je ein Bild der Start- und der Endposition, veröffentlicht unter
+der **Unlicense (Public Domain)**. Die Lizenz wurde vor der Übernahme geprüft:
+`LICENSE.md` im Repository, Unlicense-Wortlaut, keine Namensnennungspflicht.
+Die Quelle steht trotzdem im Demo-Sheet und in der README.
+
+Zwei Bilder pro Übung sind praktisch: übereinandergelegt und zyklisch
+überblendet ergeben sie die Bewegung, ohne Video oder GIF.
+
+Dreistufige Rückfallebene, jede Stufe mit eigenem Grund:
+
+| Stufe | Quelle | Wofür |
+|---|---|---|
+| 1 | `assets/ex/<id>-<n>.webp` | lokal, offline, auf 560px verkleinert (0,9 MB für 26 Übungen) |
+| 2 | `raw.githubusercontent.com` | eigene Übungen, oder wenn jemand nur die `index.html` kopiert hat |
+| 3 | gezeichnete Figur | kein Datenbankeintrag, oder beide Stufen scheitern |
+
+Die Zuordnung deutscher Namen ist **kuratiert**, nicht geraten: 31 feste
+Einträge für alles, was die App mitbringt. Für eigene Übungen greift eine
+Übersetzungstabelle (`bankdrücken → bench press`, `beinbeuger → leg curl`, …)
+plus Auswertung der englischen Klammer, die viele Namen ohnehin schon tragen.
+
+**Lektion.** Bevor man etwas selbst baut, prüfen, ob es das in brauchbarer
+Qualität und mit passender Lizenz schon gibt. Ich habe eine Pose-Engine
+geschrieben, wo eine kuratierte Zuordnungstabelle plus 0,9 MB Bilder das
+bessere Ergebnis liefern. Die Engine bleibt trotzdem — als Rückfallebene ist
+sie jetzt am richtigen Platz.
+
+**Test.** `PB-036` — acht Zuordnungen namentlich geprüft, erfundene Übungen
+dürfen **kein** Foto liefern (sonst zeigt die App eine falsche Übung), und
+alle 16 referenzierten Dateien müssen tatsächlich laden.
+
+---
+
+### PB-037
+
+**Inline-`onerror` verletzte die eigene XSS-Invariante**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Sicherheit |
+| **Gefunden** | **Fuzzer-Invariante „Keine injizierten Event-Handler-Attribute"** |
+| **Status** | ✅ behoben |
+
+**Symptom.** Direkt nach dem Einbau der Fotoschicht schlug der Fuzzer an. Die
+Fallback-Kette war so umgesetzt:
+
+```html
+<img src="assets/…" onerror="exPhotoFallback(this,'https://…')">
+```
+
+**Warum das mehr ist als ein Testartefakt.** Die naheliegende Reaktion wäre
+gewesen, die Invariante um eine Ausnahme zu erweitern. Genau das hätte sie
+wertlos gemacht: Sie existiert, um Event-Handler-Attribute zu finden, die aus
+Nutzerdaten entstehen. Eine Regel, die für den eigenen Code Ausnahmen macht,
+prüft am Ende nur noch, dass man sich selbst nicht überrascht.
+
+**Fix.** Kein Inline-Handler mehr. Die Remote-URL steht in `data-fb`, und ein
+einziger delegierter Listener fängt alle Bildfehler ab:
+
+```js
+document.addEventListener('error', e => {
+  const t = e.target;
+  if (t?.tagName === 'IMG' && t.dataset?.fb !== undefined) exPhotoFallback(t);
+}, true);   // error blubbert nicht, wird aber in der Capture-Phase zugestellt
+```
+
+Die zweite Invariante („keine Fremdelemente") musste dagegen angepasst werden —
+Fotos *sind* legitime `<img>`. Das ist aber eine **Verschärfung**: statt „gar
+keine img" prüft sie jetzt „keine img außer den bekannten Foto-Klassen". Jedes
+andere `<img>`, `<iframe>`, `<form>` schlägt weiterhin an.
+
+**Lektion.** Wenn dein eigener Code eine Sicherheitsregel verletzt, ist die
+erste Frage nicht „wie nehme ich mich aus?", sondern „warum brauche ich
+überhaupt, was ich verbiete?". Meistens gibt es einen Weg ohne. Und wenn eine
+Regel wirklich zu breit ist, macht man sie **präziser**, nicht löchriger.
+
+**Test.** `PB-037` — prüft die komplette Kette: ohne Datenbankeintrag nur SVG
+und kein `<img>`, mit Eintrag beide Frames plus SVG darunter, erster Fehlschlag
+schaltet auf die Remote-URL, zweiter entfernt das Foto und die Zeichnung bleibt.
 
 ---
 

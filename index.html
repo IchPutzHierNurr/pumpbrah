@@ -856,6 +856,29 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .ib{display:inline-flex!important;align-items:center;gap:7px;width:auto}
 .ib .ic{width:15px;height:15px;stroke-width:1.9}
 
+/* --- Übungsfotos ----------------------------------------------------------
+   Zwei Bilder übereinander: unten die Startposition, oben die Endposition,
+   die zyklisch weggeblendet wird. Das ergibt die Bewegung, ohne ein Video
+   oder GIF laden zu müssen. Die gezeichnete Figur liegt darunter und wird
+   sichtbar, sobald ein Foto fehlschlägt. */
+.exvisual{display:block;position:relative;width:100%;height:100%}
+.exvisual>svg{display:block;width:100%;height:auto}
+.exvisual .exphoto,.exvisual .exphoto-thumb{position:absolute;inset:0}
+.exphoto{position:relative;width:100%;height:100%;overflow:hidden;background:#0d0f13}
+.exphoto .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.exphoto .ph-b{animation:phSwap var(--phdur,3s) steps(1,end) infinite}
+.exphoto .ph-b.still{animation:none}
+@keyframes phSwap{0%,49.9%{opacity:1}50%,100%{opacity:0}}
+.exphoto-thumb{width:100%;height:100%;object-fit:cover;display:block}
+/* Im Sheet steht das Foto in einem festen Seitenverhältnis, damit das Layout
+   nicht springt, während die Bilder laden. */
+.exdemo .exvisual{aspect-ratio:3/2}
+.exdemo .exvisual>svg{position:absolute;inset:0;height:100%}
+.exdemo-thumb .exvisual{position:absolute;inset:0}
+.exdemo-thumb .exvisual>svg{position:absolute;inset:0;height:100%}
+.exphoto-credit{font-size:10px;color:var(--text3);letter-spacing:.02em;margin-top:8px;text-align:right}
+.exphoto-credit a{color:var(--text3);text-decoration:underline}
+
 /* --- Übungs-Illustration --------------------------------------------------
    Vorher hatte jedes Kästchen einen eigenen Verlauf (bg3 -> bg4), im Plan
    zusätzlich noch einen Muskelgruppen-Farbstich. Auf einer bg2-Karte schwammen
@@ -864,7 +887,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
    haengt; nur die grosse Demo behaelt eine eigene Flaeche. */
 .exdemo{background:var(--mat-2),var(--bg3);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:var(--edge);overflow:hidden;position:relative}
 .exdemo svg{display:block;width:100%;height:auto;padding-bottom:24px}
-.exdemo-cap{position:absolute;left:0;right:0;bottom:0;padding:9px 13px;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--text3);background:linear-gradient(0deg,color-mix(in srgb,var(--bg3) 96%,transparent) 62%,transparent)}
+.exdemo-cap{position:absolute;left:0;right:0;bottom:0;padding:10px 13px;font-size:11px;font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.82);background:linear-gradient(0deg,rgba(6,7,10,.88) 30%,rgba(6,7,10,.55) 70%,transparent);text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .exdemo-thumb{width:44px;height:44px;flex:0 0 44px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid var(--line2);overflow:hidden;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;--fig:var(--text);--fig-far:rgba(244,246,251,.24);transition:.15s}
 .exdemo-thumb svg{width:100%;height:100%;padding:0}
 .exdemo-thumb:active{transform:scale(.92);background:rgba(255,255,255,.08)}
@@ -933,7 +956,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 
 /* --- Aufwärmrampe --- */
 .warmup{margin:8px 0 2px;padding:11px 13px;border-radius:var(--r-sm);background:var(--mat-2),var(--bg3);border:1px solid color-mix(in srgb,var(--orange) 20%,var(--line));box-shadow:var(--edge)}
-.warmup-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--orange);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.warmup-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--orange);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.warmup-h .ic{stroke-width:2}
 .warmup-note{font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--text3);background:var(--bg4);padding:3px 8px;border-radius:999px;text-transform:none}
 .warmup-steps{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
 .warmup-step{flex:1;min-width:62px;text-align:center;padding:8px 6px;border-radius:11px;background:var(--bg2);border:1px solid var(--line)}
@@ -942,7 +966,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 
 /* --- Ziel-/Beat-Last-Time-Hinweis --- */
 .target-hint{display:flex;align-items:center;gap:9px;margin:8px 0 2px;padding:10px 12px;border-radius:13px;background:color-mix(in srgb,var(--accent) 8%,var(--bg3));border:1px solid color-mix(in srgb,var(--accent) 22%,transparent)}
-.target-hint .th-ico{font-size:17px}
+.target-hint .th-ico{display:flex;align-items:center;color:var(--accent);flex:0 0 auto}
 .target-hint .th-t{font-size:12px;color:var(--text2);line-height:1.4}
 .target-hint .th-t b{color:var(--accent);font-family:'JetBrains Mono',monospace}
 
@@ -1254,7 +1278,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 </div></div>
 <div class="mbg" id="m-lib"><div class="mdl" style="max-height:90vh">
 <div class="mt">ÜBUNGSBIBLIOTHEK <button class="mc" onclick="cm('m-lib')">✕</button></div>
-<input class="lib-search" id="lib-search" placeholder="🔍 Übung suchen..." oninput="filterLib(this.value)">
+<input class="lib-search" id="lib-search" placeholder="Übung suchen…" oninput="filterLib(this.value)">
 <div id="lib-content"></div>
 </div></div>
 <div class="mbg" id="m-pick"><div class="mdl">
@@ -1638,7 +1662,6 @@ function startOnboarding(){document.getElementById('login-screen').style.display
 function renderObStep(){const c=document.getElementById('ob-content');const sub=document.getElementById('ob-sub');const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');const steps=[{sub:'Schritt 1/8 — Über dich',html:`<div style="margin-bottom:12px">${obSel('ob-gen',[{k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}],'gender','male')}</div>${obBtn('WEITER →','obNext(0)')}`},{sub:'Schritt 2/8 — Geburtsdatum',html:`<div class="ig" style="margin-bottom:12px"><label>Wann bist du geboren?</label><input type="date" id="ob-birthday" style="font-size:18px;padding:14px;width:100%;font-family:'JetBrains Mono',monospace"></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px">Wird für dein Fitnessalter benötigt</div>${obBtn('WEITER →','obNext(1)')}${obBack}`},{sub:'Schritt 3/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(2)')}${obBack}`},{sub:'Schritt 4/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(3)')}${obBack}`},{sub:'Schritt 5/8 — Trainingsort',html:`<div style="margin-bottom:12px">${obSel('ob-loc',[{k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}],'location','gym')}</div>${obBtn('WEITER →','obNext(4)')}${obBack}`},{sub:'Schritt 6/8 — Trainingsfrequenz',html:`<div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label><div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===3?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>${obBtn('WEITER →','obNext(5)')}${obBack}`},{sub:'Schritt 7/8 — Trainingsziel',html:`<div style="margin-bottom:12px">${obSel('ob-focus',[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},{k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},{k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},{k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])],'focus','balanced')}</div>${obBtn('WEITER →','obNext(6)')}${obBack}`},{sub:'Schritt 8/8 — Erfahrung',html:`<div style="margin-bottom:12px">${obSel('ob-exp',[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},{k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},{k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre'}],'experience','beginner')}</div>${obBtn('🚀 PLAN ERSTELLEN','finishOnboarding()')}${obBack}`}];sub.textContent=steps[obStep].sub;c.innerHTML=steps[obStep].html}
 function obNext(step){if(step===1){obData.birthday=document.getElementById('ob-birthday').value||null;if(!obData.birthday){toast('Geburtsdatum eingeben!');return}}if(step===2){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}if(step===3){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}obStep++;renderObStep()}
 function finishOnboarding(){D.bio.height=obData.height;D.bio.gender=obData.gender;D.bio.birthday=obData.birthday;if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];D.plan={...DEFAULT_PLAN};save();if(useFirebase)startSync();setTimeout(()=>save(),1000);showApp();toast('🚀 Plan erstellt! Los geht\'s!')}
-const EMO={chest:'🫁',back:'🔙',legs:'🦵',shoulders:'🏔️',arms:'💪',core:'🎯'};
 /* --------------------------------------------------------------------------
    ICON-SET
    Vorher standen Emoji für Muskelgruppen: 🔙 (ein RICHTUNGSPFEIL) für Rücken,
@@ -1666,7 +1689,12 @@ const ICON_PATHS={
   note:'<path d="M5 4h9l5 5v11H5zM14 4v5h5M8.5 13h7M8.5 16.5h4.5"/>',
   chart:'<path d="M4 20h16M7 16v-4M12 16V6M17 16v-7"/>',
   play:'<path d="M8 5.5 18 12 8 18.5z"/>',
-  swap:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>'
+  swap:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
+  target:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/>',
+  trend:'<path d="M4 17l5-5 3.5 3.5L20 8M20 8h-4.5M20 8v4.5"/>',
+  battery:'<path d="M3.5 8.5h13v7h-13zM19 11v2M6.5 11.5v1"/>',
+  flame:'<path d="M12 3.2c2.6 3.1 4 5.4 4 7a4 4 0 0 1-8 0c0-1.6 1.4-3.9 4-7ZM12 21a5.4 5.4 0 0 0 5.4-5.4M12 21a5.4 5.4 0 0 1-5.4-5.4"/>',
+  warn:'<path d="M12 3.6 21.5 20H2.5zM12 10v4.6M12 17.4v.1"/>'
 };
 function icon(key,size){
   const d=ICON_PATHS[key]||ICON_PATHS.arms;
@@ -1675,6 +1703,20 @@ function icon(key,size){
 }
 /* Übungs-Icon nach Typ: Pre-Workout und Mobility haben Vorrang vor der
    Muskelgruppe, weil sie die Art der Arbeit beschreiben. */
+/* Die Kategorienamen der Bibliothek tragen ihr Icon als Emoji im String
+   ("🫁 Brust (Chest)"). Statt die Daten umzubauen, wird das führende Symbol
+   beim Rendern abgetrennt und durch das passende Strich-Icon ersetzt. */
+const CAT_ICONS=[[/aufwärm|pre-?workout/i,'pre'],[/brust|chest/i,'chest'],[/rücken|back/i,'back'],
+  [/bein|leg/i,'legs'],[/schulter|shoulder/i,'shoulders'],[/arm/i,'arms'],
+  [/bauch|core/i,'core'],[/eigene/i,'edit'],[/plan/i,'book'],[/mobil|dehn/i,'mob']];
+function catLabel(cat){
+  /* Führende Emoji und Variantenselektoren entfernen. */
+  return String(cat||'').replace(/^[^\p{L}\p{N}]+/u,'').trim();
+}
+function catIconKey(cat){
+  const hit=CAT_ICONS.find(([re])=>re.test(String(cat||'')));
+  return hit?hit[1]:'arms';
+}
 function exIcon(type,muscle,size){
   return icon(type==='pre'?'pre':type==='mob'?'mob':(muscle||'arms'),size);
 }
@@ -2311,6 +2353,114 @@ function moveCue(name,muscle,type){
 }
 
 /* ==========================================================================
+   2a. ÜBUNGSFOTOS
+   Die gezeichneten Figuren waren als Notlösung gedacht und bleiben es auch:
+   sie zeigen das Bewegungsmuster, aber keine echte Ausführung. Primär werden
+   deshalb Fotos aus der Free Exercise DB benutzt — 873 Übungen, je ein Bild
+   der Start- und der Endposition, veröffentlicht unter der Unlicense
+   (Public Domain, https://github.com/yuhonas/free-exercise-db).
+
+   Dreistufige Rückfallebene, jede Stufe mit eigenem Grund:
+     1. assets/ex/<id>-<n>.webp   lokal, offline, auf 560px verkleinert
+     2. raw.githubusercontent.com falls die Datei fehlt (eigene Übungen,
+                                  oder jemand hat nur die index.html kopiert)
+     3. gezeichnete Figur         wenn beides scheitert oder die Übung
+                                  in der Datenbank gar nicht vorkommt
+   ========================================================================== */
+const EXPHOTO_MAP={'bankdruecken':'Barbell_Bench_Press_-_Medium_Grip','schraegbankdruecken':'Barbell_Incline_Bench_Press_-_Medium_Grip','brustpresse maschine':'Machine_Bench_Press','kniebeugen':'Barbell_Squat','beinpresse':'Leg_Press','rumaenisches kreuzheben':'Romanian_Deadlift','kh seitheben':'Side_Lateral_Raise','latziehen breit':'Wide-Grip_Lat_Pulldown','latziehen breit obergriff':'Wide-Grip_Lat_Pulldown','maschinenrudern eng':'Seated_Cable_Rows','maschinenrudern eng neutral':'Seated_Cable_Rows','face pulls':'Face_Pull','gesichtziehen':'Face_Pull','leg extension':'Leg_Extensions','leg curl':'Seated_Leg_Curl','slantboard calf raise':'Standing_Calf_Raises','kabelcrunches':'Cable_Crunch','unterarmstuetz':'Plank','trizepsdruecken seil':'Triceps_Pushdown_-_Rope_Attachment','kh pullover':'Straight-Arm_Dumbbell_Pullover','kh curls':'Dumbbell_Bicep_Curl','atg seated good morning kh':'Seated_Good_Mornings','atg sitzender guten morgen':'Seated_Good_Mornings','atg split squat slantboard':'Split_Squat_with_Dumbbells','atg keilbrett ausfallschritt':'Split_Squat_with_Dumbbells','poliquin step slantboard':'Dumbbell_Step_Ups','ring rows':'Inverted_Row','backward walk laufband':'Walking_Treadmill','incline pigeon pose':'Intermediate_Groin_Stretch','jefferson curl kh':'Seated_Floor_Hamstring_Stretch','katana extensions kabel':'Cable_Rear_Delt_Fly'};
+const EXPHOTO_LOCAL='assets/ex/';
+const EXPHOTO_REMOTE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+/* Deutsche Übungsnamen auf die englischen Begriffe der Datenbank abbilden.
+   Deckt eigene Übungen ab, für die es keine kuratierte Zuordnung gibt. */
+const DE_EN={'bankdrücken':'bench press','schrägbank':'incline bench','kniebeuge':'squat',
+  'beinpresse':'leg press','kreuzheben':'deadlift','rumänisch':'romanian','seitheben':'lateral raise',
+  'frontheben':'front raise','latziehen':'lat pulldown','klimmzug':'pull up','rudern':'row',
+  'beinstrecker':'leg extension','beinbeuger':'leg curl','waden':'calf','bauch':'abs','crunch':'crunch',
+  'trizeps':'triceps','bizeps':'biceps','schulterdrücken':'shoulder press','nackendrücken':'shoulder press',
+  'brustpresse':'chest press','butterfly':'fly','fliegende':'fly','überzüge':'pullover','pullover':'pullover',
+  'ausfallschritt':'lunge','kh':'dumbbell','lh':'barbell','kabel':'cable','maschine':'machine',
+  'stehend':'standing','sitzend':'seated','liegend':'lying','eng':'close grip','breit':'wide grip',
+  'drücken':'press','ziehen':'pull','heben':'raise','beugen':'curl','strecken':'extension',
+  'laufband':'treadmill','rückenstrecker':'back extension','schulter':'shoulder','brust':'chest',
+  'rücken':'back','bein':'leg','arm':'arm','po':'glute','gesäß':'glute'};
+function photoKey(name){
+  return String(name||'').toLowerCase()
+    .replace(/\([^)]*\)/g,' ')            // Klammer-Übersetzungen weg
+    .replace(/[äÄ]/g,'ae').replace(/[öÖ]/g,'oe').replace(/[üÜ]/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]+/g,' ').trim();
+}
+/* Auch die englische Variante mitprüfen: "Bankdrücken (Bench Press)" trägt
+   die Antwort schon in der Klammer. */
+function photoAliases(name){
+  const raw=String(name||'');
+  const out=[photoKey(raw)];
+  const m=raw.match(/\(([^)]+)\)/);
+  if(m)out.push(photoKey(m[1]));
+  const translated=out[0].split(' ').map(w=>DE_EN[w]||w).join(' ');
+  if(translated!==out[0])out.push(translated);
+  return [...new Set(out.filter(Boolean))];
+}
+function exercisePhotoId(name){
+  for(const key of photoAliases(name)){
+    if(EXPHOTO_MAP[key])return EXPHOTO_MAP[key];
+    /* Teiltreffer: "Bankdrücken schwer" findet "bankdruecken". */
+    for(const k in EXPHOTO_MAP){
+      if(k.length>5&&(key.startsWith(k)||key.includes(' '+k)))return EXPHOTO_MAP[k];
+    }
+  }
+  return null;
+}
+/* Zwei Bilder überblenden = die Bewegung. Frame 1 (Endposition) liegt oben
+   und blendet zyklisch auf Frame 0 (Startposition) zurück. */
+function exercisePhotoHTML(name,muscle,type,opts={}){
+  const id=exercisePhotoId(name);
+  if(!id)return '';
+  const dur=(opts.speed||3);
+  const thumb=!!opts.thumb;
+  const src=(n)=>`${EXPHOTO_LOCAL}${id}-${n}.webp`;
+  const remote=(n)=>`${EXPHOTO_REMOTE}${encodeURIComponent(id)}/${n}.jpg`;
+  /* Kein inline onerror: die eigene Testinvariante verbietet
+     Event-Handler-Attribute im DOM, und eine Ausnahme für sich selbst würde
+     die Prüfung wertlos machen. Die Fallback-Kette hängt stattdessen an
+     einem delegierten Listener (siehe initPhotoFallback). */
+  const fb=(n)=>`data-fb="${attr(remote(n))}"`;
+  if(thumb){
+    return `<img class="exphoto-thumb" src="${attr(src(1))}" ${fb(1)} alt="${attr(name)}" loading="lazy" decoding="async">`;
+  }
+  const still=prefersReducedMotion()||opts.paused;
+  return `<div class="exphoto" style="--phdur:${dur}s">`+
+    `<img class="ph ph-a" src="${attr(src(0))}" ${fb(0)} alt="${attr(name)} — Startposition" loading="lazy" decoding="async">`+
+    `<img class="ph ph-b${still?' still':''}" src="${attr(src(1))}" ${fb(1)} alt="${attr(name)} — Endposition" loading="lazy" decoding="async">`+
+    `</div>`;
+}
+function exPhotoFallback(img){
+  const remote=img.dataset.fb;
+  if(img.dataset.tried||!remote){
+    /* Auch das Netz hat nichts — Foto entfernen, Zeichnung übernimmt. */
+    (img.closest('.exphoto')||img).remove();
+    return;
+  }
+  img.dataset.tried='1';
+  img.src=remote;
+}
+/* error-Events blubbern nicht, lassen sich aber in der Capture-Phase
+   abfangen. Ein Listener für alle Bilder der App, statt einer pro Bild. */
+(function initPhotoFallback(){
+  document.addEventListener('error',e=>{
+    const t=e.target;
+    if(t&&t.tagName==='IMG'&&t.dataset&&t.dataset.fb!==undefined)exPhotoFallback(t);
+  },true);
+})();
+/* Einstiegspunkt für alle Aufrufer: Foto wenn vorhanden, sonst Zeichnung. */
+function exerciseVisual(name,muscle,type,opts={}){
+  const photo=exercisePhotoHTML(name,muscle,type,opts);
+  const drawing=exerciseAnimSVG(name,muscle,type,opts);
+  if(!photo)return drawing;
+  /* Zeichnung liegt darunter und wird sichtbar, sobald das Foto scheitert. */
+  return `<span class="exvisual">${drawing}${photo}</span>`;
+}
+
+/* ==========================================================================
    3. DIAGRAMME
    svgChart zeichnet sich jetzt beim Einblenden (stroke-dashoffset),
    Fläche und Punkte staffeln nach, und jeder Punkt ist antippbar.
@@ -2451,7 +2601,7 @@ function renderPL(){
     const openCls=openPlanRows.has(ex.name)?' open':'';
     h+=`<div class="exr ${cC}${openCls}" style="animation:riseIn .34s var(--ease) both;animation-delay:${Math.min(i*30,240)}ms">`+
       `<div class="exr-h" onclick="togglePlanRow(this,'${safe}')">`+
-        `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseAnimSVG(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
+        `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="exr-b"><div class="exr-n">${esc(ex.name)}</div>`+
         `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div></div>`+
         /* Vier Buttons pro Zeile haben den Übungsnamen auf "ATG: Tibialis R…"
@@ -2461,7 +2611,7 @@ function renderPL(){
       `</div>`+
       `<div class="exr-d">${ex.note?`<div class="exr-note ${nC}">${esc(ex.note)}</div>`:''}${uNote?`<div class="exr-note" style="border-left-color:var(--purple)">📝 ${esc(uNote)}</div>`:''}`+
         `${last?`<div style="font-size:11px;color:var(--text2);margin-bottom:6px">📊 Letztes Mal: <b style="color:var(--text);font-family:JetBrains Mono,monospace">${esc(last.w)}kg × ${esc(last.r)}</b></div>`:''}`+
-        `<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn btn-s btn-g" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">▶ Ausführung</button><button class="btn btn-s btn-g" onclick="event.stopPropagation();openExNote('${safe}')">📝 Notiz</button><button class="btn btn-s btn-g" onclick="event.stopPropagation();showExHist('${safe}')">📈 Verlauf</button></div>`+
+        `<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${icon('play',14)}Ausführung</button><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();openExNote('${safe}')">${icon('note',14)}Notiz</button><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();showExHist('${safe}')">${icon('chart',14)}Verlauf</button></div>`+
       `</div></div>`;
   });
   h+=`<button class="btn" style="margin-top:10px;border-radius:12px" onclick="startWorkout('${jsStr(curTab)}');go('wo')">▶ ${esc(planDisplayName(curTab))} starten</button>`;
@@ -2528,7 +2678,7 @@ function renderExDemo(){
   const sets=getAllSets(name).filter(s=>(parseFloat(s.w)||0)>0);
   const series=sets.slice(-10).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));
   document.getElementById('exd-body').innerHTML=
-    `<div class="exdemo${paused?' paused':''}">${exerciseAnimSVG(name,muscle,type,{speed})}`+
+    `<div class="exdemo${paused?' paused':''}">${exerciseVisual(name,muscle,type,{speed,paused})}`+
     `<div class="exdemo-cap">${esc(moveChoreography(kind).label)} · ${speed}s pro Zyklus</div></div>`+
     `<div class="exdemo-speed">`+
       `<button class="${speed===2?'on':''}" onclick="setDemoSpeed(2)">Zügig 2s</button>`+
@@ -2539,9 +2689,10 @@ function renderExDemo(){
     `<div class="exdemo-tags"><span class="exdemo-tag hl">${esc(meta.label)}</span><span class="exdemo-tag">${esc(muscleName(muscle))}</span>${type!=='main'?`<span class="exdemo-tag">${type==='pre'?'Pre-Workout':'Mobility'}</span>`:''}${pr&&pr.w>0?`<span class="exdemo-tag">PR ${esc(pr.w)} kg</span>`:''}${rm?`<span class="exdemo-tag">e1RM ${esc(rm.rm)} kg</span>`:''}</div>`+
     `<div class="exdemo-cue"><b style="color:var(--text)">Zielmuskulatur:</b> ${esc(meta.primary)}</div>`+
     `<div class="exdemo-cue">${esc(meta.cue)}</div>`+
+    (exercisePhotoId(name)?`<div class="exphoto-credit">Fotos: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener">Free Exercise DB</a> · Public Domain</div>`:'')+
     (userNote?`<div class="exdemo-cue" style="border-left-color:var(--purple)">📝 ${esc(userNote)}</div>`:'')+
     (series.length>=2?`<div class="prog" style="margin-top:12px"><div class="prog-h">Dein Verlauf <span>${series.length} Sätze</span></div>${svgChart(series,{h:110,color:'var(--accent)',showGrid:true,unit:' kg'})}</div>`:'')+
-    `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-s btn-g" style="flex:1" onclick="cm('m-exdemo');openExNote('${jsStr(name)}')">📝 Notiz</button><button class="btn btn-s btn-g" style="flex:1" onclick="cm('m-exdemo');showExHist('${jsStr(name)}')">📈 Verlauf</button><button class="btn btn-s btn-g" style="flex:1" onclick="openExWebSearch()">🔎 Web</button></div>`;
+    `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');openExNote('${jsStr(name)}')">${icon('note',15)}Notiz</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');showExHist('${jsStr(name)}')">${icon('chart',15)}Verlauf</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="openExWebSearch()">${icon('book',15)}Web</button></div>`;
 }
 function pickRir(el,v){document.querySelectorAll('#log-rir-circles .rir-c').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('log-rir').value=v}
 function setLogRir(v){document.getElementById('log-rir').value=v;document.querySelectorAll('#log-rir-circles .rir-c').forEach(c=>c.classList.toggle('sel',parseInt(c.dataset.v)===v))}
@@ -3789,7 +3940,7 @@ function openLog(ei){
     tgtBox.after(demoBox);
   }
   demoBox.onclick=()=>showExDemo(ex.name,ex.muscle,ex.type);
-  demoBox.innerHTML=`<span class="exdemo-thumb">${exerciseAnimSVG(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</span><span style="font-size:11.5px;color:var(--text3)">Ausführung ansehen →</span>`;
+  demoBox.innerHTML=`<span class="exdemo-thumb">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</span><span style="font-size:11.5px;color:var(--text3)">Ausführung ansehen →</span>`;
   const weightLabel=document.querySelector('#m-log label');
   const repeatLabel=document.querySelectorAll('#m-log label')[1];
   if(weightLabel)weightLabel.textContent=cardio?'Minuten':'Gewicht (kg)';
@@ -3872,10 +4023,10 @@ function renderWo(){
   const total=D.active.exercises.length;
   const doneCount=D.active.exercises.filter(e=>e.skipped||e.logged.length>=e.sets).length;
   let h=`<div class="wo-cmdbar">`+
-    `<button class="wo-cmd accent" onclick="openWorkoutSwitch()">🔄 Tag wechseln</button>`+
-    `<button class="wo-cmd" onclick="addExerciseToWorkout()">+ Übung</button>`+
-    `<button class="wo-cmd" onclick="jumpToActiveExercise()">🎯 Zur aktiven Übung</button>`+
-    `<button class="wo-cmd" onclick="toggleWorkoutCompact()">${D.active.compact?'▤ Details':'▤ Kompakt'}</button>`+
+    `<button class="wo-cmd accent ib" onclick="openWorkoutSwitch()">${icon('swap',14)}Tag wechseln</button>`+
+    `<button class="wo-cmd ib" onclick="addExerciseToWorkout()">${icon('plus',14)}Übung</button>`+
+    `<button class="wo-cmd ib" onclick="jumpToActiveExercise()">${icon('target',14)}Zur aktiven Übung</button>`+
+    `<button class="wo-cmd ib" onclick="toggleWorkoutCompact()">${icon('more',14)}${D.active.compact?'Details':'Kompakt'}</button>`+
   `</div>`+
   `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="flex:1;height:6px;border-radius:999px;background:var(--bg4);overflow:hidden"><div style="height:100%;width:${total?Math.round(doneCount/total*100):0}%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .55s var(--ease)"></div></div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)">${doneCount}/${total}</div></div>`;
   let activeExIdx=-1;
@@ -3893,7 +4044,7 @@ function renderWo(){
     const collapsed=compact&&!isActive;
     h+=`<div id="wo-ex-${ei}" class="${isActive?'wo-active-ex':''}" style="background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:10px;${done?'border:1px solid color-mix(in srgb,var(--green) 22%,transparent);':''}${!done&&!isActive?'border:1px solid var(--bg3);':''}${skipped?'opacity:.42':''}">`+
       `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">`+
-        `<div class="exdemo-thumb" onclick="showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseAnimSVG(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
+        `<div class="exdemo-thumb" onclick="showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px">${esc(ex.name)}${skipped?' <span style="color:var(--text3);font-size:12px">(übersprungen)</span>':''}</div>`+
         `<div style="font-size:12px;color:var(--text2)">${esc(ex.sets)}×${esc(reps(ex))}${ex.rir!==null?' @ RIR '+esc(ex.rir):''}${cardio?' • Cardio':''}</div>`+
         `<div class="setdots" style="margin-top:6px">${Array.from({length:ex.sets},(_,si)=>`<span class="setdot${ex.logged[si]?' on':si===ex.logged.length&&isActive?' now':''}"></span>`).join('')}</div></div>`+
@@ -3901,7 +4052,7 @@ function renderWo(){
       `</div>`;
     if(collapsed){h+='</div>';return}
     h+=`<div class="wo-action-row" style="gap:6px;margin-bottom:8px;flex-wrap:wrap">`+
-      `<button type="button" class="wo-alt-btn" onclick="openAlternative(${ei})">↔ Alternative</button>`+
+      `<button type="button" class="wo-alt-btn" onclick="openAlternative(${ei})" class="wo-alt-btn ib">${icon('swap',14)}Alternative</button>`+
       `${ei>0?`<button type="button" class="wo-icon-btn" title="nach oben" onclick="moveActiveExercise(${ei},-1)">↑</button>`:''}`+
       `${ei<total-1?`<button type="button" class="wo-icon-btn" title="nach unten" onclick="moveActiveExercise(${ei},1)">↓</button>`:''}`+
       `<button type="button" class="wo-icon-btn" title="Sätze anpassen" onclick="adjustActiveSets(${ei},-1)">−Satz</button>`+
@@ -3992,14 +4143,14 @@ function openExerciseMenu(ei){
   document.getElementById('alt-title').textContent=ex.name;
   document.getElementById('alt-sub').textContent=`${muscleName(ex.muscle)} · ${ex.logged.length}/${ex.sets} Sätze geloggt`;
   document.getElementById('alt-list').innerHTML=
-    `<button class="alt-item" onclick="cm('m-alt');showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')"><span class="alt-ico">▶</span><span style="flex:1"><div class="alt-name">Ausführung ansehen</div><div class="alt-meta">Animierte Demo + Cues</div></span></button>`+
-    `<button class="alt-item" onclick="cm('m-alt');openAlternative(${ei})"><span class="alt-ico">↔</span><span style="flex:1"><div class="alt-name">Übung tauschen</div><div class="alt-meta">Alternative für ${esc(muscleName(ex.muscle))}</div></span></button>`+
-    `<button class="alt-item" onclick="cm('m-alt');openExNote('${safe}')"><span class="alt-ico">📝</span><span style="flex:1"><div class="alt-name">Notiz bearbeiten</div><div class="alt-meta">Wird bei jeder Session angezeigt</div></span></button>`+
-    `<button class="alt-item" onclick="cm('m-alt');showExHist('${safe}')"><span class="alt-ico">📈</span><span style="flex:1"><div class="alt-name">Verlauf</div><div class="alt-meta">Alle bisherigen Sätze</div></span></button>`+
+    `<button class="alt-item" onclick="cm('m-alt');showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')"><span class="alt-ico">${icon('play',20)}</span><span style="flex:1"><div class="alt-name">Ausführung ansehen</div><div class="alt-meta">Animierte Demo + Cues</div></span></button>`+
+    `<button class="alt-item" onclick="cm('m-alt');openAlternative(${ei})"><span class="alt-ico">${icon('swap',20)}</span><span style="flex:1"><div class="alt-name">Übung tauschen</div><div class="alt-meta">Alternative für ${esc(muscleName(ex.muscle))}</div></span></button>`+
+    `<button class="alt-item" onclick="cm('m-alt');openExNote('${safe}')"><span class="alt-ico">${icon('note',20)}</span><span style="flex:1"><div class="alt-name">Notiz bearbeiten</div><div class="alt-meta">Wird bei jeder Session angezeigt</div></span></button>`+
+    `<button class="alt-item" onclick="cm('m-alt');showExHist('${safe}')"><span class="alt-ico">${icon('chart',20)}</span><span style="flex:1"><div class="alt-name">Verlauf</div><div class="alt-meta">Alle bisherigen Sätze</div></span></button>`+
     (ex.skipped
       ?`<button class="alt-item" onclick="cm('m-alt');unskipEx(${ei})"><span class="alt-ico">↩</span><span style="flex:1"><div class="alt-name">Doch machen</div><div class="alt-meta">Übersprungen rückgängig</div></span></button>`
       :`<button class="alt-item" onclick="cm('m-alt');skipEx(${ei})"><span class="alt-ico">⏭</span><span style="flex:1"><div class="alt-name">Übung überspringen</div><div class="alt-meta">Zählt nicht in die Session</div></span></button>`)+
-    `<button class="alt-item" style="border-color:color-mix(in srgb,var(--red) 30%,transparent)" onclick="cm('m-alt');removeActiveExercise(${ei})"><span class="alt-ico">✕</span><span style="flex:1"><div class="alt-name" style="color:var(--red)">Aus dieser Session entfernen</div><div class="alt-meta">Plan bleibt unverändert</div></span></button>`;
+    `<button class="alt-item" style="border-color:color-mix(in srgb,var(--red) 30%,transparent)" onclick="cm('m-alt');removeActiveExercise(${ei})"><span class="alt-ico">${icon('trash',20)}</span><span style="flex:1"><div class="alt-name" style="color:var(--red)">Aus dieser Session entfernen</div><div class="alt-meta">Plan bleibt unverändert</div></span></button>`;
   om('m-alt');
 }
 function removeActiveExercise(ei){
@@ -4074,7 +4225,7 @@ function switchWorkoutPlan(key){
     `<button class="alt-item" onclick="applyWorkoutSwitch(null,'merge')"><span class="alt-ico">➕</span><span style="flex:1"><div class="alt-name">Anhängen</div><div class="alt-meta">Geloggte Übungen bleiben stehen, die neuen Übungen kommen unten dazu. Empfohlen.</div></span></button>`+
     `<button class="alt-item" onclick="applyWorkoutSwitch(null,'keep')"><span class="alt-ico">🧹</span><span style="flex:1"><div class="alt-name">Nur Geloggtes behalten</div><div class="alt-meta">Unangetastete Übungen des alten Tags fliegen raus, neue kommen dazu.</div></span></button>`+
     `<button class="alt-item" onclick="applyWorkoutSwitch(null,'replace')"><span class="alt-ico">🔁</span><span style="flex:1"><div class="alt-name" style="color:var(--orange)">Komplett ersetzen</div><div class="alt-meta">Alle bisher geloggten Sätze dieser Session werden verworfen.</div></span></button>`+
-    `<button class="alt-item" onclick="cm('m-woswitch')"><span class="alt-ico">✕</span><span style="flex:1"><div class="alt-name">Abbrechen</div></span></button>`;
+    `<button class="alt-item" onclick="cm('m-woswitch')"><span class="alt-ico">${icon('trash',20)}</span><span style="flex:1"><div class="alt-name">Abbrechen</div></span></button>`;
 }
 function applyWorkoutSwitch(key,strategy){
   const target=key||pendingSwitchKey;
@@ -4134,7 +4285,7 @@ function renderWarmup(ex){
   const target=last&&last.w>0?last.w:0;
   const plan=warmupPlan(target,ex.muscle,detectMovePattern(ex.name,ex.muscle,ex.type));
   if(!plan||!plan.length)return '';
-  return `<div class="warmup"><div class="warmup-h">🔥 Aufwärmrampe auf ${esc(target)} kg`+
+  return `<div class="warmup"><div class="warmup-h">${icon('flame',14)}Aufwärmrampe auf ${esc(target)} kg`+
     `<span class="warmup-note">zählt nicht ins Volumen</span></div>`+
     `<div class="warmup-steps">${plan.map(s=>`<div class="warmup-step"><b>${esc(s.kg)}</b><span>kg × ${esc(s.reps)}</span></div>`).join('')}</div></div>`;
 }
@@ -4194,23 +4345,23 @@ function nextSetTarget(ex){
     if(last&&last.w>0){
       const grain=last.w>=60?2.5:1;
       const target=Math.round((last.w*0.65)/grain)*grain;
-      return{icon:'🪫',text:`Deload: <b>${esc(target)}kg</b> statt ${esc(last.w)}kg, locker bei RIR 4. Nicht ausbelasten.`};
+      return{icon:icon('battery',17),text:`Deload: <b>${esc(target)}kg</b> statt ${esc(last.w)}kg, locker bei RIR 4. Nicht ausbelasten.`};
     }
-    return{icon:'🪫',text:'Deload-Woche: deutlich leichter, RIR 4. Technik statt Last.'};
+    return{icon:icon('battery',17),text:'Deload-Woche: deutlich leichter, RIR 4. Technik statt Last.'};
   }
   if(isCardioExercise(ex))return null;
   const setNr=ex.logged.length;
   const prevInSession=setNr>0?ex.logged[setNr-1]:null;
   const last=getLastW(ex.name);
   const ref=prevInSession&&prevInSession.w>0?prevInSession:last;
-  if(!ref||!ref.w)return{icon:'🎯',text:`Erste Referenz setzen: <b>${esc(ex.rmin)}–${esc(ex.rmax)}</b> Wdh${ex.rir!==null?` bei RIR ${esc(ex.rir)}`:''}.`};
+  if(!ref||!ref.w)return{icon:icon('target',17),text:`Erste Referenz setzen: <b>${esc(ex.rmin)}–${esc(ex.rmax)}</b> Wdh${ex.rir!==null?` bei RIR ${esc(ex.rir)}`:''}.`};
   const rmax=parseInt(ex.rmax)||12,rmin=parseInt(ex.rmin)||8;
   const w=parseFloat(ref.w)||0,r=parseInt(ref.r)||0;
   if(r>=rmax){
     const step=w>=60?2.5:w>=20?2:1;
-    return{icon:'📈',text:`Letztes Mal <b>${esc(w)}kg × ${esc(r)}</b> — obere Grenze erreicht. Jetzt <b>${esc((w+step).toFixed(1).replace(/\.0$/,''))}kg</b> bei ${esc(rmin)} Wdh.`};
+    return{icon:icon('trend',17),text:`Letztes Mal <b>${esc(w)}kg × ${esc(r)}</b> — obere Grenze erreicht. Jetzt <b>${esc((w+step).toFixed(1).replace(/\.0$/,''))}kg</b> bei ${esc(rmin)} Wdh.`};
   }
-  return{icon:'🎯',text:`Ziel: <b>${esc(w)}kg × ${esc(Math.min(rmax,r+1))}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${ref.rir!==undefined?` @ RIR ${esc(ref.rir)}`:''}.`};
+  return{icon:icon('target',17),text:`Ziel: <b>${esc(w)}kg × ${esc(Math.min(rmax,r+1))}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${ref.rir!==undefined?` @ RIR ${esc(ref.rir)}`:''}.`};
 }
 function normalizeAltItem(item,source){
   return{
@@ -4293,11 +4444,11 @@ function renderLib(q){
   allLibraryCategories().forEach((cat,ci)=>{
     const fl=q?cat.items.filter(i=>i.name.toLowerCase().includes(q)||String(i.note||'').toLowerCase().includes(q)):cat.items;
     if(!fl.length)return;
-    h+=`<div class="lib-cat${q?' open':''}" onclick="this.classList.toggle('open')"><div class="lib-cat-hdr"><span class="lib-ico">${esc(cat.cat.split(' ')[0])}</span>${esc(cat.cat.split(' ').slice(1).join(' '))}<span class="lib-cnt">${esc(fl.length)}</span><span class="lib-arr">▸</span></div><div class="lib-items">`;
+    h+=`<div class="lib-cat${q?' open':''}" onclick="this.classList.toggle('open')"><div class="lib-cat-hdr"><span class="ic-wrap" style="width:32px;height:32px;flex:0 0 32px;border-radius:10px">${icon(catIconKey(cat.cat),18)}</span>${esc(catLabel(cat.cat))}<span class="lib-cnt">${esc(fl.length)}</span><span class="lib-arr">▸</span></div><div class="lib-items">`;
     fl.forEach(item=>{
       const rp=item.rn===item.rx?item.rn:item.rn+'–'+item.rx;
       h+=`<div class="lib-item" onclick="event.stopPropagation();pickLibraryItem('${encodeURIComponent(item.name)}')">`+
-        `<span class="exdemo-thumb" style="width:38px;height:38px;flex:0 0 38px" onclick="event.stopPropagation();showExDemo('${jsStr(item.name)}','${jsStr(item.m)}','${jsStr(item.t)}')">${exerciseAnimSVG(item.name,item.m,item.t,{speed:3,thumb:true})}</span>`+
+        `<span class="exdemo-thumb" style="width:38px;height:38px;flex:0 0 38px" onclick="event.stopPropagation();showExDemo('${jsStr(item.name)}','${jsStr(item.m)}','${jsStr(item.t)}')">${exerciseVisual(item.name,item.m,item.t,{speed:3,thumb:true})}</span>`+
         `<div class="li-name">${esc(item.name)}</div><div class="li-info">${esc(item.s)}×${esc(rp)}</div></div>`;
     });
     h+=`</div></div>`;
@@ -4445,7 +4596,7 @@ function renderLibraryEditor(q){
   box.innerHTML=list.map(item=>{
     const range=item.rn===item.rx?item.rn:`${item.rn}–${item.rx}`;
     const safe=jsStr(item.name);
-    const source=esc(item.catHint?`${item.cat} · ${item.catHint}`:item.cat);
+    const source=esc(item.catHint?`${catLabel(item.cat)} · ${item.catHint}`:catLabel(item.cat));
     return `<div class="alt-item" onclick="editLibraryExercise('${safe}')" style="cursor:pointer"><span class="alt-ico">${exIcon(item.t,item.m,20)}</span><span style="flex:1"><div class="alt-name">${esc(item.name)}</div><div class="alt-meta">${source} · ${esc(item.s)}×${esc(range)} · ${esc(muscleName(item.m))} · antippen zum Bearbeiten</div>${item.note?`<div class="alt-note">${esc(item.note)}</div>`:''}</span><button class="wo-icon-btn" title="Bearbeiten" onclick="event.stopPropagation();editLibraryExercise('${safe}')">✎</button><button class="wo-icon-btn" style="color:var(--red)" title="Löschen" onclick="event.stopPropagation();deleteLibraryExercise('${safe}',${item.custom?'true':'false'})">✕</button></div>`;
   }).join('');
 }
@@ -4488,7 +4639,7 @@ function renderAlternativeButton(ex,idx){
   const range=ex.rmin===ex.rmax?ex.rmin:`${ex.rmin}–${ex.rmax}`;
   const badge=ex.sameKind?'<span class="exdemo-tag hl" style="margin-left:6px">gleiches Muster</span>':ex.sameMuscle?'<span class="exdemo-tag" style="margin-left:6px">gleiche Muskelgruppe</span>':'';
   return `<button type="button" class="alt-item" data-alt-index="${idx}">`+
-    `<span class="exdemo-thumb">${exerciseAnimSVG(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</span>`+
+    `<span class="exdemo-thumb">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</span>`+
     `<span style="flex:1"><div class="alt-name">${esc(ex.name)}</div>`+
     `<div class="alt-meta">${esc(ex.sets)}×${esc(range)}${ex.rir!==null?` · RIR ${esc(ex.rir)}`:''} · ${esc(ex.source)}${badge}</div>`+
     `${ex.note?`<div class="alt-note">${esc(ex.note)}</div>`:''}</span>`+
@@ -4505,7 +4656,7 @@ function renderAlternativeList(){
       `<button class="alt-filter${altState.scope==='muscle'?' on':''}" onclick="setAltScope('muscle')">${esc(muscleName(current.muscle))}</button>`+
       `<button class="alt-filter${altState.scope==='all'?' on':''}" onclick="setAltScope('all')">Alle</button>`+
     `</div>`+
-    `<input class="lib-search" id="alt-search" placeholder="🔍 Übung suchen…" value="${attr(altState.query)}" oninput="setAltQuery(this.value)">`+
+    `<input class="lib-search" id="alt-search" placeholder="Übung suchen…" value="${attr(altState.query)}" oninput="setAltQuery(this.value)">`+
     (altState.list.length
       ?altState.list.map(renderAlternativeButton).join('')
       :'<div class="empty">Nichts gefunden. Tippe auf „Alle“ oder such nach einem anderen Namen.</div>');
@@ -4543,8 +4694,8 @@ function swapActiveExercise(ei,altIndex){
   document.getElementById('alt-title').textContent='Tausch bestätigen';
   document.getElementById('alt-sub').innerHTML=`<b>${esc(old.name)}</b> → <b>${esc(picked.name)}</b>`;
   document.getElementById('alt-list').innerHTML=
-    (hasLogs?`<div class="target-hint" style="margin-bottom:10px"><span class="th-ico">⚠️</span><span class="th-t">${old.logged.length} Sätze sind auf „${esc(old.name)}“ geloggt. Sie werden unter dem alten Namen gespeichert und gehen nicht verloren — die alte Übung bleibt als erledigter Block in der Session.</span></div>`:'')+
-    `<button class="alt-item" onclick="commitSwap(false)"><span class="alt-ico">↔</span><span style="flex:1"><div class="alt-name">Nur diese Session</div><div class="alt-meta">Dein Trainingsplan bleibt unverändert.</div></span></button>`+
+    (hasLogs?`<div class="target-hint" style="margin-bottom:10px"><span class="th-ico" style="color:var(--orange)">${icon('warn',17)}</span><span class="th-t">${old.logged.length} Sätze sind auf „${esc(old.name)}“ geloggt. Sie werden unter dem alten Namen gespeichert und gehen nicht verloren — die alte Übung bleibt als erledigter Block in der Session.</span></div>`:'')+
+    `<button class="alt-item" onclick="commitSwap(false)"><span class="alt-ico">${icon('swap',20)}</span><span style="flex:1"><div class="alt-name">Nur diese Session</div><div class="alt-meta">Dein Trainingsplan bleibt unverändert.</div></span></button>`+
     (inPlan?`<button class="alt-item" onclick="commitSwap(true)"><span class="alt-ico">💾</span><span style="flex:1"><div class="alt-name">Session + Plan dauerhaft</div><div class="alt-meta">Ersetzt die Übung auch in „${esc(planDisplayName(D.active.planKey))}“ für alle künftigen Workouts.</div></span></button>`:'')+
     `<button class="alt-item" onclick="openAlternative(${targetIndex})"><span class="alt-ico">←</span><span style="flex:1"><div class="alt-name">Zurück zur Auswahl</div></span></button>`;
   return true;
