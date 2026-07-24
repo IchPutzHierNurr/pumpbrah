@@ -1,0 +1,973 @@
+# PUMPBRAH — Bug-Register
+
+> **Dieses Dokument ist die Gedächtnisstütze des Projekts.**
+>
+> Jeder Fehler, der jemals gefunden wurde, steht hier. Und zu jedem Eintrag
+> gibt es einen Regressionstest in [`test/check.mjs`](../test/check.mjs), der
+> bei **jedem** `/check`-Lauf erneut prüft, ob der Fehler zurückgekommen ist.
+>
+> **Die Regel, die das Ganze trägt:**
+> Ein Fix ohne Eintrag hier *und* ohne Regressionstest gilt als nicht erledigt.
+> So lernt die Codebasis dazu, statt dieselben Fehler alle sechs Monate neu zu
+> machen.
+
+---
+
+## Wie man einen neuen Bug einträgt
+
+1. **Fix schreiben.** Im Code einen kurzen Kommentar hinterlassen, *warum* die
+   Zeile so aussieht — nicht *was* sie tut.
+2. **Eintrag hier ergänzen.** Nächste freie `PB-NNN`, Vorlage siehe unten.
+   Bestehende Einträge werden **nie** gelöscht, auch wenn der Code
+   umgeschrieben wurde. Der Test bleibt.
+3. **Regressionstest in `test/check.mjs`** ins `REGRESSIONS`-Array eintragen,
+   mit derselben ID. Der Test muss **ohne den Fix fehlschlagen** — das einmal
+   gegenprüfen, sonst testet er nichts.
+4. **`node test/check.mjs` laufen lassen.** Grün? Dann ist es fertig.
+
+### Vorlage
+
+```markdown
+### PB-NNN — Kurztitel
+
+| | |
+|---|---|
+| **Schwere** | kritisch / hoch / mittel / niedrig |
+| **Klasse** | Sicherheit / Datenverlust / Falsche Berechnung / Zustand / UX |
+| **Gefunden** | Review / Fuzzer (seed=…) / Nutzerbericht |
+| **Status** | behoben / offen |
+
+**Symptom** — was der Nutzer merkt.
+**Ursache** — was im Code passiert.
+**Fix** — was geändert wurde.
+**Lektion** — die verallgemeinerbare Regel.
+**Test** — `PB-NNN` in `test/check.mjs`.
+```
+
+---
+
+## Statusübersicht
+
+| ID | Titel | Schwere | Klasse | Status |
+|---|---|---|---|---|
+| [PB-001](#pb-001) | XSS über Übungsname, Notiz und Plan-Key | kritisch | Sicherheit | ✅ |
+| [PB-002](#pb-002) | History-Dedupe löscht echte Sessions | kritisch | Datenverlust | ✅ |
+| [PB-003](#pb-003) | Session-Bearbeitung erzeugt Sync-Duplikat | hoch | Datenverlust | ✅ |
+| [PB-004](#pb-004) | Cardio zählt als Kilogramm-Tonnage | hoch | Berechnung | ✅ |
+| [PB-005](#pb-005) | Volumen-Landmarks sind selbstbezüglich | hoch | Berechnung | ✅ |
+| [PB-006](#pb-006) | Timer-Pause setzt die Pause zurück | hoch | Zustand | ✅ |
+| [PB-007](#pb-007) | Timer überlebt keinen Reload | mittel | Zustand | ✅ |
+| [PB-008](#pb-008) | Async-Guard vor statt im Callback | hoch | Zustand | ✅ |
+| [PB-009](#pb-009) | startWorkout verschluckt den Parameter | mittel | UX | ✅ |
+| [PB-010](#pb-010) | Übungstausch löscht geloggte Sätze | hoch | Datenverlust | ✅ |
+| [PB-011](#pb-011) | Skip löscht geloggte Sätze still | hoch | Datenverlust | ✅ |
+| [PB-012](#pb-012) | Umbenennen verwaist History-Referenzen | mittel | Datenverlust | ✅ |
+| [PB-013](#pb-013) | Core mit 0 Sätzen gilt als „im MAV" | mittel | Berechnung | ✅ |
+| [PB-014](#pb-014) | Erster Satz wird als PR gefeiert | niedrig | UX | ✅ |
+| [PB-015](#pb-015) | Chart-Achse mit doppelten Labels | niedrig | Darstellung | ✅ |
+| [PB-016](#pb-016) | Alternativen zeigen Namensdubletten | niedrig | UX | ✅ |
+| [PB-017](#pb-017) | Wochenring zählt andere Sätze als sein Maßstab | mittel | Berechnung | ✅ |
+| [PB-018](#pb-018) | Anführungszeichen bricht aus onclick aus | **kritisch** | Sicherheit | ✅ |
+| [PB-019](#pb-019) | Apostroph zerstört Inline-Handler | mittel | Zustand | ✅ |
+| [PB-020](#pb-020) | Veralteter logTgt-Index stürzt ab | mittel | Zustand | ✅ |
+| [PB-024](#pb-024) | Volumen-Balken ohne sichtbare Füllung | mittel | Darstellung | ✅ |
+| [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
+| [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
+| [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
+
+**21 von 21 im Frontend behebbaren Fehlern sind behoben.**
+Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
+
+---
+
+## Behobene Fehler
+
+### PB-001
+
+**XSS über Übungsname, Notiz und Plan-Key**
+
+| | |
+|---|---|
+| **Schwere** | kritisch |
+| **Klasse** | Sicherheit |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Ein Übungsname wie `<img src=x onerror="...">` führt beim Rendern
+Code aus. Ein Name mit `<` oder `"` zerschießt außerdem das Layout.
+
+**Ursache.** Alle Renderer bauten HTML per String-Konkatenation und
+interpolierten Nutzerdaten ohne Escaping. Die einzige „Absicherung" war
+`.replace(/'/g,"\\'")` — Escaping für ein einzelnes Zeichen in einem
+einzigen Kontext.
+
+Verschärfend: Die Daten kommen über `onSnapshot` aus Firestore. In Kombination
+mit [PB-021](#pb-021) (keine Auth) kann **jeder** Fremde diese Nutzlast in
+dein Dokument schreiben. Der Impact ist dann nicht „ein Alert-Fenster", sondern
+Auslesen von `localStorage.pb_data`: komplette Trainingshistorie, Geburtsdatum,
+Gewichtsverlauf, EGYM-Körperanalyse und das Profilfoto.
+
+**Fix.** Drei kontextspezifische Escaper und deren konsequenter Einsatz an
+allen 14 Renderstellen:
+
+```js
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>HTML_ENTITIES[c])}
+function attr(s){return esc(s)}
+function jsStr(s){ /* JS-escapen, dann HTML-escapen — siehe PB-018 */ }
+```
+
+**Lektion.** Escaping ist kontextabhängig. „Ich escape Anführungszeichen"
+beantwortet nicht die Frage „in welchem Kontext?". Und: Sobald ein Netzwerk-Sync
+im Spiel ist, ist „nur ich benutze die App" keine Sicherheitsgrenze mehr.
+
+**Test.** `PB-001` — prüft strukturell, dass aus der Nutzlast keine Elemente
+oder Handler entstanden sind, und dass der Name als Text trotzdem lesbar bleibt.
+
+---
+
+### PB-002
+
+**History-Dedupe löscht echte Sessions**
+
+| | |
+|---|---|
+| **Schwere** | kritisch |
+| **Klasse** | Datenverlust |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Zwei inhaltlich identische Trainings am selben Tag — eines
+verschwindet. Ohne Meldung, ohne Rückfrage.
+
+**Ursache.** `histSessionKey()` bildete die Identität einer Session als Hash
+über ihren gesamten Inhalt. `normalizeData()` — läuft bei **jedem** `save()` —
+filterte alles mit doppeltem Schlüssel heraus.
+
+**Fix.** Stabile ID beim Anlegen, Inhalts-Hash nur noch als Fallback für
+Altdaten:
+
+```js
+function histSessionKey(s){
+  if(s.id) return 'id|'+s.id;
+  ... /* Legacy-Hash */
+}
+```
+
+Wichtig: Altdaten bekommen **keine** ID nachträglich verpasst. Jedes Gerät
+würfelte sonst eine andere und legte dieselbe Session doppelt an.
+
+**Lektion.** Identität ist ein eigenes Feld, kein Nebenprodukt des Inhalts.
+Bei jeder Deduplizierung fragen: *Was passiert, wenn zwei Einträge zu Recht
+gleich aussehen?*
+
+**Test.** `PB-002` — drei identische Sessions gehen rein, drei kommen raus.
+
+---
+
+### PB-003
+
+**Session-Bearbeitung erzeugt Sync-Duplikat**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Datenverlust |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Ein Satz auf Gerät A korrigiert → auf Gerät B erscheint die Session
+zweimal. Oder umgekehrt: die Korrektur wird beim nächsten Sync überschrieben.
+
+**Ursache.** Zwei Ursachen greifen ineinander. Der inhaltsbasierte Schlüssel
+(siehe PB-002) änderte sich durch die Bearbeitung → Merge sah eine neue Session.
+Und die Merge-Funktion lautete `(local)=>local` — lokal gewann immer, also
+konnte eine Fremdkorrektur nie ankommen.
+
+**Fix.** Stabile ID plus Konfliktauflösung über `updatedAt`, mit
+verlustvermeidendem Tiebreak:
+
+```js
+function mergeHistorySession(local,remote){
+  const lt=Number(local?.updatedAt)||0, rt=Number(remote?.updatedAt)||0;
+  if(rt>lt)return remote;
+  if(lt>rt)return local;
+  return (remote?.sets||[]).length>(local?.sets||[]).length?remote:local;
+}
+```
+
+**Lektion.** „Lokal gewinnt immer" ist keine Konfliktauflösung, sondern das
+Verwerfen der Gegenseite. Bei Gleichstand im Zweifel die Fassung mit mehr Daten.
+
+**Test.** `PB-003` — bearbeitete Fassung mit höherem `updatedAt` gewinnt,
+es bleibt bei einer Session.
+
+---
+
+### PB-004
+
+**Cardio zählt als Kilogramm-Tonnage**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Falsche Berechnung |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** 30 Minuten StairMaster auf Stufe 12 erschienen als 360 kg
+Volumen. „Max Gewicht" konnte die Widerstandsstufe eines Ergometers sein.
+
+**Ursache.** Cardio-Sätze speichern Minuten in `r` und die Stufe in `w`, damit
+dasselbe Eingabeformular für beides funktioniert. Jede Statistik rechnete
+danach unverändert `w * r`.
+
+**Fix.** Eine Funktion, die die beiden Welten trennt, plus konsequenter Einsatz
+an *allen* Rechenstellen (`sessionVolume`, `getWeeklyVolume`, `renderDash`,
+`workoutCompareBlock`, `renderAna`, `renderHist`, `endWorkout`):
+
+```js
+function isCardioSet(set){
+  if(set.mode==='cardio')return true;
+  return isCardioExercise({name:set.ex,type:set.type});  // Legacy-Fallback
+}
+function setVolume(set){return isCardioSet(set)?0:(parseFloat(set.w)||0)*(parseInt(set.r)||0)}
+```
+
+Der Legacy-Fallback ist entscheidend: Sätze aus der Zeit vor `mode:'cardio'`
+haben das Feld nicht und würden ihr Phantomvolumen sonst für immer behalten.
+
+**Lektion.** Wenn du zwei Bedeutungen in ein Feld packst, musst du **jede**
+Leseposition anfassen. Such nach dem Feldnamen im ganzen Projekt, *bevor* du
+den Hack einbaust.
+
+**Test.** `PB-004` — gemischte Session, inklusive Altdatensatz ohne `mode`.
+
+---
+
+### PB-005
+
+**Volumen-Landmarks sind selbstbezüglich**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Falsche Berechnung |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Die Wochenvolumen-Ampel stand fast immer auf „IM MAV" — bei
+4 Sätzen wie bei 90.
+
+**Ursache.** Die Bewertungsgrenzen wurden aus dem bewerteten Wert berechnet:
+
+```js
+const mev = Math.max(24, Math.round(totalSets * .66) || 24);
+const mav = Math.max(mev+12, Math.round(totalSets * 1.24) || 48);
+```
+
+Der Maßstab bewegte sich mit dem Gemessenen mit. Die Anzeige sah nach
+Trainingswissenschaft aus und war ein Zufallsgenerator.
+
+**Fix.** Feste Richtwerte pro Muskelgruppe, summiert über die im Plan
+tatsächlich trainierten Gruppen (`MUSCLE_LANDMARKS` + `weeklyLandmarks()`).
+
+**Lektion.** Eine Kennzahl, deren Referenzwert aus ihr selbst abgeleitet ist,
+misst nichts. Frag bei jedem Schwellwert: *Woher kommt die Zahl?* — „Aus den
+Daten selbst" ist bei einer Bewertung immer die falsche Antwort. Und: **Falsche
+Zahlen sind schlimmer als Abstürze. Ein Absturz wird gemeldet, eine falsche
+Zahl wird geglaubt.**
+
+**Test.** `PB-005` — Landmarks bleiben stabil, wenn sich Daten ändern, und
+sind streng aufsteigend.
+
+---
+
+### PB-006
+
+**Timer-Pause setzt die Pause zurück**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Zustand |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Pause drücken, weiter drücken → der Timer springt auf die volle
+Zeit zurück. Aus „noch 20 Sekunden" werden wieder 150.
+
+**Ursache.** Die Restzeit wurde aus `timerTgt - (now - timerStartedAt)`
+berechnet. Pausieren stoppte nur den Interval; beim Fortsetzen wurde
+`timerStartedAt` neu gesetzt, `timerTgt` blieb auf dem vollen Wert. Der Zustand
+„pausiert" existierte im Datenmodell schlicht nicht.
+
+**Fix.** `timerPausedRemaining` als expliziter dritter Zustand.
+
+**Lektion.** Wenn ein Feature einen Zustand mehr hat, als deine Variablen
+darstellen können, ist der fehlende Zustand ein Bug — kein Sonderfall. Timer
+haben drei Zustände: läuft, pausiert, aus.
+
+**Test.** `PB-006` — Restzeit vor Pause == Restzeit nach Fortsetzen (±2 s).
+
+---
+
+### PB-007
+
+**Timer überlebt keinen Reload**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Zustand |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** App im Hintergrund, zurückgewechselt → Pausentimer weg.
+Auf iOS der Normalfall, nicht die Ausnahme.
+
+**Ursache.** `timerStartedAt` und `timerTgt` waren reine Modulvariablen.
+
+**Fix.** `persistTimer()` / `restoreTimer()` über `localStorage`, inklusive
+Prüfung, ob die Pause zwischenzeitlich abgelaufen ist. Dazu `visibilitychange`,
+das die Anzeige nach Rückkehr aus dem Hintergrund einmal hart nachzieht — der
+Interval wird von Mobilbrowsern gedrosselt.
+
+**Nebenbefund im selben Zug behoben:** Der Pausen-Piepton war eine WAV-Datei
+mit `data`-Chunk-Länge 0 — technisch gültig, akustisch nichts. Ersetzt durch
+zwei WebAudio-Sinustöne mit Hüllkurve, ohne Datei und ohne Netzwerk.
+
+**Lektion.** Alles, was länger als eine Sekunde dauert, muss einen Reload
+überleben. Und: `catch(()=>{})` ist Löschen von Information — hier hat es die
+Autoplay-Fehlermeldung verschluckt, die den stummen Ton erklärt hätte.
+
+**Test.** `PB-007` — Timer wird persistiert, nach Zustandsverlust rekonstruiert.
+
+---
+
+### PB-008
+
+**Async-Guard vor statt im Callback**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Zustand |
+| **Gefunden** | Browsertest (echter Absturz) |
+| **Status** | ✅ behoben |
+
+**Symptom.** `TypeError: Cannot read properties of null (reading 'exercises')`
+beim Beenden eines Workouts kurz nach dem Loggen eines Satzes.
+
+**Ursache.** Zwei Stellen mit identischer Struktur:
+
+```js
+function autoScrollNext(currentIdx){
+  if(!D.active) return;                      // ← Prüfung zum Aufrufzeitpunkt
+  setTimeout(() => {
+    for(let i=...; i<D.active.exercises.length; i++){   // ← Zugriff 300 ms später
+```
+
+Im Fenster dazwischen setzt `endWorkout()` `D.active = null`.
+
+**Fix.** Guard in den Callback verschoben, an beiden Stellen.
+
+**Lektion.** Ein Guard schützt den Code, der **synchron** auf ihn folgt. Alles
+hinter `setTimeout` / `await` / `.then` / Event-Handler ist neuer Code mit neuen
+Voraussetzungen. Und: Wenn du dieselbe Fehlerstruktur zweimal findest, such
+nach der dritten — es ist ein Muster, keine Panne.
+
+**Test.** `PB-008` — Race wird gezielt provoziert, keine Ausnahme erwartet.
+
+---
+
+### PB-009
+
+**startWorkout verschluckt den Parameter**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | UX |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Läuft schon ein Workout und man tippt auf einen anderen
+Trainingstag, passiert nichts. Der Button reagiert scheinbar nicht.
+
+**Ursache.** `if(D.active){ go('wo'); renderWo(); return; }` — der Parameter
+`pk` wurde ersatzlos verworfen.
+
+**Fix.** Bei abweichendem Tag geht es in `switchWorkoutPlan()`. Sind noch keine
+Sätze geloggt, wird direkt gewechselt; sonst öffnet sich der Strategiedialog.
+
+*(Zwischenstand, den der eigene Test aufgedeckt hat: die erste Fassung rief
+`openWorkoutSwitch()` immer vorab auf, wodurch der Dialog bei leerer Session
+sichtbar auf- und sofort wieder zuging. `switchWorkoutPlan()` öffnet ihn
+jetzt selbst, wenn er gebraucht wird.)*
+
+**Lektion.** Eine Aktion darf drei Dinge tun: ausführen, ablehnen mit
+Begründung, oder nachfragen. Sie darf **nie still nichts tun.**
+
+**Test.** `PB-009` — ohne geloggte Sätze direkter Wechsel, mit geloggten
+Sätzen Rückfrage.
+
+---
+
+### PB-010
+
+**Übungstausch löscht geloggte Sätze**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Datenverlust |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Zwei Sätze Bankdrücken gemacht, dann auf die Brustpresse
+ausgewichen — die zwei Sätze sind weg.
+
+**Ursache.** `swapActiveExercise` ersetzte das Übungsobjekt komplett durch
+eines mit `logged: []`.
+
+**Fix.** Hat die alte Übung geloggte Sätze, wird sie auf die geloggte Satzzahl
+gekürzt und bleibt als erledigter Block stehen; die neue Übung wird **darunter
+eingefügt**. Zusätzlich: optionale dauerhafte Übernahme in den Trainingsplan.
+
+**Lektion.** Das Training hat stattgefunden — also gehört es in die Historie.
+Ein Ersetzen im UI darf keine Vergangenheit löschen.
+
+**Test.** `PB-010` — zwei geloggte Sätze überleben den Tausch.
+
+---
+
+### PB-011
+
+**Skip löscht geloggte Sätze still**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Datenverlust |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** „SKIP ⏭" auf einer teilweise absolvierten Übung löschte alle
+bereits geloggten Sätze — ohne Rückfrage.
+
+**Ursache.** `skipEx` setzte `skipped = true` **und** `logged = []`.
+
+**Fix.** Sätze bleiben erhalten. Bei vorhandenen Sätzen gibt es eine bezifferte
+Rückfrage, und der Skip lässt sich per `unskipEx()` rückgängig machen.
+
+**Lektion.** Vor jeder Löschung: Ist das rekonstruierbar? Nein → Rückfrage.
+Und die Rückfrage muss beziffern, was verloren geht („3 geloggte Sätze"),
+nicht nur „Sicher?".
+
+**Test.** `PB-011` — Sätze überleben den Skip, Rücknahme funktioniert.
+
+---
+
+### PB-012
+
+**Umbenennen verwaist History-Referenzen**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Datenverlust |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Nach dem Umbenennen eines Trainingstags zeigte die Historie
+Sessions eines Plans, den es nicht mehr gibt. Eine laufende Session verlor
+ihren Bezug.
+
+**Ursache.** Die alte Fassung migrierte `D.history[].planKey` bereits, ließ
+aber `D.active.planKey` unberücksichtigt — und die Reihenfolge der Tage ging
+beim Neuaufbau des Objekts verloren.
+
+**Fix.** `savePlanDay()` baut `D.plan` reihenfolgeerhaltend neu auf und
+migriert History **und** aktive Session.
+
+**Lektion.** Beim Umbenennen eines Schlüssels: alle Orte suchen, die ihn als
+Fremdschlüssel halten. In JavaScript gehört die Schlüsselreihenfolge eines
+Objekts zum Zustand — Neuaufbau muss sie bewusst erhalten.
+
+**Test.** `PB-012` — Plan, History und aktive Session zeigen nach dem
+Umbenennen alle auf den neuen Schlüssel.
+
+---
+
+### PB-013
+
+**Core mit 0 Sätzen gilt als „im MAV"**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falsche Berechnung |
+| **Gefunden** | Screenshot-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Die Muskelvolumen-Karte zeigte „Core · im MAV · 0/8" — grünes
+Licht für null Sätze.
+
+**Ursache.** `renderMuscleVolumeCard()` hatte eine **zweite, abweichende**
+Landmark-Tabelle mit `core: {mev: 0, ...}`. Die Einordnung lautet
+`sets < mev ? 'unter MEV' : ...` — und `0 < 0` ist falsch.
+
+**Fix.** Die lokale Tabelle gelöscht, `MUSCLE_LANDMARKS` als einzige Quelle.
+
+**Lektion.** Zwei Tabellen mit denselben Daten driften garantiert
+auseinander. Und ein Schwellwert von 0 in einer `<`-Prüfung ist immer
+verdächtig.
+
+**Test.** `PB-013` — alle Landmarks streng aufsteigend, `mev > 0`.
+
+---
+
+### PB-014
+
+**Erster Satz wird als PR gefeiert**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | UX |
+| **Gefunden** | Code-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Der allererste Satz einer neuen Übung löste „🏆 NEUER PR!" aus.
+
+**Ursache.** `checkPR()` startete mit `if(!prev.length) return true`.
+
+**Fix.** `confirmLog()` prüft zusätzlich, ob überhaupt Historie existiert.
+
+**Lektion.** Eine Auszeichnung, die jeder bekommt, ist keine. Positives
+Feedback verliert seine Wirkung, wenn es nichts bedeutet.
+
+**Test.** `PB-014` — unbekannte Übung hat keine Vorgeschichte.
+
+---
+
+### PB-015
+
+**Chart-Achse mit doppelten Labels**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Darstellung |
+| **Gefunden** | Screenshot-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Bei kleinen Wertespannen zeigte die Y-Achse `53, 52, 51, 51, 50`.
+
+**Ursache.** `Math.round(val)` unabhängig von der Spanne.
+
+**Fix.** Nachkommastellen richten sich nach der Spanne: 2 bei < 2, 1 bei < 10,
+sonst 0.
+
+**Lektion.** Formatierung ist Teil der Korrektheit. Eine Achse mit doppelten
+Labels sieht aus wie ein Renderfehler und untergräbt das Vertrauen in alle
+anderen Zahlen.
+
+**Test.** `PB-015` — alle Achsenlabels sind eindeutig.
+
+---
+
+### PB-016
+
+**Alternativen zeigen Namensdubletten**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | UX |
+| **Gefunden** | Screenshot-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Beim Tausch von „Bankdrücken" erschien „Bankdrücken (Bench Press)"
+als Alternative — dieselbe Übung.
+
+**Ursache.** Deduplizierung über `libKey()` (exakter Kleinbuchstabenvergleich).
+Die Bibliothek führt viele Übungen doppelt, deutsch und mit englischer Klammer.
+
+**Fix.** `baseNameKey()` entfernt Klammerinhalte und Sonderzeichen. Bei zwei
+Varianten gewinnt die kürzere.
+
+**Lektion.** Wenn Anzeigename und Identität auseinanderfallen, brauchst du
+einen normalisierten Schlüssel neben dem Anzeigenamen.
+
+**Test.** `PB-016` — keine Dubletten und die Ausgangsübung nicht in der Liste.
+
+---
+
+### PB-017
+
+**Wochenring zählt andere Sätze als sein Maßstab**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falsche Berechnung |
+| **Gefunden** | Screenshot-Review |
+| **Status** | ✅ behoben |
+
+**Symptom.** Der Ring zeigte deutlich mehr Sätze an, als die Muskelvolumen-Karte
+in Summe auswies.
+
+**Ursache.** Der Ring zählte `s.sets.length` — also **alle** Sätze inklusive
+Mobility, Pre-Workout und Cardio — maß das aber gegen Landmarks, die für
+Krafttraining gelten.
+
+**Fix.** Der Ring zählt nur Arbeitssätze von Hauptübungen. Dieselbe
+Einschränkung in `getWeeklyVolume()`.
+
+**Lektion.** Zähler und Maßstab müssen dieselbe Menge beschreiben. Wenn eine
+Zahl gegen eine Referenz gemessen wird, prüf beide Definitionen — nicht nur eine.
+
+**Test.** `PB-017` — Ringzählung schließt Cardio nachweislich aus.
+
+---
+
+### PB-018
+
+**Anführungszeichen bricht aus onclick aus**
+
+| | |
+|---|---|
+| **Schwere** | **kritisch** |
+| **Klasse** | Sicherheit |
+| **Gefunden** | **Fuzzer** (Invariante „Keine injizierten Fremdelemente") |
+| **Status** | ✅ behoben |
+
+> Der lehrreichste Eintrag im ganzen Register: Diese Lücke entstand **beim
+> Beheben von PB-001** und wurde vom eigenen Fuzzer gefunden — genau die
+> Fehlerklasse, die im Review unter „Escaping ist kontextabhängig" beschrieben
+> steht.
+
+**Symptom.** Ein Übungsname mit `"` erzeugte echte DOM-Elemente. Nutzlast:
+
+```
+"><svg onload="window.__pwn=1"><img src=x onerror="window.__pwn=1">
+```
+
+**Ursache.** `jsStr()` escapte nur den JavaScript-Kontext:
+
+```js
+function jsStr(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+```
+
+Das JS-String-Literal steht aber **innerhalb eines HTML-Attributs**:
+
+```html
+<div onclick="showExDemo('HIER')">
+```
+
+Der Browser HTML-dekodiert das Attribut zuerst, danach parst die JS-Engine.
+Zwei Kontexte ineinander — und `"` gehört zum äußeren. Das doppelte
+Anführungszeichen beendete `onclick="`, alles danach wurde als Markup geparst.
+Der escapte Übungsname im DOM sah so aus:
+
+```html
+onclick="togglePlanRow(this,'&lt;img src=x onerror=" window.__pwn="1&quot;">"&gt;<svg onload="window.__pwn=1">')"
+                                                  ↑ Attribut endet hier
+```
+
+**Fix.** In der Reihenfolge escapen, in der dekodiert wird — erst JS, dann HTML:
+
+```js
+function jsStr(s){
+  const jsEscaped=String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r?\n/g,'\\n');
+  return esc(jsEscaped);
+}
+```
+
+Danach wird `'` zu `\&#39;` → der Browser dekodiert zu `\'` → gültiges
+JS-Escape. Und `"` wird zu `&quot;` → dekodiert zu `"` innerhalb eines
+einfach gequoteten JS-Strings → harmlos.
+
+Der Fuzzer deckte im selben Zug elf weitere unescapte Interpolationen auf
+(Timer-Leiste, Gewichtseinträge, EGYM-Detail, Session-Vergleich,
+Progressionsliste, Bibliotheks-Editor, Muskelvolumen-Karte, Avatar-URL).
+
+**Lektion.** Bei verschachtelten Kontexten wird **von innen nach außen**
+escaped — in umgekehrter Reihenfolge zur Dekodierung. Und: Ein Fix ist erst
+verifiziert, wenn ein Test ihn angreift. Manuelle Prüfung hätte hier nichts
+gefunden, weil die Nutzlast nach der ersten Runde *aussah* wie escaped.
+
+**Test.** `PB-018` — Nutzlast erzeugt keine Elemente, Name bleibt lesbar,
+Handler bleibt funktionsfähig.
+
+---
+
+### PB-019
+
+**Apostroph zerstört Inline-Handler**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Zustand |
+| **Gefunden** | Regressionstest zu PB-018 |
+| **Status** | ✅ behoben |
+
+**Symptom.** Eine Übung namens `O'Brien's Press` machte ihre Buttons
+funktionslos — der Inline-Handler war syntaktisch kaputt.
+
+**Ursache.** Dieselbe Wurzel wie PB-018 aus der Gegenrichtung: Die Kombination
+aus JS- und HTML-Escaping muss in **beide** Richtungen aufgehen.
+
+**Fix.** Mit `jsStr()` aus PB-018 abgedeckt. Als eigener Test geführt, weil er
+eine andere Eigenschaft prüft: nicht „kein Angriff", sondern „Funktion bleibt
+erhalten". Ein Escaping, das alles kaputtmacht, wäre sicher — und nutzlos.
+
+**Lektion.** Ein Sicherheitstest prüft, dass Böses nicht durchkommt. Es braucht
+den Zwillingstest, dass Gutes noch funktioniert. Sonst „behebt" man Lücken
+durch Zerstören der Funktion.
+
+**Test.** `PB-019` — Name mit Apostroph, Backslash und Anführungszeichen bleibt
+lesbar und der Handler wirkt.
+
+---
+
+### PB-020
+
+**Veralteter logTgt-Index stürzt ab**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Zustand |
+| **Gefunden** | **Fuzzer** (Iteration 102, seed=919831079) |
+| **Status** | ✅ behoben |
+
+**Symptom.** `TypeError: Cannot read properties of undefined (reading 'logged')`
+in `redoLast()`. Reproduzierbar: Log-Dialog öffnen, Trainingstag wechseln oder
+eine Übung entfernen, dann „Letzten Satz wiederholen" drücken.
+
+**Ursache.** `logTgt = {exIdx: ei}` speichert einen **Index** in
+`D.active.exercises`. Alles, was das Array verkürzt —
+`removeActiveExercise()`, `applyWorkoutSwitch()`, `commitSwap()` — macht den
+Index ungültig, während der Dialog offen ist.
+
+**Fix.** Ein Accessor, der die Gültigkeit für alle Nutzer von `logTgt` prüft:
+
+```js
+function logTargetExercise(){
+  if(!logTgt||!D.active)return null;
+  const ex=activeExercisesSafe()[logTgt.exIdx];
+  if(!ex||!Array.isArray(ex.logged))return null;
+  return ex;
+}
+```
+
+`redoLast()` und `confirmLog()` schließen bei ungültigem Ziel den Dialog mit
+einer Erklärung, statt abzustürzen.
+
+**Lektion.** Ein Index in ein veränderliches Array ist eine schwache Referenz
+mit Verfallsdatum. Entweder eine stabile ID speichern oder bei jedem Zugriff
+neu validieren. Dieselbe Fehlerklasse wie PB-008, nur über Zeit statt über
+Asynchronität.
+
+**Test.** `PB-020` — Index veralten lassen, `redoLast()` und `confirmLog()`
+dürfen nicht werfen.
+
+---
+
+### PB-024
+
+**Volumen-Balken ohne sichtbare Füllung**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Darstellung |
+| **Gefunden** | **Screenshot-Sichtprüfung** (beim Verifizieren von PB-013) |
+| **Status** | ✅ behoben |
+
+**Symptom.** Die Muskelvolumen-Karte auf dem Dashboard zeigte nur leere graue
+Balken. Die Zahlen daneben („6/8", „unter MEV") stimmten — die farbige Füllung
+fehlte komplett.
+
+**Ursache.** Beim Ergänzen der Sheen-Animation kam eine zweite Regel für
+dieselbe Klasse ins Stylesheet:
+
+```css
+/* Basisregel, weiter oben */
+.mv-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;transition:width .7s}
+
+/* neue Regel, weiter unten — gewinnt bei gleicher Spezifität */
+.mv-fill{position:relative;overflow:hidden}   /* ✗ */
+```
+
+`position:relative` nimmt dem Element seine `top`/`bottom`-Verankerung. Ohne
+explizite Höhe kollabiert es auf 0 Pixel. Die Breite (`width: 27%`) blieb
+korrekt gesetzt — das Element war nur unsichtbar dünn.
+
+**Fix.** Nur die tatsächlich benötigte Eigenschaft ergänzen:
+
+```css
+.mv-fill{overflow:hidden}
+```
+
+**Lektion.** Bei gleicher Spezifität gewinnt die spätere Regel — auch für
+Eigenschaften, die man gar nicht ändern wollte. Wenn du eine bestehende Klasse
+erweiterst, schreib **nur** die neuen Eigenschaften hin, nie einen kompletten
+Block „zur Sicherheit".
+
+Und die zweite, wichtigere Lektion: **Diesen Fehler hätte kein Verhaltenstest
+gefunden.** Die Karte rendert, die Zahlen stimmen, kein Assert schlägt an. Er
+fiel beim Ansehen eines Screenshots auf. Deshalb steht in `/check` Phase 2.5
+ausdrücklich „Screenshots ansehen, nicht nur erzeugen" — und deshalb prüft der
+Regressionstest jetzt die **berechnete Geometrie** (`getComputedStyle`,
+`getBoundingClientRect`), nicht die Existenz des Elements.
+
+**Test.** `PB-024` — alle `.mv-fill` sind `position:absolute` und haben
+Höhe > 0. Gegen den nicht-gefixten Zustand verifiziert rot.
+
+---
+
+## Offene Punkte (Backend-Änderung nötig)
+
+Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
+Firebase-Konfiguration und stehen hier, damit sie nicht vergessen werden.
+
+### PB-021
+
+**Firestore ohne Authentifizierung**
+
+| | |
+|---|---|
+| **Schwere** | **kritisch** |
+| **Klasse** | Sicherheit |
+| **Status** | ⚠️ offen — braucht Firebase-Konfiguration |
+
+**Symptom.** Der „Sync-Code" ist der kleingeschriebene Vorname. Wer `chris`
+errät, liest und überschreibt alle Daten unter `pumpbrah/chris`.
+
+**Ursache.** Kein Passwort, kein Token, keine Firebase Authentication. Der Code
+funktioniert nur unter Security-Rules, die im Kern `allow read, write: if true`
+lauten. Der öffentliche API-Key ist dabei **nicht** das Problem —
+Web-API-Keys identifizieren das Projekt, sie autorisieren nicht. Das Problem ist
+das Fehlen von Regeln dahinter.
+
+**Verstärkt** [PB-001](#pb-001)/[PB-018](#pb-018): Fremde können Nutzlasten in
+dein Dokument schreiben, die dein Browser rendert.
+
+**Lösungsweg.**
+
+```js
+// Client: anonyme Auth, Dokument-ID = uid statt Vorname
+firebase.auth().signInAnonymously();
+```
+
+```javascript
+// firestore.rules
+match /pumpbrah/{uid} {
+  allow read, write: if request.auth != null && request.auth.uid == uid;
+}
+```
+
+Preis: Der „gleicher Name = gleiche Daten"-Trick über Geräte hinweg entfällt
+und braucht einen echten Kopplungsmechanismus (E-Mail-Link, Custom Token oder
+einen einmalig generierten Gerätecode).
+
+**Lektion.** Ein Identifikator ist kein Berechtigungsnachweis. Und
+clientseitige Sicherheit gibt es nicht — die Regeln müssen dort liegen, wo der
+Angreifer sie nicht editieren kann.
+
+---
+
+### PB-022
+
+**Read-Modify-Write ohne Transaktion**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Nebenläufigkeit |
+| **Status** | ⚠️ offen |
+
+**Symptom.** Schreiben zwei Geräte gleichzeitig, kann ein Schreibvorgang
+verloren gehen.
+
+**Ursache.** `queueCloudSave()` macht `get()` → merge → `set()`. Zwischen den
+beiden Netzwerkoperationen liegt ein Fenster. Die `cloudWriteQueue`
+serialisiert nur innerhalb eines Tabs.
+
+**Lösungsweg.** `db.runTransaction()` — macht Lesen und Schreiben atomar und
+wiederholt bei Konflikt automatisch.
+
+**Praktisches Risiko:** gering, weil beide Seiten ohnehin mergen und das
+Fenster klein ist. Aber „gering" ist nicht „null".
+
+**Lektion.** Read-Modify-Write über Netzwerk ist immer eine Race Condition.
+Transaktionen sind keine Optimierung, sondern die Korrektheitsbedingung.
+
+---
+
+### PB-023
+
+**1-MB-Dokumentgrenze bei Firestore**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Skalierung |
+| **Status** | ⚠️ offen |
+
+**Symptom.** Ab einer bestimmten Historiengröße schlägt jeder Sync fehl —
+sichtbar nur als generisches „⚠️ Sync fehlgeschlagen".
+
+**Ursache.** Die gesamte App liegt in **einem** Firestore-Dokument. Limit: 1 MB.
+Bei ~1 KB pro Session ist bei rund 1.000 Sessions Schluss — etwa vier Jahre bei
+fünf Trainings pro Woche.
+
+**Lösungsweg.** Subcollection `pumpbrah/{uid}/sessions/{sessionId}`, ein
+Dokument pro Session. Senkt gleichzeitig das Schreibvolumen drastisch: statt
+der kompletten Historie bei jedem geloggten Satz nur noch das eine geänderte
+Dokument.
+
+**Sofortmaßnahme bis dahin:** Die Fehlerbehandlung sollte
+`resource-exhausted` / `invalid-argument` erkennen und eine verständliche
+Meldung samt Export-Empfehlung zeigen, statt „Sync fehlgeschlagen".
+
+**Lektion.** Jeder unbegrenzt wachsende Speicher trifft irgendwann eine harte
+Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
+
+---
+
+## Muster über alle Fehler hinweg
+
+Wenn man die 20 behobenen Fehler nach Ursache sortiert, bleiben **fünf
+wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
+gestellt werden sollten:
+
+| # | Muster | Betroffen | Frage beim nächsten Mal |
+|---|---|---|---|
+| 1 | **Kontextverwechslung beim Escaping** | PB-001, PB-018, PB-019 | In welchem Kontext landet dieser String — und in wie vielen gleichzeitig? |
+| 2 | **Identität aus Inhalt abgeleitet** | PB-002, PB-003, PB-016, PB-020 | Was ist die stabile Identität dieses Objekts, unabhängig von seinem Inhalt und seiner Position? |
+| 3 | **Zwei Quellen für dieselbe Wahrheit** | PB-005, PB-013, PB-017, PB-024 | Gibt es diese Tabelle/Definition/CSS-Regel schon woanders? |
+| 4 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render und Nebenläufigkeit? |
+| 5 | **Stille Datenvernichtung** | PB-010, PB-011, PB-012, PB-002 | Was geht hier verloren, und weiß der Nutzer es? |
+
+Bemerkenswert: **Drei Fehler entstanden beim Beheben anderer Fehler.**
+PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
+Dimension, und PB-024 wurde beim Ergänzen einer Animation eingebaut. Keiner
+davon wurde durch Nachdenken gefunden — PB-018 und PB-020 fand der Fuzzer,
+PB-024 fiel beim Ansehen eines Screenshots auf.
+
+Daraus folgen die zwei Regeln, die `/check` durchsetzt:
+
+1. **Jeder Fix ist selbst ein Änderungsrisiko.** Nach dem Beheben nochmal
+   volle Runde, nicht nur den einen Test.
+2. **Verhaltenstests und Sichtprüfung finden verschiedene Fehlerklassen.**
+   Ein Assert sieht keine unsichtbaren Balken; ein Screenshot sieht keine
+   Race Condition. Es braucht beides.
+
+> Das ist die eigentliche Begründung für dieses Register: Nicht die Fehler
+> sind das Wertvolle, sondern die Muster dahinter — und der Beweis, dass ein
+> Test sie findet, wenn der Kopf sie übersieht.
