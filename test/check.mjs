@@ -615,14 +615,22 @@ const REGRESSIONS = [
         const total = getWeeklyVolume(true);
         return {
           chestSame: direct.chest.sets === 3 && total.chest.sets === 3,
-          armsDirect: (direct.arms && direct.arms.sets) || 0,
-          armsTotal: (total.arms && total.arms.sets) || 0,
+          // Seit der Aufteilung in neun Volumengruppen geht Druecken auf den
+          // TRIZEPS, nicht auf einen Sammeltopf "Arme" - sonst zaehlen
+          // Bizeps- und Trizepsarbeit gegen dieselbe Obergrenze.
+          keinSammeltopf: !direct.arms && !total.arms,
+          trizepsDirekt: (direct.triceps && direct.triceps.sets) || 0,
+          trizepsTotal: (total.triceps && total.triceps.sets) || 0,
+          schultern: (total.shoulders && total.shoulders.sets) || 0,
+          bizepsUnberuehrt: !total.biceps,
           // 3 Sätze Drücken -> 1,5 Sätze Trizeps, sauber gerundet
           clean: Object.values(total).every(v =>
             Number.isFinite(v.sets) && Math.abs(v.sets * 10 - Math.round(v.sets * 10)) < 1e-9)
         };
       });
-      return [r.chestSame && r.armsDirect === 0 && r.armsTotal === 1.5 && r.clean, JSON.stringify(r)];
+      const ok = r.chestSame && r.keinSammeltopf && r.trizepsDirekt === 0 &&
+                 r.trizepsTotal === 1.5 && r.schultern === 1.5 && r.bizepsUnberuehrt && r.clean;
+      return [ok, JSON.stringify(r)];
     }
   },
   {

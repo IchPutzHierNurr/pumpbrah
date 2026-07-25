@@ -89,9 +89,13 @@ wichtigsten stehen hier, damit sie nicht unter den Tisch fallen:
   kann darüber keine feine Abdeckungsregel durchsetzen. Eine feinere
   Taxonomie würde auch die Animations-Engine betreffen und ist deshalb nicht
   Teil dieses Schritts.
-* **Muskelgruppen zu grob.** `legs` enthält Quadrizeps, Beinbeuger, Gesäß und
+* **Muskelgruppen zu grob.** ~~`legs` enthält Quadrizeps, Beinbeuger, Gesäß und
   Waden; `arms` Bizeps und Trizeps. Vier Sätze Wadenheben zählen damit wie
-  vier Sätze Kniebeugen.
+  vier Sätze Kniebeugen.~~ **Behoben (Juli 2026).** Der Coach rechnet jetzt in
+  neun Volumengruppen: Brust, Rücken, Schultern, Bizeps, Trizeps, Quadrizeps,
+  Beinbeuger, Waden, Core. Die Übung behält ihren gespeicherten Muskel — die
+  Gruppe wird aus Muskel und Bewegungsmuster abgeleitet. Warum das nötig war,
+  steht unten.
 * **Population.** Der Großteil der Übungsauswahl-Evidenz stammt von
   untrainierten Probanden über 8–10 Wochen. Bei Trainierten ist die Datenlage
   dünner und teils null.
@@ -99,6 +103,55 @@ wichtigsten stehen hier, damit sie nicht unter den Tisch fallen:
   sie überhaupt gemessen wurden, im Bereich kleiner Effektstärken. Sie sind
   real, aber sie entscheiden nicht darüber, ob jemand Fortschritte macht.
   Volumen, Konsistenz und Progression tun das.
+
+---
+
+---
+
+## Warum „Arme" keine Muskelgruppe ist
+
+MEV, MAV und MRV sind **pro Muskel** definiert. Solange der Coach in sechs
+Kategorien rechnete, war eine davon eine Fiktion:
+
+Jeder Drücksatz zahlte 0,5 Sätze auf „Arme" ein (Trizeps), jeder Zugsatz
+ebenfalls 0,5 (Bizeps) — **gegen dieselbe Obergrenze**. Ein Plan mit 14 Sätzen
+Brust und 14 Sätzen Rücken erzeugte damit rechnerisch 14 indirekte
+„Arm"-Sätze. Zusammen mit sechs direkten stand der Coach bei 21,5 von maximal
+20 und meldete Rot — obwohl weder Bizeps noch Trizeps auch nur in der Nähe
+ihrer Grenze waren. Der Plan war richtig, die Rechnung war falsch.
+
+Dasselbe bei `legs`: Quadrizeps, Beinbeuger und Waden teilten sich ein Budget
+von 16 Sätzen. Vier Sätze Wadenheben zählten wie vier Sätze Kniebeugen, und
+ein Bein-Tag mit ordentlich Quadrizeps ließ keinen Platz mehr für Waden.
+
+Seit Juli 2026 rechnet der Coach in **neun Gruppen**:
+
+| Gruppe | MEV | MAV | MRV | woher |
+|---|---|---|---|---|
+| Brust | 8 | 16 | 22 | `muscle=chest` |
+| Rücken | 10 | 18 | 25 | `muscle=back` |
+| Schultern | 8 | 16 | 22 | `muscle=shoulders` |
+| Bizeps | 6 | 14 | 20 | `muscle=arms` + Muster `curl` |
+| Trizeps | 6 | 14 | 18 | `muscle=arms` + Muster `triext` |
+| Quadrizeps | 8 | 16 | 20 | `muscle=legs` + `squat`/`legext` |
+| Beinbeuger | 6 | 14 | 20 | `muscle=legs` + `hinge`/`legcurl` |
+| Waden | 8 | 16 | 20 | `muscle=legs` + `calf` |
+| Core | 4 | 10 | 16 | `muscle=core` |
+
+Die gespeicherte Übung ändert sich **nicht** — Historie, geteilte Pläne und
+die Bibliothek arbeiten weiter mit den sechs Werten. Die Gruppe wird aus
+Muskel *und* Bewegungsmuster abgeleitet und greift damit auch bei eigenen
+Übungen.
+
+Was das in der Praxis sichtbar macht, an einem echten Plan:
+
+| vorher | nachher |
+|---|---|
+| Arme 21,5 / 20 → **über MRV** | Bizeps 10 / 14, Trizeps 11,5 / 14 → beide im Korridor |
+| Beine 19 / 16 → „über MAV, alles gut" | Quadrizeps 9, Beinbeuger 6, **Waden 4 — unter MEV** |
+
+Die Meldung „Arme über MRV" war ein Fehlalarm. Die fehlenden Waden hat die
+alte Rechnung dagegen komplett verschluckt.
 
 ---
 

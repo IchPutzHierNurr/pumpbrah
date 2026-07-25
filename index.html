@@ -3488,7 +3488,7 @@ function getWeeklyVolume(includeSecondary){
       if(isCardioSet(set))return;
       if(set.type&&set.type!=='main')return;
       if(!set.r)return;
-      const m=set.muscle||'other';
+      const m=volGroupOf(set.ex,set.muscle,set.type)||'other';
       bump(m,1,setVolume(set));
       if(vol[m])vol[m].direct+=1;
       if(includeSecondary){
@@ -3574,7 +3574,7 @@ function renderPL(){
       `<div class="exr-h" onclick="togglePlanRow(this,'${safe}')">`+
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="exr-b"><div class="exr-n">${esc(ex.name)}</div>`+
-        `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div>${coachBadge(ex.muscle,ex.type)}</div>`+
+        `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
         /* Vier Buttons pro Zeile haben den Übungsnamen auf "ATG: Tibialis R…"
            zusammengequetscht. Sortieren bleibt direkt erreichbar, der Rest
            wandert ins Überlaufmenü — wie in der Workout-Ansicht. */
@@ -4450,6 +4450,7 @@ function renderThemeControls(){
     `</div></div>`;
 }
 function muscleName(m){
+  if(typeof VOL_GROUP_META!=='undefined'&&VOL_GROUP_META[m])return VOL_GROUP_META[m].name;
   return({chest:'Brust',back:'Rücken',legs:'Beine',shoulders:'Schultern',arms:'Arme',core:'Core'}[m]||m||'Muskel');
 }
 function weeklyHistorySeries(weeks=6){
@@ -4487,27 +4488,83 @@ function miniSpark(values,color='var(--accent)'){
    festen Pro-Muskel-Richtwerten (Israetel/RP-Schema) und werden über die
    im Plan tatsächlich trainierten Muskelgruppen aufsummiert.
    ========================================================================== */
-const MUSCLE_LANDMARKS={chest:{mev:8,mav:16,mrv:22},back:{mev:10,mav:18,mrv:25},legs:{mev:8,mav:16,mrv:22},shoulders:{mev:6,mav:14,mrv:20},arms:{mev:6,mav:14,mrv:20},core:{mev:4,mav:10,mrv:16}};
+/* Speicherwerte einer Übung: diese sechs stehen im Datenmodell, in der
+   Bibliothek und im Übungseditor. Sie bleiben unverändert — Historie und
+   geteilte Pläne hängen daran. */
+const EX_MUSCLES=['chest','back','legs','shoulders','arms','core'];
+
+/* --------------------------------------------------------------------------
+   VOLUMENGRUPPEN
+   MEV/MAV/MRV sind pro MUSKEL definiert, nicht pro Kategorie. „Arme" ist
+   keine Muskelgruppe, sondern zwei: Bizeps arbeitet bei jedem Ziehen mit,
+   Trizeps bei jedem Drücken. In einem gemeinsamen Topf addiert sich beides
+   gegen dieselbe Obergrenze — und ein Plan mit ordentlich Brust und Rücken
+   verletzt „Arme MRV 20", ohne dass ein einziger Arm überlastet wäre.
+   Genauso bei „Beine": Quadrizeps, Beinbeuger und Waden haben eigene
+   Grenzen, vier Sätze Wadenheben zählten vorher wie vier Sätze Kniebeugen.
+   Deshalb rechnet der Coach jetzt in neun Gruppen. Die Übung behält ihren
+   gespeicherten Muskel; die Gruppe wird aus Muskel + Bewegungsmuster
+   abgeleitet, greift also auch bei eigenen Übungen.
+   Richtwerte: RP-Schema, pro Muskel und Woche.
+   -------------------------------------------------------------------------- */
+const MUSCLE_LANDMARKS={
+  chest:    {mev:8, mav:16,mrv:22},
+  back:     {mev:10,mav:18,mrv:25},
+  shoulders:{mev:8, mav:16,mrv:22},
+  biceps:   {mev:6, mav:14,mrv:20},
+  triceps:  {mev:6, mav:14,mrv:18},
+  quads:    {mev:8, mav:16,mrv:20},
+  hams:     {mev:6, mav:14,mrv:20},
+  calves:   {mev:8, mav:16,mrv:20},
+  core:     {mev:4, mav:10,mrv:16}
+};
+const VOL_GROUP_META={
+  chest:    {name:'Brust',      short:'BRU',icon:'chest',    muscle:'chest',    pats:null},
+  back:     {name:'Rücken',     short:'RÜC',icon:'back',     muscle:'back',     pats:null},
+  shoulders:{name:'Schultern',  short:'SCH',icon:'shoulders',muscle:'shoulders',pats:null},
+  biceps:   {name:'Bizeps',     short:'BIZ',icon:'arms',     muscle:'arms',     pats:['curl']},
+  triceps:  {name:'Trizeps',    short:'TRI',icon:'arms',     muscle:'arms',     pats:['triext']},
+  quads:    {name:'Quadrizeps', short:'QUA',icon:'legs',     muscle:'legs',     pats:['squat','legext']},
+  hams:     {name:'Beinbeuger', short:'BEI',icon:'legs',     muscle:'legs',     pats:['hinge','legcurl']},
+  calves:   {name:'Waden',      short:'WAD',icon:'legs',     muscle:'legs',     pats:['calf']},
+  core:     {name:'Core',       short:'COR',icon:'core',     muscle:'core',     pats:null}
+};
+/* Muskel + Bewegungsmuster -> Volumengruppe. Unbekannte Muskeln landen bei
+   null und fallen damit aus der Volumenrechnung, statt eine Gruppe zu
+   verfälschen. */
+function volGroupOf(name,muscle,type){
+  const m=muscle||'';
+  if(m==='arms')return detectMovePattern(name,m,type)==='curl'?'biceps':'triceps';
+  if(m==='legs'){
+    const p=detectMovePattern(name,m,type);
+    if(p==='calf')return'calves';
+    if(p==='hinge'||p==='legcurl')return'hams';
+    return'quads';
+  }
+  return MUSCLE_LANDMARKS[m]?m:null;
+}
+function volGroupIcon(key){return icon((VOL_GROUP_META[key]||{}).icon||'arms',20)}
 /* --------------------------------------------------------------------------
    SEKUNDÄRE MUSKELBETEILIGUNG
    Bankdrücken ist nicht nur Brust: Trizeps und vordere Schulter leisten
    erhebliche Arbeit mit. Wer 20 Sätze Drückbewegungen macht und in der
-   Statistik "6 Sätze Arme" liest, unterschätzt seine Ellenbogenbelastung
+   Statistik „6 Sätze Arme" liest, unterschätzt seine Ellenbogenbelastung
    massiv — der häufigste Grund für Beschwerden, die scheinbar aus dem
    Nichts kommen.
    Zählweise nach gängiger Praxis: ein direkter Satz zählt 1,0, ein
-   indirekt beteiligter Muskel 0,5. Basis ist das Bewegungsmuster, nicht
-   der Übungsname — dadurch greift es auch bei eigenen Übungen.
+   indirekt beteiligter Muskel 0,5. Ziel sind jetzt Volumengruppen, nicht
+   Kategorien — Drücken geht auf den Trizeps, Ziehen auf den Bizeps, und
+   nicht beides auf denselben Zähler.
    -------------------------------------------------------------------------- */
 const SECONDARY_BY_PATTERN={
-  push:   {arms:.5,shoulders:.5},
-  pushh:  {arms:.5,chest:.25},
-  pulld:  {arms:.5,back:0},
-  row:    {arms:.5,shoulders:.25},
-  hinge:  {back:.5,legs:0},
+  push:   {triceps:.5,shoulders:.5},
+  pushh:  {triceps:.5,chest:.25},
+  pulld:  {biceps:.5},
+  row:    {biceps:.5,shoulders:.25},
+  hinge:  {back:.5},
   squat:  {core:.25},
   triext: {chest:.25},
-  curl:   {back:.25},
+  curl:   {},
   raise:  {},
   legext: {},
   legcurl:{},
@@ -4519,14 +4576,17 @@ const SECONDARY_BY_PATTERN={
 };
 function secondaryContribution(name,muscle,type){
   const map=SECONDARY_BY_PATTERN[detectMovePattern(name,muscle,type)]||{};
+  const primary=volGroupOf(name,muscle,type);
   const out={};
-  Object.entries(map).forEach(([m,w])=>{if(w>0&&m!==muscle)out[m]=w});
+  Object.entries(map).forEach(([g,w])=>{if(w>0&&g!==primary&&MUSCLE_LANDMARKS[g])out[g]=w});
   return out;
 }
 function plannedMuscleGroups(){
   const set=new Set();
   Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{
-    if(ex.type==='main'&&MUSCLE_LANDMARKS[ex.muscle])set.add(ex.muscle);
+    if(ex.type!=='main')return;
+    const g=volGroupOf(ex.name,ex.muscle,ex.type);
+    if(g)set.add(g);
   }));
   if(!set.size)Object.keys(MUSCLE_LANDMARKS).forEach(k=>set.add(k));
   return [...set];
@@ -4658,7 +4718,7 @@ function planWeeklyVolume(includeSecondary){
       if(isCardioExercise(ex))return;
       const sets=parseInt(ex.sets)||0;
       if(!sets)return;
-      const m=ex.muscle||'other';
+      const m=volGroupOf(ex.name,ex.muscle,ex.type)||'other';
       const s=slot(m);
       s.sets+=sets;s.direct+=sets;
       s.days[key]=(s.days[key]||0)+sets;
@@ -4691,15 +4751,20 @@ function planWeeklyVolume(includeSecondary){
      3. Bei Gleichstand die besser belegte Übung.
    Der Evidenz-Katalog kommt vor der Bibliothek; nur wenn er nichts hergibt,
    wird die Bibliothek durchsucht. */
-function coachSuggestExercise(muscle){
+function coachSuggestExercise(group){
+  /* Der Vorschlag muss zur Volumengruppe passen, nicht nur zur Kategorie:
+     Für „Bizeps" ist eine Trizepsübung keine Antwort, obwohl beide als
+     „arms" gespeichert sind. Der Filter prüft deshalb Muskel UND Muster. */
+  const meta=VOL_GROUP_META[group]||{muscle:group,pats:null};
+  const fits=(m,pat)=>m===meta.muscle&&(!meta.pats||meta.pats.includes(pat));
   const inPlan=new Set();
   Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{
     inPlan.add(baseNameKey(ex.name));
-    if(ex.muscle===muscle)inPlan.add('kind:'+detectMovePattern(ex.name,ex.muscle,ex.type));
+    if(volGroupOf(ex.name,ex.muscle,ex.type)===group)inPlan.add('kind:'+detectMovePattern(ex.name,ex.muscle,ex.type));
   }));
   const rank=x=>(x.fresh?0:100)+({A:0,B:10,C:20}[x.item.t]||30)+(2-(x.item.c||0));
   const fromDb=EVIDENCE_DB
-    .filter(it=>it.m===muscle&&!inPlan.has(baseNameKey(it.n)))
+    .filter(it=>fits(it.m,it.p)&&!inPlan.has(baseNameKey(it.n)))
     .map(it=>({item:it,kind:it.p,fresh:!inPlan.has('kind:'+it.p),evidence:true}));
   if(fromDb.length){
     fromDb.sort((a,b)=>rank(a)-rank(b)||a.item.n.localeCompare(b.item.n,'de'));
@@ -4709,9 +4774,10 @@ function coachSuggestExercise(muscle){
   allLibraryCategories().forEach(cat=>cat.items.forEach(item=>{
     const m=item.m||item.muscle;
     const t=item.t||item.type||'main';
-    if(m!==muscle||t!=='main')return;
-    if(inPlan.has(baseNameKey(item.name)))return;
+    if(t!=='main')return;
     const kind=detectMovePattern(item.name,m,t);
+    if(!fits(m,kind))return;
+    if(inPlan.has(baseNameKey(item.name)))return;
     candidates.push({item:{n:item.name,m,p:kind,t:'B',s:item.s,rn:item.rn,rx:item.rx,rir:item.rir,cue:item.note,c:0},kind,fresh:!inPlan.has('kind:'+kind),evidence:false});
   }));
   if(!candidates.length)return null;
@@ -4747,7 +4813,7 @@ function showEvidence(name){
 function coachBestDayFor(muscle,wantNewDay){
   const keys=Object.keys(D.plan||{});
   if(!keys.length)return null;
-  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&e.muscle===muscle);
+  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&volGroupOf(e.name,e.muscle,e.type)===muscle);
   const load=k=>(D.plan[k].exercises||[]).filter(e=>e.type==='main').reduce((a,e)=>a+(parseInt(e.sets)||0),0);
   const pool=wantNewDay?keys.filter(k=>!has(k)):keys.filter(has);
   const use=pool.length?pool:keys;
@@ -4828,7 +4894,7 @@ function coachAddExercise(muscle,newDay){
   if(!confirm(`„${nm}" mit ${it.s||3} Sätzen zu ${planDisplayName(dayKey)} hinzufügen?`))return;
   D.plan[dayKey].exercises.push({
     id:Date.now(),name:nm,sets:it.s||3,rmin:it.rn||8,rmax:it.rx||12,
-    rir:it.rir===undefined||it.rir===null?2:it.rir,note:it.cue||it.note||'',type:'main',muscle:it.m||muscle
+    rir:it.rir===undefined||it.rir===null?2:it.rir,note:it.cue||it.note||'',type:'main',muscle:it.m||(VOL_GROUP_META[muscle]||{}).muscle||muscle
   });
   save();markPlanDirty();
   curTab=dayKey;
@@ -4842,7 +4908,7 @@ function coachTrimSet(muscle){
   let best=null;
   Object.entries(D.plan||{}).forEach(([key,day])=>{
     (day.exercises||[]).forEach((ex,i)=>{
-      if(ex.type!=='main'||ex.muscle!==muscle)return;
+      if(ex.type!=='main'||volGroupOf(ex.name,ex.muscle,ex.type)!==muscle)return;
       const sets=parseInt(ex.sets)||0;
       if(sets<=1)return;
       if(!best||sets>best.sets)best={key,i,sets,name:ex.name};
@@ -4861,10 +4927,10 @@ function coachSpreadMuscle(muscle){
   /* Frequenz erhöhen, ohne Volumen zu ändern: eine Übung dieses Muskels von
      dem Tag, der ihn schon trägt, auf einen Tag ohne ihn verschieben. */
   const keys=Object.keys(D.plan||{});
-  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&e.muscle===muscle);
+  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&volGroupOf(e.name,e.muscle,e.type)===muscle);
   const from=keys.filter(has).sort((a,b)=>
-    (D.plan[b].exercises||[]).filter(e=>e.muscle===muscle).length-
-    (D.plan[a].exercises||[]).filter(e=>e.muscle===muscle).length)[0];
+    (D.plan[b].exercises||[]).filter(e=>volGroupOf(e.name,e.muscle,e.type)===muscle).length-
+    (D.plan[a].exercises||[]).filter(e=>volGroupOf(e.name,e.muscle,e.type)===muscle).length)[0];
   const to=keys.filter(k=>!has(k)).sort((a,b)=>
     (D.plan[a].exercises||[]).length-(D.plan[b].exercises||[]).length)[0];
   if(!from||!to){
@@ -4874,8 +4940,10 @@ function coachSpreadMuscle(muscle){
     return;
   }
   const list=D.plan[from].exercises;
-  const idx=list.map((e,i)=>({e,i})).filter(x=>x.e.type==='main'&&x.e.muscle===muscle)
-    .sort((a,b)=>(parseInt(a.e.sets)||0)-(parseInt(b.e.sets)||0))[0].i;
+  const cand=list.map((e,i)=>({e,i})).filter(x=>x.e.type==='main'&&volGroupOf(x.e.name,x.e.muscle,x.e.type)===muscle)
+    .sort((a,b)=>(parseInt(a.e.sets)||0)-(parseInt(b.e.sets)||0));
+  if(!cand.length){toast('Keine passende Übung zum Verschieben');return}
+  const idx=cand[0].i;
   const ex=list[idx];
   if(!confirm(`„${ex.name}" von ${planDisplayName(from)} nach ${planDisplayName(to)} verschieben?\n\nDas Wochenvolumen bleibt gleich, ${muscleName(muscle)} kommt dann an zwei Tagen dran.`))return;
   list.splice(idx,1);
@@ -4961,10 +5029,11 @@ function renderCoachCard(){
   `</div>`;
 }
 /* Badge an einer einzelnen Planübung: wie steht ihr Muskel in der Woche da? */
-function coachBadge(muscle,type){
-  if(type!=='main'||!MUSCLE_LANDMARKS[muscle])return'';
+function coachBadge(name,muscle,type){
+  const group=type==='main'?volGroupOf(name,muscle,type):null;
+  if(!group)return'';
   const a=coachCachedAnalysis();
-  const m=a.muscles.find(x=>x.key===muscle);
+  const m=a.muscles.find(x=>x.key===group);
   if(!m)return'';
   /* Nur warnen, nicht bestätigen. Ein grünes „alles gut" an jeder Zeile ist
      Rauschen — und es kostet genau die Breite, die der Übungsname braucht
@@ -4972,8 +5041,8 @@ function coachBadge(muscle,type){
   if(m.sets>0&&m.state.key!=='low'&&m.state.key!=='high')return'';
   const low=m.sets<=0||m.state.key==='low';
   const txt=low
-    ?`${muscleName(muscle)} ${m.sets}/${m.lm.mev} · unter MEV`
-    :`${muscleName(muscle)} ${m.sets}/${m.lm.mrv} · über MRV`;
+    ?`${muscleName(group)} ${m.sets}/${m.lm.mev} · unter MEV`
+    :`${muscleName(group)} ${m.sets}/${m.lm.mrv} · über MRV`;
   return`<div class="coach-badge ${low?'low':'high'}" title="${attr(m.name)}: ${attr(m.sets)} Sätze pro Woche">${esc(txt)}</div>`;
 }
 /* Die Analyse läuft über den ganzen Plan. Sie pro Übungszeile neu zu rechnen
@@ -5404,7 +5473,7 @@ function sanitizeSharePayload(obj){
       return[key,wd,list.slice(0,SHARE_MAX_EX).map(e=>{
         const a=Array.isArray(e)?e:[];
         const type=['main','pre','mob'].includes(a[5])?a[5]:'main';
-        const muscle=MUSCLE_LANDMARKS[a[6]]?a[6]:'chest';
+        const muscle=EX_MUSCLES.includes(a[6])?a[6]:'chest';
         const rmin=int(a[2],1,300,8);
         return[
           str(a[0])||'Übung',
