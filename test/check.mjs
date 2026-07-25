@@ -863,6 +863,68 @@ const REGRESSIONS = [
       });
       return [r.idxAct >= 0 && !r.danachVorAktiv && !r.erledigtNachAktiv, JSON.stringify(r)];
     }
+  },
+  {
+    id: 'PB-039', title: 'Coach-Matrix hat eindeutige Spaltenüberschriften',
+    run: async () => {
+      // Die erste Fassung kuerzte den Plannamen auf sechs Zeichen. Aus
+      // "FullBody A" und "FullBody B" wurde damit zweimal "FULLBO" - eine
+      // Tabelle, in der zwei Spalten gleich heissen, ist keine Tabelle.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.plan));
+        D.plan = {
+          Ganzkoerper_A: { day: 'Mo', exercises: [{ id: 1, name: 'Bankdrücken', sets: 3, rmin: 8, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' }] },
+          Ganzkoerper_B: { day: 'Do', exercises: [{ id: 2, name: 'Kniebeugen', sets: 3, rmin: 6, rmax: 10, rir: 2, type: 'main', muscle: 'legs', note: '' }] },
+          Ganzkoerper_C: { day: 'Sa', exercises: [{ id: 3, name: 'Latziehen breit', sets: 3, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle: 'back', note: '' }] }
+        };
+        const distinct = coachDayLabels(Object.keys(D.plan));
+        // Zweiter Fall: Plannamen ohne unterscheidbares letztes Wort.
+        D.plan = {
+          Oberkoerper: { day: 'Mo', exercises: [{ id: 4, name: 'Bankdrücken', sets: 3, rmin: 8, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' }] },
+          Unterkoerper: { day: 'Do', exercises: [{ id: 5, name: 'Kniebeugen', sets: 3, rmin: 6, rmax: 10, rir: 2, type: 'main', muscle: 'legs', note: '' }] }
+        };
+        const collide = coachDayLabels(Object.keys(D.plan));
+        D.plan = before; save(); coachInvalidate();
+        const uniq = a => new Set(a).size === a.length && a.every(Boolean);
+        return { distinct, collide, ok: uniq(distinct) && uniq(collide) };
+      });
+      return [r.ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-040', title: 'Coach-Maßnahmen lassen den Plan gültig zurück',
+    run: async () => {
+      // Vorwaertsgerichteter Test (wie PB-029/PB-030): Die Massnahmen des
+      // Coaches schreiben in D.plan. Zwei Zusagen muessen dabei halten:
+      //   "Verteilen" aendert die Frequenz, NICHT das Volumen.
+      //   "- Satz" faellt nie unter einen Satz.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.plan));
+        const sets = () => Object.values(D.plan).flatMap(d => d.exercises || [])
+          .filter(e => e.type === 'main' && e.muscle === 'chest')
+          .reduce((a, e) => a + (parseInt(e.sets) || 0), 0);
+        const days = () => Object.values(D.plan)
+          .filter(d => (d.exercises || []).some(e => e.type === 'main' && e.muscle === 'chest')).length;
+        D.plan = {
+          Tag_A: { day: 'Mo', exercises: [
+            { id: 1, name: 'Bankdrücken', sets: 4, rmin: 8, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' },
+            { id: 2, name: 'Butterfly', sets: 3, rmin: 12, rmax: 15, rir: 1, type: 'main', muscle: 'chest', note: '' }] },
+          Tag_B: { day: 'Do', exercises: [
+            { id: 3, name: 'Kniebeugen', sets: 3, rmin: 6, rmax: 10, rir: 2, type: 'main', muscle: 'legs', note: '' }] }
+        };
+        const volBefore = sets(), freqBefore = days();
+        coachSpreadMuscle('chest');
+        const volAfter = sets(), freqAfter = days();
+        // Auf 1 Satz herunterfahren und dann weiter druecken.
+        D.plan = { Tag_A: { day: 'Mo', exercises: [
+          { id: 1, name: 'Bankdrücken', sets: 1, rmin: 8, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' }] } };
+        coachTrimSet('chest'); coachTrimSet('chest');
+        const floor = D.plan.Tag_A.exercises[0].sets;
+        D.plan = before; save(); coachInvalidate();
+        return { volBefore, volAfter, freqBefore, freqAfter, floor };
+      });
+      return [r.volBefore === r.volAfter && r.freqAfter > r.freqBefore && r.floor >= 1, JSON.stringify(r)];
+    }
   }
 ];
 
@@ -1028,6 +1090,20 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
     ['jumpActive', () => jumpToActiveExercise()],
     ['openLibraries', () => { openLibrary(); openLibraryEditor(); resetLibraryEditorForm(); }],
     ['savePlan', () => savePlanChanges()],
+    ['coach', () => {
+      // Der Coach rechnet ueber den GANZEN Plan und greift ueber seine
+      // Massnahmen auch hinein - damit ist er genau die Sorte Feature, die
+      // an fremden Daten zerbricht (leerer Plan, Muskel ohne Landmark,
+      // Uebung mit sets:0).
+      coachInvalidate();
+      const a = coachAnalyzePlan();
+      coachMatrixHTML(a); coachDayLabels(a.dayKeys);
+      renderCoachCard(); coachSessionHTML();
+      Object.keys(MUSCLE_LANDMARKS).forEach(m => { coachBadge(m, 'main'); coachSuggestExercise(m); coachBestDayFor(m, int(0,1) === 1); });
+      Object.keys(D.plan || {}).forEach(k => coachDayHintHTML(k));
+      const m = pick(Object.keys(MUSCLE_LANDMARKS));
+      pick([() => coachAddExercise(m, false), () => coachTrimSet(m), () => coachSpreadMuscle(m)])();
+    }],
     ['pureMath', () => {
       // Reine Rechenfunktionen mit Grenzwerten beschießen.
       const vals = [0, -1, 0.5, 1, 30, 1000, NaN, Infinity, -Infinity];
