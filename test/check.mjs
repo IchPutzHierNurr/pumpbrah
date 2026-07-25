@@ -689,7 +689,14 @@ const REGRESSIONS = [
           ['Rumänisches Kreuzheben', 'hinge'], ['Kniebeugen', 'squat'],
           ['KH Seitheben', 'raise'], ['Trizepsdrücken Seil', 'triext'],
           ['Wadenheben stehend', 'calf'], ['Kabelcrunches', 'core'],
-          ['Laufband', 'cardio'], ['Incline Pigeon Pose', 'mobility']
+          ['Laufband', 'cardio'], ['Incline Pigeon Pose', 'mobility'],
+          // PB-047: standen in Regeln, die vor der passenden kamen
+          ['Katana Extensions Kabel', 'triext'], ['Katana Extension', 'triext'],
+          ['Reverse Butterfly', 'raise'], ['Reverse Pec Deck', 'raise'],
+          ['Face Pulls', 'raise'], ['Gesichtziehen', 'raise'],
+          // Gegenprobe: die allgemeinen Regeln greifen weiterhin
+          ['Kabelzug Brust tief', 'push'], ['Butterfly', 'push'], ['Pec Deck', 'push'],
+          ['LH Rudern vorgebeugt', 'row'], ['Ring Rows', 'row']
         ];
         return cases.filter(([n, want]) => detectMovePattern(n, 'chest', 'main') !== want)
                     .map(([n, want]) => `${n}: erwartet ${want}, ist ${detectMovePattern(n, 'chest', 'main')}`);

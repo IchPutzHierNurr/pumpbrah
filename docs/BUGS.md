@@ -89,11 +89,12 @@
 | [PB-041](#pb-041) | QR-Codes sahen richtig aus und waren unlesbar | **hoch** | Korrektheit | ✅ |
 | [PB-043](#pb-043) | Fotoschicht entfernt — Kacheln zeigen jetzt eine Marke | — | Darstellung | ✅ |
 | [PB-046](#pb-046) | Negatives Gewicht wurde klaglos gespeichert | **hoch** | Berechnung | ✅ |
+| [PB-047](#pb-047) | Zwei Übungen im falschen Bewegungsmuster | mittel | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**38 von 38 im Frontend behebbaren Fehlern sind behoben.**
+**39 von 39 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -1723,6 +1724,61 @@ Satz-Editor und prüft, dass im Modell nur geklemmte, endliche Werte landen.
 
 ---
 
+### PB-047
+
+**Zwei Übungen im falschen Bewegungsmuster**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Darstellung / Klassifikation |
+| **Gefunden** | beim Durchrechnen eines neuen Trainingsplans |
+| **Status** | ✅ behoben |
+
+**Symptom.** Beim Aufbau eines Drei-Tage-Splits zeigte die Musterauswertung
+`push: 4`, obwohl der Plan nur drei Drückübungen enthielt. Die beiden
+Ausreißer:
+
+* **„Katana Extensions Kabel"** — eine Trizeps-Überkopfstreckung — stand als
+  Wort in der `push`-Zeile und galt damit als Brustübung.
+* **„Reverse Butterfly"** — hintere Schulter — enthält `butterfly`, und die
+  `push`-Regel steht vor der `row`-Regel, in der `reverse butterfly`
+  ordnungsgemäß aufgeführt war. Die allgemeinere Regel gewann.
+
+**Warum das mehr ist als ein Etikett.** Das Bewegungsmuster steuert inzwischen
+vier Dinge: die Marke auf der Übungskachel, die Auswahl der Alternativen, die
+Animation in der Demo — und seit dem Volumen-Coach auch die Frage, ob ein
+Muskel schon ein bestimmtes Muster abgedeckt hat. Eine falsch einsortierte
+Übung führt also dazu, dass der Coach eine Bewegungsrichtung für abgedeckt
+hält, die im Plan gar nicht vorkommt.
+
+**Fix.** `katana` von der `push`- in die `triext`-Zeile verschoben. Für die
+hintere Schulter eine eigene, **vorgezogene** Regel:
+
+```js
+{k:'raise', re:/(reverse ?(butterfly|fly|pec ?deck)|rear ?delt|hintere ?schulter|face ?pull|gesichtziehen)/i},
+```
+
+Damit wandern auch Face Pulls von `row` (horizontales Ziehen) nach `raise` —
+sie sind horizontale Abduktion, keine Ruderbewegung.
+
+**Bezug zu PB-033.** Das ist derselbe Fehler wie „Leg Curl wurde als
+Bizeps-Curl erkannt", zwei Jahre alter Wein in neuen Schläuchen: In einer
+Liste, bei der die erste passende Regel gewinnt, **ist die Reihenfolge die
+Bedeutung**. Jeder neue Übungsname, der ein allgemeines Wort enthält
+(`curl`, `butterfly`, `press`, `row`), muss gegen die Liste geprüft werden —
+nicht nur dagegen, ob *irgendeine* Regel passt.
+
+**Lektion.** Wenn dieselbe Fehlerklasse zum zweiten Mal auftritt, reicht der
+Einzelfix nicht. Der Regressionstest zu PB-033 prüft jetzt zusätzlich beide
+neuen Fälle **und** je eine Gegenprobe, dass die allgemeinen Regeln weiterhin
+greifen — sonst repariert man den Sonderfall und bricht den Normalfall.
+
+**Test.** `PB-033` (erweitert) — 28 Name-zu-Muster-Paare, darunter die beiden
+neuen Fälle und Gegenproben für `push` und `row`.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1848,7 +1904,7 @@ gestellt werden sollten:
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
 | 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040 | Was geht hier verloren, und weiß der Nutzer es? |
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
-| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
+| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
 | 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |

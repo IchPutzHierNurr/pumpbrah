@@ -2834,10 +2834,17 @@ function withViewTransition(fn){fn()}
 const MOVE_PATTERNS=[
   {k:'hinge',   re:/(kreuzheben|deadlift|rdl|rumänisch|romanian|good ?morning|hip ?thrust|hüftheben|jefferson|hyperext|rückenstrecker|back ?extension|kettlebell ?swing)/i},
   {k:'squat',   re:/(kniebeuge|squat|beinpresse|leg ?press|hackenschmidt|ausfallschritt|lunge|split ?squat|step ?up|pistol|beinbeuge.*stehend|poliquin)/i},
+  /* Rückwärts ausgeführte Fliegende sind KEIN Brustdrücken. „Reverse
+     Butterfly" enthält aber „butterfly" und wurde deshalb von der push-Regel
+     gefangen, die weiter unten steht — dieselbe Falle wie bei „Leg Curl"
+     (PB-033). Face Pulls standen aus demselben Grund unter „Rudern", obwohl
+     sie horizontale Abduktion sind, keine Ruderbewegung. Beides gehört zur
+     hinteren Schulter und damit vor die allgemeinen Regeln (PB-047). */
+  {k:'raise',   re:/(reverse ?(butterfly|fly|pec ?deck)|rear ?delt|hintere ?schulter|face ?pull|gesichtziehen)/i},
   {k:'pushh',   re:/(schulterdrücken|overhead ?press|ohp|military|arnold ?press|schulterpresse|shoulder ?press|handstand)/i},
-  {k:'push',    re:/(bankdrücken|bench|brustpresse|chest ?press|butterfly|fliegende|fly|dips?|liegestütz|push ?ups?|pec ?deck|kabelzug.*brust|katana)/i},
+  {k:'push',    re:/(bankdrücken|bench|brustpresse|chest ?press|butterfly|fliegende|fly|dips?|liegestütz|push ?ups?|pec ?deck|kabelzug.*brust)/i},
   {k:'pulld',   re:/(latziehen|lat ?pulldown|klimmzug|pull ?ups?|chin ?ups?|pullover|überzüge)/i},
-  {k:'row',     re:/(rudern|row|ring ?row|face ?pull|gesichtziehen|reverse ?fly|reverse ?butterfly|shrug|nackenziehen)/i},
+  {k:'row',     re:/(rudern|row|ring ?row|shrug|nackenziehen)/i},
   /* REIHENFOLGE IST BEDEUTUNG: Die erste passende Regel gewinnt. "Leg Curl"
      enthält "curl" und wurde deshalb als Bizeps-Curl erkannt — die Animation
      zeigte einen stehenden Hantelcurl statt der Beinmaschine. Spezifische
@@ -2845,7 +2852,12 @@ const MOVE_PATTERNS=[
   {k:'legext',  re:/(beinstrecker|leg ?extension|beinstrecken|knee ?extension)/i},
   {k:'legcurl', re:/(beinbeuger|leg ?curl|beinbeugen|nordic|hamstring ?curl)/i},
   {k:'curl',    re:/(curl|bizeps|biceps|hammer|preacher|scott)/i},
-  {k:'triext',  re:/(trizeps|triceps|pushdown|drücken.*seil|french ?press|skull ?crusher|stirndrücken|kickback|dip ?machine)/i},
+  /* „Katana Extensions" ist eine Trizeps-Überkopfstreckung am Kabel. Das Wort
+     stand in der push-Zeile und machte daraus eine Brustübung — mit falscher
+     Marke, falschem Muster im Coach und falscher Alternativen-Liste. Namen,
+     die kein Körperteil enthalten, gehören zu dem Muster, das die Bewegung
+     beschreibt, nicht zu dem, bei dem sie zufällig zuerst passt (PB-047). */
+  {k:'triext',  re:/(trizeps|triceps|pushdown|drücken.*seil|french ?press|skull ?crusher|stirndrücken|kickback|dip ?machine|katana)/i},
   {k:'raise',   re:/(seitheben|lateral ?raise|frontheben|front ?raise|seitenheben|upright ?row|aufrechtes ?rudern)/i},
   {k:'calf',    re:/(waden|calf|zehenstand|tibialis|schienbein)/i},
   {k:'core',    re:/(crunch|sit ?up|plank|unterarmstütz|bauch|core|russian ?twist|beinheben|leg ?raise|hollow|ab ?wheel|wood ?chop)/i},
