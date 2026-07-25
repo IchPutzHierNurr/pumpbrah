@@ -32,11 +32,13 @@ Trainingstag wechseln (anhängen / nur Geloggtes behalten / ersetzen) ·
 Ziel für den nächsten Satz nach doppelter Progression · Wake Lock
 
 **Auswertung**
-Wochenvolumen gegen MEV/MAV/MRV, wahlweise inklusive indirekt beteiligter
-Muskeln (0,5 Sätze) · Volumen-Radar über sechs Muskelgruppen · Tonnage- und
-RIR-Trends · e1RM-Verlauf pro Übung statt nur Rohgewicht · PR-Erkennung ·
-Deload-Empfehlung aus Trend, RIR und Volumen · Fitnessalter · Gewichtsverlauf ·
-optionale EGYM-Körperanalyse · Kalenderhistorie
+Wochenvolumen gegen MEV/MAV/MRV über **neun Muskeln** — Bizeps und Trizeps
+getrennt, Quadrizeps, Beinbeuger und Waden getrennt (Begründung in
+[`docs/EVIDENZ.md`](docs/EVIDENZ.md)) · wahlweise inklusive indirekt
+beteiligter Muskeln (0,5 Sätze) · Volumen-Radar · Tonnage- und RIR-Trends ·
+e1RM-Verlauf pro Übung statt nur Rohgewicht · PR-Erkennung · Deload-Empfehlung
+aus Trend, RIR und Volumen · Fitnessalter · Gewichtsverlauf · EGYM-BioAge in
+Altersdifferenzen statt Rohwerten · Kalenderhistorie · einklappbare Abschnitte
 
 **Übungsausführung**
 In Listen steht je Übung eine Bewegungsmuster-Marke: ein Strich-Piktogramm für
