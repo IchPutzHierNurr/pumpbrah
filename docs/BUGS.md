@@ -91,6 +91,7 @@
 | [PB-046](#pb-046) | Negatives Gewicht wurde klaglos gespeichert | **hoch** | Berechnung | ✅ |
 | [PB-047](#pb-047) | Zwei Übungen im falschen Bewegungsmuster | mittel | Darstellung | ✅ |
 | [PB-048](#pb-048) | „Nächstes Workout" beschrieb den falschen Tag | mittel | Darstellung | ✅ |
+| [PB-049](#pb-049) | Trizepsübung zählte auf den Bizeps | mittel | Klassifikation | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -1839,6 +1840,53 @@ nach Satzanzahl, ein Punkt je Trainingstag.
 
 ---
 
+### PB-049
+
+**Eine Trizepsübung zählte auf den Bizeps**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Klassifikation / Berechnung |
+| **Gefunden** | im Plan eines Nutzers, nach der Aufteilung in neun Volumengruppen |
+| **Status** | ✅ behoben |
+
+**Symptom.** Eine Übung namens „Extensions Kabel" mit Muskel `arms` wurde als
+**Bizepsarbeit** gezählt. Im Coach stand dadurch drei Curl-Übungen an einem
+Tag, während der Trizeps unter MEV lag — beides falsch.
+
+**Ursache.** Der Name traf **keine einzige** Regel der Mustertabelle. Danach
+greift der Fallback:
+
+```js
+const byMuscle={legs:'squat',back:'row',chest:'push',shoulders:'raise',arms:'curl',core:'core'};
+```
+
+Für `arms` ist das eine Münze mit zwei gleichen Seiten: Jede unbekannte
+Armübung wird ein Curl. Solange „Arme" ein gemeinsamer Topf war, fiel das
+nicht auf — die Sätze landeten so oder so am selben Zähler. Mit der Trennung
+in Bizeps und Trizeps (siehe `docs/EVIDENZ.md`) wurde aus einer ungenauen
+Marke ein **falscher Volumenwert**.
+
+**Fix.** `extensions?` in die `triext`-Regel aufgenommen. Sie steht hinter
+`hinge`, `legext` und `legcurl`, deshalb bleiben „Leg Extension" (Quadrizeps),
+„Back Extension" und „Hyperextension" (Hüftbeuge) unberührt — die
+Gegenproben stehen im Test.
+
+**Lektion.** Ein Fallback ist eine stille Annahme. Solange sein Ergebnis nur
+ein Icon steuert, ist eine falsche Annahme kosmetisch. Sobald dasselbe
+Ergebnis in eine Rechnung eingeht, wird sie zu einem Fehler — und zwar zu
+einem, den niemand sucht, weil an der Stelle nie etwas geändert wurde.
+**Wenn ein abgeleiteter Wert neue Bedeutung bekommt, gehören alle seine
+Standardpfade neu geprüft.**
+
+**Test.** `PB-033` (erweitert) — „Extensions Kabel", „Overhead Extension" und
+„Rope Extensions" → `triext`; Gegenproben „Leg Extensions" → `legext`,
+„Back Extension" und „Hyperextension" → `hinge`; zusätzlich zwei Proben
+direkt auf `volGroupOf(…, 'arms')` → Trizeps bzw. Bizeps.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1964,7 +2012,7 @@ gestellt werden sollten:
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
 | 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040 | Was geht hier verloren, und weiß der Nutzer es? |
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
-| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
+| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
 | 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |

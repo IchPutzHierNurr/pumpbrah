@@ -702,12 +702,27 @@ const REGRESSIONS = [
           ['Katana Extensions Kabel', 'triext'], ['Katana Extension', 'triext'],
           ['Reverse Butterfly', 'raise'], ['Reverse Pec Deck', 'raise'],
           ['Face Pulls', 'raise'], ['Gesichtziehen', 'raise'],
+          // PB-049: traf gar keine Regel und fiel auf den Muskel-Fallback zurueck,
+          // der aus jeder unbekannten Armuebung einen Curl macht -> Bizeps
+          ['Extensions Kabel', 'triext'], ['Overhead Extension', 'triext'],
+          ['Rope Extensions', 'triext'],
+          // Gegenprobe zu PB-049: "Extension" darf die spezifischen Regeln nicht kapern
+          ['Leg Extensions', 'legext'], ['Back Extension', 'hinge'],
+          ['Hyperextension', 'hinge'],
           // Gegenprobe: die allgemeinen Regeln greifen weiterhin
           ['Kabelzug Brust tief', 'push'], ['Butterfly', 'push'], ['Pec Deck', 'push'],
           ['LH Rudern vorgebeugt', 'row'], ['Ring Rows', 'row']
         ];
-        return cases.filter(([n, want]) => detectMovePattern(n, 'chest', 'main') !== want)
+        // Muskel 'arms' statt 'chest': nur so laeuft eine namenlose Armuebung
+        // ueberhaupt in den Fallback, um den es bei PB-049 geht.
+        const fails = cases.filter(([n, want]) => detectMovePattern(n, 'chest', 'main') !== want)
                     .map(([n, want]) => `${n}: erwartet ${want}, ist ${detectMovePattern(n, 'chest', 'main')}`);
+        const armCases = [['Extensions Kabel', 'triceps'], ['Hammercurls Kabel', 'biceps']];
+        armCases.forEach(([n, want]) => {
+          const got = volGroupOf(n, 'arms', 'main');
+          if (got !== want) fails.push(`${n} (arms): erwartet ${want}, ist ${got}`);
+        });
+        return fails;
       });
       return [r.length === 0, r.join(' | ')];
     }
