@@ -86,11 +86,12 @@
 | [PB-037](#pb-037) | Inline-`onerror` verletzte die eigene XSS-Invariante | mittel | Sicherheit | ✅ |
 | [PB-038](#pb-038) | „Danach" stand über einer bereits erledigten Übung | niedrig | Darstellung | ✅ |
 | [PB-039](#pb-039) | Zwei Matrixspalten hießen gleich | niedrig | Darstellung | ✅ |
+| [PB-041](#pb-041) | QR-Codes sahen richtig aus und waren unlesbar | **hoch** | Korrektheit | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**36 von 36 im Frontend behebbaren Fehlern sind behoben.**
+**37 von 37 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -1513,6 +1514,110 @@ formuliert, bevor jemand sie beim nächsten Umbau versehentlich bricht.
 
 ---
 
+### PB-041
+
+**QR-Codes sahen richtig aus und waren unlesbar**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Korrektheit |
+| **Gefunden** | Vergleich mit zwei unabhängigen Decodern |
+| **Status** | ✅ behoben |
+
+**Symptom.** Der selbst gebaute QR-Encoder lieferte Bilder, die in jeder
+Hinsicht wie QR-Codes aussehen: richtige Größe, drei Suchmuster, Taktspur,
+Ausrichtungsmuster, plausibel verteilte Module. Nur ließen sie sich nicht
+lesen — je nach Version und Maske mal ja, mal nein.
+
+**Warum das die gefährlichste Fehlerklasse in diesem Projekt ist.** Bei jedem
+anderen Fehler sieht man das Problem: ein Balken fehlt, eine Zahl stimmt
+nicht, eine Karte ist leer. Hier ist die Ausgabe für das menschliche Auge
+**nicht von der korrekten zu unterscheiden**. Ein Screenshot beweist nichts.
+Nur ein echter Decoder beweist etwas.
+
+**Zwei Ursachen, beide unsichtbar:**
+
+1. **Formatbits in umgekehrter Bit-Reihenfolge.** Die 15 Formatbits stehen an
+   festen Positionen. Ich schrieb Bit 0 dorthin, wo Bit 14 hingehört. Der Code
+   wirkt völlig normal — der Decoder liest nur eine falsche Maske heraus und
+   entmaskiert alles falsch.
+2. **Regel 3 der Maskenbewertung war praktisch abgeschaltet.** In der
+   Suchschleife stand ein `return` ohne Bedingung im Schleifenkörper:
+
+   ```js
+   for (let k = 0; k < 11; k++) {
+     …
+     return ok1 || ok2;      // beendet die Schleife nach dem ersten Durchlauf
+   }
+   ```
+
+   Damit fiel die Regel weg, die Muster mit dem Verhältnis 1:1:3:1:1 bestraft —
+   also genau die Folge, an der ein Scanner die Ecken erkennt. Der Encoder
+   wählte dadurch Masken, die falsche Suchmuster in die Daten schreiben.
+
+**Fix.** Formatbits als `(fmt >> (14 - i)) & 1`; Regel 3 als vollständige
+Mustersuche über Zeilen und Spalten.
+
+**Prüfung.** Zwei unabhängige Decoder außerhalb der App: **ZXing** (die
+Engine hinter den meisten Scanner-Apps) und **OpenCV**. 110 zufällige
+Nutzlasten von 1 bis 1400 Zeichen, Versionen 1 bis 29, mit Umlauten und
+Sonderzeichen — alle korrekt dekodiert. Zusätzlich der echte Teilen-Link aus
+der laufenden App (Version 27).
+
+**Nebenbefund.** OpenCV scheiterte an einigen Masken, an denen ZXing nicht
+scheiterte — und zwar auch bei Codes einer etablierten Referenzbibliothek.
+Ein einzelner Decoder als Wahrheitsquelle hätte hier zu einer Fehlersuche an
+der falschen Stelle geführt.
+
+**Lektion.** Wenn die Ausgabe eines Algorithmus für Menschen nicht prüfbar
+ist, ist eine unabhängige Gegenimplementierung kein Luxus, sondern die
+einzige verfügbare Wahrheit — und zwei davon sind besser als eine. Für
+Regressionen genügt danach eine Prüfsumme über die Referenzausgabe.
+
+**Test.** `PB-041` — friert Größe und Prüfsumme dreier Referenzcodes ein und
+prüft, dass eine zu große Nutzlast sauber `null` liefert statt einen kaputten
+Code.
+
+---
+
+### PB-042
+
+**Vorwärtsgerichtet: Import härtet fremde Daten**
+
+| | |
+|---|---|
+| **Schwere** | — (kein aufgetretener Fehler) |
+| **Klasse** | Sicherheit / Datenintegrität |
+| **Gefunden** | aus dem Muster-Register abgeleitet |
+| **Status** | ✅ abgesichert |
+
+Der Plan-Import ist die erste Stelle der App, an der **fremder Input** aus
+einer Datei, einer Zwischenablage oder einem Link ins Datenmodell wandert.
+Damit treffen gleich drei bekannte Muster aufeinander: Kontextverwechslung
+beim Escaping (Muster 1), neuer Datentyp in alte Rechenwege (Muster 4) und
+stille Datenvernichtung (Muster 6).
+
+Deshalb gilt hier: **Escaping beim Rendern ist die zweite Verteidigung, nicht
+die erste.** Jedes Feld wird beim Einlesen auf Typ, Wertebereich und Länge
+gezwungen — Sätze 1–20, Wiederholungen 1–300 mit `rmax >= rmin`, RIR 0–10
+oder `null`, Typ aus einer festen Liste, Muskel nur wenn eine Landmark dazu
+existiert, Texte auf 400 Zeichen. Übungen ohne Namen und Tage ohne Übungen
+fallen weg.
+
+Und: Ein importierter Tagesschlüssel überschreibt **nie** einen vorhandenen.
+Bei Namensgleichheit bekommt er einen Zusatz — sonst verschwände ein eigener
+Trainingstag stillschweigend, nur weil er zufällig genauso heißt.
+
+**Test.** `PB-042` — importiert einen Container mit unmöglichen Werten
+(999 Sätze, negative Wiederholungen, erfundene Muskelgruppe, 5000-Zeichen-Notiz)
+und Skript-Versuchen im Übungsnamen. Geprüft wird, dass Historie, Körperdaten
+und Einstellungen unverändert bleiben, die bestehenden Trainingstage erhalten
+sind, alle Werte im gültigen Bereich landen und kein fremdes Element im DOM
+auftaucht.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1630,7 +1735,7 @@ gestellt werden sollten:
 
 | # | Muster | Betroffen | Frage beim nächsten Mal |
 |---|---|---|---|
-| 1 | **Kontextverwechslung beim Escaping** | PB-001, PB-018, PB-019 | In welchem Kontext landet dieser String — und in wie vielen gleichzeitig? |
+| 1 | **Kontextverwechslung beim Escaping** | PB-001, PB-018, PB-019, PB-042 | In welchem Kontext landet dieser String — und in wie vielen gleichzeitig? |
 | 2 | **Identität aus Inhalt abgeleitet** | PB-002, PB-003, PB-016, PB-020 | Was ist die stabile Identität dieses Objekts, unabhängig von seinem Inhalt und seiner Position? |
 | 3 | **Zwei Quellen für dieselbe Wahrheit** | PB-005, PB-013, PB-017, PB-024 | Gibt es diese Tabelle/Definition/CSS-Regel schon woanders? |
 | 3b | **Fernwirkung auf Nachfahren** | PB-024, PB-032 | Welche Vorfahren-Eigenschaft (overflow, transform, filter, Spezifität) wirkt hier hinein? |
@@ -1642,6 +1747,7 @@ gestellt werden sollten:
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
 | 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
+| 12 | **Ausgabe, die für Menschen nicht prüfbar ist** | PB-041 | Kann ich diesem Ergebnis ansehen, ob es stimmt? Wenn nein: Welche unabhängige Gegenimplementierung prüft es — und reicht eine? |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
