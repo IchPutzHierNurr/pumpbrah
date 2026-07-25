@@ -1050,6 +1050,206 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-054', title: 'Mesozyklus skaliert das Workout, nicht den Plan',
+    run: async () => {
+      // Der Zyklus darf denselben Fehler nicht machen wie ein naiver Deload:
+      // Wer das Volumen im PLAN reduziert, hat es nach vier Wochen dauerhaft
+      // verloren (dieselbe Klasse wie PB-030).
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.plan));
+        const beforeUi = JSON.parse(JSON.stringify(D.ui.meso || {}));
+        D.plan = { Tag_A: { day: 'Mo', exercises: [
+          { id: 1, name: 'Bankdrücken', sets: 6, rmin: 6, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' }] } };
+        const planVorher = JSON.stringify(D.plan);
+        const res = { verlauf: [] };
+        startMeso(5);
+        const woche = w => {
+          D.ui.meso.start = Date.now() - w * 7 * 864e5;   // w volle Wochen zurueck
+          const st = mesoState();
+          D.active = null; startWorkout('Tag_A');
+          const sets = D.active.exercises[0].sets;
+          D.active = null;
+          return { woche: st.week, faktor: st.factor, sets, deload: st.deload };
+        };
+        for (let w = 0; w < 5; w++) res.verlauf.push(woche(w));
+        res.planUnberuehrt = JSON.stringify(D.plan) === planVorher;
+        res.steigend = res.verlauf.slice(0, 4).every((x, i, a) => i === 0 || x.sets >= a[i - 1].sets);
+        res.starttUnten = res.verlauf[0].sets < 6;
+        res.endetOben = res.verlauf[3].sets === 6;
+        res.deloadWoche = res.verlauf[4].deload === true && res.verlauf[4].sets < res.verlauf[3].sets;
+        stopMeso();
+        res.ohneZyklus = (() => {
+          D.active = null; startWorkout('Tag_A');
+          const s = D.active.exercises[0].sets; D.active = null; return s === 6;
+        })();
+        D.plan = before; D.ui.meso = beforeUi; D.active = null; save();
+        return res;
+      });
+      const ok = r.planUnberuehrt && r.steigend && r.starttUnten && r.endetOben
+                 && r.deloadWoche && r.ohneZyklus;
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-053', title: 'Keine Uebung faellt auf den Muskel-Fallback zurueck',
+    run: async () => {
+      // "Klimmzuege" traf keine Regel: in der Tabelle stand "klimmzug", der
+      // Plural hat ein Umlaut-ue. Die Uebung landete ueber den Fallback bei
+      // "Rudern" - vertikales Ziehen wurde als horizontales gezaehlt.
+      // Statt nur diesen einen Namen zu pruefen, faehrt der Test JEDEN Namen
+      // durch, den die App selbst mitbringt: Bibliothek, Evidenzkatalog,
+      // Standardplan, Onboarding-Pool. Der Fallback ist eine Notbremse fuer
+      // eigene Uebungen des Nutzers, kein Weg fuer mitgelieferte Namen.
+      const r = await page.evaluate(() => {
+        const names = new Set();
+        allLibraryCategories().forEach(c => c.items.forEach(i =>
+          names.add([i.name, i.m || i.muscle, i.t || i.type || 'main'].join('|'))));
+        EVIDENCE_DB.forEach(e => names.add([e.n, e.m, 'main'].join('|')));
+        Object.values(DEFAULT_PLAN).forEach(d => d.exercises.forEach(e =>
+          names.add([e.name, e.muscle, e.type].join('|'))));
+        Object.values(OB_POOL).forEach(v => ['gym', 'home'].forEach(k =>
+          names.add([v[k][0], v[k][1], 'main'].join('|'))));
+        const fall = [];
+        [...names].forEach(entry => {
+          const [n, m, t] = entry.split('|');
+          if (t !== 'main') return;
+          if (!MOVE_PATTERNS.some(p => p.re.test(n))) fall.push(n + ' [' + m + ']');
+        });
+        return { anzahl: names.size, fall };
+      });
+      // Mindestens die mitgelieferten Namen muessen abgedeckt sein
+      const ok = r.anzahl > 100 && r.fall.length === 0;
+      return [ok, r.fall.length ? r.fall.slice(0, 6).join(' | ') : r.anzahl + ' Namen geprueft'];
+    }
+  },
+  {
+    id: 'PB-052', title: 'Onboarding erzeugt fuer jede Antwortkombination einen gueltigen Plan',
+    run: async () => {
+      // Vorher wurden Trainingsort, Tage, Ziel und Erfahrung abgefragt und
+      // weggeworfen - jeder bekam denselben Standardplan. Jetzt erzeugen sie
+      // den Plan, und zwar gegen dieselben Landmarks, an denen der Coach ihn
+      // spaeter misst. Dieser Test faehrt alle Kombinationen durch.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.plan));
+        const bad = [];
+        const days = [2, 3, 4, 5, 6];
+        const locs = ['gym', 'home'];
+        const exps = ['beginner', 'intermediate', 'advanced'];
+        const focs = ['hypertrophy', 'strength', 'balanced', 'recomp', 'bbp'];
+        days.forEach(d => locs.forEach(loc => exps.forEach(exp => focs.forEach(focus => {
+          D.plan = buildPlanFromOnboarding({ days: d, location: loc, experience: exp, focus });
+          coachInvalidate();
+          const tag = `${d}d/${loc}/${exp}/${focus}`;
+          const keys = Object.keys(D.plan);
+          if (keys.length !== d) bad.push(tag + ': ' + keys.length + ' Tage');
+          keys.forEach(k => {
+            if (!D.plan[k].exercises.length) bad.push(tag + ': ' + k + ' leer');
+            const mins = estimatedDuration(k);
+            if (mins > 105) bad.push(tag + ': ' + k + ' ' + mins + ' min');
+            // Keine Redundanz an einem Tag: derselbe Muskel mit derselben
+            // Bewegung zweimal. Muster ALLEIN reicht als Kriterium nicht -
+            // seitliches und hinteres Schulterheben teilen sich das Muster
+            // 'raise', sind aber verschiedene Muskeln (und umgekehrt).
+            const sig = D.plan[k].exercises.map(e =>
+              volGroupOf(e.name, e.muscle, e.type) + '/' + detectMovePattern(e.name, e.muscle, e.type));
+            if (new Set(sig).size !== sig.length) bad.push(tag + ': ' + k + ' Uebung doppelt');
+            const namen = D.plan[k].exercises.map(e => e.name);
+            if (new Set(namen).size !== namen.length) bad.push(tag + ': ' + k + ' Name doppelt');
+          });
+          const a = coachAnalyzePlan();
+          a.muscles.forEach(m => {
+            if (m.sets <= 0) bad.push(tag + ': ' + m.name + ' fehlt');
+            else if (m.state.key === 'low') bad.push(tag + ': ' + m.name + ' unter MEV');
+            else if (m.state.key === 'high') bad.push(tag + ': ' + m.name + ' ueber MRV');
+          });
+        }))));
+        D.plan = before; coachInvalidate(); save();
+        return bad.slice(0, 8);
+      });
+      return [r.length === 0, r.join(' | ')];
+    }
+  },
+  {
+    id: 'PB-050', title: 'Einseitige Uebungen zaehlen doppelt',
+    run: async () => {
+      // Das Evidenzblatt behauptete "die Satzangabe gilt pro Seite, fuers
+      // Wochenvolumen zaehlt sie doppelt" - die Rechnung tat es nicht.
+      const r = await page.evaluate(() => {
+        const beforePlan = JSON.parse(JSON.stringify(D.plan));
+        const beforeHist = JSON.parse(JSON.stringify(D.history));
+        const ex = (id, name, sets, muscle) =>
+          ({ id, name, sets, rmin: 8, rmax: 12, rir: 2, note: '', type: 'main', muscle });
+        D.plan = { Tag_A: { day: 'Mo', exercises: [
+          ex(1, 'KH Rudern einarmig', 4, 'back'),
+          ex(2, 'Maschinenrudern eng neutral', 4, 'back')] } };
+        D.history = [];
+        const vol = planWeeklyVolume(false);
+        const einarmig = estimatedDuration('Tag_A');
+        D.plan = { Tag_A: { day: 'Mo', exercises: [
+          ex(1, 'Maschinenrudern breit', 4, 'back'),
+          ex(2, 'Maschinenrudern eng neutral', 4, 'back')] } };
+        const beidseitig = estimatedDuration('Tag_A');
+        // Und derselbe Massstab in der Historie
+        D.plan = beforePlan;
+        D.history = [{ id: 'UNI1', updatedAt: Date.now(), date: new Date().toLocaleDateString('de-DE'),
+          planKey: 'Tag_A', duration: 40, sets: [
+            { ex: 'KH Rudern einarmig', nr: 1, w: 30, r: 10, rir: 2, note: '', muscle: 'back', type: 'main', mode: '' }] }];
+        const hist = getWeeklyVolume(false);
+        const res = {
+          // 4 einarmig + 4 beidseitig = 8 + 4 = 12 Saetze Ruecken
+          planVolumen: vol.back && vol.back.sets === 12,
+          // doppelte Arbeitszeit, aber nicht doppelte Pause
+          zeitLaenger: einarmig > beidseitig,
+          zeitPlausibel: einarmig - beidseitig === Math.round(4 * 40 / 60),
+          historieDoppelt: hist.back && hist.back.sets === 2,
+          erkennung: isUnilateral('Bulgarian Split Squat') && isUnilateral('KH Rudern einarmig')
+                     && !isUnilateral('Bankdrücken') && !isUnilateral('Beinpresse'),
+          // Ein explizites Feld schlaegt die Namenserkennung
+          feldSchlaegtNamen: isUnilateral('Bankdrücken', { uni: true }) === true
+                             && isUnilateral('KH Rudern einarmig', { uni: false }) === false
+        };
+        D.plan = beforePlan; D.history = beforeHist; save();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-051', title: 'Nur eine Trendrechnung fuer dieselbe Uebung',
+    run: async () => {
+      // Die Stats-Liste rechnete e1RM ueber Einheiten, das Detailblatt rohes
+      // Gewicht ueber Saetze: dieselbe Uebung stand gleichzeitig als "+3,8 kg"
+      // und als "Stagnation" da.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.history));
+        D.history = [];
+        // Acht Einheiten, +1 kg pro Einheit, ZWEI Saetze pro Einheit - genau die
+        // Konstellation, in der die alte Rechnung scheiterte: die letzten drei
+        // SAETZE gegen die drei davor sind anderthalb Trainings gegen anderthalb,
+        // der Unterschied bleibt unter der 2-%-Schwelle und hiess "Stagnation".
+        for (let i = 0; i < 8; i++) {
+          const d = new Date(); d.setDate(d.getDate() - (8 - i) * 3);
+          D.history.push({ id: 'T' + i, updatedAt: Date.now(), date: d.toLocaleDateString('de-DE'),
+            planKey: 'Tag_A', duration: 40, sets: [
+              { ex: 'Bankdrücken', nr: 1, w: 80 + i, r: 8, rir: 2, note: '', muscle: 'chest', type: 'main', mode: '' },
+              { ex: 'Bankdrücken', nr: 2, w: 80 + i, r: 8, rir: 2, note: '', muscle: 'chest', type: 'main', mode: '' }] });
+        }
+        const prog = exerciseProgress('Bankdrücken');
+        const trend = getExTrend('Bankdrücken');
+        const res = {
+          listeSteigend: !!prog && prog.delta > 0 && prog.dir === 'up',
+          detailGleich: trend === (prog ? prog.dir : 'x'),
+          keinWiderspruch: !(prog && prog.dir === 'up' && trend === 'flat')
+        };
+        D.history = before; save();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-048', title: 'Karte "Naechstes Workout" beschreibt den richtigen Tag',
     run: async () => {
       // Sichtbar geworden mit dem 3-Tage-Split: die Karte zeigte nur das erste

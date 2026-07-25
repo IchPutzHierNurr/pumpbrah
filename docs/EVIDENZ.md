@@ -84,8 +84,11 @@ wichtigsten stehen hier, damit sie nicht unter den Tisch fallen:
   identischer Begründungsstruktur (Prinzip + Ausbelastbarkeit, kein
   Direktvergleich) tragen teils „plausibel", teils „Erfahrungswert". Die
   mechanische Nachbearbeitung hat die klarsten Fälle korrigiert, nicht alle.
-* **Bewegungsmuster zu grob.** `raise` fasst seitliches Heben und horizontale
-  Abduktion zusammen, `core` neun mechanisch verschiedene Übungen. Der Coach
+* **Bewegungsmuster zu grob.** `raise` fasst weiterhin seitliches Heben und
+  horizontale Abduktion zusammen — für das VOLUMEN sind sie seit Juli 2026
+  getrennt (eigene Gruppe „Hintere Schulter"), für Marke, Animation und
+  Alternativenliste nicht. `core` fasst neun mechanisch verschiedene Übungen
+  zusammen. Der Coach
   kann darüber keine feine Abdeckungsregel durchsetzen. Eine feinere
   Taxonomie würde auch die Animations-Engine betreffen und ist deshalb nicht
   Teil dieses Schritts.
@@ -124,13 +127,17 @@ Dasselbe bei `legs`: Quadrizeps, Beinbeuger und Waden teilten sich ein Budget
 von 16 Sätzen. Vier Sätze Wadenheben zählten wie vier Sätze Kniebeugen, und
 ein Bein-Tag mit ordentlich Quadrizeps ließ keinen Platz mehr für Waden.
 
-Seit Juli 2026 rechnet der Coach in **neun Gruppen**:
+Seit Juli 2026 rechnet der Coach in **zehn Gruppen** — die seitliche und die
+hintere Schulter kamen zuletzt dazu, aus demselben Grund: Beim Drücken
+bekommt die vordere Schulter alles ab, die hintere nichts, und Rudern
+trainiert die hintere, nicht die seitliche.
 
 | Gruppe | MEV | MAV | MRV | woher |
 |---|---|---|---|---|
 | Brust | 8 | 16 | 22 | `muscle=chest` |
 | Rücken | 10 | 18 | 25 | `muscle=back` |
-| Schultern | 8 | 16 | 22 | `muscle=shoulders` |
+| Schultern (seitlich/vorne) | 8 | 16 | 22 | `muscle=shoulders` |
+| Hintere Schulter | 6 | 14 | 20 | `muscle=shoulders` + Name nach Reverse Fly / Face Pull |
 | Bizeps | 6 | 14 | 20 | `muscle=arms` + Muster `curl` |
 | Trizeps | 6 | 14 | 18 | `muscle=arms` + Muster `triext` |
 | Quadrizeps | 8 | 16 | 20 | `muscle=legs` + `squat`/`legext` |

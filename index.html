@@ -232,7 +232,14 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .c-arms{background:color-mix(in srgb,var(--red) 12%,var(--bg3))}
 .c-core{background:color-mix(in srgb,var(--green) 12%,var(--bg3))}
 .exr-b{flex:1;min-width:0}
-.exr-n{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Der Übungsname ist das Wichtigste in der Zeile und bekam die wenigste
+   Breite: „Kabelrudern sitz…", „Katana Extensio…". Jetzt bis zu zwei Zeilen,
+   erst danach abgeschnitten — die Zeile wächst um wenige Pixel, der Name
+   bleibt lesbar. */
+.exr-n{font-weight:700;font-size:14px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.exr-n .uni{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:800;letter-spacing:.04em;
+  color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);
+  border-radius:6px;padding:1px 5px;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .exr-m{font-size:11.5px;color:var(--text2);margin-top:3px;display:flex;gap:7px;align-items:center;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;min-width:0}
 .rb{font-size:10px;padding:2px 7px;border-radius:6px;background:var(--nd);color:var(--accent);font-weight:700;font-family:'JetBrains Mono',monospace}
 .exr-a{color:var(--text3);font-size:16px;transition:transform .25s var(--ease)}
@@ -1661,6 +1668,33 @@ html,body{
 .trend-more:active{transform:scale(.985);color:var(--text)}
 
 /* ============================================================================
+   MESOZYKLUS
+   Eine Karte, die eine Zeitachse zeigt statt eines Zustands: wo in den fünf
+   Wochen man steht, was das für die heutige Einheit bedeutet, und dass der
+   Plan selbst unangetastet bleibt.
+   ============================================================================ */
+.meso-card{border-radius:var(--r-lg);border:1px solid var(--line);padding:14px;margin-bottom:12px;
+  background:rgba(255,255,255,.035)}
+.meso-card.build{border-color:color-mix(in srgb,var(--accent) 30%,transparent);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 9%,transparent),transparent)}
+.meso-card.deload{border-color:color-mix(in srgb,#4ea1ff 32%,transparent);
+  background:linear-gradient(135deg,color-mix(in srgb,#4ea1ff 10%,transparent),transparent)}
+.meso-card .mc-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.meso-card .mc-t{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.5px}
+.meso-card .mc-f{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);font-weight:700}
+.meso-card .mc-wk{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2)}
+.meso-card .mc-wk button{width:26px;height:26px;border-radius:9px;border:1px solid var(--line);
+  background:rgba(255,255,255,.06);color:var(--text);font-size:15px;line-height:1;cursor:pointer}
+.meso-card .mc-bar{position:relative;height:8px;border-radius:999px;background:rgba(255,255,255,.09);margin:11px 0 9px}
+.meso-card .mc-bar i{position:absolute;left:0;top:0;height:8px;border-radius:999px;background:var(--accent);
+  transition:width var(--dur-ring) var(--out)}
+.meso-card.deload .mc-bar i{background:#4ea1ff}
+.meso-card .mc-bar u{position:absolute;top:-2px;width:2px;height:12px;background:rgba(255,255,255,.28)}
+.meso-card .mc-d{font-size:12px;color:var(--text2);line-height:1.5}
+.meso-card .mc-d b{color:var(--text)}
+.meso-card .mc-act{display:flex;gap:8px;margin-top:10px}
+
+/* ============================================================================
    SETUP
    Der Screen war eine Sammlung verschieden gebauter Karten mit Emoji-Knöpfen.
    Jetzt: eine Zeile ist eine Einstellung — links was und warum, rechts der
@@ -1941,6 +1975,7 @@ html,body{
 <div id="d-kpi-row"></div>
 <div id="d-next-card"></div>
 <div id="d-muscle-volume"></div>
+<div id="meso-area"></div>
 <div id="deload-area"></div>
 <div class="plan-drawer card" id="dash-plan-drawer">
 <button class="plan-drawer-toggle" id="plan-drawer-toggle" onclick="togglePlanDrawer()">
@@ -2280,7 +2315,7 @@ html,body{
 const FIREBASE_CONFIG={apiKey:"AIzaSyCaWvytYF7RnkX8ouIlsDiBRy0MP4pZW-g",authDomain:"pumpbrah-9e21e.firebaseapp.com",projectId:"pumpbrah-9e21e",storageBucket:"pumpbrah-9e21e.firebasestorage.app",messagingSenderId:"190452878389",appId:"1:190452878389:web:eac735f8031f68eb8df57c"};
 let db=null,useFirebase=false,syncCode='',unsubscribe=null,cloudWriteQueue=Promise.resolve();
 let D={plan:null,history:[],active:null,settings:{compound:150,isolation:90},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[]}};
-const DEFAULT_PLAN={"FullBody_A":{"day":"Di","exercises":[{"id":1,"name":"Bankdrücken","sets":6,"rmin":6,"rmax":10,"rir":2,"note":"Schulterblätter fixiert, Ellenbogen 45°, kurzer Brustkontakt ohne Abfedern","type":"main","muscle":"chest"},{"id":2,"name":"Maschinenrudern eng neutral","sets":5,"rmin":8,"rmax":12,"rir":2,"note":"Vorne voll ausstrecken lassen, hinten Schulterblätter zusammen","type":"main","muscle":"back"},{"id":3,"name":"Beinpresse","sets":6,"rmin":10,"rmax":15,"rir":2,"note":"Hüftbreit-mittig, Knie nicht locken, so tief wie das Becken stabil bleibt","type":"main","muscle":"legs"},{"id":4,"name":"Beinbeuger sitzend","sets":5,"rmin":10,"rmax":15,"rir":1,"note":"Sitzend statt liegend: gebeugte Hüfte = längere Position für die Ischios","type":"main","muscle":"legs"},{"id":5,"name":"KH Seitheben","sets":3,"rmin":12,"rmax":20,"rir":1,"note":"Kontrolliert, kein Schwung — hier zählt Technik vor Gewicht","type":"main","muscle":"shoulders"},{"id":6,"name":"Slantboard Calf Raise","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"Gestrecktes Knie, Ferse tief sinken lassen, oben 1s halten","type":"main","muscle":"legs"},{"id":7,"name":"Trizepsdrücken Seil","sets":3,"rmin":10,"rmax":15,"rir":1,"note":"Oberarm fixiert, unten das Seil auseinanderziehen","type":"main","muscle":"arms"},{"id":8,"name":"Kabelcrunches","sets":3,"rmin":12,"rmax":15,"rir":1,"note":"Kniend, Becken einrollen statt Hüfte beugen","type":"main","muscle":"core"}]},"FullBody_B":{"day":"Do","exercises":[{"id":9,"name":"Schrägbankdrücken Kurzhantel","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"30°, nicht steiler — darüber übernimmt die vordere Schulter","type":"main","muscle":"chest"},{"id":10,"name":"Latziehen breit Obergriff","sets":6,"rmin":8,"rmax":12,"rir":2,"note":"Max. 15° Rücklage, oben die Schultern hochlaufen lassen","type":"main","muscle":"back"},{"id":11,"name":"Rumänisches Kreuzheben","sets":5,"rmin":8,"rmax":12,"rir":2,"note":"Hüfte nach hinten, Stange körpernah, Rücken neutral","type":"main","muscle":"legs"},{"id":12,"name":"Leg Extension","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"Oben 1s halten, Lehne zurück für mehr Rectus femoris","type":"main","muscle":"legs"},{"id":13,"name":"Kurzhantel Reverse Butterfly","sets":3,"rmin":12,"rmax":20,"rir":1,"note":"Ellbogen leicht gebeugt fixieren, Bewegung nur aus der Schulter","type":"main","muscle":"shoulders"},{"id":14,"name":"Schrägbank-Kurzhantelcurl","sets":3,"rmin":8,"rmax":12,"rir":1,"note":"Bank ca. 60°, Arme hängen hinter dem Rumpf — dort liegt die Dehnung","type":"main","muscle":"arms"},{"id":15,"name":"Wadenheben stehend","sets":6,"rmin":10,"rmax":15,"rir":1,"note":"Gestrecktes Knie, volle Dehnung unten, kein Wippen","type":"main","muscle":"legs"},{"id":16,"name":"Hängendes Beinheben","sets":5,"rmin":8,"rmax":15,"rir":1,"note":"Becken einrollen, kein Schwung","type":"main","muscle":"core"}]},"FullBody_C":{"day":"Sa","exercises":[{"id":17,"name":"Kabelzug-Fliegende","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"In der Dehnung 1s halten, oben die Hände nicht weit kreuzen","type":"main","muscle":"chest"},{"id":18,"name":"Kabelrudern sitzend eng","sets":5,"rmin":8,"rmax":12,"rir":2,"note":"Vorne Schultern nach vorn laufen lassen, hinten Ellbogen an den Rumpf","type":"main","muscle":"back"},{"id":19,"name":"Hackenschmidt-Kniebeuge","sets":6,"rmin":8,"rmax":12,"rir":2,"note":"Füße mittig, tief bis das Becken stabil bleibt. Ersatz: Beinpresse eng","type":"main","muscle":"legs"},{"id":20,"name":"Beinbeuger liegend","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"Langsam ablassen, Becken bleibt an der Auflage","type":"main","muscle":"legs"},{"id":21,"name":"Schulterdrücken Maschine","sets":3,"rmin":8,"rmax":12,"rir":2,"note":"Griff auf Schulterhöhe starten, oben nicht in die Sperre drücken","type":"main","muscle":"shoulders"},{"id":22,"name":"Katana Extensions Kabel","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"Ellbogen fixiert, in der Dehnung kurz halten","type":"main","muscle":"arms"},{"id":23,"name":"Hammercurls Kabel","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"Neutraler Griff — trifft Brachialis und Unterarm mit","type":"main","muscle":"arms"},{"id":24,"name":"Wadenheben sitzend","sets":6,"rmin":12,"rmax":20,"rir":1,"note":"Gebeugtes Knie = Soleus. Andere Faserlage als stehend, deshalb beides","type":"main","muscle":"legs"}]}};
+const DEFAULT_PLAN={"FullBody_A":{"day":"Di","exercises":[{"id":1,"name":"Bankdrücken","sets":6,"rmin":6,"rmax":10,"rir":2,"note":"Schulterblätter fixiert, Ellenbogen 45°, kurzer Brustkontakt ohne Abfedern","type":"main","muscle":"chest"},{"id":2,"name":"Maschinenrudern eng neutral","sets":6,"rmin":8,"rmax":12,"rir":2,"note":"Vorne voll ausstrecken lassen, hinten Schulterblätter zusammen","type":"main","muscle":"back"},{"id":3,"name":"Beinpresse","sets":6,"rmin":10,"rmax":15,"rir":2,"note":"Hüftbreit-mittig, Knie nicht locken, so tief wie das Becken stabil bleibt","type":"main","muscle":"legs"},{"id":4,"name":"Beinbeuger sitzend","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"Sitzend statt liegend: gebeugte Hüfte = längere Position für die Ischios","type":"main","muscle":"legs"},{"id":5,"name":"KH Seitheben","sets":3,"rmin":12,"rmax":20,"rir":1,"note":"Kontrolliert, kein Schwung — hier zählt Technik vor Gewicht","type":"main","muscle":"shoulders"},{"id":6,"name":"Slantboard Calf Raise","sets":8,"rmin":10,"rmax":15,"rir":1,"note":"Gestrecktes Knie = Gastrocnemius. Ferse tief sinken lassen, oben 1s halten","type":"main","muscle":"legs"},{"id":7,"name":"Trizepsdrücken Seil","sets":3,"rmin":10,"rmax":15,"rir":1,"note":"Oberarm fixiert, unten das Seil auseinanderziehen","type":"main","muscle":"arms"},{"id":8,"name":"Kabelcrunches","sets":3,"rmin":12,"rmax":15,"rir":1,"note":"Kniend, Becken einrollen statt Hüfte beugen","type":"main","muscle":"core"}]},"FullBody_B":{"day":"Do","exercises":[{"id":9,"name":"Schrägbankdrücken Kurzhantel","sets":5,"rmin":8,"rmax":12,"rir":2,"note":"30°, nicht steiler — darüber übernimmt die vordere Schulter","type":"main","muscle":"chest"},{"id":10,"name":"Latziehen breit Obergriff","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Max. 15° Rücklage, oben die Schultern hochlaufen lassen","type":"main","muscle":"back"},{"id":11,"name":"Rumänisches Kreuzheben","sets":5,"rmin":8,"rmax":12,"rir":2,"note":"Hüfte nach hinten, Stange körpernah, Rücken neutral","type":"main","muscle":"legs"},{"id":12,"name":"Leg Extension","sets":5,"rmin":10,"rmax":15,"rir":1,"note":"Oben 1s halten, Lehne zurück für mehr Rectus femoris","type":"main","muscle":"legs"},{"id":13,"name":"Schrägbank-Kurzhantelcurl","sets":3,"rmin":8,"rmax":12,"rir":1,"note":"Bank ca. 60°, Arme hängen hinter dem Rumpf — dort liegt die Dehnung","type":"main","muscle":"arms"},{"id":14,"name":"Wadenheben stehend","sets":8,"rmin":10,"rmax":15,"rir":1,"note":"Gestrecktes Knie, volle Dehnung unten, kein Wippen","type":"main","muscle":"legs"},{"id":15,"name":"Hängendes Beinheben","sets":5,"rmin":8,"rmax":15,"rir":1,"note":"Becken einrollen, kein Schwung","type":"main","muscle":"core"},{"id":16,"name":"Kurzhantel Reverse Butterfly","sets":6,"rmin":12,"rmax":20,"rir":1,"note":"Ellbogen leicht gebeugt fixieren, Bewegung nur aus der Schulter","type":"main","muscle":"shoulders"}]},"FullBody_C":{"day":"Sa","exercises":[{"id":17,"name":"Kabelzug-Fliegende","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"In der Dehnung 1s halten, oben die Hände nicht weit kreuzen","type":"main","muscle":"chest"},{"id":18,"name":"Kabelrudern sitzend eng","sets":6,"rmin":8,"rmax":12,"rir":2,"note":"Vorne Schultern nach vorn laufen lassen, hinten Ellbogen an den Rumpf","type":"main","muscle":"back"},{"id":19,"name":"Hackenschmidt-Kniebeuge","sets":5,"rmin":8,"rmax":12,"rir":2,"note":"Füße mittig, tief bis das Becken stabil bleibt. Ersatz: Beinpresse eng","type":"main","muscle":"legs"},{"id":20,"name":"Beinbeuger liegend","sets":5,"rmin":10,"rmax":15,"rir":1,"note":"Langsam ablassen, Becken bleibt an der Auflage","type":"main","muscle":"legs"},{"id":21,"name":"Seitheben Kabel","sets":6,"rmin":12,"rmax":20,"rir":1,"note":"Kabel hinter dem Rücken, konstante Spannung auch unten","type":"main","muscle":"shoulders"},{"id":22,"name":"Face Pulls","sets":5,"rmin":15,"rmax":20,"rir":1,"note":"Seil auf Augenhöhe, außenrotieren — hintere Schulter und Schultergesundheit","type":"main","muscle":"shoulders"},{"id":23,"name":"Katana Extensions Kabel","sets":4,"rmin":10,"rmax":15,"rir":1,"note":"Ellbogen fixiert, in der Dehnung kurz halten","type":"main","muscle":"arms"},{"id":24,"name":"Hammercurls Kabel","sets":5,"rmin":10,"rmax":15,"rir":1,"note":"Neutraler Griff — trifft Brachialis und Unterarm mit","type":"main","muscle":"arms"}]}};
 function cloudSafeSnapshot(data){
   const copy=cloneData(data);
   if(copy.ui&&copy.ui.avatar)delete copy.ui.avatar;
@@ -2448,6 +2483,9 @@ function normalizeExercise(ex){
 }
 function normalizeData(){
   if(!D||typeof D!=='object')D={};
+  /* Die Onboarding-Antworten sind Profildaten, kein Wegwerfzustand — sie
+     erklären, warum der Plan so aussieht, und überleben Reload und Sync. */
+  if(!D.profile||typeof D.profile!=='object')D.profile={};
   if(!D.plan||typeof D.plan!=='object')D.plan={...DEFAULT_PLAN};
   Object.values(D.plan).forEach(day=>{
     if(!day||typeof day!=='object')return;
@@ -2593,7 +2631,186 @@ let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experie
 function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';obStep=0;renderObStep()}
 function renderObStep(){const c=document.getElementById('ob-content');const sub=document.getElementById('ob-sub');const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');const steps=[{sub:'Schritt 1/8 — Über dich',html:`<div style="margin-bottom:12px">${obSel('ob-gen',[{k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}],'gender','male')}</div>${obBtn('WEITER →','obNext(0)')}`},{sub:'Schritt 2/8 — Geburtsdatum',html:`<div class="ig" style="margin-bottom:12px"><label>Wann bist du geboren?</label><input type="date" id="ob-birthday" style="font-size:18px;padding:14px;width:100%;font-family:'JetBrains Mono',monospace"></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px">Wird für dein Fitnessalter benötigt</div>${obBtn('WEITER →','obNext(1)')}${obBack}`},{sub:'Schritt 3/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(2)')}${obBack}`},{sub:'Schritt 4/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(3)')}${obBack}`},{sub:'Schritt 5/8 — Trainingsort',html:`<div style="margin-bottom:12px">${obSel('ob-loc',[{k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}],'location','gym')}</div>${obBtn('WEITER →','obNext(4)')}${obBack}`},{sub:'Schritt 6/8 — Trainingsfrequenz',html:`<div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label><div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===3?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>${obBtn('WEITER →','obNext(5)')}${obBack}`},{sub:'Schritt 7/8 — Trainingsziel',html:`<div style="margin-bottom:12px">${obSel('ob-focus',[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},{k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},{k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},{k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])],'focus','balanced')}</div>${obBtn('WEITER →','obNext(6)')}${obBack}`},{sub:'Schritt 8/8 — Erfahrung',html:`<div style="margin-bottom:12px">${obSel('ob-exp',[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},{k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},{k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre'}],'experience','beginner')}</div>${obBtn('🚀 PLAN ERSTELLEN','finishOnboarding()')}${obBack}`}];sub.textContent=steps[obStep].sub;c.innerHTML=steps[obStep].html}
 function obNext(step){if(step===1){obData.birthday=document.getElementById('ob-birthday').value||null;if(!obData.birthday){toast('Geburtsdatum eingeben!');return}}if(step===2){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}if(step===3){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}obStep++;renderObStep()}
-function finishOnboarding(){D.bio.height=obData.height;D.bio.gender=obData.gender;D.bio.birthday=obData.birthday;if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];D.plan={...DEFAULT_PLAN};save();if(useFirebase)startSync();setTimeout(()=>save(),1000);showApp();toast('🚀 Plan erstellt! Los geht\'s!')}
+/* --------------------------------------------------------------------------
+   PLAN AUS DEN ONBOARDING-ANTWORTEN
+   Acht Fragen, davon vier ohne Wirkung: Trainingsort, Tage pro Woche, Ziel
+   und Erfahrung landeten in `obData` und wurden nie gelesen — jeder bekam
+   denselben Standardplan. Entweder man benutzt die Antworten oder man fragt
+   nicht danach. Hier werden sie benutzt.
+
+   Aufbau: ein Pool aus Übungen je Bewegungsmuster, getrennt nach Studio und
+   Zuhause. Die Tagesbaupläne verteilen die Muster so, dass jeder Muskel
+   mindestens zweimal pro Woche drankommt. Sätze skalieren mit der Erfahrung,
+   das Ziel verschiebt Volumen zwischen den Gruppen. Gerechnet wird gegen
+   dieselben Landmarks wie im Coach — der Plan kommt also aus demselben
+   Modell, an dem er später gemessen wird.
+   -------------------------------------------------------------------------- */
+const OB_POOL={
+  push:  {gym:['Bankdrücken','chest',6,10,2],       home:['Kurzhantel-Bankdrücken','chest',8,12,2]},
+  push2: {gym:['Schrägbankdrücken Kurzhantel','chest',8,12,2], home:['Liegestütze','chest',8,20,2]},
+  fly:   {gym:['Kabelzug-Fliegende','chest',10,15,1],home:['Kurzhantel-Fliegende','chest',10,15,1]},
+  row:   {gym:['Maschinenrudern eng neutral','back',8,12,2], home:['Kurzhantel-Rudern beidarmig','back',8,12,2]},
+  row2:  {gym:['Kabelrudern sitzend eng','back',8,12,2],     home:['Ring Rows','back',8,15,2]},
+  pulld: {gym:['Latziehen breit Obergriff','back',8,12,2],   home:['Klimmzüge','back',5,12,2]},
+  squat: {gym:['Beinpresse','legs',10,15,2],                 home:['Goblet Squat','legs',8,15,2]},
+  squat2:{gym:['Hackenschmidt-Kniebeuge','legs',8,12,2],     home:['Bulgarian Split Squat','legs',8,12,2]},
+  hinge: {gym:['Rumänisches Kreuzheben','legs',8,12,2],      home:['Kurzhantel-Kreuzheben rumänisch','legs',8,12,2]},
+  legext:{gym:['Leg Extension','legs',10,15,1],              home:['Beinstrecken mit Band','legs',10,15,1]},
+  legcurl:{gym:['Beinbeuger sitzend','legs',10,15,1],        home:['Nordic Curls','legs',5,10,1]},
+  legcurl2:{gym:['Beinbeuger liegend','legs',10,15,1],       home:['Beinbeugen mit Band','legs',10,15,1]},
+  calf:  {gym:['Slantboard Calf Raise','legs',10,15,1],      home:['Wadenheben Stufe','legs',12,20,1]},
+  calf2: {gym:['Wadenheben sitzend','legs',12,20,1],         home:['Wadenheben einbeinig','legs',12,20,1]},
+  raise: {gym:['KH Seitheben','shoulders',12,20,1],          home:['Kurzhantel-Seitheben','shoulders',12,20,1]},
+  rear:  {gym:['Kurzhantel Reverse Butterfly','shoulders',12,20,1], home:['Reverse Flyes Kurzhantel','shoulders',12,20,1]},
+  rear2: {gym:['Face Pulls','shoulders',15,20,1],              home:['Face Pulls Band','shoulders',15,20,1]},
+  raise2:{gym:['Seitheben Kabel','shoulders',12,20,1],         home:['Seitheben Band','shoulders',12,20,1]},
+  calf3: {gym:['Wadenheben stehend','legs',10,15,1],           home:['Wadenheben einbeinig Stufe','legs',12,20,1]},
+  pushh: {gym:['Schulterdrücken Maschine','shoulders',8,12,2],home:['Kurzhantel-Schulterdrücken','shoulders',8,12,2]},
+  curl:  {gym:['Schrägbank-Kurzhantelcurl','arms',8,12,1],   home:['Kurzhantel-Curls','arms',8,12,1]},
+  curl2: {gym:['Hammercurls Kabel','arms',10,15,1],          home:['Hammercurls Kurzhantel','arms',10,15,1]},
+  triext:{gym:['Trizepsdrücken Seil','arms',10,15,1],        home:['Trizepsstrecken Kurzhantel liegend','arms',8,15,1]},
+  triext2:{gym:['Katana Extensions Kabel','arms',10,15,1],   home:['Überkopf-Trizepsstrecken KH','arms',10,15,1]},
+  core:  {gym:['Kabelcrunches','core',12,15,1],              home:['Crunches','core',12,20,1]},
+  core2: {gym:['Hängendes Beinheben','core',8,15,1],         home:['Beinheben liegend','core',10,20,1]}
+};
+/* Ein Bauplan je Tageszahl. Jeder Eintrag ist ein Tag: Name und die Muster,
+   die an diesem Tag drankommen. Kein Muster zweimal am selben Tag. */
+const OB_TEMPLATES={
+  2:[['Ganzkoerper A',['push','row','squat','legcurl','raise','triext','calf','core']],
+     ['Ganzkoerper B',['push2','pulld','hinge','legext','rear','curl','calf2','core2']]],
+  3:[['FullBody A',['push','row','squat','legcurl','raise','calf','triext','core']],
+     ['FullBody B',['push2','pulld','hinge','legext','rear','curl','calf2','core2']],
+     ['FullBody C',['fly','row2','squat2','legcurl2','raise2','rear2','triext2','curl2']]],
+  4:[['Oberkoerper A',['push','row','raise','triext','curl','core']],
+     ['Unterkoerper A',['squat','hinge','legext','calf','rear2']],
+     ['Oberkoerper B',['push2','pulld','row2','rear','triext2','curl2']],
+     ['Unterkoerper B',['squat2','legcurl','calf2','raise2','core2']]],
+  5:[['Druecken',['push','pushh','raise','triext','core']],
+     ['Ziehen',['pulld','row','curl','rear']],
+     ['Beine',['squat','hinge','legext','calf']],
+     ['Oberkoerper',['push2','row2','raise2','triext2','curl2']],
+     ['Beine & Rumpf',['squat2','legcurl','calf2','rear2','core2']]],
+  6:[['Druecken A',['push','pushh','raise','triext']],
+     ['Ziehen A',['pulld','row','curl','rear']],
+     ['Beine A',['squat','hinge','legext','calf']],
+     ['Druecken B',['push2','raise2','triext2','core']],
+     ['Ziehen B',['row2','curl2','rear2','core2']],
+     ['Beine B',['squat2','legcurl','calf2','fly']]]
+};
+const OB_WEEKDAYS={2:['Di','Fr'],3:['Di','Do','Sa'],4:['Mo','Di','Do','Fr'],
+  5:['Mo','Di','Mi','Fr','Sa'],6:['Mo','Di','Mi','Do','Fr','Sa']};
+/* Erfahrung bestimmt, WO im Korridor der Plan landet: Anfänger knapp über
+   dem Minimum, Fortgeschrittene am Optimum. Nicht „mehr Sätze für alle" —
+   das reißt bei den kleinen Muskeln die Obergrenze. */
+const OB_LEVEL={beginner:.2,intermediate:.65,advanced:1};
+/* Obergrenze für eine erzeugte Einheit. Wer mehr will, erhöht die Sätze selbst. */
+const OB_MAX_MIN=100;
+/* Das Ziel verschiebt den Anteil im Korridor, nicht die Satzzahl direkt. */
+const OB_FOCUS_BONUS={
+  hypertrophy:{chest:.12,back:.12,shoulders:.12,biceps:.12,triceps:.12},
+  strength:{chest:.12,back:.12,quads:.12,hams:.12},
+  balanced:{},
+  recomp:{quads:.1,hams:.1,core:.15},
+  bbp:{quads:.2,hams:.2,calves:.15,core:.2,chest:-.15,triceps:-.15,biceps:-.15}
+};
+/* Verteilt die Sätze so, dass jede Volumengruppe ihr Wochenziel trifft —
+   gerechnet mit denselben Landmarks und derselben Sekundärbeteiligung wie im
+   Coach. Fixpunkt, weil indirektes Volumen von den Satzzahlen abhängt, die es
+   selbst mitbestimmt: drei Runden reichen, danach bewegt sich nichts mehr. */
+function buildPlanFromOnboarding(ob){
+  const days=Math.min(6,Math.max(2,parseInt(ob&&ob.days)||3));
+  const home=(ob&&ob.location)==='home';
+  const level=OB_LEVEL[(ob&&ob.experience)||'beginner'];
+  const bonus=OB_FOCUS_BONUS[(ob&&ob.focus)||'balanced']||{};
+  const tpl=OB_TEMPLATES[days]||OB_TEMPLATES[3];
+  const weekdays=OB_WEEKDAYS[days]||OB_WEEKDAYS[3];
+
+  const slots=[];
+  tpl.forEach(([dayName,patterns],di)=>{
+    patterns.forEach(pk=>{
+      const entry=OB_POOL[pk];
+      if(!entry)return;
+      const[name,muscle,rmin,rmax,rir]=entry[home?'home':'gym'];
+      slots.push({di,dayName,name,muscle,rmin,rmax,rir,
+        group:volGroupOf(name,muscle,'main'),sides:setSides(name),sets:3});
+    });
+  });
+  const target={};
+  Object.keys(MUSCLE_LANDMARKS).forEach(g=>{
+    const lm=MUSCLE_LANDMARKS[g];
+    const t=lm.mev+(lm.mav-lm.mev)*level*(1+(bonus[g]||0));
+    target[g]=Math.max(lm.mev,Math.min(lm.mrv,t));
+  });
+  const byGroup={};
+  slots.forEach(s=>{if(s.group)(byGroup[s.group]=byGroup[s.group]||[]).push(s)});
+  for(let iter=0;iter<3;iter++){
+    const indirect={};
+    slots.forEach(s=>{
+      Object.entries(secondaryContribution(s.name,s.muscle,'main')).forEach(([g,w])=>{
+        indirect[g]=(indirect[g]||0)+w*s.sets*s.sides;
+      });
+    });
+    Object.entries(byGroup).forEach(([g,list])=>{
+      const need=Math.max(0,(target[g]||0)-(indirect[g]||0));
+      const sides=list.reduce((a,x)=>a+x.sides,0)||1;
+      const per=Math.max(2,Math.min(6,Math.round(need/sides)));
+      list.forEach(x=>{x.sets=per});
+    });
+  }
+  /* Zeitdeckel. Bei zwei Trainingstagen passt das Optimum schlicht nicht in
+     zwei Einheiten — dann lieber ehrlich weniger Volumen als eine Einheit,
+     die niemand durchhält. Der Coach sagt danach, was fehlt. */
+  const dayMinutes=di=>{
+    let sec=0;
+    slots.filter(s=>s.di===di).forEach(s=>{
+      sec+=s.sets*(40*s.sides+restSecondsFor(s.name,s.muscle,'main'));
+    });
+    return sec/60;
+  };
+  const groupVolume=g=>{
+    let v=0;
+    slots.forEach(s=>{
+      if(s.group===g)v+=s.sets*s.sides;
+      const sec=secondaryContribution(s.name,s.muscle,'main');
+      if(sec[g])v+=sec[g]*s.sets*s.sides;
+    });
+    return v;
+  };
+  for(let guard=0;guard<200;guard++){
+    let worst=-1,worstMin=0;
+    tpl.forEach((_,di)=>{const m=dayMinutes(di);if(m>OB_MAX_MIN&&m>worstMin){worst=di;worstMin=m}});
+    if(worst<0)break;
+    /* Gekürzt wird nur, wo danach noch das Minimum steht. Sonst spart der
+       Zeitdeckel genau dort, wo ohnehin am wenigsten Volumen liegt, und
+       schiebt eine Muskelgruppe unter MEV. */
+    const cand=slots.filter(s=>s.di===worst&&s.sets>2&&
+        groupVolume(s.group)-s.sides>=(MUSCLE_LANDMARKS[s.group]||{mev:0}).mev)
+      .sort((a,b)=>b.sets-a.sets)[0];
+    if(!cand)break;
+    cand.sets--;
+  }
+  const plan={};
+  let id=1;
+  tpl.forEach(([name],di)=>{
+    const key=name.replace(/\s+/g,'_');
+    plan[key]={day:weekdays[di]||'',exercises:slots.filter(s=>s.di===di).map(s=>({
+      id:id++,name:s.name,sets:s.sets,rmin:s.rmin,rmax:s.rmax,rir:s.rir,
+      note:'',type:'main',muscle:s.muscle
+    }))};
+  });
+  return plan;
+}
+function finishOnboarding(){
+  D.bio.height=obData.height;D.bio.gender=obData.gender;D.bio.birthday=obData.birthday;
+  if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];
+  /* Die Antworten bleiben erhalten: sie erklären später, warum der Plan so
+     aussieht, und ein Neuaufbau kann sie wiederverwenden. */
+  D.profile={days:obData.days,focus:obData.focus,experience:obData.experience,location:obData.location};
+  D.plan=buildPlanFromOnboarding(obData);
+  save();if(useFirebase)startSync();setTimeout(()=>save(),1000);showApp();
+  const n=Object.keys(D.plan).length;
+  toast(`Plan erstellt — ${n} Trainingstage`);
+}
 /* --------------------------------------------------------------------------
    ICON-SET
    Vorher standen Emoji für Muskelgruppen: 🔙 (ein RICHTUNGSPFEIL) für Rücken,
@@ -3014,6 +3231,25 @@ function withViewTransition(fn){fn()}
    auf den Gliedmaßen der Figur. Kostet 0 Bytes Netzwerk und funktioniert
    in jeder Offline-Session.
    ========================================================================== */
+/* --------------------------------------------------------------------------
+   EINSEITIGE ÜBUNGEN
+   Bei „KH Rudern einarmig 4×10" sind vier Sätze pro Seite gemeint, also acht
+   Arbeitssätze und die doppelte Arbeitszeit. Das Evidenzblatt sagte das
+   sogar wörtlich — die Rechnung dahinter ignorierte es (PB-050). Erkannt
+   wird es am Namen, weil genau dort die Information steht; ein explizites
+   Feld `uni` an der Übung schlägt die Namenserkennung.
+   -------------------------------------------------------------------------- */
+const UNILATERAL_RE=/(einarmig|einbeinig|one[ -]?arm|single[ -]?(arm|leg)|unilateral|pro seite|je seite|bulgarian|split ?squat|ausfallschritt|lunge|step ?up|pistol|poliquin)/i;
+function isUnilateral(name,ex){
+  if(ex&&ex.uni!==undefined&&ex.uni!==null)return !!ex.uni;
+  return UNILATERAL_RE.test(String(name||''));
+}
+/* Wie viele Arbeitssätze ein eingetragener Satz wirklich bedeutet. */
+function setSides(name,ex){return isUnilateral(name,ex)?2:1}
+/* Rückwärtige Schulter: eigene Volumengruppe, aber dasselbe Bewegungsmuster
+   wie seitliches Heben. Die Unterscheidung hängt am Namen, deshalb steht sie
+   hier einmal und wird von der Mustertabelle mitbenutzt. */
+const REAR_DELT_RE=/(reverse ?(butterfly|fly|flye|pec ?deck)|rear ?delt|hintere ?schulter|face ?pull|gesichtziehen)/i;
 const MOVE_PATTERNS=[
   {k:'hinge',   re:/(kreuzheben|deadlift|rdl|rumänisch|romanian|good ?morning|hip ?thrust|hüftheben|jefferson|hyperext|rückenstrecker|back ?extension|kettlebell ?swing)/i},
   {k:'squat',   re:/(kniebeuge|squat|beinpresse|leg ?press|hackenschmidt|ausfallschritt|lunge|split ?squat|step ?up|pistol|beinbeuge.*stehend|poliquin)/i},
@@ -3023,10 +3259,13 @@ const MOVE_PATTERNS=[
      (PB-033). Face Pulls standen aus demselben Grund unter „Rudern", obwohl
      sie horizontale Abduktion sind, keine Ruderbewegung. Beides gehört zur
      hinteren Schulter und damit vor die allgemeinen Regeln (PB-047). */
-  {k:'raise',   re:/(reverse ?(butterfly|fly|pec ?deck)|rear ?delt|hintere ?schulter|face ?pull|gesichtziehen)/i},
+  {k:'raise',   re:REAR_DELT_RE},
   {k:'pushh',   re:/(schulterdrücken|overhead ?press|ohp|military|arnold ?press|schulterpresse|shoulder ?press|handstand)/i},
   {k:'push',    re:/(bankdrücken|bench|brustpresse|chest ?press|butterfly|fliegende|fly|dips?|liegestütz|push ?ups?|pec ?deck|kabelzug.*brust)/i},
-  {k:'pulld',   re:/(latziehen|lat ?pulldown|klimmzug|pull ?ups?|chin ?ups?|pullover|überzüge)/i},
+  /* „klimmzug" traf den Plural „Klimmzüge" nicht — Umlaut. Die Übung fiel
+     durch alle Regeln und landete über den Muskel-Fallback bei „Rudern",
+     also horizontalem statt vertikalem Ziehen (PB-053). */
+  {k:'pulld',   re:/(latziehen|lat ?pulldown|klimmz|pull ?ups?|chin ?ups?|pullover|überzug|überzüge)/i},
   {k:'row',     re:/(rudern|row|ring ?row|shrug|nackenziehen)/i},
   /* REIHENFOLGE IST BEDEUTUNG: Die erste passende Regel gewinnt. "Leg Curl"
      enthält "curl" und wurde deshalb als Bizeps-Curl erkannt — die Animation
@@ -3048,7 +3287,7 @@ const MOVE_PATTERNS=[
   {k:'triext',  re:/(trizeps|triceps|pushdown|drücken.*seil|french ?press|skull ?crusher|stirndrücken|kickback|dip ?machine|katana|extensions?)/i},
   {k:'raise',   re:/(seitheben|lateral ?raise|frontheben|front ?raise|seitenheben|upright ?row|aufrechtes ?rudern)/i},
   {k:'calf',    re:/(waden|calf|zehenstand|tibialis|schienbein)/i},
-  {k:'core',    re:/(crunch|sit ?up|plank|unterarmstütz|bauch|core|russian ?twist|beinheben|leg ?raise|hollow|ab ?wheel|wood ?chop)/i},
+  {k:'core',    re:/(crunch|sit ?up|plank|unterarmstütz|bauch|core|russian ?twist|beinheben|leg ?raise|hollow|ab ?wheel|wood ?chop|seitbeuge|side ?bend|pallof)/i},
   {k:'cardio',  re:/(cardio|laufband|treadmill|stair|treppe|bike|ergometer|crosstrainer|elliptical|rudergerät|skierg|assault|seilspringen|jump ?rope|sprint|walk|gehen|lauf|jog|run)/i},
   {k:'mobility',re:/(mobility|dehnen|stretch|pigeon|taube|yoga|foam|faszien|rotation|cat ?cow|90\/90|hüftöffner)/i}
 ];
@@ -3572,7 +3811,18 @@ function svgChart(data,opts={}){
 })();
 function getLastW(name){for(let i=D.history.length-1;i>=0;i--){const f=D.history[i].sets.filter(s=>s.ex===name&&s.w>0);if(f.length){const l=f[f.length-1];return{w:l.w,r:l.r,rir:l.rir}}}return null}
 function getAllSets(name){const arr=[];D.history.forEach(s=>s.sets.forEach(set=>{if(set.ex===name)arr.push({...set,date:s.date})}));return arr}
-function getExTrend(name){const sets=getAllSets(name).filter(s=>s.w>0);if(sets.length<3)return'—';const last3=sets.slice(-3).map(s=>s.w);const avg3=last3.reduce((a,b)=>a+b,0)/3;const prev=sets.slice(-6,-3);if(prev.length===0)return'—';const avgP=prev.reduce((a,b)=>a+b.w,0)/prev.length;if(avg3>avgP*1.02)return'up';if(avg3<avgP*0.98)return'down';return'flat'}
+/* EINE Trendrechnung für die ganze App. Vorher gab es zwei: diese hier
+   verglich die letzten drei SÄTZE mit den drei davor über das rohe Gewicht,
+   die Stats-Liste dagegen das beste e1RM der letzten drei EINHEITEN. Bei zwei
+   Sätzen pro Einheit vergleicht die erste anderthalb Trainings gegen
+   anderthalb — dieselbe Übung stand deshalb gleichzeitig als „+3,8 kg" in
+   der Liste und als „Stagnation" im Detail (PB-051). Jetzt delegiert diese
+   Funktion an exerciseProgress, es gibt nur noch eine Wahrheit. */
+function getExTrend(name){
+  const p=(typeof exerciseProgress==='function')?exerciseProgress(name):null;
+  if(!p||p.sessions<2||p.delta===null)return'—';
+  return p.dir||'flat';
+}
 function getExPR(name){const sets=getAllSets(name).filter(s=>s.w>0);if(!sets.length)return null;let best=sets[0];sets.forEach(s=>{if(s.w>best.w||(s.w===best.w&&s.r>best.r))best=s});return best}
 function calc1RM(w,r){if(r<=0||w<=0)return 0;if(r===1)return w;return Math.round(w*(1+r/30)*10)/10}
 function getEx1RM(name){const sets=getAllSets(name).filter(s=>s.w>0&&s.r>0);if(!sets.length)return null;let best=0,bestSet=null;sets.forEach(s=>{const rm=calc1RM(s.w,s.r);if(rm>best){best=rm;bestSet=s}});return{rm:best,set:bestSet}}
@@ -3596,13 +3846,15 @@ function getWeeklyVolume(includeSecondary){
       if(set.type&&set.type!=='main')return;
       if(!set.r)return;
       const m=volGroupOf(set.ex,set.muscle,set.type)||'other';
-      bump(m,1,setVolume(set));
-      if(vol[m])vol[m].direct+=1;
+      /* Ein geloggter Satz einer einseitigen Übung ist zweimal Arbeit. */
+      const sides=setSides(set.ex,set);
+      bump(m,sides,setVolume(set));
+      if(vol[m])vol[m].direct+=sides;
       if(includeSecondary){
         const sec=secondaryContribution(set.ex,m,set.type);
         Object.entries(sec).forEach(([sm,w])=>{
-          bump(sm,w,0);
-          if(vol[sm])vol[sm].indirect+=w;
+          bump(sm,w*sides,0);
+          if(vol[sm])vol[sm].indirect+=w*sides;
         });
       }
     });
@@ -3642,7 +3894,8 @@ function renderPlan(){
     const d=document.createElement('div');
     d.className='dtab'+(k===curTab?' on':'');
     const count=(v.exercises||[]).length;
-    d.innerHTML=esc(planDisplayName(k))+`<span class="dn">${esc(v.day||'kein Tag')} · ${count} Üb.</span>`;
+    const mins=estimatedDuration(k);
+    d.innerHTML=esc(planDisplayName(k))+`<span class="dn">${esc(v.day||'kein Tag')} · ${count} Üb.${mins?` · ~${mins} min`:''}</span>`;
     d.onclick=()=>{curTab=k;renderPlan();haptic(8)};
     t.appendChild(d);
   });
@@ -3680,7 +3933,7 @@ function renderPL(){
     h+=`<div class="exr ${cC}${openCls}" style="animation:riseIn .34s var(--ease) both;animation-delay:${Math.min(i*30,240)}ms">`+
       `<div class="exr-h" onclick="togglePlanRow(this,'${safe}')">`+
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
-        `<div class="exr-b"><div class="exr-n">${esc(ex.name)}</div>`+
+        `<div class="exr-b"><div class="exr-n">${esc(ex.name)}${isUnilateral(ex.name,ex)?'<span class="uni">pro Seite</span>':''}</div>`+
         `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
         /* Vier Buttons pro Zeile haben den Übungsnamen auf "ATG: Tibialis R…"
            zusammengequetscht. Sortieren bleibt direkt erreichbar, der Rest
@@ -4692,6 +4945,7 @@ const MUSCLE_LANDMARKS={
   chest:    {mev:8, mav:16,mrv:22},
   back:     {mev:10,mav:18,mrv:25},
   shoulders:{mev:8, mav:16,mrv:22},
+  rear:     {mev:6, mav:14,mrv:20},
   biceps:   {mev:6, mav:14,mrv:20},
   triceps:  {mev:6, mav:14,mrv:18},
   quads:    {mev:8, mav:16,mrv:20},
@@ -4703,6 +4957,7 @@ const VOL_GROUP_META={
   chest:    {name:'Brust',      short:'BRU',icon:'chest',    muscle:'chest',    pats:null},
   back:     {name:'Rücken',     short:'RÜC',icon:'back',     muscle:'back',     pats:null},
   shoulders:{name:'Schultern',  short:'SCH',icon:'shoulders',muscle:'shoulders',pats:null},
+  rear:     {name:'Hintere Schulter',short:'HSC',mx:'Hint. Sch.',icon:'shoulders',muscle:'shoulders',pats:['raise']},
   biceps:   {name:'Bizeps',     short:'BIZ',icon:'arms',     muscle:'arms',     pats:['curl']},
   triceps:  {name:'Trizeps',    short:'TRI',icon:'arms',     muscle:'arms',     pats:['triext']},
   quads:    {name:'Quadrizeps', short:'QUA',mx:'Quads',icon:'legs',muscle:'legs',    pats:['squat','legext']},
@@ -4716,6 +4971,9 @@ const VOL_GROUP_META={
 function volGroupOf(name,muscle,type){
   const m=muscle||'';
   if(m==='arms')return detectMovePattern(name,m,type)==='curl'?'biceps':'triceps';
+  /* Seitliche und hintere Schulter reagieren völlig verschieden: beim Drücken
+     bekommt die vordere alles ab, die hintere nichts. Eigene Grenzen also. */
+  if(m==='shoulders')return REAR_DELT_RE.test(String(name||''))?'rear':'shoulders';
   if(m==='legs'){
     const p=detectMovePattern(name,m,type);
     if(p==='calf')return'calves';
@@ -4741,7 +4999,7 @@ const SECONDARY_BY_PATTERN={
   push:   {triceps:.5,shoulders:.5},
   pushh:  {triceps:.5,chest:.25},
   pulld:  {biceps:.5},
-  row:    {biceps:.5,shoulders:.25},
+  row:    {biceps:.5,rear:.25},
   hinge:  {back:.5},
   squat:  {core:.25},
   triext: {chest:.25},
@@ -4761,6 +5019,33 @@ function secondaryContribution(name,muscle,type){
   const out={};
   Object.entries(map).forEach(([g,w])=>{if(w>0&&g!==primary&&MUSCLE_LANDMARKS[g])out[g]=w});
   return out;
+}
+/* Geschätzte Dauer eines Trainingstages: Arbeitszeit plus Pausen aus den
+   eigenen Timer-Einstellungen. Bei einseitigen Übungen verdoppelt sich die
+   ARBEITSZEIT, nicht die Pause — man macht beide Seiten und pausiert dann.
+   Ohne diese Zahl ist „maximal 90 Minuten" eine Absicht ohne Anzeige. */
+function estimatedDuration(dayKey){
+  const day=(D.plan||{})[dayKey];
+  if(!day)return 0;
+  let sec=0;
+  (day.exercises||[]).forEach(e=>{
+    const sets=parseInt(e.sets)||0;
+    if(!sets)return;
+    sec+=sets*(40*setSides(e.name,e)+restSecondsFor(e.name,e.muscle,e.type));
+  });
+  return Math.round(sec/60);
+}
+/* Pausenlänge nach der BEWEGUNG, nicht nach dem gespeicherten Muskel.
+   Vorher entschied `muscle`: alles unter „legs" bekam die Grundübungspause.
+   Damit ruhte Wadenheben 150 Sekunden wie Kreuzheben, und ein Beintag war in
+   der Schätzung 20 Minuten länger als in Wirklichkeit. Systemermüdung hängt
+   am Bewegungsmuster: mehrgelenkig lang, eingelenkig kurz. */
+const COMPOUND_PATTERNS=['push','pushh','pulld','row','hinge','squat'];
+function restSecondsFor(name,muscle,type){
+  const c=Math.max(0,parseInt(D.settings&&D.settings.compound)||150);
+  const i=Math.max(0,parseInt(D.settings&&D.settings.isolation)||90);
+  if(type&&type!=='main')return 45;
+  return COMPOUND_PATTERNS.includes(detectMovePattern(name,muscle,type))?c:i;
 }
 function plannedMuscleGroups(){
   const set=new Set();
@@ -4897,7 +5182,7 @@ function planWeeklyVolume(includeSecondary){
     (day.exercises||[]).forEach(ex=>{
       if(ex.type!=='main')return;
       if(isCardioExercise(ex))return;
-      const sets=parseInt(ex.sets)||0;
+      const sets=(parseInt(ex.sets)||0)*setSides(ex.name,ex);
       if(!sets)return;
       const m=volGroupOf(ex.name,ex.muscle,ex.type)||'other';
       const s=slot(m);
@@ -6708,6 +6993,43 @@ function renderDeload(){
   el.innerHTML=`<div class="deload-banner"><div class="dl-head"><span class="dl-ico">🪫</span><span class="dl-title">Deload empfohlen</span></div>${d.reasons.map(r=>`<div class="dl-reason">${esc(r)}</div>`).join('')}<div class="dl-tip">💡 Eine Woche mit rund 60 % der Sätze bei RIR 4. Die App stellt deine Workouts automatisch um — dein Trainingsplan bleibt unverändert.</div><div class="dl-actions"><button class="btn btn-s btn-orange" style="margin:0" onclick="startDeload()">🪫 Deload starten</button><button class="btn btn-s btn-g" style="margin:0" onclick="snoozeDeload()">7 Tage ausblenden</button></div></div>`;
 }
 /* Läuft ein Deload, ersetzt sein Statusbanner die Empfehlung. */
+/* Der Mesozyklus-Streifen: Woche, Phase, Faktor, ein Balken. Er steht über
+   dem Deload-Banner, weil er den größeren Rahmen beschreibt — und er
+   verschwindet vollständig, solange kein Zyklus läuft. */
+function renderMeso(){
+  const el=document.getElementById('meso-area');
+  if(!el)return;
+  const st=mesoState();
+  const m=ensureMesoState();
+  if(!st){
+    el.innerHTML=`<div class="meso-card off">`+
+      `<div class="mc-h"><div class="mc-t">Mesozyklus</div>`+
+      `<div class="mc-wk"><button type="button" onclick="setMesoWeeks(-1)">−</button>`+
+      `<span>${esc(m.weeks)} Wochen</span>`+
+      `<button type="button" onclick="setMesoWeeks(1)">+</button></div></div>`+
+      `<div class="mc-d">Volumen steigt über ${esc(m.weeks-1)} Wochen von ${Math.round(MESO_START_FACTOR*100)} % auf 100 % deines Plans, danach eine Entlastungswoche mit halbem Volumen. Der Plan selbst bleibt unverändert.</div>`+
+      `<button class="btn btn-s" style="margin:10px 0 0" onclick="startMeso(${esc(m.weeks)})">Zyklus starten</button>`+
+    `</div>`;
+    return;
+  }
+  const pct=Math.round(st.week/st.weeks*100);
+  const cls=st.deload?'deload':'build';
+  el.innerHTML=`<div class="meso-card ${cls}">`+
+    `<div class="mc-h"><div class="mc-t">Woche ${esc(st.week)} von ${esc(st.weeks)}</div>`+
+    `<div class="mc-f">Sätze ×${esc(st.factor.toFixed(2).replace('.',','))}</div></div>`+
+    `<div class="mc-bar"><i data-grow="${pct}%" style="width:0"></i>`+
+      Array.from({length:st.weeks-1},(_,i)=>`<u style="left:${Math.round((i+1)/st.weeks*100)}%"></u>`).join('')+
+    `</div>`+
+    `<div class="mc-d"><b>${esc(mesoLabel(st))}.</b> ${st.deload
+      ? 'Halbes Volumen, zwei Wiederholungen mehr im Tank. Die Erholung holt auf, die Leistung kommt in der nächsten Woche zurück.'
+      : st.over ? 'Der Zyklus ist durch — starte den nächsten, dann beginnt die Steigerung neu.'
+      : 'Das Workout übernimmt den Faktor automatisch. Dein Plan bleibt unverändert.'}</div>`+
+    `<div class="mc-act">`+
+      (st.over?`<button class="btn btn-s" style="margin:0" onclick="startMeso(${esc(st.weeks)})">Nächster Zyklus</button>`:'')+
+      `<button class="btn btn-s btn-g" style="margin:0" onclick="stopMeso()">Beenden</button>`+
+    `</div></div>`;
+  runBarGrows(el);
+}
 function renderDeloadActive(){
   const el=document.getElementById('deload-area');
   if(!el)return false;
@@ -6806,6 +7128,7 @@ function renderDash(){
     nc.innerHTML=`<div class="next-card-shot"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="eyebrow2">Nächstes Workout</div><div style="display:flex;gap:6px;align-items:center">${dots}</div></div><div class="row"><div><div class="planline">${esc(dayLabel)} • ${esc(p.day||'kein Tag')}</div><div class="big">${bigHTML}</div><div class="small">${esc(mains||'Workout bereit')}</div></div><button class="play" onclick="startWorkout('${jsStr(nk.key)}');go('wo')">▶</button></div></div>`;
   }
   renderMuscleVolumeCard();
+  renderMeso();
   renderDeload();
   syncPlanDrawerUI();
   runCountUps(document.getElementById('s-dash'));
@@ -6977,8 +7300,7 @@ function confirmLog(){
   justLoggedKey=logTgt.exIdx+':'+(ex.logged.length-1);
   save();
   cm('m-log');
-  const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);
-  timerTgt=isC?D.settings.compound:D.settings.isolation;
+  timerTgt=restSecondsFor(ex.name,ex.muscle,ex.type);
   if(timerInt){clearInterval(timerInt);timerInt=null}
   timerStartedAt=0;timerPausedRemaining=0;
   startTmr();
@@ -7393,14 +7715,84 @@ function endDeload(){
 }
 /* Wird beim Start eines Workouts auf die Übungsliste angewendet, nicht auf
    den Plan selbst. Der Plan bleibt unangetastet. */
+/* --------------------------------------------------------------------------
+   MESOZYKLUS
+   Der Coach kannte MEV, MAV und MRV — aber keine Zeitachse. Ein Plan, der
+   dauerhaft am Optimum steht, ist kein Zyklus: Volumen soll über Wochen von
+   knapp über dem Minimum Richtung Maximum steigen, und danach kommt eine
+   leichte Woche, in der die Erholung aufholt.
+
+   Der PLAN bleibt dabei unangetastet — genau wie beim Deload. Skaliert wird
+   erst beim Start des Workouts. Der Plan ist die Zielgröße der letzten harten
+   Woche; alles davor ist ein Anteil davon.
+   -------------------------------------------------------------------------- */
+const MESO_DEFAULT_WEEKS=5;      /* vier Aufbauwochen plus eine leichte */
+const MESO_START_FACTOR=.72;     /* Woche 1 liegt bei 72 % des Planvolumens */
+const MESO_DELOAD_FACTOR=.5;
+function ensureMesoState(){
+  ensureUIState();
+  if(!D.ui.meso||typeof D.ui.meso!=='object')D.ui.meso={active:false,start:0,weeks:MESO_DEFAULT_WEEKS};
+  const m=D.ui.meso;
+  if(!Number.isFinite(m.weeks)||m.weeks<3||m.weeks>8)m.weeks=MESO_DEFAULT_WEEKS;
+  return m;
+}
+/* Woche 1 beginnt am Starttag, nicht am Montag danach — sonst wäre die erste
+   Woche je nach Wochentag zwischen einem und sieben Tagen lang. */
+function mesoState(){
+  const m=ensureMesoState();
+  if(!m.active||!m.start)return null;
+  const passed=Math.floor((Date.now()-m.start)/(7*864e5));
+  const week=passed+1;
+  if(week>m.weeks)return{week:m.weeks,weeks:m.weeks,over:true,deload:true,factor:MESO_DELOAD_FACTOR};
+  const isDeload=week===m.weeks;
+  const build=Math.max(1,m.weeks-1);
+  const factor=isDeload?MESO_DELOAD_FACTOR
+    :MESO_START_FACTOR+(1-MESO_START_FACTOR)*((week-1)/Math.max(1,build-1));
+  return{week,weeks:m.weeks,over:false,deload:isDeload,factor:Math.round(factor*100)/100};
+}
+function mesoLabel(st){
+  if(!st)return'';
+  if(st.deload)return'Entlastungswoche';
+  if(st.week===1)return'Einstiegswoche';
+  return st.week===st.weeks-1?'letzte harte Woche':'Aufbauwoche';
+}
+function startMeso(weeks){
+  const m=ensureMesoState();
+  m.weeks=Math.min(8,Math.max(3,parseInt(weeks)||MESO_DEFAULT_WEEKS));
+  m.start=Date.now();
+  m.active=true;
+  save();renderDash();
+  toast(`Mesozyklus gestartet — ${m.weeks} Wochen`);
+  haptic([12,40,12]);
+}
+function stopMeso(){
+  const m=ensureMesoState();
+  m.active=false;m.start=0;
+  save();renderDash();
+  toast('Mesozyklus beendet');
+}
+function setMesoWeeks(delta){
+  const m=ensureMesoState();
+  m.weeks=Math.min(8,Math.max(3,(parseInt(m.weeks)||MESO_DEFAULT_WEEKS)+delta));
+  save();renderDash();
+}
 function applyDeloadToExercises(list){
-  if(!deloadActive())return list;
+  /* Zwei Quellen, ein Ergebnis: der manuelle Deload und die Woche im
+     Mesozyklus. Es gewinnt der kleinere Faktor — wer von Hand entlastet,
+     will nicht, dass eine Aufbauwoche das wieder hochzieht. */
+  const st=mesoState();
+  const manual=deloadActive()?0.6:1;
+  const cycle=st?st.factor:1;
+  const factor=Math.min(manual,cycle);
+  const easier=deloadActive()||(st&&st.deload);
+  if(factor>=1&&!easier)return list;
   return list.map(ex=>{
     if(ex.type!=='main')return ex;
     return{...ex,
-      sets:Math.max(1,Math.round((parseInt(ex.sets)||3)*0.6)),
-      rir:ex.rir===null?null:Math.max(3,(parseInt(ex.rir)||2)+2),
-      deloaded:true};
+      sets:Math.max(1,Math.round((parseInt(ex.sets)||3)*factor)),
+      rir:(!easier||ex.rir===null)?ex.rir:Math.max(3,(parseInt(ex.rir)||2)+2),
+      deloaded:!!easier,
+      cycled:factor<1};
   });
 }
 

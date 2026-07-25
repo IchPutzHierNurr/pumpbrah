@@ -92,6 +92,11 @@
 | [PB-047](#pb-047) | Zwei Übungen im falschen Bewegungsmuster | mittel | Darstellung | ✅ |
 | [PB-048](#pb-048) | „Nächstes Workout" beschrieb den falschen Tag | mittel | Darstellung | ✅ |
 | [PB-049](#pb-049) | Trizepsübung zählte auf den Bizeps | mittel | Klassifikation | ✅ |
+| [PB-050](#pb-050) | Einseitige Übungen zählten einfach statt doppelt | mittel | Berechnung | ✅ |
+| [PB-051](#pb-051) | Zwei Trendrechnungen widersprachen sich sichtbar | mittel | Berechnung | ✅ |
+| [PB-052](#pb-052) | Onboarding warf vier von acht Antworten weg | mittel | Funktion | ✅ |
+| [PB-053](#pb-053) | „Klimmzüge" zählten als Rudern | mittel | Klassifikation | ✅ |
+| [PB-054](#pb-054) | Mesozyklus — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -1885,6 +1890,166 @@ Standardpfade neu geprüft.**
 „Back Extension" und „Hyperextension" → `hinge`; zusätzlich zwei Proben
 direkt auf `volGroupOf(…, 'arms')` → Trizeps bzw. Bizeps.
 
+
+---
+
+### PB-050
+
+**Einseitige Übungen zählten einfach statt doppelt**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Berechnung |
+| **Gefunden** | beim Bauen eines Plans, den die App selbst gegenrechnen sollte |
+| **Status** | ✅ behoben |
+
+**Symptom.** „KH Rudern einarmig 4×10" sind vier Sätze **pro Seite**, also acht
+Arbeitssätze und die doppelte Arbeitszeit. Die App zählte vier.
+
+**Das Besondere daran:** Das Evidenzblatt derselben App sagte es wörtlich —
+*„Einseitige Übung — die Satzangabe gilt pro Seite. Für das Wochenvolumen
+zählt sie doppelt."* Der Text war da, das `uni`-Feld im Katalog war da, und die
+Rechnung ignorierte beides. Ein Fehler, der nur auffällt, wenn jemand die
+eigene Erklärung gegen das eigene Ergebnis hält.
+
+**Fix.** `isUnilateral(name,ex)` — ein explizites Feld schlägt die
+Namenserkennung — und `setSides()` als gemeinsamer Faktor in beiden
+Volumenpfaden (Plan und Historie) sowie in der neuen Dauerschätzung. Bei der
+Zeit verdoppelt sich allerdings nur die **Arbeitszeit**, nicht die Pause: Man
+macht beide Seiten und pausiert dann einmal.
+
+**Lektion.** Wenn die App etwas über ihre eigene Rechnung behauptet, ist dieser
+Satz ein Testfall. **Erklärtexte sind Spezifikation.**
+
+**Test.** `PB-050` — Plan mit einseitiger und beidseitiger Übung: Volumen 12
+statt 8, Zeitschätzung höher, aber nicht doppelt, Historie mit demselben
+Maßstab, Erkennung samt Vorrang des expliziten Feldes.
+
+---
+
+### PB-051
+
+**Zwei Trendrechnungen widersprachen sich — sichtbar**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Berechnung / Konsistenz |
+| **Gefunden** | im Screenshot, beim Ansehen zweier Ansichten nebeneinander |
+| **Status** | ✅ behoben |
+
+**Symptom.** Dieselbe Übung, derselbe Moment: In der Stats-Liste stand
+**„Bankdrücken +3,8 kg"**, im Detailblatt **„→ Stagnation"**.
+
+**Ursache.** Zwei Funktionen für dieselbe Frage. `exerciseProgress` vergleicht
+das beste e1RM der letzten drei **Einheiten** mit dem der drei davor.
+`getExTrend` verglich die letzten drei **Sätze** über das rohe Gewicht, mit
+einer 2-%-Schwelle. Bei zwei Sätzen pro Einheit vergleicht das anderthalb
+Trainings gegen anderthalb — bei +1 kg pro Einheit bleibt der Unterschied unter
+der Schwelle und heißt „Stagnation".
+
+**Fix.** `getExTrend` delegiert an `exerciseProgress`. Eine Rechnung, eine
+Wahrheit — auch für die Deload-Erkennung, die ebenfalls daran hängt.
+
+**Lektion.** Zwei Implementierungen derselben Frage sind kein Redundanz-,
+sondern ein Konsistenzproblem. Sie fallen erst auf, wenn beide Ergebnisse
+**gleichzeitig sichtbar** sind — deshalb ist „zwei Ansichten nebeneinander
+ansehen" eine eigene Prüfmethode.
+
+**Test.** `PB-051` — acht Einheiten mit +1 kg und zwei Sätzen je Einheit, also
+genau die Konstellation, in der die alte Rechnung scheiterte: Liste und Detail
+müssen dieselbe Richtung melden.
+
+---
+
+### PB-052
+
+**Das Onboarding warf vier von acht Antworten weg**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Funktion / Versprechen |
+| **Gefunden** | beim Durchsehen des eigenen Codes auf offene Punkte |
+| **Status** | ✅ behoben |
+
+**Symptom.** Acht Fragen: Geschlecht, Geburtstag, Größe, Gewicht,
+**Trainingsort, Tage pro Woche, Ziel, Erfahrung**. Verwendet wurden vier. Die
+letzten vier landeten in `obData` und wurden nie gelesen — jeder bekam
+denselben Standardplan, egal ob zweimal die Woche zu Hause oder sechsmal im
+Studio.
+
+**Fix.** Ein Generator, der gegen **dieselben Landmarks** rechnet, an denen der
+Coach den Plan später misst: ein Bauplan je Tageszahl, ein Übungspool getrennt
+nach Studio und Zuhause, Zielvolumen je Muskel aus Erfahrung (wo im Korridor)
+und Ziel (welche Gruppe mehr bekommt). Die Satzverteilung ist ein Fixpunkt über
+drei Runden, weil indirektes Volumen von den Satzzahlen abhängt, die es selbst
+mitbestimmt. Ein Zeitdeckel kürzt zu lange Tage — aber nie unter MEV.
+
+**Lektion.** Eine Frage zu stellen ist ein Versprechen. Wer die Antwort nicht
+benutzt, sollte nicht fragen; wer fragt, schuldet die Wirkung.
+
+**Test.** `PB-052` — alle 150 Kombinationen aus Tagen × Ort × Erfahrung × Ziel:
+richtige Tagesanzahl, kein leerer Tag, keine Übung doppelt, kein Muskel unter
+MEV oder über MRV, keine Einheit über 105 Minuten.
+
+---
+
+### PB-053
+
+**„Klimmzüge" zählten als Rudern**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Klassifikation |
+| **Gefunden** | durch den Test zu PB-052, an einer erzeugten Home-Variante |
+| **Status** | ✅ behoben |
+
+**Symptom.** In der Mustertabelle stand `klimmzug`. Der Plural heißt
+**Klimmzüge** — mit Umlaut. Die Regel traf nicht, keine andere auch, und der
+Muskel-Fallback machte aus `back` ein `row`: vertikales Ziehen wurde als
+horizontales gezählt.
+
+**Fix.** `klimmz` statt `klimmzug`. Wichtiger als der Einzelfall ist die
+**strukturelle Absicherung**: Der Test fährt jetzt *jeden* Übungsnamen durch,
+den die App selbst mitbringt — Bibliothek, Evidenzkatalog, Standardplan,
+Onboarding-Pool, aktuell 145 Namen — und verlangt, dass für jeden eine Regel
+greift. Der Fallback ist eine Notbremse für eigene Übungen des Nutzers, kein
+Weg für mitgelieferte Namen.
+
+**Lektion.** Dieselbe Fehlerklasse zum dritten Mal (PB-033, PB-047, PB-049).
+Nach dem dritten Mal reicht kein Einzelfix mehr: Es braucht einen Test, der die
+**ganze Menge** prüft, statt auf den nächsten Namen zu warten. Deutsche
+Umlaut-Plurale sind dabei die häufigste Falle — `Klimmzug/Klimmzüge`,
+`Überzug/Überzüge`.
+
+**Test.** `PB-053` — kein mitgelieferter Übungsname fällt auf den
+Muskel-Fallback zurück.
+
+---
+
+### PB-054
+
+**Mesozyklus — der Test kam vor dem Fehler**
+
+| | |
+|---|---|
+| **Schwere** | — (vorbeugend) |
+| **Klasse** | Vorbeugung |
+| **Status** | ✅ abgesichert |
+
+Kein aufgetretener Fehler, sondern ein Test aus einem bekannten Muster:
+**PB-030** („Deload reduziert Sätze, lässt den Plan aber unberührt"). Der
+Mesozyklus skaliert das Volumen über Wochen — genau die Stelle, an der ein
+naiver Ansatz in den Plan schreiben würde. Vier Wochen später wäre das Volumen
+dann dauerhaft weg, ohne dass es jemand bemerkt.
+
+**Test.** `PB-054` — über fünf simulierte Wochen: Sätze steigen, die
+Entlastungswoche liegt darunter, der Plan bleibt zeichengleich, und ohne
+laufenden Zyklus greift kein Faktor.
+
 ---
 
 ## Offene Punkte (Backend-Änderung nötig)
@@ -2012,12 +2177,15 @@ gestellt werden sollten:
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
 | 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040 | Was geht hier verloren, und weiß der Nutzer es? |
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
-| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
+| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049, PB-053 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
 | 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
 | 12 | **Ausgabe, die für Menschen nicht prüfbar ist** | PB-041 | Kann ich diesem Ergebnis ansehen, ob es stimmt? Wenn nein: Welche unabhängige Gegenimplementierung prüft es — und reicht eine? |
 | 13 | **Anzeige, die nur bei der aktuellen Datenmenge stimmt** | PB-048 | Stimmt das auch bei drei statt zwei, bei Wiederholungen, bei null? Oder beschreibt es nur zufällig den Ist-Zustand? |
+| 14 | **Zwei Rechnungen für dieselbe Frage** | PB-051 | Gibt es diese Aussage noch woanders — und kommt dort dasselbe heraus? |
+| 15 | **Erklärtext ohne Deckung im Code** | PB-050 | Behauptet ein Hilfetext etwas über die Rechnung? Dann ist der Satz ein Testfall. |
+| 16 | **Erhobene Daten ohne Wirkung** | PB-052 | Wird jede abgefragte Antwort irgendwo gelesen? Wenn nein: benutzen oder nicht fragen. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
