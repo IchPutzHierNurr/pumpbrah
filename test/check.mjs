@@ -89,7 +89,7 @@ for (let i = 0; i < 8; i++) {
 await page.waitForTimeout(500);
 check('smoke', 'App nach Onboarding sichtbar', await page.isVisible('#main-app'));
 
-for (const [tab, sel] of [['dash', '.mesh-hero'], ['hist', '#cal-grid'],
+for (const [tab, sel] of [['dash', '.mesh-hero'], ['hist', '#h-streak'],
                           ['ana', '#ana-muscles'], ['settings', '#prof-name']]) {
   await page.evaluate(t => go(t), tab);
   await page.waitForTimeout(200);
@@ -911,6 +911,54 @@ const REGRESSIONS = [
         return { volBefore, volAfter, freqBefore, freqAfter, floor };
       });
       return [r.volBefore === r.volAfter && r.freqAfter > r.freqBefore && r.floor >= 1, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-044', title: 'Session-Vergleich nur bei vergleichbaren Sessions',
+    run: async () => {
+      // Derselbe Plan-Schluessel garantiert nicht denselben Inhalt. Wer den Tag
+      // umbaut, verglich vorher Beine gegen Brust - das ergab Prozentwerte wie
+      // "+192 %", die nichts bedeuten. Ausserdem: Koerpergewichtsuebungen haben
+      // konstant 0 kg, dort muss die Wiederholungszahl verglichen werden.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.history));
+        const mkSet = (ex, w, reps, muscle) => ({ ex, nr: 1, w, r: reps, rir: 2, muscle, type: 'main', note: '' });
+        D.history = [
+          { id: 'x1', date: '01.07.2026', planKey: 'Tag_A', duration: 60, updatedAt: 1,
+            sets: [mkSet('Bankdrücken', 80, 8, 'chest'), mkSet('Klimmzüge', 0, 8, 'back')] },
+          // gleicher Schluessel, voellig anderer Inhalt -> kein Vergleich
+          { id: 'x2', date: '08.07.2026', planKey: 'Tag_A', duration: 60, updatedAt: 2,
+            sets: [mkSet('Kniebeugen', 120, 5, 'legs'), mkSet('Beinpresse', 200, 10, 'legs')] },
+          // gleicher Schluessel, gleicher Inhalt -> Vergleich erlaubt
+          { id: 'x3', date: '15.07.2026', planKey: 'Tag_A', duration: 60, updatedAt: 3,
+            sets: [mkSet('Kniebeugen', 125, 5, 'legs'), mkSet('Beinpresse', 210, 10, 'legs')] },
+          // Koerpergewicht: mehr Wiederholungen bei 0 kg
+          { id: 'x4', date: '22.07.2026', planKey: 'Tag_B', duration: 50, updatedAt: 4,
+            sets: [mkSet('Klimmzüge', 0, 8, 'back')] },
+          { id: 'x5', date: '29.07.2026', planKey: 'Tag_B', duration: 50, updatedAt: 5,
+            sets: [mkSet('Klimmzüge', 0, 11, 'back')] }
+        ];
+        const find = id => D.history.find(h => h.id === id);
+        const res = {
+          mismatchNoCompare: previousSameSession(find('x2')) === null,
+          matchCompares: (previousSameSession(find('x3')) || {}).id === 'x2',
+          bodyweightCompares: (previousSameSession(find('x5')) || {}).id === 'x4'
+        };
+        // Und die gerenderte Zeile muss Wiederholungen statt Kilogramm zeigen
+        const html = histSessionHTML({ ...find('x5'), __i: 4 });
+        res.showsReps = /11<\/b>\s*←\s*8\s*Wdh/.test(html) || (/Wdh/.test(html) && !/0\s*kg/.test(html));
+        // Keine erfundene Prozentzahl bei fehlendem Vorgaenger
+        res.noFakePercent = !/VOLUMEN/.test(histSessionHTML({ ...find('x2'), __i: 1 }));
+        // PR-Erkennung: 125 kg schlaegt 120 kg, 120 kg selbst ist kein PR
+        const prs3 = sessionPRs(find('x3')).map(p => p.ex);
+        const prs2 = sessionPRs(find('x2')).map(p => p.ex);
+        res.prFound = prs3.includes('Kniebeugen');
+        res.noPrOnFirst = prs2.length === 0;
+        D.history = before; save();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
     }
   },
   {

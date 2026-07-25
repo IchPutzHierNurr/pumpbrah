@@ -1473,6 +1473,115 @@ html,body{
 .imp-row .s{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);white-space:nowrap}
 .imp-row.more .n{color:var(--text3);font-weight:500}
 
+/* ============================================================================
+   HISTORIE
+   Drei Ebenen mit drei verschiedenen Fragen:
+     Serie + Heatmap  — bleibe ich dran?
+     Kalender         — wann genau war was? (eingeklappt, weil selten gebraucht)
+     Sessions         — bin ich besser geworden als beim letzten Mal?
+   ============================================================================ */
+.streak-hero .cap{color:rgba(255,255,255,.58)}
+.heat{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-top:14px}
+.heat i{
+  aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,.09);
+  animation:heatIn .34s var(--out) both;animation-delay:var(--hd,0ms);
+}
+@keyframes heatIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
+.heat i.l1{background:color-mix(in srgb,var(--accent) 30%,transparent)}
+.heat i.l2{background:color-mix(in srgb,var(--accent) 58%,transparent)}
+.heat i.l3{background:var(--accent)}
+.heat-lg{display:flex;justify-content:space-between;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.45)}
+.streak-tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.streak-tri div{text-align:center;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}
+.streak-tri b{display:block;font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
+.streak-tri span{display:block;font-size:9px;font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.45);margin-top:2px}
+
+/* --- Kalender: eingeklappt, weil er selten gebraucht wird --- */
+.hist-cal{margin-bottom:12px}
+.hist-cal summary{
+  display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;
+  padding:13px 15px;border-radius:var(--r-lg);
+  background:var(--mat-1),var(--bg2);border:1px solid var(--line);box-shadow:var(--edge);
+  font-size:13.5px;font-weight:800;
+}
+.hist-cal summary::-webkit-details-marker{display:none}
+.hist-cal summary::after{content:'▾';margin-left:auto;color:var(--text3);transition:transform .25s var(--ease)}
+.hist-cal[open] summary::after{transform:rotate(180deg)}
+.hist-cal .cal-meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:400;color:var(--text3)}
+.calcard{
+  margin-top:8px;border-radius:var(--r-lg);padding:14px;
+  background:var(--mat-1),var(--bg2);border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
+}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.calhead #cal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.04em}
+.calnav{
+  width:36px;height:36px;border-radius:50%;flex:0 0 36px;cursor:pointer;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text2);font-size:16px;
+  transition:transform var(--dur-micro) var(--sp);
+}
+.calnav:active{transform:scale(.9)}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.calgrid .wd{font-size:9px;font-weight:800;letter-spacing:.08em;color:var(--text3);padding:4px 0}
+.calgrid .cell{
+  aspect-ratio:1;border-radius:11px;border:none;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:transparent;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:12.5px;
+  transition:transform var(--dur-micro) var(--sp);
+}
+.calgrid .cell:active{transform:scale(.9)}
+.calgrid .cell.has{background:color-mix(in srgb,var(--accent) 13%,transparent);font-weight:800}
+.calgrid .cell.has.big{background:color-mix(in srgb,var(--accent) 28%,transparent)}
+.calgrid .cell.today{outline:1.5px solid var(--brand-b);outline-offset:-1.5px}
+.calgrid .cell.sel{background:linear-gradient(140deg,var(--brand-a),var(--brand-b));font-weight:800;color:#fff}
+.calgrid .cell .dv{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);margin-top:1px}
+.calgrid .cell.sel .dv{color:rgba(255,255,255,.82)}
+.cal-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.cal-sum div{text-align:center;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line2)}
+.cal-sum b{display:block;font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
+.cal-sum span{display:block;font-size:9px;font-weight:800;letter-spacing:.12em;color:var(--text3);margin-top:2px}
+
+/* --- Session-Karte mit Vergleich --- */
+.hist-session{
+  border-radius:22px;padding:14px;margin-bottom:10px;
+  background:var(--mat-1),var(--bg2);border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
+}
+.hs-h{display:flex;align-items:center;gap:11px}
+.hs-d{
+  width:46px;flex:0 0 46px;text-align:center;border-radius:14px;padding:6px 0;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);
+}
+.hs-d .dd{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
+.hs-d .mm{font-size:8.5px;font-weight:800;letter-spacing:.1em;color:var(--text3)}
+.hs-b{flex:1;min-width:0}
+.hs-b .n{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-b .m{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-b .vs{font-size:10px;color:var(--text3);margin-top:2px}
+.hs-delta{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums}
+.hs-delta small{display:block;font-family:'Space Grotesk',sans-serif;font-size:8.5px;font-weight:800;letter-spacing:.1em;color:var(--text3)}
+.hs-delta.up{color:var(--green)}
+.hs-delta.down{color:var(--red)}
+.hs-delta.flat{color:var(--text3)}
+.hs-del{
+  width:30px;height:30px;flex:0 0 30px;border-radius:50%;cursor:pointer;
+  background:transparent;border:none;color:var(--text3);font-size:19px;line-height:1;
+  transition:.15s;
+}
+.hs-del:active{transform:scale(.85);color:var(--red)}
+.hs-prs{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
+.hs-prs .pr{
+  font-size:10px;font-weight:800;padding:4px 8px;border-radius:8px;
+  background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange);
+  border:1px solid color-mix(in srgb,var(--orange) 28%,transparent);
+}
+.hs-ex{margin-top:10px}
+.hex{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line2);cursor:pointer;font-size:12.5px}
+.hex .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hex .w{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap;flex:0 0 auto}
+.hex .w b{font-weight:700}
+.hex .w b.up{color:var(--green)}
+.hex .w b.down{color:var(--red)}
+.hex .w b.flat{color:var(--text2)}
+
 /* --- Regel 6: Druckzustände --------------------------------------------- */
 .card,.gtile,.exr,.dtab,.optrow,.wo-cmd{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
 .btn,.btn-s{transition:transform var(--dur-micro) var(--sp),box-shadow .2s var(--ease),filter .2s}
@@ -1613,15 +1722,20 @@ html,body{
 <div class="ltitle-sub" id="h-cnt">0 Sessions</div>
 </div></div>
 </div>
-<div class="card" style="margin-top:12px;padding:12px">
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-<button style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:none;color:var(--text);font-size:16px;cursor:pointer" onclick="calNav(-1)">‹</button>
-<div id="cal-title" style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px"></div>
-<button style="width:36px;height:36px;border-radius:50%;background:var(--bg3);border:none;color:var(--text);font-size:16px;cursor:pointer" onclick="calNav(1)">›</button>
+<div id="h-streak" class="parallax"></div>
+<details class="hist-cal" id="h-cal-wrap">
+<summary><span>Kalender</span><span class="cal-meta" id="cal-meta"></span></summary>
+<div class="calcard">
+<div class="calhead">
+<button type="button" class="calnav" title="Monat zurück" onclick="calNav(-1)">‹</button>
+<div id="cal-title"></div>
+<button type="button" class="calnav" title="Monat vor" onclick="calNav(1)">›</button>
 </div>
-<div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:2px"></div>
+<div id="cal-grid" class="calgrid"></div>
+<div id="cal-sum" class="cal-sum"></div>
 </div>
-<div class="st">ALLE SESSIONS <div class="ln"></div></div>
+</details>
+<div class="st" id="h-list-title">ALLE SESSIONS <div class="ln"></div></div>
 <div id="hl"></div>
 </div>
 <div class="screen" id="s-ana">
@@ -3665,14 +3779,102 @@ function histDateKey(day,month,year){
 }
 function selectCalDay(d){calSelDay=calSelDay===d?null:d;renderHist()}
 function delSess(i){if(!confirm('Session löschen?'))return;addTombstone('history',histSessionKey(D.history[i]));D.history.splice(i,1);save();renderHist();renderDash();renderAna();toast('Session gelöscht')}
+/* Serie in Wochen: wie viele zusammenhängende Kalenderwochen bis heute
+   mindestens eine Einheit hatten. Bewusst in WOCHEN, nicht in Tagen — eine
+   Tages-Serie bestraft jeden Ruhetag und misst damit das Gegenteil von dem,
+   was gutes Training ausmacht. */
+function trainingStreak(){
+  const weeks=new Set();
+  (D.history||[]).forEach(sess=>{
+    const d=parseGermanDate(sess.date);
+    if(!d)return;
+    weeks.add(isoWeekKey(d));
+  });
+  let streak=0,best=0,run=0;
+  const cursor=new Date();
+  /* Die laufende Woche zählt nur mit, wenn sie schon eine Einheit hat —
+     sonst stünde am Montagmorgen jede Serie fälschlich bei +1. */
+  for(let i=0;i<104;i++){
+    const key=isoWeekKey(cursor);
+    if(weeks.has(key)){run++;if(i===streak)streak=run}
+    else{best=Math.max(best,run);run=0;if(i===0)streak=0;else if(streak===i)streak=streak}
+    cursor.setDate(cursor.getDate()-7);
+  }
+  best=Math.max(best,run,streak);
+  /* streak sauber nachrechnen: von heute rückwärts, bis eine Woche fehlt. */
+  const c2=new Date();let s2=0;
+  if(!weeks.has(isoWeekKey(c2)))c2.setDate(c2.getDate()-7);
+  while(weeks.has(isoWeekKey(c2))){s2++;c2.setDate(c2.getDate()-7)}
+  return{streak:s2,best:Math.max(best,s2),weeks};
+}
+function isoWeekKey(d){
+  const t=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  t.setDate(t.getDate()-((t.getDay()+6)%7));      /* auf Montag zurück */
+  return t.getFullYear()+'-'+t.getMonth()+'-'+t.getDate();
+}
+/* Persönliche Bestwerte einer Session: Übungen, deren Höchstgewicht an
+   diesem Tag alles davor übertrifft. „Davor" heißt streng vorher — sonst
+   wäre jede Session ihr eigener Rekord. */
+function sessionPRs(session){
+  const out=[];
+  const when=parseGermanDate(session.date);
+  if(!when)return out;
+  const byEx={};
+  strengthSets(session.sets||[]).forEach(x=>{
+    const w=parseFloat(x.w)||0;
+    if(!x.ex)return;
+    if(!byEx[x.ex]||w>byEx[x.ex])byEx[x.ex]=w;
+  });
+  Object.entries(byEx).forEach(([ex,w])=>{
+    if(w<=0)return;
+    let prev=0;
+    (D.history||[]).forEach(other=>{
+      if(other===session)return;
+      const od=parseGermanDate(other.date);
+      if(!od||od.getTime()>=when.getTime())return;
+      strengthSets(other.sets||[]).forEach(x=>{
+        if(x.ex===ex)prev=Math.max(prev,parseFloat(x.w)||0);
+      });
+    });
+    if(prev>0&&w>prev)out.push({ex,w,prev});
+  });
+  return out.sort((a,b)=>(b.w-b.prev)-(a.w-a.prev)).slice(0,3);
+}
+/* Die letzte Session desselben Trainingstags — die einzige sinnvolle
+   Vergleichsgröße. Ein Beintag gegen einen Pushtag zu stellen erzeugt
+   Prozentzahlen, die nichts bedeuten. */
+function previousSameSession(session){
+  const when=parseGermanDate(session.date);
+  if(!when)return null;
+  const mine=new Set((session.sets||[]).map(x=>x.ex).filter(Boolean));
+  let best=null,bestT=-Infinity;
+  (D.history||[]).forEach(other=>{
+    if(other===session||other.planKey!==session.planKey)return;
+    const od=parseGermanDate(other.date);
+    if(!od||od.getTime()>=when.getTime())return;
+    if(od.getTime()>bestT){bestT=od.getTime();best=other}
+  });
+  if(!best||!mine.size)return null;
+  /* Derselbe Plan-Schlüssel garantiert NICHT denselben Inhalt: wer den Tag
+     zwischendurch umbaut oder Übungen tauscht, vergleicht sonst Beine gegen
+     Brust und bekommt „+192 %" angezeigt. Erst ab der Hälfte gemeinsamer
+     Übungen ist ein Prozentwert überhaupt eine Aussage. */
+  const theirs=new Set((best.sets||[]).map(x=>x.ex).filter(Boolean));
+  let shared=0;
+  mine.forEach(n=>{if(theirs.has(n))shared++});
+  const overlap=shared/Math.max(mine.size,theirs.size||1);
+  return overlap>=0.5?best:null;
+}
 function renderHist(){
   const cnt=document.getElementById('h-cnt'),title=document.getElementById('cal-title'),grid=document.getElementById('cal-grid'),list=document.getElementById('hl');
   if(!cnt||!title||!grid||!list)return;
   const months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
-  cnt.textContent=(D.history||[]).length+((D.history||[]).length===1?' Session':' Sessions');
+  const hist=D.history||[];
+  cnt.textContent=hist.length+(hist.length===1?' Session':' Sessions');
   title.textContent=months[calMonth]+' '+calYear;
+  renderHistStreak();
   const trainDates={};
-  (D.history||[]).forEach((s,i)=>{
+  hist.forEach((s,i)=>{
     const d=parseGermanDate(s.date);
     if(!d)return;
     const key=histDateKey(d.getDate(),d.getMonth(),d.getFullYear());
@@ -3683,29 +3885,132 @@ function renderHist(){
   const offset=firstDay===0?6:firstDay-1;
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
   const today=new Date();
-  let gh=['MO','DI','MI','DO','FR','SA','SO'].map(d=>`<div style="font-size:10px;color:var(--text3);font-weight:700;padding:4px 0">${d}</div>`).join('');
+  let monthSessions=0,monthVol=0,monthMin=0;
+  let gh=['MO','DI','MI','DO','FR','SA','SO'].map(d=>`<div class="wd">${d}</div>`).join('');
   for(let i=0;i<offset;i++)gh+='<div></div>';
   for(let d=1;d<=daysInMonth;d++){
     const key=histDateKey(d,calMonth,calYear);
-    const has=!!trainDates[key];
+    const idx=trainDates[key];
     const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
     const isSel=calSelDay===d;
-    gh+=`<button onclick="selectCalDay(${d})" style="border:none;border-radius:12px;padding:7px 0;background:${isSel?'var(--accent)':isToday?'var(--nd)':'transparent'};color:${isSel?'#fff':isToday?'var(--neon)':'var(--text)'};cursor:pointer"><div style="font-size:13px;font-weight:${has||isToday?'800':'500'}">${d}</div>${has?`<span style="display:block;width:6px;height:6px;border-radius:50%;background:${isSel?'#fff':'var(--accent)'};margin:2px auto 0"></span>`:''}</button>`;
+    let vol=0;
+    if(idx){idx.forEach(i=>{vol+=sessionVolume(hist[i]);monthMin+=parseInt(hist[i].duration)||0});monthSessions+=idx.length;monthVol+=vol}
+    const t=vol/1000;
+    const cls=['cell'];
+    if(idx)cls.push(t>=12?'has big':'has');
+    if(isToday)cls.push('today');
+    if(isSel)cls.push('sel');
+    gh+=`<button type="button" class="${cls.join(' ')}" onclick="selectCalDay(${d})">`+
+      `<span class="dn">${d}</span>${idx?`<span class="dv">${t>=1?t.toFixed(t>=10?0:1)+'t':'·'}</span>`:''}</button>`;
   }
   grid.innerHTML=gh;
-  let sessions=(D.history||[]).map((s,i)=>({...s,__i:i})).filter(s=>{
+  const sum=document.getElementById('cal-sum');
+  if(sum)sum.innerHTML=`<div><b>${monthSessions}</b><span>SESSIONS</span></div>`+
+    `<div><b>${(monthVol/1000).toFixed(monthVol/1000>=10?0:1)}</b><span>TONNEN</span></div>`+
+    `<div><b>${monthSessions?Math.round(monthMin/monthSessions):0}</b><span>Ø MINUTEN</span></div>`;
+  const meta=document.getElementById('cal-meta');
+  if(meta)meta.textContent=`${months[calMonth]} ${calYear} · ${monthSessions} ${monthSessions===1?'Session':'Sessions'}`;
+  const listTitle=document.getElementById('h-list-title');
+  if(listTitle)listTitle.innerHTML=(calSelDay!==null?`${calSelDay}. ${months[calMonth]}`:'Alle Sessions')+' <div class="ln"></div>';
+  let sessions=hist.map((s,i)=>({...s,__i:i})).filter(s=>{
     const d=parseGermanDate(s.date);
     if(!d)return false;
     if(calSelDay!==null)return d.getFullYear()===calYear&&d.getMonth()===calMonth&&d.getDate()===calSelDay;
     return d.getFullYear()===calYear&&d.getMonth()===calMonth;
   }).sort((a,b)=>(parseGermanDate(b.date)||0)-(parseGermanDate(a.date)||0));
-  if(!sessions.length){list.innerHTML='<div class="empty">Keine Sessions in dieser Auswahl.</div>';return}
-  list.innerHTML=sessions.map(s=>{
-    const vol=sessionVolume(s);
-    const exNames=[...new Set((s.sets||[]).map(x=>x.ex))];
-    const cMin=cardioMinutes(s.sets);
-    return`<div class="card" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px">${esc(s.date)}</div><div style="font-size:12px;color:var(--text2)">${(s.sets||[]).length===1?'1 Satz':(s.sets||[]).length+' Sätze'} · ${(vol/1000).toFixed(1)}t Volumen${cMin?` · ${cMin} min Cardio`:''}</div></div><div style="display:flex;align-items:center;gap:8px"><button class="pill" style="border:none" onclick="event.stopPropagation()">${esc(planDisplayName(s.planKey||'Workout'))}</button><button style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer" onclick="delSess(${s.__i})">×</button></div></div><div style="margin-top:10px;border-top:1px solid var(--bg3);padding-top:8px">${exNames.map(ex=>{const rows=(s.sets||[]).filter(x=>x.ex===ex);const isC=rows.some(isCardioSet);const maxW=Math.max(...rows.map(x=>parseFloat(x.w)||0));const mins=isC?rows.reduce((a,x)=>a+(parseInt(x.r)||0),0):0;return`<div onclick="showExHist('${jsStr(ex)}')" style="display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg3);cursor:pointer"><span style="font-size:13px;font-weight:700">${esc(ex)}</span><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${isC?`${mins} min`:`${maxW}kg`} · ${rows.length===1?'1 Satz':rows.length+' Sätze'}</span></div>`}).join('')}</div></div>`;
+  if(!sessions.length){list.innerHTML='<div class="empty">Keine Sessions in dieser Auswahl.<br><br>Wähle einen anderen Monat oder tippe den markierten Tag erneut an.</div>';return}
+  list.innerHTML=sessions.map(s=>histSessionHTML(s)).join('');
+  runBarGrows(list);
+}
+function histSessionHTML(s){
+  const d=parseGermanDate(s.date);
+  const months=['JAN','FEB','MÄR','APR','MAI','JUN','JUL','AUG','SEP','OKT','NOV','DEZ'];
+  const vol=sessionVolume(s);
+  const strength=strengthSets(s.sets||[]);
+  const cMin=cardioMinutes(s.sets);
+  const prev=previousSameSession(s);
+  const prevVol=prev?sessionVolume(prev):0;
+  const pct=prevVol>0?Math.round(((vol-prevVol)/prevVol)*100):null;
+  const cls=pct===null?'flat':pct>0?'up':pct<0?'down':'flat';
+  const prs=sessionPRs(s);
+  const avgRir=strength.length?(strength.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/strength.length).toFixed(1):null;
+  /* Übungszeilen mit direktem Vergleich zur letzten gleichen Einheit. Ohne
+     Vorgänger steht nur der Wert — eine erfundene Null wäre schlimmer als
+     gar keine Angabe. */
+  const exNames=[...new Set((s.sets||[]).map(x=>x.ex))].filter(Boolean);
+  const rows=exNames.map(ex=>{
+    const cur=(s.sets||[]).filter(x=>x.ex===ex);
+    const isC=cur.some(isCardioSet);
+    const p=prev?(prev.sets||[]).filter(x=>x.ex===ex):[];
+    /* Bei Körpergewichtsübungen ist das Gewicht konstant null — dort ist die
+       Wiederholungszahl die Größe, die sich bewegt. „0 ← 0 kg" wäre eine
+       Zeile, die zwei Zahlen zeigt und nichts aussagt. */
+    const maxW=arr=>arr.length?Math.max(...arr.map(x=>parseFloat(x.w)||0)):0;
+    const bodyweight=!isC&&maxW(cur)<=0&&maxW(p)<=0;
+    const value=arr=>isC||bodyweight?arr.reduce((a,x)=>a+(parseInt(x.r)||0),0):maxW(arr);
+    const curMax=value(cur);
+    const old=p.length?value(p):null;
+    const unit=isC?' min':bodyweight?' Wdh':' kg';
+    const dir=old===null?'':curMax>old?'up':curMax<old?'down':'flat';
+    const cmp=old===null?`<span class="w">${esc(curMax)}${unit} · ${cur.length}×</span>`
+      :`<span class="w"><b class="${dir}">${esc(curMax)}</b> ${dir==='flat'?'=':'←'} ${esc(old)}${unit}</span>`;
+    return`<div class="hex" onclick="showExHist('${jsStr(ex)}')"><span class="n">${esc(ex)}</span>${cmp}</div>`;
   }).join('');
+  return`<div class="hist-session">`+
+    `<div class="hs-h">`+
+      `<div class="hs-d"><div class="dd">${d?d.getDate():'–'}</div><div class="mm">${d?months[d.getMonth()]:''}</div></div>`+
+      `<div class="hs-b"><div class="n">${esc(planDisplayName(s.planKey||'Workout'))}</div>`+
+      `<div class="m">${(s.sets||[]).length} ${(s.sets||[]).length===1?'Satz':'Sätze'} · ${(vol/1000).toFixed(1)} t`+
+      `${s.duration?` · ${esc(s.duration)} min`:''}${avgRir?` · Ø RIR ${esc(avgRir)}`:''}${cMin?` · ${esc(cMin)} min Cardio`:''}</div>`+
+      `${prev?`<div class="vs">vs. ${esc(prev.date)}</div>`:''}</div>`+
+      `${pct===null?'':`<div class="hs-delta ${cls}">${pct>0?'+':''}${pct}%<small>VOLUMEN</small></div>`}`+
+      `<button type="button" class="hs-del" title="Session löschen" onclick="event.stopPropagation();delSess(${s.__i})">×</button>`+
+    `</div>`+
+    (prs.length?`<div class="hs-prs">${prs.map(p=>`<span class="pr">PR ${esc(p.ex)} ${esc(p.w)} kg</span>`).join('')}</div>`:'')+
+    `<div class="hs-ex">${rows}</div>`+
+  `</div>`;
+}
+/* Der Kopf des Screens: Serie in Wochen als Heldenzahl, darunter eine
+   Wochen-Heatmap. Sie beantwortet die Frage, die eine Sessionliste nicht
+   beantwortet — nicht „was habe ich gemacht", sondern „bleibe ich dran". */
+function renderHistStreak(){
+  const mount=document.getElementById('h-streak');
+  if(!mount)return;
+  const hist=D.history||[];
+  if(!hist.length){
+    mount.innerHTML=`<div class="empty">Noch keine Session aufgezeichnet.<br><br>Sobald du dein erstes Workout beendest, entsteht hier deine Serie.</div>`;
+    return;
+  }
+  const{streak,best,weeks}=trainingStreak();
+  const WEEKS=12;
+  const counts=[];
+  const cursor=new Date();
+  cursor.setDate(cursor.getDate()-((cursor.getDay()+6)%7));
+  for(let i=0;i<WEEKS;i++){
+    const key=isoWeekKey(cursor);
+    const n=hist.filter(s=>{const d=parseGermanDate(s.date);return d&&isoWeekKey(d)===key}).length;
+    counts.unshift(n);
+    cursor.setDate(cursor.getDate()-7);
+  }
+  const level=n=>n<=0?'':n===1?'l1':n===2?'l2':'l3';
+  const total=hist.length;
+  const activeWeeks=weeks.size||1;
+  const perWeek=(total/Math.max(1,Math.min(WEEKS,activeWeeks))).toFixed(1);
+  const durs=hist.map(s=>parseInt(s.duration)||0).filter(x=>x>0);
+  const avgMin=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
+  mount.innerHTML=`<div class="mesh-hero streak-hero">`+
+    `<div class="cap">Aktuelle Serie</div>`+
+    `<div class="mesh-row"><div class="mesh-num countup" data-count="${streak}" data-count-dur="800">0</div>`+
+    `<div class="mesh-side"><div class="u">${streak===1?'WOCHE':'WOCHEN'}</div>`+
+    `<div class="o">ohne Ausfall · Bestwert ${best}</div></div></div>`+
+    `<div class="heat">${counts.map((n,i)=>`<i class="${level(n)}" title="${n} ${n===1?'Session':'Sessions'}" style="--hd:${i*22}ms"></i>`).join('')}</div>`+
+    `<div class="heat-lg"><span>vor ${WEEKS} Wochen</span><span>diese Woche</span></div>`+
+    `<div class="streak-tri">`+
+      `<div><b class="countup" data-count="${total}">0</b><span>SESSIONS</span></div>`+
+      `<div><b>${perWeek}</b><span>Ø PRO WOCHE</span></div>`+
+      `<div><b class="countup" data-count="${avgMin}">0</b><span>Ø MINUTEN</span></div>`+
+    `</div></div>`;
+  runCountUps(mount);
 }
 function renderBio(){
   if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
