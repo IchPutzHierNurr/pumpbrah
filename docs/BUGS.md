@@ -84,11 +84,12 @@
 | [PB-035](#pb-035) | Figur schwebte aus dem Bildausschnitt | mittel | Darstellung | ✅ |
 | [PB-036](#pb-036) | Zeichnungen statt echter Übungsfotos | hoch | Darstellung | ✅ |
 | [PB-037](#pb-037) | Inline-`onerror` verletzte die eigene XSS-Invariante | mittel | Sicherheit | ✅ |
+| [PB-038](#pb-038) | „Danach" stand über einer bereits erledigten Übung | niedrig | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**34 von 34 im Frontend behebbaren Fehlern sind behoben.**
+**35 von 35 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -1386,6 +1387,52 @@ schaltet auf die Remote-URL, zweiter entfernt das Foto und die Zeichnung bleibt.
 
 ---
 
+### PB-038
+
+**„Danach" stand über einer bereits erledigten Übung**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Darstellung |
+| **Gefunden** | Screenshot des neuen Fokus-Layouts angesehen |
+| **Status** | ✅ behoben |
+
+**Symptom.** Das neue Workout-Layout gliedert die Übungsliste in Zonen:
+erledigt, gerade dran, kommt noch. Die Zwischenüberschrift „Danach" tauchte
+aber über der *ersten eingeklappten* Übung auf — und das war die bereits
+abgehakte Übung Nummer eins. Die Überschrift behauptete also das Gegenteil
+dessen, was darunter stand.
+
+**Ursache.** Die Bedingung fragte das Falsche:
+
+```js
+if (!isActive && !upcomingHeaderDone) { …'Danach'… }
+```
+
+`!isActive` ist wahr für **alles**, was nicht die aktive Übung ist — vor ihr
+genauso wie nach ihr. Die Position relativ zur aktiven Übung kam in der
+Bedingung gar nicht vor, obwohl genau sie die Bedeutung trägt.
+
+**Fix.** Die Zone aus dem Vergleich mit dem Index der aktiven Übung ableiten
+statt aus einem Negativ:
+
+```js
+if (activeExIdx < 0)        → „Übungen"   (nichts mehr offen)
+else if (ei < activeExIdx)  → „Erledigt"
+else if (ei > activeExIdx)  → „Danach"
+```
+
+**Lektion.** Eine Überschrift ist eine Behauptung über das, was folgt. Wenn
+sie aus einer Verneinung abgeleitet wird (`!isActive`), prüft der Code nicht,
+ob die Behauptung stimmt — er prüft nur, dass etwas anderes nicht zutrifft.
+Bei drei Zonen und einer Zweiwertbedingung fällt genau eine Zone hinten runter.
+
+**Test.** `PB-038` — startet ein Workout, hakt die erste Übung ab und prüft,
+dass keine „Danach"-Überschrift vor der aktiven Übung im DOM steht.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1513,6 +1560,7 @@ gestellt werden sollten:
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
 | 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
+| 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

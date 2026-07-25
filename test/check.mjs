@@ -512,9 +512,17 @@ const REGRESSIONS = [
         const declared = /\*\s*\{[^}]*-webkit-touch-callout\s*:\s*none/s.test(css);
         const inputsExempt = /input,textarea,select\s*\{[^}]*-webkit-touch-callout\s*:\s*default/s.test(css);
         D.active = null; startWorkout('FullBody_A');
-        D.active.exercises[0].logged = [{ w: 20, r: 10, rir: 2, note: '' }];
-        renderWo(); go('wo');
-        const row = document.querySelector('#wo-c .wsr');
+        // In die Übung loggen, die danach noch NICHT fertig ist - eine
+        // abgeschlossene Übung klappt im Fokus-Layout zu einer Zeile zusammen
+        // und zeigt gar keine Satz-Chips mehr. Der Test soll die Geste prüfen,
+        // nicht versehentlich das Zuklappen.
+        const ei = D.active.exercises.findIndex(e => !e.skipped && e.sets > 1);
+        D.active.exercises[ei].logged = [{ w: 20, r: 10, rir: 2, note: '' }];
+        // Zeile explizit aufklappen: welche Übung gerade "aktiv" ist, haengt
+        // vom Plan ab - der Test soll die Geste pruefen, nicht die Auswahl.
+        toggleWoRow(ei);
+        go('wo');
+        const row = document.querySelector('#wo-c .wsr:not(.empty)');
         const cs = row ? getComputedStyle(row) : null;
         const select = cs ? (cs.userSelect || cs.webkitUserSelect) : '';
         const hasGesture = !!(row && row.getAttribute('onpointerdown') || '').includes('setLongPress');
@@ -631,7 +639,18 @@ const REGRESSIONS = [
         const el = document.querySelector('#s-dash .ltitle');
         const expandedH = Math.round(el.getBoundingClientRect().height);
         window.scrollTo(0, 400);
-        await new Promise(res => requestAnimationFrame(() => setTimeout(res, 160)));
+        // Warten, bis sich die Seite beruhigt hat, statt fest 160 ms zu raten:
+        // beim Einklappen schrumpft die Kopfzeile um ~23 px, dadurch schrumpft
+        // das Dokument, dadurch klemmt der Browser scrollY nach unten - und
+        // waehrend dieses Nachziehens steht die Kopfzeile kurz bei top > 0.
+        // Ohne Abwarten misst der Test genau dieses Zwischenbild.
+        let last = -1, stable = 0;
+        for (let i = 0; i < 40 && stable < 3; i++) {
+          await new Promise(res => requestAnimationFrame(() => setTimeout(res, 16)));
+          const now = Math.round(el.getBoundingClientRect().top) + Math.round(window.scrollY) * 1000;
+          stable = now === last ? stable + 1 : 0;
+          last = now;
+        }
         const box = el.getBoundingClientRect();
         const t = parseFloat(el.style.getPropertyValue('--t') || '0');
         const scrolled = window.scrollY;
@@ -817,6 +836,32 @@ const REGRESSIONS = [
         return { ring, naive, anyCardio, excludes: !anyCardio || ring < naive };
       });
       return [r.excludes, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-038', title: 'Zonen-Überschriften stimmen mit ihrem Inhalt überein',
+    run: async () => {
+      // Das Fokus-Layout gliedert in "Erledigt / aktive Übung / Danach".
+      // "Danach" darf nie VOR der aktiven Übung im DOM stehen - sonst
+      // behauptet die Überschrift das Gegenteil dessen, was darunter steht.
+      const r = await page.evaluate(() => {
+        D.active = null; startWorkout('FullBody_A');
+        // Erste Übung abhaken, damit es eine "Erledigt"-Zone gibt.
+        const first = D.active.exercises[0];
+        first.logged = Array.from({ length: first.sets }, () => ({ w: 20, r: 8, rir: 2, note: '' }));
+        renderWo(); go('wo');
+        const nodes = [...document.querySelectorAll('#wo-c .st, #wo-c .wo-act')];
+        const idxAct = nodes.findIndex(n => n.classList.contains('wo-act'));
+        const heads = nodes.map((n, i) => n.classList.contains('wo-act')
+          ? '<AKTIV>' : (i < idxAct ? 'vor:' : 'nach:') + n.textContent.trim());
+        const danachVorAktiv = nodes.some((n, i) =>
+          n.classList.contains('st') && i < idxAct && /Danach/.test(n.textContent));
+        const erledigtNachAktiv = nodes.some((n, i) =>
+          n.classList.contains('st') && idxAct >= 0 && i > idxAct && /Erledigt/.test(n.textContent));
+        D.active = null; save();
+        return { heads, idxAct, danachVorAktiv, erledigtNachAktiv };
+      });
+      return [r.idxAct >= 0 && !r.danachVorAktiv && !r.erledigtNachAktiv, JSON.stringify(r)];
     }
   }
 ];
