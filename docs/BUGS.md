@@ -85,11 +85,12 @@
 | [PB-036](#pb-036) | Zeichnungen statt echter Übungsfotos | hoch | Darstellung | ✅ |
 | [PB-037](#pb-037) | Inline-`onerror` verletzte die eigene XSS-Invariante | mittel | Sicherheit | ✅ |
 | [PB-038](#pb-038) | „Danach" stand über einer bereits erledigten Übung | niedrig | Darstellung | ✅ |
+| [PB-039](#pb-039) | Zwei Matrixspalten hießen gleich | niedrig | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**35 von 35 im Frontend behebbaren Fehlern sind behoben.**
+**36 von 36 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -1433,6 +1434,85 @@ dass keine „Danach"-Überschrift vor der aktiven Übung im DOM steht.
 
 ---
 
+### PB-039
+
+**Zwei Matrixspalten hießen gleich**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Darstellung |
+| **Gefunden** | Screenshot der neuen Coach-Matrix angesehen |
+| **Status** | ✅ behoben |
+
+**Symptom.** Die Matrix des Volumen-Coaches stellt Muskeln (Zeilen) gegen
+Trainingstage (Spalten). Die Spaltenüberschriften entstanden so:
+
+```js
+planDisplayName(k).split(/[\s_]/)[0].slice(0,6)
+```
+
+Beim Standardplan heißen zwei Tage „FullBody A" und „FullBody B". Das erste
+Wort ist bei beiden „FullBody", auf sechs Zeichen gekürzt zweimal **FULLBO**.
+Eine Tabelle mit zwei identisch beschrifteten Spalten ist keine Tabelle mehr —
+man kann die Zahl darunter keinem Tag zuordnen.
+
+**Warum das kein Kürzungsproblem ist.** Der naheliegende Reflex wäre, auf acht
+oder zehn Zeichen zu kürzen. Das verschiebt den Fehler nur: „Oberkörper A" und
+„Oberkörper B" kollidieren dann wieder. Das Problem ist nicht die Länge,
+sondern dass **Eindeutigkeit gar nicht geprüft wurde**.
+
+**Fix.** Eine Funktion, die eine garantiert eindeutige Beschriftung liefert,
+mit Rückfallkette:
+
+1. das **letzte** Wort des Plannamens (bei „Push A" / „Push B" ist genau das
+   der Unterschied),
+2. sonst der Wochentag,
+3. sonst `T1 … Tn`.
+
+Entscheidend: Bei einer Kollision wird **nicht** die einzelne Spalte
+umbenannt, sondern die ganze Kopfzeile auf dieselbe Systematik umgestellt.
+Eine Zeile „A · Do · Mi" ist schwerer zu lesen als „Mo · Do · Mi" — gemischte
+Benennungen liest niemand als eine Tabelle.
+
+**Lektion.** Wenn eine Beschriftung gekürzt wird, ist sie ein *Bezeichner*,
+kein Text. Bezeichner brauchen eine Eindeutigkeitsprüfung, und der Fallback
+muss die ganze Menge betreffen, nicht den kollidierenden Einzelfall.
+
+**Test.** `PB-039` — zwei Pläne, einer mit gemeinsamem Präfix, einer ohne
+unterscheidbares letztes Wort; beide Male müssen die Beschriftungen paarweise
+verschieden und keine leer sein.
+
+---
+
+### PB-040
+
+**Vorwärtsgerichtet: Coach-Maßnahmen lassen den Plan gültig zurück**
+
+| | |
+|---|---|
+| **Schwere** | — (kein aufgetretener Fehler) |
+| **Klasse** | Datenintegrität |
+| **Gefunden** | aus dem Muster-Register abgeleitet |
+| **Status** | ✅ abgesichert |
+
+Kein aufgetretener Fehler, sondern ein Test aus **Muster 6 (stille
+Datenvernichtung)**: Der Coach schreibt über seine Maßnahmen direkt in
+`D.plan`. Zwei Zusagen macht das UI dem Nutzer, und beide müssen halten:
+
+* **„Verteilen"** verschiebt eine Übung auf einen anderen Tag. Der Dialog sagt
+  ausdrücklich „das Wochenvolumen bleibt gleich" — der Test rechnet die Sätze
+  vor und nach der Aktion nach und prüft zusätzlich, dass die Frequenz
+  tatsächlich steigt.
+* **„− Satz"** darf nie unter einen Satz fallen. Der Test drückt den Knopf
+  zweimal auf einer Übung, die schon bei einem Satz steht.
+
+**Lektion.** Jede Zusage, die im UI-Text steht („bleibt gleich", „bleibt
+erhalten", „ändert nichts an …"), ist eine Invariante — und gehört als Test
+formuliert, bevor jemand sie beim nächsten Umbau versehentlich bricht.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1556,11 +1636,12 @@ gestellt werden sollten:
 | 3b | **Fernwirkung auf Nachfahren** | PB-024, PB-032 | Welche Vorfahren-Eigenschaft (overflow, transform, filter, Spezifität) wirkt hier hinein? |
 | 4 | **Neuer Datentyp in alte Rechenwege** | PB-004, PB-029, PB-031 | Wer alles liest dieses Feld — und stimmt die Rechnung für den neuen Fall? |
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
-| 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030 | Was geht hier verloren, und weiß der Nutzer es? |
+| 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040 | Was geht hier verloren, und weiß der Nutzer es? |
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
 | 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
+| 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
