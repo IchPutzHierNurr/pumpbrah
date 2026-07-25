@@ -526,6 +526,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .mv-fill.low{background:linear-gradient(90deg,#e0930f,var(--orange))}
 .mv-fill.mid{background:linear-gradient(90deg,#22b657,var(--green))}
 .mv-fill.high{background:linear-gradient(90deg,#d02a46,var(--red))}
+.mv-fill.ok{background:linear-gradient(90deg,#2f7fd0,var(--blue))}
 .mv-mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(255,255,255,.18);border-radius:999px}
 .mv-zero{font-size:10.5px;color:var(--text3);margin-top:5px;font-family:'JetBrains Mono',monospace}
 .mv-zero:empty{display:none}
@@ -1582,6 +1583,55 @@ html,body{
 .hex .w b.down{color:var(--red)}
 .hex .w b.flat{color:var(--text2)}
 
+/* ============================================================================
+   STATS
+   Reihenfolge ist die eigentliche Entscheidung: erst der Satz, der die Woche
+   einordnet, dann die Belege. Wer Zahlen zuerst zeigt, überlässt dem Nutzer
+   die Deutung — und die ist bei Trainingsdaten der schwierige Teil.
+   ============================================================================ */
+.rep{display:flex;gap:11px;padding:13px;border-radius:17px;margin-bottom:9px;
+  background:var(--mat-2),rgba(255,255,255,.03);border:1px solid var(--line)}
+.rep-i{
+  width:28px;height:28px;flex:0 0 28px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;
+}
+.rep .t{font-weight:800;font-size:13.5px;line-height:1.25}
+.rep .d{font-size:11.5px;color:var(--text2);margin-top:4px;line-height:1.45}
+.rep.warn-red{border-color:color-mix(in srgb,var(--red) 28%,transparent);background:color-mix(in srgb,var(--red) 7%,transparent)}
+.rep.warn-orange{border-color:color-mix(in srgb,var(--orange) 26%,transparent);background:color-mix(in srgb,var(--orange) 7%,transparent)}
+
+/* --- Übungen nach Trend --- */
+.prow{
+  display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:18px;margin-bottom:8px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+  transition:transform var(--dur-micro) var(--sp);
+}
+.prow:active{transform:scale(.985)}
+.prow.stale{border-color:color-mix(in srgb,var(--red) 30%,transparent);background:color-mix(in srgb,var(--red) 6%,transparent)}
+.prow .bd{flex:1;min-width:0}
+.prow .bd b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .bd span{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3)}
+.prow .tspark{flex:0 0 62px;width:62px;height:26px}
+.prow .kg{
+  font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;
+  min-width:58px;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums;
+}
+.prow .kg small{display:block;font-family:'Space Grotesk',sans-serif;font-size:8.5px;font-weight:800;letter-spacing:.06em;color:var(--text3)}
+
+/* Der Bericht sitzt im Parallax-Container; die inneren Abschnittstitel
+   dürfen dort nicht kleben, sonst überlagern sich zwei sticky-Ebenen. */
+#ana-report .st{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+
+/* Im Balance-Abschnitt stehen die Balken untereinander statt in der
+   Zeilenform des Home-Screens — dort sitzt der Balken unter dem Namen,
+   hier braucht es zusätzlich die Zahl daneben. */
+.mv-list.bars{display:flex;flex-direction:column;gap:13px}
+.mv-list.bars .mv-row{padding:0}
+.mv-list.bars .mv-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:12.5px}
+.mv-list.bars .mv-top span{font-family:'JetBrains Mono',monospace;font-size:10.5px}
+.mv-list.bars .mv-bar{height:8px;background:rgba(255,255,255,.08)}
+.mv-list.bars .mv-fill{width:0;transition:width var(--dur-ring) var(--out)}
+
 /* --- Regel 6: Druckzustände --------------------------------------------- */
 .card,.gtile,.exr,.dtab,.optrow,.wo-cmd{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
 .btn,.btn-s{transition:transform var(--dur-micro) var(--sp),box-shadow .2s var(--ease),filter .2s}
@@ -1592,9 +1642,12 @@ html,body{
    jederzeit, in welchem Abschnitt es gerade ist. */
 .st{
   position:sticky;top:calc(max(env(safe-area-inset-top),10px) + 42px);z-index:20;
-  background:linear-gradient(180deg,var(--bg) 62%,transparent);
-  padding-top:8px;padding-bottom:6px;margin-top:22px;
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  /* Der Verlauf muss weit genug deckend sein, sonst scrollt die erste Zeile
+     des Abschnitts sichtbar durch die Überschrift hindurch. Bei 62 % blieb
+     ein gutes Drittel durchsichtig — genau die Höhe einer Zeile. */
+  background:linear-gradient(180deg,var(--bg) 0%,var(--bg) 82%,transparent 100%);
+  padding-top:10px;padding-bottom:10px;margin-top:22px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
 
 /* --- Leere Zustände: Regel „Tag 1 ist der erste Eindruck" ---------------- */
@@ -1745,6 +1798,11 @@ html,body{
 <div class="ltitle-h">Stats</div>
 </div><div class="ltitle-slot"><div class="pill" id="ana-total">0 Sätze</div></div></div>
 </div>
+<div id="ana-report" class="parallax"></div>
+<div class="st">Übungen nach Trend <div class="ln"></div></div>
+<div id="ana-progress"></div>
+<div class="st">Balance <div class="ln"></div></div>
+<div id="ana-muscles"></div>
 <div class="st">KÖRPERDATEN <div class="ln"></div></div>
 <div class="card" id="fitness-age-card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg3));border-color:var(--bg4)">
 <div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:4px">Dein Fitnessalter</div>
@@ -1773,9 +1831,6 @@ html,body{
 </div>
 <div id="bio-chart-area"></div>
 <div id="bio-entries-area"></div>
-<div class="hero" style="margin-top:12px"><div class="hs"><div class="v" id="a-maxw">0</div><div class="l">Max Gewicht</div></div><div class="hs"><div class="v" id="a-avgrir">—</div><div class="l">Ø RIR</div></div><div class="hs"><div class="v" id="a-excount">0</div><div class="l">Übungen</div></div></div>
-<div class="st">MUSKELGRUPPEN <div class="ln"></div></div>
-<div id="ana-muscles"></div>
 <div id="egym-section" style="display:none">
 <div class="st">EGYM BIOAGE <div class="ln"></div></div>
 <div class="card" id="egym-bioage-card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg3))">
@@ -5353,6 +5408,199 @@ function renderEgym(){
   });
   hc.innerHTML=hh;
 }
+/* Geschätztes Einwiederholungsmaximum nach Epley. Es ist eine Schätzung,
+   keine Messung — deshalb steht im UI „geschätzt" und nicht „dein 1RM".
+   Wert: es macht 5×100 und 8×90 vergleichbar, ohne dass jemand einen
+   Maximalversuch fahren muss. */
+function e1RM(w,reps){
+  const W=parseFloat(w)||0,R=parseInt(reps)||0;
+  if(W<=0||R<=0)return 0;
+  if(R===1)return W;
+  return Math.round(W*(1+R/30)*10)/10;
+}
+/* Ein Trend pro Übung: bestes e1RM der letzten drei Einheiten gegen das der
+   drei davor. Drei statt einer, weil ein einzelner schlechter Tag sonst als
+   Rückschritt gilt. */
+function exerciseProgress(name){
+  const sets=getAllSets(name).filter(x=>!isCardioSet(x));
+  if(!sets.length)return null;
+  const byDate={};
+  sets.forEach(x=>{
+    const d=x.date||'';
+    const v=e1RM(x.w,x.r);
+    const reps=parseInt(x.r)||0;
+    if(!byDate[d])byDate[d]={e:0,reps:0,w:0};
+    byDate[d].e=Math.max(byDate[d].e,v);
+    byDate[d].reps=Math.max(byDate[d].reps,reps);
+    byDate[d].w=Math.max(byDate[d].w,parseFloat(x.w)||0);
+  });
+  const keys=Object.keys(byDate).sort((a,b)=>(parseGermanDate(a)||0)-(parseGermanDate(b)||0));
+  if(!keys.length)return null;
+  const bodyweight=keys.every(k=>byDate[k].w<=0);
+  const series=keys.map(k=>bodyweight?byDate[k].reps:byDate[k].e);
+  const last=series[series.length-1];
+  const recent=series.slice(-3),before=series.slice(-6,-3);
+  let delta=null,dir='flat';
+  if(before.length){
+    const a=Math.max(...recent),b=Math.max(...before);
+    delta=Math.round((a-b)*10)/10;
+    dir=delta>0.5?'up':delta<-0.5?'down':'flat';
+  }
+  /* Stagnation: mehrere Einheiten ohne neuen Bestwert. Das ist die Zahl, die
+     den Nutzer zum Handeln bringt — nicht der Absolutwert. */
+  const peak=Math.max(...series);
+  let stale=0;
+  for(let i=series.length-1;i>=0;i--){if(series[i]>=peak)break;stale++}
+  return{name,sessions:keys.length,series,last,delta,dir,stale,bodyweight,
+    lastW:byDate[keys[keys.length-1]].w,unit:bodyweight?'Wdh':'kg'};
+}
+function progressAll(){
+  const names=[...new Set((D.history||[]).flatMap(s=>(s.sets||[])
+    .filter(x=>(!x.type||x.type==='main')&&!isCardioSet(x)).map(x=>x.ex)))].filter(Boolean);
+  return names.map(exerciseProgress).filter(p=>p&&p.sessions>=2)
+    .sort((a,b)=>(b.delta===null?-1e9:b.delta)-(a.delta===null?-1e9:a.delta));
+}
+/* Sparkline für eine Übungszeile. Keine Achsen, keine Zahlen — sie soll die
+   Richtung zeigen, den Wert liest man rechts daneben. */
+function trendSpark(series,color){
+  const pts=series.slice(-8);
+  if(pts.length<2)return '<svg viewBox="0 0 62 26" class="tspark"></svg>';
+  const min=Math.min(...pts),max=Math.max(...pts),span=(max-min)||1;
+  const d=pts.map((v,i)=>`${(i/(pts.length-1)*62).toFixed(1)} ${(22-((v-min)/span)*18).toFixed(1)}`).join(' L ');
+  return`<svg viewBox="0 0 62 26" class="tspark" aria-hidden="true"><path d="M ${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function renderAnaProgress(){
+  const mount=document.getElementById('ana-progress');
+  if(!mount)return;
+  const all=progressAll();
+  if(!all.length){mount.innerHTML='<div class="empty">Noch zu wenig Daten.<br><br>Ab der zweiten Einheit mit derselben Übung entsteht hier ein Verlauf.</div>';return}
+  mount.innerHTML=all.slice(0,14).map(p=>{
+    const col=p.dir==='up'?'var(--green)':p.dir==='down'?'var(--red)':'var(--text3)';
+    const warn=p.stale>=4;
+    const sign=p.delta===null?'':p.delta>0?'+':'';
+    return`<div class="prow${warn?' stale':''}" onclick="showExHist('${jsStr(p.name)}')">`+
+      `<div class="bd"><b>${esc(p.name)}</b>`+
+      `<span>${p.sessions} Einheiten · zuletzt ${esc(p.bodyweight?p.last:p.lastW)} ${esc(p.unit)}`+
+      `${warn?` · stagniert seit ${p.stale}`:''}</span></div>`+
+      trendSpark(p.series,col)+
+      `<div class="kg" style="color:${col}">${p.delta===null?'—':sign+p.delta}<small>${esc(p.unit.toUpperCase())}</small></div>`+
+    `</div>`;
+  }).join('');
+}
+/* Der Wochenbericht: erst ein Satz, der die Woche einordnet, dann Belege.
+   Bewusst in dieser Reihenfolge — wer Zahlen zuerst zeigt, überlässt dem
+   Nutzer die Deutung, und die ist bei Trainingsdaten der schwierige Teil. */
+/* Dieselben Landmark-Balken wie auf dem Home-Screen, hier aber über die
+   letzten 7 Tage der HISTORIE statt über den Plan: dort steht, was geplant
+   ist, hier, was tatsächlich passiert ist. */
+function weeklyMuscleBarsHTML(){
+  const withSec=D.ui&&D.ui.volMode!=='direct';
+  const vol=getWeeklyVolume(withSec);
+  const rows=Object.keys(MUSCLE_LANDMARKS).map(key=>{
+    const entry=vol[key]||{};
+    const sets=entry.sets||0;
+    const rp=MUSCLE_LANDMARKS[key];
+    const st=landmarkState(sets,rp);
+    /* Vier Zustände, vier Farben — die Legende darunter nennt alle vier.
+       Wer „über MAV" blau beschriftet und grün einfärbt, macht die Legende
+       zur Falschaussage. */
+    const cls=st.key==='low'||sets<=0?'low':st.key==='high'?'high':st.key==='ok'?'ok':'mid';
+    const fill=Math.max(0,Math.min(100,(sets/Math.max(rp.mrv,1))*100));
+    const note=st.key==='low'?` · ${st.label}`:st.key==='high'?` · ${st.label}`:'';
+    return`<div class="mv-row"><div class="mv-top"><b>${esc(muscleName(key))}</b>`+
+      `<span style="color:${st.key==='mid'?'var(--text3)':st.color}">${esc(sets)} / ${esc(st.key==='low'?rp.mev:st.key==='high'?rp.mrv:rp.mav)}${esc(note)}</span></div>`+
+      `<div class="mv-bar"><div class="mv-fill ${cls}" data-grow="${fill.toFixed(1)}%"></div>`+
+      `<span class="mv-mark" style="left:${(rp.mev/Math.max(rp.mrv,1)*100).toFixed(1)}%"></span>`+
+      `<span class="mv-mark" style="left:${(rp.mav/Math.max(rp.mrv,1)*100).toFixed(1)}%"></span></div></div>`;
+  }).join('');
+  return`<div class="card"><div class="cap" style="margin-bottom:12px">Sätze je Muskel · 7 Tage</div>`+
+    `<div class="mv-list bars">${rows}</div>`+
+    `<div class="coach-legend" style="margin-top:12px"><span><i style="background:#ffb020"></i>unter MEV</span>`+
+    `<span><i style="background:#2ee06a"></i>im MAV</span><span><i style="background:#4ea1ff"></i>über MAV</span>`+
+    `<span><i style="background:#ff3b5c"></i>über MRV</span></div></div>`;
+}
+function renderAnaReport(){
+  const mount=document.getElementById('ana-report');
+  if(!mount)return;
+  const hist=D.history||[];
+  if(!hist.length){
+    mount.innerHTML=`<div class="empty">Noch keine Trainingsdaten.<br><br>Nach dem ersten Workout steht hier dein Wochenbericht — was gut lief, was Aufmerksamkeit braucht, und die Zahlen dazu.</div>`;
+    return;
+  }
+  const weeks=weeklyHistorySeries(6);
+  const cur=weeks[weeks.length-1]||[];
+  const prev=weeks[weeks.length-2]||[];
+  const ton=list=>list.reduce((a,s)=>a+sessionVolume(s),0);
+  const tonCur=ton(cur),tonPrev=ton(prev);
+  const tonTrend=tonPrev>0?Math.round(((tonCur-tonPrev)/tonPrev)*100):null;
+  const work=cur.flatMap(s=>strengthSets(s.sets).filter(x=>!x.type||x.type==='main'));
+  const sets=work.length;
+  const lm=weeklyLandmarks();
+  const st=landmarkState(sets,lm);
+  const rir=work.length?(work.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/work.length):0;
+  const minutes=cur.reduce((a,s)=>a+(parseInt(s.duration)||0),0);
+  const{streak}=trainingStreak();
+  const prog=progressAll();
+  const ups=prog.filter(p=>p.dir==='up');
+  const stale=prog.filter(p=>p.stale>=4);
+  const vol=getWeeklyVolume(D.ui&&D.ui.volMode!=='direct');
+  const low=Object.keys(MUSCLE_LANDMARKS).map(k=>({k,sets:(vol[k]&&vol[k].sets)||0,lm:MUSCLE_LANDMARKS[k]}))
+    .filter(m=>m.sets<m.lm.mev).sort((a,b)=>(a.sets-a.lm.mev)-(b.sets-b.lm.mev));
+  /* Note aus drei Achsen: Volumen im Korridor, Frequenz erreicht, kein
+     Muskel unter MEV. Kein Punktesystem mit Nachkommastellen — die
+     Genauigkeit hätten die Daten nicht her. */
+  let score=0;
+  if(st.key==='mid'||st.key==='ok')score+=2; else if(st.key==='low')score+=0; else score+=1;
+  const planDays=Math.max(1,Object.keys(D.plan||{}).length);
+  if(cur.length>=planDays)score+=2; else if(cur.length>=planDays-1)score+=1;
+  if(!low.length)score+=1;
+  const grade=['D','C','C+','B','A−','A'][Math.max(0,Math.min(5,score))];
+  const headline=st.key==='low'
+    ? `Zu wenig Volumen für Wachstum — ${lm.mev-sets} Sätze fehlen bis MEV.`
+    : stale.length
+      ? `Volumen und Frequenz stimmen. Was hakt, ist <b>${esc(stale[0].name)}</b> — ${stale[0].stale} Einheiten ohne neuen Bestwert.`
+      : low.length
+        ? `Volumen und Frequenz stimmen. Was fehlt, ist <b>${esc(muscleName(low[0].k))}</b>.`
+        : `Alles im Korridor. Volumen, Frequenz und Verteilung passen zusammen.`;
+  const good=[];
+  if(ups.length)good.push({ico:'▲',col:'var(--green)',t:`${ups.length} ${ups.length===1?'Übung stärker':'Übungen stärker'}`,
+    d:ups.slice(0,4).map(p=>`${esc(p.name)} ${p.delta>0?'+':''}${p.delta} ${esc(p.unit)}`).join(', ')+'.'});
+  if(streak>=2)good.push({ico:'✓',col:'var(--green)',t:`${streak} Wochen ohne Ausfall`,
+    d:'Konsistenz ist die Größe, die über Monate am meisten entscheidet.'});
+  if(!good.length)good.push({ico:'✓',col:'var(--text3)',t:'Noch keine Vergleichswerte',
+    d:'Ab der zweiten Woche mit denselben Übungen steht hier, was besser geworden ist.'});
+  const bad=[];
+  stale.slice(0,2).forEach(p=>bad.push({ico:'▼',col:'var(--red)',cls:'warn-red',
+    t:`${esc(p.name)} stagniert`,
+    d:`${p.stale} Einheiten ohne neuen Bestwert. Das ist selten ein Erholungsproblem — eher Übungsauswahl oder Ausführung.`}));
+  low.slice(0,2).forEach(m=>bad.push({ico:'!',col:'var(--orange)',cls:'warn-orange',
+    t:`${esc(muscleName(m.k))} unter MEV`,
+    d:`${m.sets} von ${m.lm.mev} Sätzen. Der Volumen-Coach im Plan schlägt eine passende Übung vor.`}));
+  if(rir&&rir<1)bad.push({ico:'!',col:'var(--orange)',cls:'warn-orange',t:'Ø RIR unter 1',
+    d:'Du trainierst dauerhaft am Muskelversagen. Das kostet mehr Erholung, als es an Reiz bringt.'});
+  const row=x=>`<div class="rep ${x.cls||''}"><div class="rep-i" style="color:${x.col};background:color-mix(in srgb,${x.col} 16%,transparent)">${x.ico}</div>`+
+    `<div><div class="t">${x.t}</div><div class="d">${x.d}</div></div></div>`;
+  mount.innerHTML=`<div class="mesh-hero">`+
+    `<div class="cap">Diese Woche</div>`+
+    `<div class="mesh-row"><div class="mesh-num">${esc(grade)}</div>`+
+    `<div class="mesh-side"><div class="u">TRAININGSWOCHE</div>`+
+    `<div class="o">${cur.length} ${cur.length===1?'Einheit':'Einheiten'} · ${(tonCur/1000).toFixed(1)} t · Ø RIR ${rir?rir.toFixed(1):'—'}</div></div></div>`+
+    `<div class="mesh-note">${headline}</div></div>`+
+    `<div class="gtiles">`+
+      `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup" data-count="${(tonCur/1000).toFixed(1)}" data-count-dec="1">0</span><small>t</small></div>`+
+      `<div class="gd" style="color:${tonTrend===null?'var(--text3)':tonTrend<0?'var(--red)':'var(--green)'}">${tonTrend===null?'keine Vorwoche':(tonTrend>0?'+':'')+tonTrend+' % zur Vorwoche'}</div></div>`+
+      `<div class="gtile"><div class="gl">Arbeitssätze</div><div class="gv"><span class="countup" data-count="${sets}">0</span></div>`+
+      `<div class="gd" style="color:${st.color}">${esc(st.label)} · Ziel ${lm.mav}</div></div>`+
+      `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${rir?rir.toFixed(1):'—'}</div>`+
+      `<div class="gd">${!work.length?'noch keine Sätze':rir<1.5?'nah am Versagen':rir<3?'sauber gesteuert':'viel Luft nach oben'}</div></div>`+
+      `<div class="gtile"><div class="gl">Zeit</div><div class="gv">${(minutes/60).toFixed(1)}<small>h</small></div>`+
+      `<div class="gd">${cur.length?'Ø '+Math.round(minutes/cur.length)+' min':'—'}</div></div>`+
+    `</div>`+
+    `<div class="st">Was gut lief <div class="ln"></div></div>${good.map(row).join('')}`+
+    `<div class="st">Was Aufmerksamkeit braucht <div class="ln"></div></div>`+
+    (bad.length?bad.map(row).join(''):`<div class="rep"><div class="rep-i" style="color:var(--green);background:color-mix(in srgb,var(--green) 16%,transparent)">✓</div><div><div class="t">Nichts Auffälliges</div><div class="d">Kein Muskel unter MEV, keine Übung stagniert, RIR im vernünftigen Bereich.</div></div></div>`);
+  runCountUps(mount);
+}
 function renderAna(){
   normalizeData();
   renderBio();
@@ -5383,12 +5631,15 @@ function renderAna(){
   if(mc){
     const rows=Object.entries(muscles).filter(([k,m])=>m.sets.length);
     if(!rows.length){mc.innerHTML='<div class="empty">Noch keine Trainingsdaten. Log dein erstes Workout.</div>'}
-    else mc.innerHTML=muscleRadarCard()+rows.map(([key,m])=>{
+    else mc.innerHTML=muscleRadarCard()+weeklyMuscleBarsHTML()+`<div class="cap" style="margin:16px 2px 10px">Details je Muskelgruppe</div>`+rows.map(([key,m])=>{
       const byEx={};
       m.sets.forEach(s=>{if(!byEx[s.ex])byEx[s.ex]=[];byEx[s.ex].push(s)});
       return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><span class="ic-wrap">${icon(key,20)}</span><div class="ana-muscle-name">${esc(m.name)}</div><div class="ana-muscle-cnt">${m.ex.size===1?'1 Übung':m.ex.size+' Übungen'} · ${m.sets.length===1?'1 Satz':m.sets.length+' Sätze'}</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=strengthSets(sets).filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length).toFixed(1):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExDemo('${jsStr(ex)}','${jsStr(key)}','main')" style="font-weight:700;font-size:13px;cursor:pointer">${esc(ex)}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${esc(max)}kg</span></div><div style="font-size:11px;color:var(--text2);margin:4px 0">${sets.length===1?'1 Satz':sets.length+' Sätze'} · Ø RIR ${esc(avg)}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true,unit:' kg'}):'<div style="font-size:11px;color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
     }).join('');
   }
+  renderAnaReport();
+  renderAnaProgress();
+  runBarGrows(document.getElementById('s-ana'));
   runCountUps(document.getElementById('s-ana'));
 }
 /* Radar über die Wochenvolumen relativ zum jeweiligen MAV. 1.0 = optimal

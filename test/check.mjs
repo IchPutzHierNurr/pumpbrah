@@ -962,6 +962,64 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-045', title: 'Stats bleibt korrekt bei leeren und einseitigen Daten',
+    run: async () => {
+      // Der Stats-Screen rechnet Trends, Noten und Stagnation. Genau solche
+      // abgeleiteten Werte kippen an den Raendern: keine Historie, nur eine
+      // Session, nur Koerpergewichtsuebungen, nur Cardio.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.history));
+        const res = {};
+        const mk = (date, key, sets) => ({ id: 'p' + date, date, planKey: key, duration: 60, updatedAt: 1, sets });
+        const set = (ex, w, reps, muscle, mode) => ({ ex, nr: 1, w, r: reps, rir: 2, muscle, type: 'main', note: '', ...(mode ? { mode } : {}) });
+
+        // 1. Leere Historie darf nicht werfen und muss einen leeren Zustand zeigen
+        D.history = []; renderAna(); go('ana');
+        res.emptyOk = /Noch keine Trainingsdaten/.test(document.getElementById('ana-report').textContent)
+          && !!document.getElementById('ana-progress').textContent;
+
+        // 2. Eine einzige Session: kein Trend, aber auch kein Absturz und keine
+        //    erfundene Prozentzahl gegen eine nicht existierende Vorwoche
+        D.history = [mk('01.07.2026', 'Tag_A', [set('Bankdrücken', 80, 8, 'chest')])];
+        renderAna();
+        const rep1 = document.getElementById('ana-report').textContent;
+        res.singleNoFakeTrend = /keine Vorwoche/.test(rep1) && !/NaN|Infinity|undefined/.test(rep1);
+
+        // 3. Nur Koerpergewicht: Trend muss in Wiederholungen rechnen, nicht in kg
+        D.history = [
+          mk('01.07.2026', 'Tag_B', [set('Klimmzüge', 0, 6, 'back')]),
+          mk('08.07.2026', 'Tag_B', [set('Klimmzüge', 0, 9, 'back')]),
+          mk('15.07.2026', 'Tag_B', [set('Klimmzüge', 0, 11, 'back')])
+        ];
+        const bw = exerciseProgress('Klimmzüge');
+        res.bodyweightUsesReps = !!bw && bw.bodyweight === true && bw.unit === 'Wdh' && bw.last === 11;
+
+        // 4. Nur Cardio: darf gar nicht in der Progression auftauchen
+        D.history = [
+          mk('01.07.2026', 'Tag_C', [set('Laufband', 12, 30, 'legs', 'cardio')]),
+          mk('08.07.2026', 'Tag_C', [set('Laufband', 12, 35, 'legs', 'cardio')])
+        ];
+        renderAna();
+        res.cardioExcluded = progressAll().length === 0;
+
+        // 5. Stagnation wird erkannt, wenn seit vier Einheiten kein Bestwert faellt
+        const flat = [];
+        for (let i = 1; i <= 6; i++) flat.push(mk(`0${i}.07.2026`, 'Tag_D', [set('Beinpresse', i <= 2 ? 200 : 180, 10, 'legs')]));
+        D.history = flat;
+        const p = exerciseProgress('Beinpresse');
+        res.staleDetected = !!p && p.stale >= 4;
+
+        // 6. e1RM-Formel: 1 Wiederholung ist die Last selbst, mehr ist mehr
+        res.e1rm = e1RM(100, 1) === 100 && e1RM(100, 5) > 100 && e1RM(0, 5) === 0 && e1RM(100, 0) === 0;
+
+        D.history = before; save(); renderAna();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-041', title: 'QR-Encoder liefert unveraenderte Referenzcodes',
     run: async () => {
       // Der QR-Encoder ist selbst gebaut. Beim Bauen sind zwei Fehler
