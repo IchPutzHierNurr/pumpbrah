@@ -88,11 +88,12 @@
 | [PB-039](#pb-039) | Zwei Matrixspalten hießen gleich | niedrig | Darstellung | ✅ |
 | [PB-041](#pb-041) | QR-Codes sahen richtig aus und waren unlesbar | **hoch** | Korrektheit | ✅ |
 | [PB-043](#pb-043) | Fotoschicht entfernt — Kacheln zeigen jetzt eine Marke | — | Darstellung | ✅ |
+| [PB-046](#pb-046) | Negatives Gewicht wurde klaglos gespeichert | **hoch** | Berechnung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**37 von 37 im Frontend behebbaren Fehlern sind behoben.**
+**38 von 38 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -1673,6 +1674,55 @@ die Figur, und kein Rest der Fotoschicht ist im Code oder CSS übrig.
 
 ---
 
+### PB-046
+
+**Negatives Gewicht wurde klaglos gespeichert**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Berechnung / Datenintegrität |
+| **Gefunden** | **Fuzzer-Invariante „Volumen ist endlich und nicht negativ"** |
+| **Status** | ✅ behoben |
+
+**Symptom.** `<input type="number">` akzeptiert ein Minuszeichen. Wer beim
+Loggen `-50` eintippt — oder es sich aus einem verrutschten Tastendruck
+ergibt —, bekam einen Satz mit −50 kg ins Datenmodell geschrieben.
+
+**Warum das nicht nur hässlich ist.** Das Gewicht ist kein Anzeigewert,
+sondern eine Rechengröße. Ein negativer Satz zieht sich durch:
+
+* Tonnage der Session und der Woche wird kleiner statt größer,
+* das geschätzte 1RM im neuen Stats-Trend wird negativ,
+* die Bestwert-Erkennung vergleicht gegen einen unmöglichen Vorwert,
+* der Volumen-Coach rechnet mit einem Satz, der Erholung „zurückgibt".
+
+Und all das **still** — keine Fehlermeldung, keine auffällige Zahl, nur
+Werte, die einige Prozent zu niedrig sind.
+
+**Warum es so lange unentdeckt blieb.** Die Eingabe ist über die
+Benutzeroberfläche kaum absichtlich zu erzeugen; erst der Fuzzer, der
+Zahlenfelder mit Grenzwerten beschießt, hat sie in einer Kette aus zwölf
+Aktionen produziert. Genau dafür existiert die Invariante — sie prüft nach
+*jeder* Aktion eine Eigenschaft, die immer gelten muss, statt eines Ergebnisses,
+an das jemand gedacht hat.
+
+**Fix.** Klemmen an der einzigen Stelle, an der Werte ins Modell wandern:
+`confirmLog()` und `saveEditSet()`. Gewicht 0–2000 kg, Wiederholungen 0–999,
+RIR 0–10. Bewusst **nicht** im Eingabefeld über `min="0"` — ein Attribut im
+Markup lässt sich umgehen, eine Klemmung in der Schreibfunktion nicht.
+
+**Lektion.** Eine Zahl, die weiterverrechnet wird, braucht ihre Wertebereichs-
+prüfung dort, wo sie ins Modell geschrieben wird — nicht dort, wo sie
+eingegeben wird. Und: Der wertvollste Test ist nicht der, der ein erwartetes
+Ergebnis prüft, sondern der, der eine Eigenschaft prüft, die nie verletzt sein
+darf.
+
+**Test.** `PB-046` — tippt negative und absurd große Werte in Log-Dialog und
+Satz-Editor und prüft, dass im Modell nur geklemmte, endliche Werte landen.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1794,7 +1844,7 @@ gestellt werden sollten:
 | 2 | **Identität aus Inhalt abgeleitet** | PB-002, PB-003, PB-016, PB-020 | Was ist die stabile Identität dieses Objekts, unabhängig von seinem Inhalt und seiner Position? |
 | 3 | **Zwei Quellen für dieselbe Wahrheit** | PB-005, PB-013, PB-017, PB-024 | Gibt es diese Tabelle/Definition/CSS-Regel schon woanders? |
 | 3b | **Fernwirkung auf Nachfahren** | PB-024, PB-032 | Welche Vorfahren-Eigenschaft (overflow, transform, filter, Spezifität) wirkt hier hinein? |
-| 4 | **Neuer Datentyp in alte Rechenwege** | PB-004, PB-029, PB-031 | Wer alles liest dieses Feld — und stimmt die Rechnung für den neuen Fall? |
+| 4 | **Neuer Datentyp in alte Rechenwege** | PB-004, PB-029, PB-031, PB-046 | Wer alles liest dieses Feld — und stimmt die Rechnung für den neuen Fall? |
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
 | 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040 | Was geht hier verloren, und weiß der Nutzer es? |
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |

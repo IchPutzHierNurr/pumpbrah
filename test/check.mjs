@@ -1020,6 +1020,44 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-046', title: 'Negative Eingaben landen nicht im Datenmodell',
+    run: async () => {
+      // Vom Fuzzer gefunden: ein Zahlenfeld akzeptiert das Minuszeichen. Ein
+      // negatives Gewicht rechnet sich durch die ganze App - negative Tonnage,
+      // negatives geschaetztes 1RM, kaputte Bestwert-Erkennung.
+      const r = await page.evaluate(() => {
+        D.active = null; startWorkout('FullBody_A');
+        const ei = D.active.exercises.findIndex(e => !e.skipped);
+        openLog(ei);
+        const put = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+        put('log-w', '-50'); put('log-r', '-8'); put('log-rir', '-3');
+        confirmLog();
+        const a = D.active.exercises[ei].logged[0] || {};
+        openLog(ei);
+        put('log-w', '999999'); put('log-r', '100000'); put('log-rir', '99');
+        confirmLog();
+        const b = D.active.exercises[ei].logged[1] || {};
+        // Und ueber den Satz-Editor derselbe Versuch
+        const host = document.createElement('div'); host.id = 'set-popup';
+        host.innerHTML = '<input id="edit-set-w" value="-99"><input id="edit-set-r" value="-5">';
+        document.body.appendChild(host);
+        saveEditSet(ei, 0);
+        const c = D.active.exercises[ei].logged[0] || {};
+        document.getElementById('set-popup')?.remove();
+        const vol = { w: a.w, r: a.r, rir: a.rir };
+        D.active = null; save();
+        return {
+          noNegative: a.w >= 0 && a.r >= 0 && a.rir >= 0,
+          capped: b.w <= 2000 && b.r <= 999 && b.rir <= 10,
+          editorClamped: c.w >= 0 && c.r >= 0,
+          finite: Object.values(vol).every(Number.isFinite)
+        };
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-041', title: 'QR-Encoder liefert unveraenderte Referenzcodes',
     run: async () => {
       // Der QR-Encoder ist selbst gebaut. Beim Bauen sind zwei Fehler
@@ -1292,6 +1330,9 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       Object.keys(MUSCLE_LANDMARKS).forEach(m => { coachBadge(m, 'main'); coachSuggestExercise(m); coachBestDayFor(m, int(0,1) === 1); });
       Object.keys(D.plan || {}).forEach(k => coachDayHintHTML(k));
       const m = pick(Object.keys(MUSCLE_LANDMARKS));
+      // Evidenz-Katalog mitbeschiessen: Vorschlag, Begruendungsblatt, Badge
+      coachSuggestExercise(m); confBadge(int(-2, 5));
+      showEvidence(pick(EVIDENCE_DB).n); showEvidence('Gibt es nicht ' + int(1, 99)); cm('m-evidence');
       pick([() => coachAddExercise(m, false), () => coachTrimSet(m), () => coachSpreadMuscle(m)])();
     }],
     ['pureMath', () => {
