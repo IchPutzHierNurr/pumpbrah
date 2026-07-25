@@ -765,63 +765,50 @@ const REGRESSIONS = [
     }
   },
   {
-    id: 'PB-036', title: 'Übungsfotos werden korrekt zugeordnet und geladen',
+    id: 'PB-043', title: 'Übungskacheln zeigen die Marke, kein Bild',
     run: async () => {
-      const r = await page.evaluate(async () => {
-        const want = {
-          'Bankdrücken': 'Barbell_Bench_Press_-_Medium_Grip',
-          'Bankdrücken (Bench Press)': 'Barbell_Bench_Press_-_Medium_Grip',
-          'Kniebeugen (Back Squat)': 'Barbell_Squat',
-          'Leg Curl': 'Seated_Leg_Curl',
-          'Leg Extension': 'Leg_Extensions',
-          'Rumänisches Kreuzheben': 'Romanian_Deadlift',
-          'KH Seitheben': 'Side_Lateral_Raise',
-          'Latziehen breit Obergriff': 'Wide-Grip_Lat_Pulldown'
-        };
-        const wrong = Object.entries(want)
-          .filter(([n, id]) => exercisePhotoId(n) !== id)
-          .map(([n, id]) => `${n}: erwartet ${id}, ist ${exercisePhotoId(n)}`);
-        // Unbekannte Übung darf KEIN Foto liefern, sonst zeigt sie ein falsches
-        const falsePositive = ['Völlig Erfundene Übung 4711', ''].filter(n => exercisePhotoId(n));
-        // Und die Datei muss tatsächlich existieren
-        const load = (src) => new Promise(res => {
-          const i = new Image(); i.onload = () => res(true); i.onerror = () => res(false); i.src = src;
-        });
-        const files = await Promise.all(Object.values(want).flatMap(id =>
-          [0, 1].map(f => load(`assets/ex/${id}-${f}.webp`))));
-        return { wrong, falsePositive, missing: files.filter(x => !x).length, checked: files.length };
-      });
-      return [r.wrong.length === 0 && r.falsePositive.length === 0 && r.missing === 0,
-              JSON.stringify(r).slice(0, 240)];
-    }
-  },
-  {
-    id: 'PB-037', title: 'Ohne Foto greift die gezeichnete Figur',
-    run: async () => {
+      // Ersetzt PB-036 und PB-037: die Fotoschicht ist entfernt (siehe
+      // docs/BUGS.md). Der neue Vertrag lautet - in Listen NIE ein <img>,
+      // immer eine Marke mit lesbarem Bewegungsmuster, auch fuer unbekannte
+      // Uebungen; die Demo liefert weiterhin die animierte Figur.
       const r = await page.evaluate(() => {
-        // Übung ohne Datenbankeintrag -> nur SVG, kein leerer Kasten
-        const html = exerciseVisual('Erfundene Spezialübung 99', 'chest', 'main', {});
         const host = document.createElement('div');
         host.style.cssText = 'position:absolute;left:-9999px;width:320px';
-        host.innerHTML = html; document.body.appendChild(host);
-        const noPhoto = { svg: !!host.querySelector('svg'), img: !!host.querySelector('img') };
-        host.innerHTML = exerciseVisual('Bankdrücken', 'chest', 'main', {});
-        const withPhoto = { svg: !!host.querySelector('svg'), img: host.querySelectorAll('img').length };
-        // Fallback-Kette: erst lokal, dann Netz, dann Element entfernen
-        const img = host.querySelector('img');
-        const hasRemote = !!(img && img.dataset.fb && img.dataset.fb.startsWith('https://'));
-        exPhotoFallback(img);                    // 1. Fehlschlag -> Netz
-        const switched = img.src.startsWith('https://');
-        exPhotoFallback(img);                    // 2. Fehlschlag -> entfernen
-        const removed = !host.querySelector('.exphoto');
-        const svgSurvives = !!host.querySelector('svg');
+        document.body.appendChild(host);
+        const probe = (name, muscle, type) => {
+          host.innerHTML = exerciseVisual(name, muscle, type, { thumb: true });
+          const mark = host.querySelector('.exmark');
+          return {
+            img: host.querySelectorAll('img').length,
+            mark: !!mark,
+            pattern: mark ? mark.getAttribute('data-pattern') : '',
+            svg: !!host.querySelector('svg path')
+          };
+        };
+        const cases = [
+          probe('Bankdrücken', 'chest', 'main'),
+          probe('Völlig Erfundene Übung 4711', 'back', 'main'),
+          probe('', 'legs', 'main'),
+          probe('Leg Curl', 'legs', 'main')
+        ];
+        // Muster muss zur Uebung passen, nicht nur irgendein Text sein
+        host.innerHTML = exerciseVisual('Schulterdrücken LH', 'shoulders', 'main', { thumb: true });
+        const vertical = host.querySelector('.exmark').getAttribute('data-pattern');
+        host.innerHTML = exerciseVisual('Bankdrücken', 'chest', 'main', { thumb: true });
+        const horizontal = host.querySelector('.exmark').getAttribute('data-pattern');
+        // Demo bleibt die animierte Figur
+        host.innerHTML = exerciseVisual('Kniebeugen', 'legs', 'main', {});
+        const demo = { svg: !!host.querySelector('svg'), img: host.querySelectorAll('img').length };
+        // Kein Rest der Fotoschicht mehr im Code
+        const css = [...document.querySelectorAll('style')].map(x => x.textContent).join('\n');
+        const leftovers = /exphoto|EXPHOTO/.test(css) || typeof window.exercisePhotoId === 'function';
         host.remove();
-        return { noPhoto, withPhoto, hasRemote, switched, removed, svgSurvives };
+        return { cases, vertical, horizontal, demo, leftovers };
       });
-      const ok = r.noPhoto.svg && !r.noPhoto.img
-        && r.withPhoto.svg && r.withPhoto.img === 2
-        && r.hasRemote && r.switched && r.removed && r.svgSurvives;
-      return [ok, JSON.stringify(r)];
+      const ok = r.cases.every(c => c.img === 0 && c.mark && c.pattern && c.svg)
+        && /Vertikales/.test(r.vertical) && /Horizontales/.test(r.horizontal)
+        && r.demo.svg && r.demo.img === 0 && !r.leftovers;
+      return [ok, JSON.stringify(r).slice(0, 300)];
     }
   },
   {
@@ -1174,9 +1161,14 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
     ['avatar', () => { if (rnd() < 0.5) clearProfileImage(); else { D.ui.avatar = 'data:image/png;base64,iVBORw0KGgo='; save(); renderSettings(); renderDash(); } }],
     ['exerciseMenu', () => { if (D.active && D.active.exercises.length) openExerciseMenu(int(0, D.active.exercises.length - 1)); }],
     ['planExMenu', () => { const p = D.plan[curTab]; if (p && p.exercises.length) openPlanExMenu(int(0, p.exercises.length - 1)); }],
-    ['photos', () => {
-      ['Bankdrücken', 'Leg Curl', pick(NASTY), 'Eigene Übung ' + int(1, 99), 'Kniebeugen (Back Squat)']
-        .forEach(n => { exercisePhotoId(n); exerciseVisual(n, pick(['chest','legs','back']), 'main', { thumb: rnd() < .5 }); });
+    ['marks', () => {
+      // Fruehere Aktion "photos". Die Fotoschicht ist weg; geprueft wird jetzt,
+      // dass Marke und Figur auch mit boesartigen Namen sauber erzeugt werden.
+      ['Bankdrücken', 'Leg Curl', pick(NASTY), 'Eigene Übung ' + int(1, 99), 'Kniebeugen (Back Squat)', '']
+        .forEach(n => {
+          exerciseMark(n, pick(['chest','legs','back','core']), 'main');
+          exerciseVisual(n, pick(['chest','legs','back']), pick(['main','pre','mob']), { thumb: rnd() < .5 });
+        });
     }],
     ['icons', () => { hydrateIcons(); Object.keys(ICON_PATHS).forEach(k => icon(k, int(12, 28))); exIcon(pick(['main','pre','mob']), pick(['chest','back','legs','arms','core','shoulders','unbekannt'])); }],
     ['jumpActive', () => jumpToActiveExercise()],
@@ -1265,12 +1257,21 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
        Aufweichung: jedes img ohne diese Klassen schlägt weiterhin an. */
     ['Keine injizierten Fremdelemente', () =>
       [...document.getElementById('main-app').querySelectorAll('img,iframe,object,embed,form')]
-        .filter(el => !(el.tagName === 'IMG' && (el.classList.contains('ph') || el.classList.contains('exphoto-thumb'))))
+        // Seit dem Entfernen der Fotoschicht darf ueberhaupt kein <img> mehr
+    // im gerenderten Baum stehen - die Ausnahme von PB-037 entfaellt und die
+    // Invariante wird dadurch strenger, nicht loecheriger.
         .length === 0],
     ['Keine XSS-Flagge gesetzt', () => !window.__pwn && !window.__pwned],
-    ['Übungs-SVG bleibt wohlgeformt', () => {
-      const svg = document.querySelector('.exdemo-thumb svg, .exdemo svg');
-      return !svg || svg.querySelectorAll('line,circle').length > 0; }],
+    // Zwei getrennte Vertraege, seit Kacheln und Demo verschiedene Grafiken
+    // zeigen: die Marke ist ein Pfad-Symbol, die Demo eine Strichfigur aus
+    // Linien und Kreisen. Eine gemeinsame Regel wuerde entweder die Marke
+    // faelschlich anschlagen oder die Figur nicht mehr pruefen.
+    ['Übungsmarke hat ein Symbol', () => {
+      const mark = document.querySelector('.exmark svg');
+      return !mark || mark.querySelectorAll('path').length > 0; }],
+    ['Übungsfigur bleibt wohlgeformt', () => {
+      const fig = document.querySelector('.exdemo svg, #demo-stage svg');
+      return !fig || fig.querySelectorAll('line,circle,polyline,polygon,path').length > 0; }],
     ['Tombstone-Listen bleiben Arrays', () => ['history', 'weights', 'egym', 'libraryCustom']
       .every(k => Array.isArray(D.deleted[k]))]
   ];

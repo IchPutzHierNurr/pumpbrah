@@ -82,11 +82,12 @@
 | [PB-033](#pb-033) | „Leg Curl" wurde als Bizeps-Curl erkannt | hoch | Darstellung | ✅ |
 | [PB-034](#pb-034) | Hantel lief eine halbe Phase neben der Hand | mittel | Darstellung | ✅ |
 | [PB-035](#pb-035) | Figur schwebte aus dem Bildausschnitt | mittel | Darstellung | ✅ |
-| [PB-036](#pb-036) | Zeichnungen statt echter Übungsfotos | hoch | Darstellung | ✅ |
-| [PB-037](#pb-037) | Inline-`onerror` verletzte die eigene XSS-Invariante | mittel | Sicherheit | ✅ |
+| [PB-036](#pb-036) | Zeichnungen statt echter Übungsfotos | hoch | Darstellung | ⊘ entfällt |
+| [PB-037](#pb-037) | Inline-`onerror` verletzte die eigene XSS-Invariante | mittel | Sicherheit | ⊘ entfällt |
 | [PB-038](#pb-038) | „Danach" stand über einer bereits erledigten Übung | niedrig | Darstellung | ✅ |
 | [PB-039](#pb-039) | Zwei Matrixspalten hießen gleich | niedrig | Darstellung | ✅ |
 | [PB-041](#pb-041) | QR-Codes sahen richtig aus und waren unlesbar | **hoch** | Korrektheit | ✅ |
+| [PB-043](#pb-043) | Fotoschicht entfernt — Kacheln zeigen jetzt eine Marke | — | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -1615,6 +1616,60 @@ und Skript-Versuchen im Übungsnamen. Geprüft wird, dass Historie, Körperdaten
 und Einstellungen unverändert bleiben, die bestehenden Trainingstage erhalten
 sind, alle Werte im gültigen Bereich landen und kein fremdes Element im DOM
 auftaucht.
+
+---
+
+### PB-043
+
+**Fotoschicht entfernt — Kacheln zeigen jetzt eine Marke**
+
+| | |
+|---|---|
+| **Schwere** | — (Feature zurückgebaut) |
+| **Klasse** | Darstellung |
+| **Gefunden** | Nutzerurteil beim Ansehen der App |
+| **Status** | ✅ umgesetzt |
+
+**Anlass.** Die Übungsfotos aus der Free Exercise DB waren fachlich korrekt
+und lizenzrechtlich sauber — und gestalterisch Fremdkörper. Rote Studiowände,
+Holzböden, Tageslicht, vier verschiedene Kameras: nebeneinander in einer
+Liste sahen sie aus wie vier verschiedene Apps. Kein Filter hätte das ganz
+geheilt, und jeder Filter hätte die Erkennbarkeit weiter gesenkt.
+
+**Entscheidung.** Statt die Fotos zu behandeln, wurde die Frage neu gestellt:
+*Was soll eine 44-Pixel-Kachel überhaupt leisten?* Eine Bewegung erklären kann
+sie nicht. Einordnen kann sie. Also zeigt sie jetzt eine **Marke** — das
+Bewegungsmuster als Symbol, eingefärbt nach Muskelgruppe. Wer wissen will, wie
+die Übung aussieht, öffnet die Demo; dort steht weiterhin die animierte Figur
+mit Ausführungshinweisen.
+
+**Was dabei wegfiel:** 52 Bilddateien (0,9 MB), die Zuordnungstabelle
+Deutsch→Datenbank, die Deutsch-Englisch-Übersetzungsliste, die zweistufige
+Fallback-Kette lokal→Netz→entfernen und der delegierte Fehler-Listener.
+
+**Folgen für das Register.** PB-036 (falsche Foto-Zuordnung) und PB-037
+(Inline-`onerror` gegen die eigene XSS-Invariante) betreffen Code, den es
+nicht mehr gibt. Sie stehen weiter im Register — gelöschte Fehler sind
+gelöschte Erkenntnisse —, sind aber als **entfällt** markiert. Ihre Tests
+wurden nicht stillschweigend entfernt, sondern durch `PB-043` ersetzt.
+
+**Was dabei strenger wurde.** Die Invariante „keine injizierten Fremdelemente"
+brauchte für PB-037 eine Ausnahme für Foto-`<img>`. Diese Ausnahme ist weg:
+im gerenderten Baum darf jetzt **überhaupt kein** `<img>` mehr stehen.
+Ebenso wurde die Invariante „Übungs-SVG bleibt wohlgeformt" geteilt — Marke
+und Figur sind zwei verschiedene Grafiken mit zwei verschiedenen Verträgen;
+eine gemeinsame Regel hätte entweder falsch angeschlagen oder nichts geprüft.
+
+**Lektion.** Wenn Fremdmaterial nicht zum eigenen System passt, ist die erste
+Frage nicht „welcher Filter rettet es?", sondern „welche Aufgabe hat dieses
+Element eigentlich?". Oft ist die Antwort kleiner als das, was man ersetzen
+wollte — und dann verschwindet mit dem Material auch dessen ganze
+Fehlerklasse.
+
+**Test.** `PB-043` — Kacheln enthalten nie ein `<img>`, jede Übung bekommt
+eine Marke mit lesbarem Bewegungsmuster (auch unbekannte und namenlose), das
+Muster stimmt (vertikal vs. horizontal drücken), die Demo liefert weiterhin
+die Figur, und kein Rest der Fotoschicht ist im Code oder CSS übrig.
 
 ---
 

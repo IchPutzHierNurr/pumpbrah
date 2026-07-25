@@ -863,21 +863,14 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
    sichtbar, sobald ein Foto fehlschlägt. */
 .exvisual{display:block;position:relative;width:100%;height:100%}
 .exvisual>svg{display:block;width:100%;height:auto}
-.exvisual .exphoto,.exvisual .exphoto-thumb{position:absolute;inset:0}
-.exphoto{position:relative;width:100%;height:100%;overflow:hidden;background:#0d0f13}
-.exphoto .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.exphoto .ph-b{animation:phSwap var(--phdur,3s) steps(1,end) infinite}
-.exphoto .ph-b.still{animation:none}
-@keyframes phSwap{0%,49.9%{opacity:1}50%,100%{opacity:0}}
-.exphoto-thumb{width:100%;height:100%;object-fit:cover;display:block}
-/* Im Sheet steht das Foto in einem festen Seitenverhältnis, damit das Layout
-   nicht springt, während die Bilder laden. */
-.exdemo .exvisual{aspect-ratio:3/2}
-.exdemo .exvisual>svg{position:absolute;inset:0;height:100%}
-.exdemo-thumb .exvisual{position:absolute;inset:0}
-.exdemo-thumb .exvisual>svg{position:absolute;inset:0;height:100%}
-.exphoto-credit{font-size:10px;color:var(--text3);letter-spacing:.02em;margin-top:8px;text-align:right}
-.exphoto-credit a{color:var(--text3);text-decoration:underline}
+/* --- Übungsmarke statt Foto --- */
+.exmark{
+  display:flex;align-items:center;justify-content:center;width:100%;height:100%;
+  background:linear-gradient(140deg,color-mix(in srgb,var(--tint) 26%,transparent),rgba(20,16,36,.9));
+}
+.exmark svg{width:52%;height:52%;stroke:var(--tint);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.exmark.full{border-radius:var(--r-lg);aspect-ratio:4/3;flex-direction:column;gap:10px}
+.exmark.full svg{width:56px;height:56px;stroke-width:1.5}
 
 /* --- Übungs-Illustration --------------------------------------------------
    Vorher hatte jedes Kästchen einen eigenen Verlauf (bg3 -> bg4), im Plan
@@ -2999,97 +2992,54 @@ function moveCue(name,muscle,type){
      3. gezeichnete Figur         wenn beides scheitert oder die Übung
                                   in der Datenbank gar nicht vorkommt
    ========================================================================== */
-const EXPHOTO_MAP={'bankdruecken':'Barbell_Bench_Press_-_Medium_Grip','schraegbankdruecken':'Barbell_Incline_Bench_Press_-_Medium_Grip','brustpresse maschine':'Machine_Bench_Press','kniebeugen':'Barbell_Squat','beinpresse':'Leg_Press','rumaenisches kreuzheben':'Romanian_Deadlift','kh seitheben':'Side_Lateral_Raise','latziehen breit':'Wide-Grip_Lat_Pulldown','latziehen breit obergriff':'Wide-Grip_Lat_Pulldown','maschinenrudern eng':'Seated_Cable_Rows','maschinenrudern eng neutral':'Seated_Cable_Rows','face pulls':'Face_Pull','gesichtziehen':'Face_Pull','leg extension':'Leg_Extensions','leg curl':'Seated_Leg_Curl','slantboard calf raise':'Standing_Calf_Raises','kabelcrunches':'Cable_Crunch','unterarmstuetz':'Plank','trizepsdruecken seil':'Triceps_Pushdown_-_Rope_Attachment','kh pullover':'Straight-Arm_Dumbbell_Pullover','kh curls':'Dumbbell_Bicep_Curl','atg seated good morning kh':'Seated_Good_Mornings','atg sitzender guten morgen':'Seated_Good_Mornings','atg split squat slantboard':'Split_Squat_with_Dumbbells','atg keilbrett ausfallschritt':'Split_Squat_with_Dumbbells','poliquin step slantboard':'Dumbbell_Step_Ups','ring rows':'Inverted_Row','backward walk laufband':'Walking_Treadmill','incline pigeon pose':'Intermediate_Groin_Stretch','jefferson curl kh':'Seated_Floor_Hamstring_Stretch','katana extensions kabel':'Cable_Rear_Delt_Fly'};
-const EXPHOTO_LOCAL='assets/ex/';
-const EXPHOTO_REMOTE='https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
-/* Deutsche Übungsnamen auf die englischen Begriffe der Datenbank abbilden.
-   Deckt eigene Übungen ab, für die es keine kuratierte Zuordnung gibt. */
-const DE_EN={'bankdrücken':'bench press','schrägbank':'incline bench','kniebeuge':'squat',
-  'beinpresse':'leg press','kreuzheben':'deadlift','rumänisch':'romanian','seitheben':'lateral raise',
-  'frontheben':'front raise','latziehen':'lat pulldown','klimmzug':'pull up','rudern':'row',
-  'beinstrecker':'leg extension','beinbeuger':'leg curl','waden':'calf','bauch':'abs','crunch':'crunch',
-  'trizeps':'triceps','bizeps':'biceps','schulterdrücken':'shoulder press','nackendrücken':'shoulder press',
-  'brustpresse':'chest press','butterfly':'fly','fliegende':'fly','überzüge':'pullover','pullover':'pullover',
-  'ausfallschritt':'lunge','kh':'dumbbell','lh':'barbell','kabel':'cable','maschine':'machine',
-  'stehend':'standing','sitzend':'seated','liegend':'lying','eng':'close grip','breit':'wide grip',
-  'drücken':'press','ziehen':'pull','heben':'raise','beugen':'curl','strecken':'extension',
-  'laufband':'treadmill','rückenstrecker':'back extension','schulter':'shoulder','brust':'chest',
-  'rücken':'back','bein':'leg','arm':'arm','po':'glute','gesäß':'glute'};
-function photoKey(name){
-  return String(name||'').toLowerCase()
-    .replace(/\([^)]*\)/g,' ')            // Klammer-Übersetzungen weg
-    .replace(/[äÄ]/g,'ae').replace(/[öÖ]/g,'oe').replace(/[üÜ]/g,'ue').replace(/ß/g,'ss')
-    .replace(/[^a-z0-9]+/g,' ').trim();
+/* ==========================================================================
+   2a. ÜBUNGSMARKE
+   Hier standen Fotos aus einer Übungsdatenbank. Sie waren fachlich richtig,
+   aber gestalterisch Fremdkörper: rote Studiowände, Holzböden, Tageslicht —
+   in einer Fläche, die sonst aus violettem Verlauf und einer Akzentfarbe
+   besteht. Vier Bilder nebeneinander sahen aus wie vier verschiedene Apps.
+
+   Ersatz ist keine Abbildung, sondern eine MARKE: das Bewegungsmuster als
+   Symbol, eingefärbt nach Muskelgruppe. Sie behauptet nicht, die Übung zu
+   zeigen — sie sortiert sie. Wer wissen will, wie die Bewegung aussieht,
+   öffnet die Demo; dort steht die animierte Figur mit Ausführungshinweisen.
+
+   Nebeneffekt: 0,9 MB Bilddaten und eine Netzwerk-Fallbackkette entfallen.
+   ========================================================================== */
+const PATTERN_ICON={
+  push:  '<path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/>',
+  pushh: '<path d="M12 21V9M8 5h8M6 9h12M9 5V3M15 5V3"/>',
+  pulld: '<path d="M12 21V7M7 12l5-5 5 5M4 4h16"/>',
+  row:   '<path d="M3 12h13M11 7l5 5-5 5M19 6v12"/>',
+  hinge: '<path d="M5 6v6a7 7 0 0014 0V6M5 18h14"/>',
+  squat: '<path d="M8 3v7l-3 5 3 6M16 3v7l3 5-3 6"/>',
+  curl:  '<path d="M7 20V9a5 5 0 0110 0v2M14 14l3 3 3-3"/>',
+  triext:'<path d="M7 4v11a5 5 0 0010 0v-2M14 10l3-3 3 3"/>',
+  raise: '<path d="M12 21v-8M4 11l8-6 8 6M4 15h4M16 15h4"/>',
+  legext:'<path d="M6 5v8h6M12 13l6-4M6 19h12"/>',
+  legcurl:'<path d="M18 5v8h-6M12 13l-6-4M6 19h12"/>',
+  calf:  '<path d="M9 3v10l-3 4h12l-3-4V3M8 21h8"/>',
+  core:  '<path d="M5 8h14M5 16h14M9 4v16M15 4v16"/>',
+  cardio:'<path d="M3 12h4l2-5 3 10 2-5h7"/>',
+  mobility:'<path d="M12 4a8 8 0 108 8M12 4v8l6 3"/>',
+  generic:'<path d="M4 9v6M20 9v6M7 7v10M17 7v10M7 12h10"/>'
+};
+const MUSCLE_TINT={chest:'#ff6fd8',back:'#4ea1ff',legs:'#ffb020',shoulders:'#8b7bff',arms:'#ff3b5c',core:'#2ee06a'};
+/* Erzeugt die Marke. `full` schaltet auf die große Fläche im Demo-Kopf um. */
+function exerciseMark(name,muscle,type,opts={}){
+  const kind=detectMovePattern(name,muscle,type);
+  const path=PATTERN_ICON[kind]||PATTERN_ICON.generic;
+  const tint=MUSCLE_TINT[muscle]||'#8b7bff';
+  const label=(MOVE_META[kind]||MOVE_META.generic).label;
+  return`<span class="exmark${opts.full?' full':''}" style="--tint:${tint}" data-pattern="${attr(label)}">`+
+    `<svg viewBox="0 0 24 24" role="img" aria-label="${attr(label)}">${path}</svg></span>`;
 }
-/* Auch die englische Variante mitprüfen: "Bankdrücken (Bench Press)" trägt
-   die Antwort schon in der Klammer. */
-function photoAliases(name){
-  const raw=String(name||'');
-  const out=[photoKey(raw)];
-  const m=raw.match(/\(([^)]+)\)/);
-  if(m)out.push(photoKey(m[1]));
-  const translated=out[0].split(' ').map(w=>DE_EN[w]||w).join(' ');
-  if(translated!==out[0])out.push(translated);
-  return [...new Set(out.filter(Boolean))];
-}
-function exercisePhotoId(name){
-  for(const key of photoAliases(name)){
-    if(EXPHOTO_MAP[key])return EXPHOTO_MAP[key];
-    /* Teiltreffer: "Bankdrücken schwer" findet "bankdruecken". */
-    for(const k in EXPHOTO_MAP){
-      if(k.length>5&&(key.startsWith(k)||key.includes(' '+k)))return EXPHOTO_MAP[k];
-    }
-  }
-  return null;
-}
-/* Zwei Bilder überblenden = die Bewegung. Frame 1 (Endposition) liegt oben
-   und blendet zyklisch auf Frame 0 (Startposition) zurück. */
-function exercisePhotoHTML(name,muscle,type,opts={}){
-  const id=exercisePhotoId(name);
-  if(!id)return '';
-  const dur=(opts.speed||3);
-  const thumb=!!opts.thumb;
-  const src=(n)=>`${EXPHOTO_LOCAL}${id}-${n}.webp`;
-  const remote=(n)=>`${EXPHOTO_REMOTE}${encodeURIComponent(id)}/${n}.jpg`;
-  /* Kein inline onerror: die eigene Testinvariante verbietet
-     Event-Handler-Attribute im DOM, und eine Ausnahme für sich selbst würde
-     die Prüfung wertlos machen. Die Fallback-Kette hängt stattdessen an
-     einem delegierten Listener (siehe initPhotoFallback). */
-  const fb=(n)=>`data-fb="${attr(remote(n))}"`;
-  if(thumb){
-    return `<img class="exphoto-thumb" src="${attr(src(1))}" ${fb(1)} alt="${attr(name)}" loading="lazy" decoding="async">`;
-  }
-  const still=prefersReducedMotion()||opts.paused;
-  return `<div class="exphoto" style="--phdur:${dur}s">`+
-    `<img class="ph ph-a" src="${attr(src(0))}" ${fb(0)} alt="${attr(name)} — Startposition" loading="lazy" decoding="async">`+
-    `<img class="ph ph-b${still?' still':''}" src="${attr(src(1))}" ${fb(1)} alt="${attr(name)} — Endposition" loading="lazy" decoding="async">`+
-    `</div>`;
-}
-function exPhotoFallback(img){
-  const remote=img.dataset.fb;
-  if(img.dataset.tried||!remote){
-    /* Auch das Netz hat nichts — Foto entfernen, Zeichnung übernimmt. */
-    (img.closest('.exphoto')||img).remove();
-    return;
-  }
-  img.dataset.tried='1';
-  img.src=remote;
-}
-/* error-Events blubbern nicht, lassen sich aber in der Capture-Phase
-   abfangen. Ein Listener für alle Bilder der App, statt einer pro Bild. */
-(function initPhotoFallback(){
-  document.addEventListener('error',e=>{
-    const t=e.target;
-    if(t&&t.tagName==='IMG'&&t.dataset&&t.dataset.fb!==undefined)exPhotoFallback(t);
-  },true);
-})();
-/* Einstiegspunkt für alle Aufrufer: Foto wenn vorhanden, sonst Zeichnung. */
+/* In Listen steht die Marke, in der Demo die animierte Figur. Die Trennung
+   ist Absicht: eine 44-px-Kachel kann eine Bewegung ohnehin nicht erklären,
+   also soll sie einordnen statt zu behaupten. */
 function exerciseVisual(name,muscle,type,opts={}){
-  const photo=exercisePhotoHTML(name,muscle,type,opts);
-  const drawing=exerciseAnimSVG(name,muscle,type,opts);
-  if(!photo)return drawing;
-  /* Zeichnung liegt darunter und wird sichtbar, sobald das Foto scheitert. */
-  return `<span class="exvisual">${drawing}${photo}</span>`;
+  if(opts.thumb)return exerciseMark(name,muscle,type,opts);
+  return exerciseAnimSVG(name,muscle,type,opts);
 }
 
 /* ==========================================================================
@@ -3379,7 +3329,7 @@ function renderExDemo(){
     `<div class="exdemo-tags"><span class="exdemo-tag hl">${esc(meta.label)}</span><span class="exdemo-tag">${esc(muscleName(muscle))}</span>${type!=='main'?`<span class="exdemo-tag">${type==='pre'?'Pre-Workout':'Mobility'}</span>`:''}${pr&&pr.w>0?`<span class="exdemo-tag">PR ${esc(pr.w)} kg</span>`:''}${rm?`<span class="exdemo-tag">e1RM ${esc(rm.rm)} kg</span>`:''}</div>`+
     `<div class="exdemo-cue"><b style="color:var(--text)">Zielmuskulatur:</b> ${esc(meta.primary)}</div>`+
     `<div class="exdemo-cue">${esc(meta.cue)}</div>`+
-    (exercisePhotoId(name)?`<div class="exphoto-credit">Fotos: <a href="https://github.com/yuhonas/free-exercise-db" target="_blank" rel="noopener">Free Exercise DB</a> · Public Domain</div>`:'')+
+
     (userNote?`<div class="exdemo-cue" style="border-left-color:var(--purple)">📝 ${esc(userNote)}</div>`:'')+
     (series.length>=2?`<div class="prog" style="margin-top:12px"><div class="prog-h">Dein Verlauf <span>${series.length} Sätze</span></div>${svgChart(series,{h:110,color:'var(--accent)',showGrid:true,unit:' kg'})}</div>`:'')+
     `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');openExNote('${jsStr(name)}')">${icon('note',15)}Notiz</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');showExHist('${jsStr(name)}')">${icon('chart',15)}Verlauf</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="openExWebSearch()">${icon('book',15)}Web</button></div>`;
