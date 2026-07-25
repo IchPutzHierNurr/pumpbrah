@@ -89,14 +89,14 @@ Drei Stufen:
 |---|---|
 | **Smoke** | Start, Onboarding, jeder Screen rendert |
 | **Regression** | Ein Test pro Eintrag in `docs/BUGS.md` — wächst mit jedem Fund |
-| **Fuzz** | N zufällige Aktionen über 68 Operationen, 17 Invarianten nach **jeder** Aktion |
+| **Fuzz** | N zufällige Aktionen über 67 Operationen, 17 Invarianten nach **jeder** Aktion |
 
 Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **53 Prüfungen grün** — 44 Regressionstests plus Fuzzing über
-68 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
+Aktueller Stand: **54 Prüfungen grün** — 45 Regressionstests plus Fuzzing über
+67 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
 

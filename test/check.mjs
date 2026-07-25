@@ -1027,6 +1027,48 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-048', title: 'Karte "Naechstes Workout" beschreibt den richtigen Tag',
+    run: async () => {
+      // Sichtbar geworden mit dem 3-Tage-Split: die Karte zeigte nur das erste
+      // Wort des Tagesnamens ("FULLBODY"), also fuer A, B und C dasselbe. Die
+      // Muskelzeile nahm die ersten drei Uebungen statt der groessten
+      // Muskelgruppen - bei zwei Ruecken-Uebungen am Anfang stand da
+      // "Bruest . Ruecken . Ruecken". Die Punktreihe stand fest auf vier.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.plan));
+        const ex = (id, name, sets, muscle) =>
+          ({ id, name, sets, rmin: 8, rmax: 12, rir: 2, note: '', type: 'main', muscle });
+        D.plan = {
+          Tag_A: { day: 'Mo', exercises: [
+            ex(1, 'Latziehen', 4, 'back'), ex(2, 'Rudern', 4, 'back'),
+            ex(3, 'Bankdruecken', 3, 'chest'), ex(4, 'Beinpresse', 6, 'legs')] },
+          Tag_B: { day: 'Di', exercises: [ex(5, 'Bankdruecken', 3, 'chest')] },
+          Tag_C: { day: 'Mi', exercises: [ex(6, 'Kniebeugen', 3, 'legs')] }
+        };
+        // Heute ist der Tag von Tag_A -> die Karte muss Tag_A beschreiben
+        const dayMap = { 0: 'So', 1: 'Mo', 2: 'Di', 3: 'Mi', 4: 'Do', 5: 'Fr', 6: 'Sa' };
+        D.plan.Tag_A.day = dayMap[new Date().getDay()];
+        save(); renderDash();
+        const card = document.getElementById('d-next-card');
+        const big = card.querySelector('.big');
+        const small = card.querySelector('.small').textContent;
+        const parts = small.split('·').map(s => s.trim()).filter(Boolean);
+        const dots = card.querySelectorAll('.eyebrow2 + div > span').length;
+        const res = {
+          suffixSichtbar: !!big.querySelector('.suf') && big.textContent.includes('A'),
+          keineDoppelten: parts.length === new Set(parts).size,
+          // Ruecken 8 Saetze > Beine 6 > Brust 3 - die Reihenfolge folgt dem Volumen
+          groessteZuerst: parts[0] === 'Rücken' && parts[1] === 'Beine',
+          punkteGleichTage: dots === Object.keys(D.plan).length
+        };
+        D.plan = before; save(); renderDash();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-046', title: 'Negative Eingaben landen nicht im Datenmodell',
     run: async () => {
       // Vom Fuzzer gefunden: ein Zahlenfeld akzeptiert das Minuszeichen. Ein

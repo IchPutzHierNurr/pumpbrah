@@ -90,6 +90,7 @@
 | [PB-043](#pb-043) | Fotoschicht entfernt — Kacheln zeigen jetzt eine Marke | — | Darstellung | ✅ |
 | [PB-046](#pb-046) | Negatives Gewicht wurde klaglos gespeichert | **hoch** | Berechnung | ✅ |
 | [PB-047](#pb-047) | Zwei Übungen im falschen Bewegungsmuster | mittel | Darstellung | ✅ |
+| [PB-048](#pb-048) | „Nächstes Workout" beschrieb den falschen Tag | mittel | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -1779,6 +1780,65 @@ neuen Fälle und Gegenproben für `push` und `row`.
 
 ---
 
+### PB-048
+
+**Die Karte „Nächstes Workout" beschreibt den falschen Tag**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Darstellung |
+| **Gefunden** | beim Screenshot des neuen Drei-Tage-Splits |
+| **Status** | ✅ behoben |
+
+**Symptom.** Drei Befunde in einer Karte, alle drei erst sichtbar, als aus
+zwei Trainingstagen drei wurden:
+
+1. Der Titel zeigte `FULLBODY` — für **alle drei** Tage. Der Code nahm
+   `planDisplayName(key).split(' ')[0]`, also nur das erste Wort. Bei
+   „FullBody A/B/C" ist die Unterscheidung genau das zweite Wort.
+2. Die Muskelzeile las die **ersten drei Übungen** statt der größten
+   Muskelgruppen. Tag C beginnt mit Brust, Rücken, Rücken — die Karte
+   meldete „Brust · Rücken · Rücken". Zusätzlich war `arms` fest mit
+   „Trizeps" beschriftet, obwohl auch Bizepsübungen darunter fallen.
+3. Die Punktreihe rechts oben stand **fest auf vier** Punkten — sie war reine
+   Dekoration und behauptete trotzdem eine Anzahl.
+
+**Warum das zusammengehört.** Alle drei sind derselbe Denkfehler: Die Karte
+zeigte etwas, das bei *einer bestimmten Plangröße* zufällig gestimmt hat.
+Zwei Tage mit verschiedenen Namen, vier Punkte für vier Kacheln, eine
+Übungsreihenfolge ohne Wiederholung — solange das zutraf, sah alles richtig
+aus. Kein Test schlug an, weil kein Test die Karte gelesen hat.
+
+**Fix.**
+
+```js
+const setsPerMuscle={};                       // nach Volumen, nicht nach Reihenfolge
+p.exercises.filter(e=>e.type==='main').forEach(e=>{
+  const n=MUSCLE_DE[e.muscle]||e.muscle||'—';
+  setsPerMuscle[n]=(setsPerMuscle[n]||0)+(parseInt(e.sets)||0);
+});
+const mains=Object.entries(setsPerMuscle).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]).join(' · ');
+const nameParts=planDisplayName(nk.key).toUpperCase().split(' ').filter(Boolean);
+const bigHTML=esc(nameParts[0]||'WORKOUT')+(nameParts.length>1?`<span class="suf">${esc(nameParts.slice(1).join(' '))}</span>`:'');
+const dots=planKeys.map(k=>k===nk.key?'…breit…':'…schmal…').join('');
+```
+
+Der Tageszusatz steht als eigener, kleinerer Ton im Akzent hinter dem Namen —
+voll ausgeschrieben sprengt „FULLBODY A" bei 48 px die Karte, weglassen macht
+die Tage ununterscheidbar.
+
+**Lektion.** Dekoration, die eine Anzahl zeigt, ist keine Dekoration mehr —
+sie ist eine Behauptung. Und eine Zusammenfassung, die die *ersten n*
+Elemente nimmt, beschreibt die Reihenfolge, nicht den Inhalt. Beides fällt
+erst auf, wenn sich die Datenmenge ändert, für die es einmal gepasst hat.
+
+**Test.** `PB-048` — Plan mit drei Tagen und doppelter Muskelgruppe:
+Tagessuffix vorhanden, keine Wiederholung in der Muskelzeile, Reihenfolge
+nach Satzanzahl, ein Punkt je Trainingstag.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -1909,6 +1969,7 @@ gestellt werden sollten:
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
 | 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
 | 12 | **Ausgabe, die für Menschen nicht prüfbar ist** | PB-041 | Kann ich diesem Ergebnis ansehen, ob es stimmt? Wenn nein: Welche unabhängige Gegenimplementierung prüft es — und reicht eine? |
+| 13 | **Anzeige, die nur bei der aktuellen Datenmenge stimmt** | PB-048 | Stimmt das auch bei drei statt zwei, bei Wiederholungen, bei null? Oder beschreibt es nur zufällig den Ist-Zustand? |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
