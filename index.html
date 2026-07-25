@@ -319,9 +319,14 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .chart-line{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 .chart-area{opacity:.14}
 .chart-dot{stroke-width:2;fill:var(--bg2)}
+/* Der jüngste Punkt ist gefüllt — er ist der Stand, nicht Teil des Verlaufs. */
+.chart-dot.last{fill:currentColor}
 .chart-label{font-family:'JetBrains Mono',monospace;font-size:9px;fill:var(--text3)}
+/* Der aktuelle Wert steht am Ende der Linie — er ist die Zahl, die man
+   sucht, und sie soll nicht erst aus der Achse abgelesen werden müssen. */
+.chart-last{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.5px}
 .chart-val-label{font-family:'JetBrains Mono',monospace;font-size:8px;fill:var(--text2)}
-.chart-median{stroke:var(--orange);stroke-dasharray:4,4;stroke-width:1}
+.chart-median{stroke:var(--text3);stroke-dasharray:3,5;stroke-width:1;opacity:.7}
 
 /* modals */
 .mbg{display:none;position:fixed;inset:0;background:rgba(4,5,8,.66);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
@@ -1790,6 +1795,18 @@ html,body{
 .bio-row .rng{display:flex;justify-content:space-between;font-size:9.5px;color:var(--text3);margin-top:3px;
   font-family:'JetBrains Mono',monospace}
 
+/* Die Faktoren des Fitnessalters standen als Chips mit nackten Zahlen da
+   („BMI okay (0)"). Als Liste mit Punkt, Text und Vorzeichen liest man sie
+   in einem Durchgang — und sieht sofort, was zieht und was bremst. */
+.gtiles.three{grid-template-columns:repeat(3,1fr)}
+.gtiles.three .gv{font-size:30px}
+.gtiles.three .gd{font-size:10px}
+.fa-list{margin-top:14px;border-top:1px solid rgba(255,255,255,.09);padding-top:4px}
+.fa-f{display:flex;align-items:center;gap:9px;padding:7px 0}
+.fa-f .d{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.fa-f .l{flex:1;min-width:0;font-size:12.5px;color:var(--text2)}
+.fa-f .v{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;flex:0 0 auto}
+
 /* Im Balance-Abschnitt stehen die Balken untereinander statt in der
    Zeilenform des Home-Screens — dort sitzt der Balken unter dem Namen,
    hier braucht es zusätzlich die Zahl daneben. */
@@ -2008,34 +2025,27 @@ html,body{
 <div id="ana-progress"></div>
 <div class="st st-tog" onclick="toggleSection('balance')"><span>Balance</span><span class="chev" id="chev-balance">▾</span><div class="ln"></div></div>
 <div id="ana-muscles"></div>
-<div class="st">KÖRPERDATEN <div class="ln"></div></div>
-<div class="card" id="fitness-age-card" style="text-align:center;padding:20px 16px;background:linear-gradient(135deg,var(--bg2),var(--bg3));border-color:var(--bg4)">
-<div style="font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:4px">Dein Fitnessalter</div>
-<div style="display:flex;align-items:center;justify-content:center;gap:16px">
-<div><div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--neon);line-height:1" id="fa-value">—</div><div style="font-size:10px;color:var(--text2)">FITNESS</div></div>
-<div style="font-size:24px;color:var(--text3)">vs</div>
-<div><div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--text2);line-height:1" id="fa-real">—</div><div style="font-size:10px;color:var(--text2)">REAL</div></div>
+<div class="st st-tog" onclick="toggleSection('koerper')"><span>Körperdaten</span><span class="chev" id="chev-koerper">▾</span><div class="ln"></div></div>
+<div id="koerper-body">
+<div id="fitness-age-card"></div>
+<div id="bio-stats"></div>
+<div class="set-card">
+<div class="sr">
+<div class="sr-bd"><b>Gewicht heute</b><span>Immer zur gleichen Tageszeit wiegen — nüchtern nach dem Aufstehen schwankt am wenigsten.</span></div>
+<div class="sr-num"><input type="number" inputmode="decimal" step="0.1" id="bio-weight-input" placeholder="kg" style="width:86px"><button class="setbtn" style="flex:0 0 auto;min-width:0;padding:11px 15px" onclick="addWeight()">+</button></div>
 </div>
-<div style="font-size:13px;margin-top:8px;font-weight:600" id="fa-label">—</div>
-<div style="display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap" id="fa-factors"></div>
+<div class="sr">
+<div class="sr-bd"><b>Geburtsdatum</b><span>Basis für Fitnessalter und BioAge-Differenz</span></div>
+<div class="sr-num"><input type="date" id="bio-birthday" style="width:150px;text-align:left" onchange="saveBioBirthday(this.value)"></div>
 </div>
-<div class="card">
-<div class="ir">
-<div class="ig"><label>Geburtsdatum</label><input type="date" id="bio-birthday" style="font-family:'JetBrains Mono',monospace" onchange="saveBioBirthday(this.value)"></div>
-<div class="ig"><label>Größe (cm)</label><input type="number" id="bio-height" placeholder="180" onchange="saveBioHeight(this.value)"></div>
-</div>
-<div class="ir">
-<div class="ig"><label>Aktuelles Gewicht</label>
-<div style="display:flex;gap:4px"><input type="number" inputmode="decimal" step="0.1" id="bio-weight-input" placeholder="kg" style="flex:1"><button class="btn btn-s" style="margin:0;padding:8px 12px" onclick="addWeight()">+</button></div>
-</div>
-</div>
-<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">
-<span style="color:var(--text2)">Letztes Gewicht: <b style="color:var(--text)" id="bio-last-w">—</b></span>
-<span style="color:var(--text2)">BMI: <b style="color:var(--neon)" id="bio-bmi">—</b></span>
+<div class="sr sr-last">
+<div class="sr-bd"><b>Körpergröße</b><span>Für BMI und die Einordnung der Muskelmasse</span></div>
+<div class="sr-num"><input type="number" inputmode="numeric" id="bio-height" placeholder="180" style="width:86px"onchange="saveBioHeight(this.value)"><small>cm</small></div>
 </div>
 </div>
 <div id="bio-chart-area"></div>
 <div id="bio-entries-area"></div>
+</div>
 </div>
 <div class="screen" id="s-settings">
 <div class="ltitle">
@@ -3431,11 +3441,103 @@ function exerciseVisual(name,muscle,type,opts={}){
    Fläche und Punkte staffeln nach, und jeder Punkt ist antippbar.
    ========================================================================== */
 function pathLength(pts){let l=0;for(let i=1;i<pts.length;i++){l+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y)}return Math.ceil(l)+8}
-function svgChart(data,opts={}){if(!data||data.length<2)return'<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Zu wenig Daten</div>';const W=opts.w||320,H=opts.h||120;const pad={t:12,r:8,b:opts.xLabels?24:8,l:opts.showGrid?32:8};const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;const vals=data.map(d=>d.v);const mn=opts.yMin!==undefined?opts.yMin:Math.min(...vals);const mx=opts.yMax!==undefined?opts.yMax:Math.max(...vals);const range=mx-mn||1;const color=opts.color||'var(--neon)';const dotColor=opts.dotColor||color;function x(i){return pad.l+(i/(data.length-1))*cw}function y(v){return pad.t+ch-(((v-mn)/range)*ch)}const pts=data.map((d,i)=>({x:x(i),y:y(d.v)}));const pathD=pts.map((p,i)=>((i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1))).join(' ');let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;/* Achsenbeschriftung an den Wertebereich anpassen: bei einer Spanne von 2,5 kg
-   erzeugte Math.round() vorher vier identische bzw. doppelte Labels
-   ("53, 52, 51, 51, 50"), was wie ein Renderfehler aussieht. */
-const axDec=range<2?2:range<10?1:0;
-if(opts.showGrid!==false){const steps=4;for(let i=0;i<=steps;i++){const yy=pad.t+(ch/steps)*i;const val=mx-((i/steps)*range);svg+=`<line x1="${pad.l}" y1="${yy}" x2="${W-pad.r}" y2="${yy}" class="chart-grid" stroke="var(--bg4)" stroke-width="0.5"/>`;svg+=`<text x="${pad.l-4}" y="${yy+3}" class="chart-label" text-anchor="end">${val.toFixed(axDec)}</text>`}}if(opts.xLabels&&data.length<=12){data.forEach((d,i)=>{if(d.label)svg+=`<text x="${x(i)}" y="${H-2}" class="chart-label" text-anchor="middle">${d.label}</text>`})}if(opts.showArea!==false){svg+=`<path d="${pathD} L${pts[pts.length-1].x},${pad.t+ch} L${pts[0].x},${pad.t+ch} Z" fill="${color}" class="chart-area fade"/>`}if(opts.median!==undefined){const my=y(opts.median);svg+=`<line x1="${pad.l}" y1="${my}" x2="${W-pad.r}" y2="${my}" stroke="var(--orange)" class="chart-median"/>`;svg+=`<text x="${W-pad.r+2}" y="${my+3}" style="font-size:8px;fill:var(--orange);font-family:JetBrains Mono,monospace">${opts.median}</text>`}const len=pathLength(pts);svg+=`<path d="${pathD}" class="chart-line draw" stroke="${color}" style="--len:${len}"/>`;if(opts.showDots!==false){pts.forEach((p,i)=>{let dc=dotColor;if(opts.colorDots){const pct=(data[i].v-mn)/range;if(pct>=0.8)dc='var(--green)';else if(pct>=0.5)dc='var(--blue)';else if(pct>=0.3)dc='var(--orange)';else dc='var(--red)'}const delay=(0.35+(i/Math.max(1,pts.length-1))*0.75).toFixed(2);svg+=`<circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--bg)" stroke="${dc}" class="chart-dot pop" style="color:${dc};animation-delay:${delay}s"/>`;const tip=`${data[i].v}${opts.unit||''}${data[i].label?' · '+data[i].label:''}`;svg+=`<circle class="hit" cx="${p.x}" cy="${p.y}" r="13" data-tip="${attr(tip)}"/>`})}svg+=`</svg>`;return svg}
+/* --------------------------------------------------------------------------
+   DIAGRAMM
+   Ein Chart für die ganze App: Gewichtsverlauf, e1RM je Übung, EGYM-Werte,
+   Tonnage. Drei Dinge waren daran falsch und sind es jetzt nicht mehr:
+
+   1. X-Beschriftungen wurden alle gezeichnet und klebten aneinander
+      ("01.0315.0329.03…"). Jetzt richtet sich ihre Anzahl nach der Breite,
+      und die Randlabels werden nach innen ausgerichtet statt abgeschnitten.
+   2. Die Fläche war ein flacher, halbdurchsichtiger Block. Jetzt ein
+      Verlauf von der Linie nach unten ins Nichts — die Linie bleibt die
+      Aussage, die Fläche gibt ihr nur Gewicht.
+   3. Der letzte Punkt sah aus wie jeder andere, obwohl er der aktuelle
+      Stand ist. Er ist jetzt gefüllt und trägt seinen Wert.
+   -------------------------------------------------------------------------- */
+let chartSeq=0;
+function svgChart(data,opts={}){
+  if(!data||data.length<2)return'<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Zu wenig Daten</div>';
+  const W=opts.w||320,H=opts.h||120;
+  const showGrid=opts.showGrid!==false;
+  const pad={t:14,r:opts.lastValue===false?10:34,b:opts.xLabels?24:10,l:showGrid?34:10};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const vals=data.map(d=>d.v);
+  const rawMin=Math.min(...vals),rawMax=Math.max(...vals);
+  /* Etwas Luft über und unter der Kurve: eine Linie, die den Rahmen
+     berührt, sieht abgeschnitten aus. */
+  const pad0=(rawMax-rawMin)*0.12||Math.max(0.5,Math.abs(rawMax)*0.02);
+  const mn=opts.yMin!==undefined?opts.yMin:rawMin-pad0;
+  const mx=opts.yMax!==undefined?opts.yMax:rawMax+pad0;
+  const range=mx-mn||1;
+  const color=opts.color||'var(--accent)';
+  const dotColor=opts.dotColor||color;
+  const uid='cg'+(++chartSeq);
+  const x=i=>pad.l+(i/(data.length-1))*cw;
+  const y=v=>pad.t+ch-(((v-mn)/range)*ch);
+  const pts=data.map((d,i)=>({x:x(i),y:y(d.v)}));
+  const pathD=pts.map((p,i)=>((i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1))).join(' ');
+  const axDec=range<2?2:range<10?1:0;
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  svg+=`<defs><linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1">`+
+       `<stop offset="0%" stop-color="${color}" stop-opacity=".38"/>`+
+       `<stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>`;
+  if(showGrid){
+    const steps=3;
+    for(let i=0;i<=steps;i++){
+      const yy=pad.t+(ch/steps)*i;
+      const val=mx-((i/steps)*range);
+      svg+=`<line x1="${pad.l}" y1="${yy.toFixed(1)}" x2="${W-pad.r}" y2="${yy.toFixed(1)}" class="chart-grid" stroke="var(--line)" stroke-width="1"/>`;
+      svg+=`<text x="${pad.l-6}" y="${(yy+3).toFixed(1)}" class="chart-label" text-anchor="end">${val.toFixed(axDec)}</text>`;
+    }
+  }
+  if(opts.xLabels){
+    /* So viele Beschriftungen, wie nebeneinander lesbar sind — nicht mehr. */
+    const per=44;
+    const maxLabels=Math.max(2,Math.floor(cw/per));
+    const step=Math.max(1,Math.ceil((data.length-1)/(maxLabels-1)));
+    data.forEach((d,i)=>{
+      if(!d.label)return;
+      const last=i===data.length-1;
+      if(i%step!==0&&!last)return;
+      if(last&&(data.length-1)%step!==0&&(data.length-1-Math.floor((data.length-1)/step)*step)<step/2)return;
+      const anchor=i===0?'start':last?'end':'middle';
+      svg+=`<text x="${x(i).toFixed(1)}" y="${H-4}" class="chart-label" text-anchor="${anchor}">${esc(d.label)}</text>`;
+    });
+  }
+  if(opts.showArea!==false){
+    svg+=`<path d="${pathD} L${pts[pts.length-1].x.toFixed(1)},${(pad.t+ch).toFixed(1)} L${pts[0].x.toFixed(1)},${(pad.t+ch).toFixed(1)} Z" fill="url(#${uid})" class="chart-area fade"/>`;
+  }
+  if(opts.median!==undefined){
+    const my=y(opts.median);
+    svg+=`<line x1="${pad.l}" y1="${my.toFixed(1)}" x2="${W-pad.r}" y2="${my.toFixed(1)}" stroke="var(--text3)" class="chart-median"/>`;
+    svg+=`<text x="${pad.l+3}" y="${(my-5).toFixed(1)}" class="chart-label" style="fill:var(--text3)">⌀ ${Number(opts.median).toFixed(axDec)}</text>`;
+  }
+  const len=pathLength(pts);
+  svg+=`<path d="${pathD}" class="chart-line draw" stroke="${color}" style="--len:${len}"/>`;
+  if(opts.showDots!==false){
+    pts.forEach((p,i)=>{
+      const last=i===pts.length-1;
+      let dc=dotColor;
+      if(opts.colorDots){
+        const pct=(data[i].v-mn)/range;
+        dc=pct>=0.8?'#2ee06a':pct>=0.5?'#4ea1ff':pct>=0.3?'#ffb020':'#ff3b5c';
+      }
+      const delay=(0.35+(i/Math.max(1,pts.length-1))*0.75).toFixed(2);
+      /* Der jüngste Punkt ist gefüllt: er ist der Stand, alles davor Verlauf. */
+      svg+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${last?4.5:3.5}" `+
+        `stroke="${dc}" class="chart-dot pop${last?' last':''}" style="color:${dc};animation-delay:${delay}s"/>`;
+      const tip=`${data[i].v}${opts.unit||''}${data[i].label?' · '+data[i].label:''}`;
+      svg+=`<circle class="hit" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="13" data-tip="${attr(tip)}"/>`;
+    });
+    if(opts.lastValue!==false){
+      const lp=pts[pts.length-1],lv=data[data.length-1].v;
+      svg+=`<text x="${Math.min(W-3,lp.x+9).toFixed(1)}" y="${(lp.y+3.5).toFixed(1)}" class="chart-last" style="fill:${color}">${esc(lv)}</text>`;
+    }
+  }
+  svg+=`</svg>`;
+  return svg;
+}
 /* Ein einziger delegierter Listener bedient sämtliche Charts der App.
    Kein Listener pro Datenpunkt, kein Leak beim Re-Render. */
 (function initChartTips(){
@@ -3825,7 +3927,54 @@ function saveBioHeight(v){D.bio.height=parseFloat(v)||null;save();renderBio()}
 function saveBioBirthday(v){D.bio.birthday=v||null;save();renderBio()}
 function getRealAge(){if(!D.bio.birthday)return null;const bd=new Date(D.bio.birthday);const now=new Date();let age=now.getFullYear()-bd.getFullYear();if(now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))age--;return age}
 function calcFitnessAge(){const realAge=getRealAge();if(!realAge)return null;let fa=realAge;const factors=[];const ws=D.bio.weights;const lastW=ws.length?ws[ws.length-1].kg:null;if(lastW&&D.bio.height){const hm=D.bio.height/100;const bmi=lastW/(hm*hm);if(bmi>=20&&bmi<=24.9){fa-=2;factors.push({label:'BMI optimal',val:-2,color:'var(--green)'})}else if(bmi>=18.5&&bmi<20||bmi>=25&&bmi<27){factors.push({label:'BMI okay',val:0,color:'var(--text2)'})}else if(bmi>=27&&bmi<30){fa+=2;factors.push({label:'BMI erhöht',val:+2,color:'var(--orange)'})}else if(bmi>=30){fa+=4;factors.push({label:'BMI hoch',val:+4,color:'var(--red)'})}else{fa+=2;factors.push({label:'BMI niedrig',val:+2,color:'var(--orange)'})}}const historyTimes=[];D.history.forEach(s=>{const p=String(s.date||'').split('.');if(p.length===3){const t=new Date(p[2],p[1]-1,p[0]).getTime();if(!isNaN(t))historyTimes.push(t)}});(D.bio.weights||[]).forEach(w=>{const k=dateKey(w&&w.date);const m=String(k).match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)historyTimes.push(new Date(+m[1],+m[2]-1,+m[3]).getTime())});const trackingDays=historyTimes.length?Math.max(0,Math.floor((Date.now()-Math.min(...historyTimes))/864e5)):0;const windowDays=Math.min(28,Math.max(trackingDays,7));const windowStart=Date.now()-windowDays*864e5;const recentSessions=D.history.filter(s=>{const p=s.date.split('.');if(p.length!==3)return false;return new Date(p[2],p[1]-1,p[0]).getTime()>windowStart});const sessPerWeek=recentSessions.length/(windowDays/7);if(sessPerWeek>=4){fa-=4;factors.push({label:'Frequenz top ('+sessPerWeek.toFixed(1)+'/Wo)',val:-4,color:'var(--green)'})}else if(sessPerWeek>=3){fa-=3;factors.push({label:'Frequenz gut ('+sessPerWeek.toFixed(1)+'/Wo)',val:-3,color:'var(--green)'})}else if(sessPerWeek>=2){fa-=1;factors.push({label:'Frequenz okay ('+sessPerWeek.toFixed(1)+'/Wo)',val:-1,color:'var(--neon)'})}else if(sessPerWeek>=1){factors.push({label:'Frequenz mäßig ('+sessPerWeek.toFixed(1)+'/Wo)',val:0,color:'var(--text2)'})}else if(trackingDays>=14){fa+=3;factors.push({label:'Kaum Training',val:+3,color:'var(--red)'})}else{factors.push({label:'Frequenz: zu wenig Daten',val:0,color:'var(--text2)'})}const twelveWeeksAgo=Date.now()-84*864e5;const weekBuckets=new Array(12).fill(0);D.history.forEach(s=>{const p=s.date.split('.');if(p.length!==3)return;const d=new Date(p[2],p[1]-1,p[0]).getTime();if(d>twelveWeeksAgo){const weekIdx=Math.floor((Date.now()-d)/(7*864e5));if(weekIdx<12)weekBuckets[weekIdx]++}});const observedWeeks=Math.min(12,Math.max(1,Math.ceil(Math.max(trackingDays,1)/7)));const activeWeeks=weekBuckets.filter(w=>w>0).length;const consistency=activeWeeks/observedWeeks;if(trackingDays<28){factors.push({label:'Konsistenz: zu wenig Daten',val:0,color:'var(--text2)'})}else if(consistency>=0.8){fa-=2;factors.push({label:'Sehr konsistent',val:-2,color:'var(--green)'})}else if(consistency>=0.55){fa-=1;factors.push({label:'Konsistent',val:-1,color:'var(--neon)'})}else if(consistency>=0.3){factors.push({label:'Teils konsistent',val:0,color:'var(--text2)'})}else{fa+=2;factors.push({label:'Inkonsistent',val:+2,color:'var(--orange)'})}const allSets=[];D.history.forEach(s=>s.sets.forEach(set=>{if(set.w>0)allSets.push(set)}));if(allSets.length>0&&lastW){const maxes={};allSets.forEach(s=>{if(!maxes[s.ex]||s.w>maxes[s.ex])maxes[s.ex]=s.w});const bestCompound=Math.max(...Object.values(maxes));const ratio=bestCompound/lastW;if(ratio>=1.5){fa-=3;factors.push({label:'Kraftniveau stark ('+ratio.toFixed(1)+'x BW)',val:-3,color:'var(--green)'})}else if(ratio>=1.0){fa-=1;factors.push({label:'Kraftniveau gut ('+ratio.toFixed(1)+'x BW)',val:-1,color:'var(--neon)'})}else if(ratio>=0.6){factors.push({label:'Kraftniveau aufbauend ('+ratio.toFixed(1)+'x BW)',val:0,color:'var(--text2)'})}else{fa+=1;factors.push({label:'Kraftniveau Anfänger',val:+1,color:'var(--orange)'})}}return{fitnessAge:Math.max(14,Math.round(fa)),realAge,factors}}
-function renderFitnessAge(){const result=calcFitnessAge();if(!result){document.getElementById('fa-value').textContent='—';document.getElementById('fa-real').textContent='—';document.getElementById('fa-label').textContent='Geburtsdatum eingeben';document.getElementById('fa-factors').innerHTML='';return}const{fitnessAge,realAge,factors}=result;const diff=fitnessAge-realAge;document.getElementById('fa-value').textContent=fitnessAge;document.getElementById('fa-real').textContent=realAge;document.getElementById('fa-value').style.color=diff<=(-3)?'var(--green)':diff<0?'var(--neon)':diff===0?'var(--text)':diff<=3?'var(--orange)':'var(--red)';let label='';if(diff<=-5)label='🏆 Deutlich jünger als dein Alter!';else if(diff<=-2)label='💪 Fitter als der Durchschnitt';else if(diff<=1)label='⚖️ Entspricht deinem Alter';else if(diff<=4)label='⚠️ Etwas über deinem Alter';else label='🔴 Handlungsbedarf — mehr Training!';document.getElementById('fa-label').textContent=label;let fh='';factors.forEach(f=>{const sign=f.val>0?'+':'';fh+=`<div style="font-size:10px;padding:3px 8px;border-radius:12px;background:var(--bg4);color:${f.color}">${f.label} (${sign}${f.val})</div>`});document.getElementById('fa-factors').innerHTML=fh}
+/* Das Fitnessalter ist dieselbe Art Aussage wie BioAge: eine Zahl, die erst
+   im Abstand zum echten Alter etwas bedeutet. Also dieselbe Darstellung —
+   Differenz groß, Achse mit dem eigenen Alter als Nullpunkt, und darunter
+   die Faktoren im Klartext statt als Chips mit nackten Zahlen. */
+function renderFitnessAge(){
+  const mount=document.getElementById('fitness-age-card');
+  if(!mount)return;
+  const result=calcFitnessAge();
+  if(!result){
+    mount.innerHTML=`<div class="bio-hero"><div class="eyebrow2">Fitnessalter</div>`+
+      `<div class="bio-delta"><span class="n" style="color:var(--text3)">—</span></div>`+
+      `<div class="bio-sub">Trag unten dein Geburtsdatum ein — ohne das gibt es keinen Bezugspunkt.</div></div>`;
+    return;
+  }
+  const{fitnessAge,realAge,factors}=result;
+  const diff=fitnessAge-realAge;
+  const col=bioDiffColor(diff);
+  const abs=Math.abs(diff);
+  const word=diff<0?'jünger':diff>0?'älter':'gleich';
+  const line=diff===0
+    ?`Rechnerisch <b>${fitnessAge}</b> — genau dein kalendarisches Alter.`
+    :`Rechnerisch <b>${fitnessAge}</b>, kalendarisch <b>${realAge}</b>. Aus Training, Konsistenz, Kraftniveau und BMI.`;
+  const rows=factors.map(f=>{
+    const c=f.val<0?'#2ee06a':f.val>0?'#ff3b5c':'var(--text3)';
+    const txt=f.val===0?'±0':(f.val>0?'+':'−')+Math.abs(f.val);
+    return`<div class="fa-f"><span class="d" style="background:${c}"></span>`+
+      `<span class="l">${esc(f.label)}</span><span class="v" style="color:${c}">${esc(txt)}</span></div>`;
+  }).join('');
+  mount.innerHTML=`<div class="bio-hero">`+
+    `<div class="eyebrow2">Fitnessalter</div>`+
+    `<div class="bio-delta"><span class="n" style="color:${col}">${diff>0?'+':diff<0?'−':'±'}${esc(abs)}</span>`+
+      `<span class="u">Jahre ${esc(word)}</span></div>`+
+    `<div class="bio-sub">${line}</div>`+
+    `<div class="bio-axis"><div class="track"></div>`+
+      `<div class="zero" style="left:calc(50% - 1px)"></div>`+
+      `<div class="mark" data-left="${bioAxisPos(diff)}%" style="left:50%;background:${col}"></div>`+
+      `<div class="lb" style="left:0">−10 Jahre</div>`+
+      `<div class="lb" style="left:50%;transform:translateX(-50%)">dein Alter</div>`+
+      `<div class="lb" style="right:0">+10</div>`+
+    `</div>`+
+    (rows?`<div class="fa-list">${rows}</div>`:'')+
+  `</div>`;
+  const mk=mount.querySelector('.bio-axis .mark');
+  if(mk&&mk.dataset.left){
+    if(prefersReducedMotion())mk.style.left=mk.dataset.left;
+    else requestAnimationFrame(()=>requestAnimationFrame(()=>{mk.style.left=mk.dataset.left}));
+  }
+}
 function addWeight(){const v=parseFloat(document.getElementById('bio-weight-input').value);if(!v||v<20||v>300){toast('Gewicht eingeben (20-300kg)');return}const today=new Date().toLocaleDateString('de-DE');removeTombstone('weights',dateKey(today));const idx=D.bio.weights.findIndex(w=>w.date===today);if(idx>=0)D.bio.weights[idx].kg=v;else D.bio.weights.push({date:today,kg:v});D.bio.weights.sort((a,b)=>{const pa=a.date.split('.');const pb=b.date.split('.');return new Date(pa[2],pa[1]-1,pa[0])-new Date(pb[2],pb[1]-1,pb[0])});document.getElementById('bio-weight-input').value='';save();renderBio();toast('✓ '+v+'kg gespeichert')}
 function delWeight(i){addTombstone('weights',dateKey((D.bio.weights[i]||{}).date));D.bio.weights.splice(i,1);save();renderBio()}function openExNote(name){document.getElementById('exn-name').textContent=name;document.getElementById('exn-text').value=D.notes[name]||'';document.getElementById('exn-text').dataset.ex=name;om('m-exnote')}
 function saveExNote(){const name=document.getElementById('exn-text').dataset.ex;const txt=document.getElementById('exn-text').value.trim();if(txt)D.notes[name]=txt;else delete D.notes[name];save();cm('m-exnote');renderPL();toast('Notiz gespeichert!')}
@@ -4286,33 +4435,60 @@ function renderBio(){
   if(D.bio.birthday)document.getElementById('bio-birthday').value=D.bio.birthday;
   renderFitnessAge();
   const ws=D.bio.weights||[];
-  const lastW=ws.length?ws[ws.length-1].kg:null;
-  document.getElementById('bio-last-w').textContent=lastW?lastW+' kg':'—';
-  if(lastW&&D.bio.height){
-    const hm=D.bio.height/100;
-    document.getElementById('bio-bmi').textContent=(lastW/(hm*hm)).toFixed(1);
-  }else document.getElementById('bio-bmi').textContent='—';
+  const lastW=ws.length?parseFloat(ws[ws.length-1].kg)||0:0;
+  const bmi=(lastW&&D.bio.height)?lastW/Math.pow(D.bio.height/100,2):0;
+  /* Drei Kacheln statt einer Fußnote: aktuelles Gewicht, Veränderung seit
+     dem ersten Eintrag, BMI mit Einordnung. Die Veränderung ist der Wert,
+     den man wirklich sucht — sie stand vorher nirgends. */
+  const stats=document.getElementById('bio-stats');
+  if(stats){
+    if(!lastW)stats.innerHTML='';
+    else{
+      const first=parseFloat(ws[0].kg)||lastW;
+      const delta=Math.round((lastW-first)*10)/10;
+      const weeks=ws.length>1?Math.max(1,Math.round((parseGermanDate(ws[ws.length-1].date)-parseGermanDate(ws[0].date))/(7*864e5))):0;
+      const perWeek=weeks?Math.round(delta/weeks*100)/100:0;
+      const bmiState=!bmi?null:bmi<18.5?{t:'niedrig',c:'#4ea1ff'}:bmi<25?{t:'normal',c:'#2ee06a'}:bmi<30?{t:'erhöht',c:'#ffb020'}:{t:'hoch',c:'#ff3b5c'};
+      stats.innerHTML=`<div class="gtiles${bmi?' three':''}" style="margin-bottom:12px">`+
+        `<div class="gtile"><div class="gl">Aktuell</div><div class="gv">${esc(lastW.toFixed(1))}<small>kg</small></div>`+
+        `<div class="gd">${esc(ws[ws.length-1].date)}</div></div>`+
+        `<div class="gtile"><div class="gl">Veränderung</div>`+
+        `<div class="gv" style="color:${delta===0?'var(--text)':delta<0?'#2ee06a':'#ffb020'}">${delta>0?'+':delta<0?'−':'±'}${esc(Math.abs(delta).toFixed(1))}<small>kg</small></div>`+
+        `<div class="gd">${weeks?esc(perWeek>0?'+':perWeek<0?'−':'±')+esc(Math.abs(perWeek).toFixed(2))+' kg/Woche':'erst ein Eintrag'}</div></div>`+
+        (bmiState?`<div class="gtile"><div class="gl">BMI</div><div class="gv">${esc(bmi.toFixed(1))}</div>`+
+          `<div class="gd" style="color:${bmiState.c}">${esc(bmiState.t)}</div></div>`:'')+
+        `</div>`;
+    }
+  }
   const ca=document.getElementById('bio-chart-area');
   if(ws.length<2)ca.innerHTML='';
   else{
-    const vals=ws.map(w=>w.kg);
+    const vals=ws.map(w=>parseFloat(w.kg)||0);
     const med=vals.slice().sort((a,b)=>a-b)[Math.floor(vals.length/2)];
-    const chartData=ws.map(w=>({v:w.kg,label:w.date.substring(0,5)}));
-    ca.innerHTML=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span>Median: ${med.toFixed(1)}kg</span></div>${svgChart(chartData,{h:140,color:'var(--accent)',median:med,colorDots:false,showGrid:true,xLabels:ws.length<=14})}</div>`;
+    const chartData=ws.map(w=>({v:parseFloat(w.kg)||0,label:String(w.date||'').substring(0,5)}));
+    ca.innerHTML=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span style="color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px">${ws.length} Einträge</span></div>`+
+      svgChart(chartData,{h:150,color:'var(--accent)',median:med,colorDots:false,showGrid:true,xLabels:true,unit:' kg'})+`</div>`;
   }
   const ea=document.getElementById('bio-entries-area');
-  if(ws.length<=3){ea.innerHTML='';return}
-  let h='<div class="card" style="padding:12px 14px"><div style="font-size:12px;font-weight:700;margin-bottom:4px">Letzte Einträge</div><div class="bio-entries">';
-  [...ws].reverse().slice(0,3).forEach((w,i)=>{
-    const ri=ws.length-1-i;
-    const diff=ri>0?(w.kg-ws[ri-1].kg):0;
-    const dc=diff>0?'trend-up':diff<0?'trend-down':'trend-flat';
-    const ds=diff>0?'+'+diff.toFixed(1):diff<0?diff.toFixed(1):'±0';
-    h+=`<div class="bio-entry"><span class="be-d">${esc(w.date)}</span><span class="be-v">${esc(w.kg)} kg</span><span class="${dc}" style="font-size:11px;font-family:'JetBrains Mono',monospace">${ds}</span><button class="be-del" onclick="delWeight(${ri})">✕</button></div>`;
-  });
-  h+='</div></div>';
-  ea.innerHTML=h;
-}function egymRate(key,val){
+  if(!ea)return;
+  if(!ws.length){ea.innerHTML='';return}
+  /* Alle Einträge, nicht nur die letzten drei — eingeklappt, damit die
+     Liste den Screen nicht auffrisst. */
+  ea.innerHTML=`<div class="st st-tog" onclick="toggleSection('gewicht')"><span>Alle Wiegungen</span><span class="chev" id="chev-gewicht">▾</span><div class="ln"></div></div>`+
+    `<div id="bio-entries-list"><div class="set-card">`+
+    [...ws].reverse().map((w,i)=>{
+      const ri=ws.length-1-i;
+      const diff=ri>0?(parseFloat(w.kg)-parseFloat(ws[ri-1].kg)):null;
+      const ds=diff===null?'erster Eintrag':(diff>0?'+':diff<0?'−':'±')+Math.abs(diff).toFixed(1)+' kg';
+      const dc=diff===null?'var(--text3)':diff<0?'#2ee06a':diff>0?'#ffb020':'var(--text3)';
+      return`<div class="sr${i===ws.length-1?' sr-last':''}">`+
+        `<div class="sr-bd"><b>${esc(w.kg)} kg</b><span>${esc(w.date)}</span></div>`+
+        `<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${dc};flex:0 0 auto">${esc(ds)}</span>`+
+        `<button class="be-del" aria-label="Eintrag löschen" onclick="delWeight(${ri})">${icon('trash',16)}</button></div>`;
+    }).join('')+`</div></div>`;
+  applySectionState('gewicht');
+}
+function egymRate(key,val){
   const gender=(D.bio&&D.bio.gender)||'male';
   const isMale=gender==='male';
   const weight=(D.bio&&D.bio.weights&&D.bio.weights.length)?D.bio.weights[D.bio.weights.length-1].kg:(D.egym&&D.egym.measurements&&D.egym.measurements.length?D.egym.measurements[D.egym.measurements.length-1].gewicht:null);
@@ -4391,7 +4567,7 @@ function ensureUIState(){
    Zustand liegt bewusst in den Daten und nicht in einer Modulvariablen:
    sonst klappt der Screen bei jedem Reload wieder auf und die Einstellung
    ist auf dem zweiten Gerät weg. */
-const SECTION_BODY={egym:'egym-body',egymhist:'egym-history',trend:'ana-progress',balance:'ana-muscles'};
+const SECTION_BODY={egym:'egym-body',egymhist:'egym-history',trend:'ana-progress',balance:'ana-muscles',koerper:'koerper-body',gewicht:'bio-entries-list'};
 function applySectionState(key){
   ensureUIState();
   const chev=document.getElementById('chev-'+key);
@@ -5873,7 +6049,7 @@ function bioScaleRow(label,val,unit,key,scale){
     `<span style="display:flex;align-items:center;gap:8px">${egymBadge(rate)}`+
     `<span class="val">${esc(val)} ${esc(unit)}</span></span></div>`+
     `<div class="scale"><span class="bg"></span>${bands}<span class="dot" style="left:${pos(v)}%"></span></div>`+
-    `<div class="rng"><span>${esc(lo)}</span><span>${esc(hi)}</span></div></div>`;
+    `<div class="rng"><span>${esc(Math.round(lo*10)/10)}</span><span>${esc(Math.round(hi*10)/10)}</span></div></div>`;
 }
 function bioPairRow(label,vl,vr,unit){
   if(vl===null||vl===undefined||vr===null||vr===undefined)return'';
