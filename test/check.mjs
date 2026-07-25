@@ -89,7 +89,7 @@ for (let i = 0; i < 8; i++) {
 await page.waitForTimeout(500);
 check('smoke', 'App nach Onboarding sichtbar', await page.isVisible('#main-app'));
 
-for (const [tab, sel] of [['dash', '.week-ring-card'], ['hist', '#cal-grid'],
+for (const [tab, sel] of [['dash', '.mesh-hero'], ['hist', '#cal-grid'],
                           ['ana', '#ana-muscles'], ['settings', '#prof-name']]) {
   await page.evaluate(t => go(t), tab);
   await page.waitForTimeout(200);
