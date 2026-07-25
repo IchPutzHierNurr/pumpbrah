@@ -1434,6 +1434,52 @@ html,body{
 .coach-sessrow .cs-v{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1.05;margin-top:3px;font-variant-numeric:tabular-nums}
 .coach-sessrow .cs-s{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.5)}
 
+/* ============================================================================
+   PLAN TEILEN UND IMPORTIEREN
+   ============================================================================ */
+.share-sub{font-size:12.5px;color:var(--text2);margin-bottom:12px;line-height:1.45}
+.share-note{
+  padding:11px 13px;border-radius:15px;margin-bottom:12px;
+  font-size:12px;line-height:1.5;color:var(--text2);
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+}
+.share-note b{color:var(--text)}
+.share-note.info{
+  background:color-mix(in srgb,var(--blue) 10%,transparent);
+  border-color:color-mix(in srgb,var(--blue) 26%,transparent);color:#bcd9ff;
+}
+.share-note.info b{color:var(--blue)}
+.share-qr{display:flex;justify-content:center;margin:4px 0 14px}
+.qr-svg{width:min(72vw,220px);height:auto;display:block;border-radius:14px;background:#fff;padding:0;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.share-link{
+  padding:11px 13px;border-radius:14px;margin-bottom:12px;
+  font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.5;color:var(--text2);
+  background:rgba(255,255,255,.04);border:1px solid var(--line);word-break:break-all;
+}
+.share-actions{display:flex;gap:8px;flex-wrap:wrap}
+.share-actions .btn{flex:1;min-width:120px}
+.share-code{margin-top:12px}
+.share-code summary{font-size:11.5px;font-weight:700;color:var(--text3);cursor:pointer;padding:6px 0;list-style:none}
+.share-code summary::-webkit-details-marker{display:none}
+.share-code summary::before{content:'▸ '}
+.share-code[open] summary::before{content:'▾ '}
+.share-code textarea,#import-body textarea{
+  width:100%;margin-top:8px;padding:11px;border-radius:13px;resize:vertical;
+  background:var(--bg3);border:1px solid var(--line);color:var(--text);
+  /* 16px ist auf iOS Pflicht — darunter zoomt Safari beim Fokussieren hinein. */
+  font-family:'JetBrains Mono',monospace;font-size:16px;line-height:1.4;word-break:break-all;
+}
+#import-body textarea{margin-bottom:12px}
+.imp-day{margin-bottom:12px;border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+.imp-day-h{padding:11px 13px;background:rgba(255,255,255,.05);display:flex;align-items:center;gap:10px}
+.imp-day-h .n{flex:1;font-weight:800;font-size:13.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imp-day-h .b{font-size:10px;font-weight:800;padding:4px 8px;border-radius:8px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);white-space:nowrap}
+.imp-row{display:flex;align-items:center;gap:10px;padding:9px 13px;border-top:1px solid var(--line2)}
+.imp-row .d{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text3);width:22px;flex:0 0 22px}
+.imp-row .n{flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.imp-row .s{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);white-space:nowrap}
+.imp-row.more .n{color:var(--text3);font-weight:500}
+
 /* --- Regel 6: Druckzustände --------------------------------------------- */
 .card,.gtile,.exr,.dtab,.optrow,.wo-cmd{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
 .btn,.btn-s{transition:transform var(--dur-micro) var(--sp),box-shadow .2s var(--ease),filter .2s}
@@ -1545,6 +1591,8 @@ html,body{
 <button class="btn btn-s btn-g ib" style="font-size:12px;color:var(--red)" onclick="deletePlanDay()"><span data-ic="trash"></span>Tag löschen</button>
 <button class="btn btn-s btn-o ib" onclick="openAddEx()"><span data-ic="plus"></span>Übung</button>
 <button class="btn btn-s btn-g ib" onclick="openLibraryEditor()"><span data-ic="book"></span>Bibliothek</button>
+<button class="btn btn-s btn-g ib" onclick="openPlanShare()"><span data-ic="copy"></span>Teilen</button>
+<button class="btn btn-s btn-g ib" onclick="openPlanImport()"><span data-ic="plus"></span>Importieren</button>
 <button class="btn btn-s plan-save-btn" id="plan-save-btn" onclick="savePlanChanges()" style="display:none">💾 Plan speichern</button>
 </div>
 <div class="plan-save-state" id="plan-save-state" style="display:none">✓ Automatisch gespeichert & synchronisiert</div>
@@ -1795,6 +1843,18 @@ html,body{
 <div id="exn-name" style="font-size:14px;color:var(--text2);margin-bottom:8px"></div>
 <div class="ir"><div class="ig"><label>Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
 <button class="btn" onclick="saveExNote()">💾 SPEICHERN</button>
+</div></div>
+<div class="mbg" id="m-share"><div class="mdl" style="max-height:92vh;overflow:auto">
+<div class="mt"><span id="share-title">Plan teilen</span> <button class="mc" onclick="cm('m-share')">✕</button></div>
+<div id="share-body"></div>
+</div></div>
+<div class="mbg" id="m-import"><div class="mdl">
+<div class="mt">PLAN IMPORTIEREN <button class="mc" onclick="cm('m-import')">✕</button></div>
+<div id="import-body"></div>
+</div></div>
+<div class="mbg" id="m-importpreview"><div class="mdl" style="max-height:92vh;overflow:auto">
+<div class="mt"><span id="importpreview-title">Vorschau</span> <button class="mc" onclick="cm('m-importpreview')">✕</button></div>
+<div id="importpreview-body"></div>
 </div></div>
 <div class="mbg" id="m-alt"><div class="mdl">
 <div class="mt"><span id="alt-title">Alternative wählen</span> <button class="mc" onclick="cm('m-alt')">✕</button></div>
@@ -2151,6 +2211,7 @@ function resetDForNewUser(){D={plan:{},history:[],active:null,settings:{compound
 function offlineMode(){useFirebase=false;syncCode='offline';localStorage.setItem('pb_sync','offline');loadLocal();if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}}
 function showApp(){normalizeData();document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';document.getElementById('show-sync').textContent=syncCode;restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
   mountAurora();
+  checkSharedPlanLink();
   hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachSheetGestures();attachReveals();
   if(IS_STANDALONE)document.documentElement.classList.add('standalone');
 }
@@ -4299,6 +4360,572 @@ function coachSessionHTML(){
       `<div class="cs-s">+${esc(r.session)} heute</div></div>`).join('')}</div>`+
   `</div>`;
 }
+/* ==========================================================================
+   QR-CODE
+   Wird gebraucht, um einen Trainingsplan ohne Server weiterzugeben: der Plan
+   steckt im Link, der Link steckt im Code. Eine fertige Bibliothek einzubinden
+   hätte bedeutet, die App von einem CDN abhängig zu machen — genau das, was
+   sie sonst nirgends tut. Also selbst gebaut: Byte-Modus, Fehlerkorrektur L,
+   Versionen 1–40, Maskenwahl nach Strafpunkten (ISO/IEC 18004).
+
+   Die drei großen Tabellen (Blockaufteilung, Ausrichtungsmuster, Format- und
+   Versionsbits) sind aus der Norm übernommen und gegen eine unabhängige
+   Referenzimplementierung Modul für Modul verglichen worden — siehe den
+   Regressionstest PB-041.
+   ========================================================================== */
+const QR_BLOCKS=[[[1,26,19]],[[1,44,34]],[[1,70,55]],[[1,100,80]],[[1,134,108]],[[2,86,68]],[[2,98,78]],[[2,121,97]],[[2,146,116]],[[2,86,68],[2,87,69]],[[4,101,81]],[[2,116,92],[2,117,93]],[[4,133,107]],[[3,145,115],[1,146,116]],[[5,109,87],[1,110,88]],[[5,122,98],[1,123,99]],[[1,135,107],[5,136,108]],[[5,150,120],[1,151,121]],[[3,141,113],[4,142,114]],[[3,135,107],[5,136,108]],[[4,144,116],[4,145,117]],[[2,139,111],[7,140,112]],[[4,151,121],[5,152,122]],[[6,147,117],[4,148,118]],[[8,132,106],[4,133,107]],[[10,142,114],[2,143,115]],[[8,152,122],[4,153,123]],[[3,147,117],[10,148,118]],[[7,146,116],[7,147,117]],[[5,145,115],[10,146,116]],[[13,145,115],[3,146,116]],[[17,145,115]],[[17,145,115],[1,146,116]],[[13,145,115],[6,146,116]],[[12,151,121],[7,152,122]],[[6,151,121],[14,152,122]],[[17,152,122],[4,153,123]],[[4,152,122],[18,153,123]],[[20,147,117],[4,148,118]],[[19,148,118],[6,149,119]]];
+const QR_ALIGN=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]];
+const QR_FORMAT=[30660,29427,32170,30877,26159,25368,27713,26998];
+const QR_VERSION=[31892,34236,39577,42195,48118,51042,55367,58893,63784,68472,70749,76311,79154,84390,87683,92361,96236,102084,102881,110507,110734,117786,119615,126325,127568,133589,136944,141498,145311,150283,152622,158308,161089,167017];
+
+/* Galoisfeld GF(256) mit dem QR-Generatorpolynom 0x11d. */
+const QR_EXP=new Uint8Array(512),QR_LOG=new Uint8Array(256);
+(function(){let x=1;for(let i=0;i<255;i++){QR_EXP[i]=x;QR_LOG[x]=i;x<<=1;if(x&0x100)x^=0x11d}
+  for(let i=255;i<512;i++)QR_EXP[i]=QR_EXP[i-255];})();
+function qrMul(a,b){return (a===0||b===0)?0:QR_EXP[QR_LOG[a]+QR_LOG[b]]}
+function qrGenPoly(deg){
+  let g=[1];
+  for(let i=0;i<deg;i++){
+    const n=new Array(g.length+1).fill(0);
+    for(let j=0;j<g.length;j++){n[j]^=g[j];n[j+1]^=qrMul(g[j],QR_EXP[i])}
+    g=n;
+  }
+  return g;
+}
+function qrEcc(data,ecLen){
+  const gen=qrGenPoly(ecLen);
+  const res=new Array(ecLen).fill(0);
+  for(let i=0;i<data.length;i++){
+    const factor=data[i]^res[0];
+    res.shift();res.push(0);
+    if(factor!==0)for(let j=0;j<ecLen;j++)res[j]^=qrMul(gen[j+1],factor);
+  }
+  return res;
+}
+function qrCapacity(version){
+  return QR_BLOCKS[version-1].reduce((a,g)=>a+g[0]*g[2],0);
+}
+/* Kleinste Version, in die die Nutzdaten passen. Der Zähler für die Länge ist
+   bis Version 9 acht Bit breit, danach sechzehn — deshalb kann ein Sprung über
+   die Grenze zusätzliche Bits kosten. */
+function qrPickVersion(byteLen){
+  for(let v=1;v<=40;v++){
+    const countBits=v<10?8:16;
+    const needBits=4+countBits+byteLen*8;
+    if(Math.ceil(needBits/8)<=qrCapacity(v))return v;
+  }
+  return 0;
+}
+function qrBuildCodewords(bytes,version){
+  const countBits=version<10?8:16;
+  const bits=[];
+  const push=(val,len)=>{for(let i=len-1;i>=0;i--)bits.push((val>>i)&1)};
+  push(4,4);push(bytes.length,countBits);
+  for(const b of bytes)push(b,8);
+  const cap=qrCapacity(version)*8;
+  for(let i=0;i<4&&bits.length<cap;i++)bits.push(0);   // Terminator
+  while(bits.length%8)bits.push(0);
+  const cw=[];
+  for(let i=0;i<bits.length;i+=8){let b=0;for(let j=0;j<8;j++)b=(b<<1)|bits[i+j];cw.push(b)}
+  const pads=[0xEC,0x11];
+  for(let i=0;cw.length<qrCapacity(version);i++)cw.push(pads[i%2]);
+  /* Blöcke bilden, Daten und Fehlerkorrektur getrennt verschachteln. */
+  const groups=QR_BLOCKS[version-1];
+  const ecLen=groups[0][1]-groups[0][2];
+  const dataBlocks=[],ecBlocks=[];
+  let pos=0;
+  groups.forEach(([n,,dataLen])=>{
+    for(let i=0;i<n;i++){
+      const block=cw.slice(pos,pos+dataLen);pos+=dataLen;
+      dataBlocks.push(block);ecBlocks.push(qrEcc(block,ecLen));
+    }
+  });
+  const out=[];
+  const maxData=Math.max(...dataBlocks.map(b=>b.length));
+  for(let i=0;i<maxData;i++)dataBlocks.forEach(b=>{if(i<b.length)out.push(b[i])});
+  for(let i=0;i<ecLen;i++)ecBlocks.forEach(b=>out.push(b[i]));
+  return out;
+}
+function qrMask(mask,r,c){
+  switch(mask){
+    case 0:return (r+c)%2===0;
+    case 1:return r%2===0;
+    case 2:return c%3===0;
+    case 3:return (r+c)%3===0;
+    case 4:return (Math.floor(r/2)+Math.floor(c/3))%2===0;
+    case 5:return ((r*c)%2)+((r*c)%3)===0;
+    case 6:return (((r*c)%2)+((r*c)%3))%2===0;
+    default:return (((r+c)%2)+((r*c)%3))%2===0;
+  }
+}
+function qrPenalty(m,size){
+  let p=0;
+  /* Regel 1: Läufe gleicher Farbe ab fünf Modulen. */
+  const run=(get)=>{
+    for(let a=0;a<size;a++){
+      let last=-1,len=0;
+      for(let b=0;b<size;b++){
+        const v=get(a,b);
+        if(v===last)len++;else{if(len>=5)p+=len-2;last=v;len=1}
+      }
+      if(len>=5)p+=len-2;
+    }
+  };
+  run((r,c)=>m[r][c]);run((c,r)=>m[r][c]);
+  /* Regel 2: gleichfarbige 2x2-Blöcke. */
+  for(let r=0;r<size-1;r++)for(let c=0;c<size-1;c++){
+    const v=m[r][c];
+    if(v===m[r][c+1]&&v===m[r+1][c]&&v===m[r+1][c+1])p+=3;
+  }
+  /* Regel 3: das Suchmuster-Verhältnis 1:1:3:1:1 mit vier hellen Modulen an
+     einer Seite. Genau diese Folge sucht ein Scanner, um die Ecken zu finden —
+     taucht sie mitten in den Daten auf, verliert er die Orientierung. Deshalb
+     ist das die teuerste Regel (40 Punkte pro Fund) und die, die man nicht
+     verkürzen darf. */
+  const P1=[1,0,1,1,1,0,1,0,0,0,0],P2=[0,0,0,0,1,0,1,1,1,0,1];
+  const scan=(get)=>{
+    for(let a=0;a<size;a++)for(let b=0;b<=size-11;b++){
+      let ok1=true,ok2=true;
+      for(let i=0;i<11;i++){
+        const v=get(a,b+i)?1:0;
+        if(v!==P1[i])ok1=false;
+        if(v!==P2[i])ok2=false;
+        if(!ok1&&!ok2)break;
+      }
+      if(ok1||ok2)p+=40;
+    }
+  };
+  scan((a,b)=>m[a][b]);   // zeilenweise
+  scan((a,b)=>m[b][a]);   // spaltenweise
+  /* Regel 4: Abweichung vom hälftigen Dunkelanteil. */
+  let dark=0;
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(m[r][c])dark++;
+  p+=Math.floor(Math.abs(dark*100/(size*size)-50)/5)*10;
+  return p;
+}
+/* Liefert eine Matrix aus 0/1 (true = dunkel) oder null, wenn die Daten in
+   keine Version passen. */
+function qrMatrix(text){
+  const bytes=Array.from(new TextEncoder().encode(text));
+  const version=qrPickVersion(bytes.length);
+  if(!version)return null;
+  const size=version*4+17;
+  const m=Array.from({length:size},()=>new Array(size).fill(0));
+  const fixed=Array.from({length:size},()=>new Array(size).fill(false));
+  const set=(r,c,v)=>{m[r][c]=v?1:0;fixed[r][c]=true};
+  /* Suchmuster mit Trennlinien. */
+  const finder=(r0,c0)=>{
+    for(let r=-1;r<=7;r++)for(let c=-1;c<=7;c++){
+      const rr=r0+r,cc=c0+c;
+      if(rr<0||cc<0||rr>=size||cc>=size)continue;
+      const inRing=(r>=0&&r<=6&&(c===0||c===6))||(c>=0&&c<=6&&(r===0||r===6));
+      const inCore=r>=2&&r<=4&&c>=2&&c<=4;
+      set(rr,cc,inRing||inCore);
+    }
+  };
+  finder(0,0);finder(0,size-7);finder(size-7,0);
+  /* Taktmuster. */
+  for(let i=8;i<size-8;i++){set(6,i,i%2===0);set(i,6,i%2===0)}
+  /* Ausrichtungsmuster — nicht dort, wo ein Suchmuster liegt. */
+  const pos=QR_ALIGN[version-1];
+  pos.forEach(r=>pos.forEach(c=>{
+    if((r<=8&&c<=8)||(r<=8&&c>=size-9)||(r>=size-9&&c<=8))return;
+    for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++)
+      set(r+dr,c+dc,Math.max(Math.abs(dr),Math.abs(dc))!==1);
+  }));
+  /* Dunkelmodul und reservierte Felder für die Formatbits. */
+  set(size-8,8,1);
+  for(let i=0;i<9;i++){if(!fixed[8][i])set(8,i,0);if(!fixed[i][8])set(i,8,0)}
+  /* Zweite Kopie der Formatbits: SIEBEN Module senkrecht (Spalte 8, Zeilen
+     size-1 bis size-7) und ACHT waagerecht (Zeile 8, Spalten size-8 bis
+     size-1). Das Dunkelmodul bei (size-8, 8) gehört nicht dazu, ist aber
+     ebenfalls belegt. Zusammen 16 belegte Module — genau so viele, dass die
+     Zahl der freien Module der Norm entspricht (in Version 1: 208). */
+  for(let i=0;i<8;i++){if(!fixed[size-1-i][8])set(size-1-i,8,0)}
+  for(let i=0;i<8;i++){if(!fixed[8][size-1-i])set(8,size-1-i,0)}
+  /* Versionsbits ab Version 7. */
+  if(version>=7){
+    const bits=QR_VERSION[version-7];
+    for(let i=0;i<18;i++){
+      const b=(bits>>i)&1;
+      set(Math.floor(i/3),size-11+(i%3),b);
+      set(size-11+(i%3),Math.floor(i/3),b);
+    }
+  }
+  /* Daten im Zickzack von rechts unten nach oben. */
+  const cw=qrBuildCodewords(bytes,version);
+  let bitIdx=0;
+  const nextBit=()=>{
+    const byte=cw[bitIdx>>3];
+    const bit=byte===undefined?0:(byte>>(7-(bitIdx&7)))&1;
+    bitIdx++;
+    return bit;
+  };
+  let up=true;
+  for(let c=size-1;c>0;c-=2){
+    if(c===6)c--;                      // die vertikale Taktspur überspringen
+    for(let i=0;i<size;i++){
+      const r=up?size-1-i:i;
+      for(let k=0;k<2;k++){
+        const cc=c-k;
+        if(fixed[r][cc])continue;
+        m[r][cc]=nextBit();
+      }
+    }
+    up=!up;
+  }
+  /* Maske wählen: alle acht anwenden, die mit den wenigsten Strafpunkten
+     gewinnt. Das ist keine Optik-Frage — schlechte Masken erzeugen Muster,
+     die ein Scanner mit den Suchmustern verwechselt. */
+  let best=null,bestScore=Infinity;
+  for(let mask=0;mask<8;mask++){
+    const t=m.map(row=>row.slice());
+    for(let r=0;r<size;r++)for(let c=0;c<size;c++)
+      if(!fixed[r][c]&&qrMask(mask,r,c))t[r][c]^=1;
+    const fmt=QR_FORMAT[mask];
+    for(let i=0;i<15;i++){
+      const b=(fmt>>(14-i))&1;
+      /* Formatbits liegen doppelt im Code — einmal um das linke obere
+         Suchmuster, einmal verteilt auf die beiden anderen. */
+      if(i<6)t[8][i]=b;
+      else if(i===6)t[8][7]=b;
+      else if(i===7)t[8][8]=b;
+      else if(i===8)t[7][8]=b;
+      else t[14-i][8]=b;
+      /* Zweite Kopie: Bit 0–7 senkrecht (Spalte 8, von unten), Bit 7–14
+         waagerecht (Zeile 8, von rechts). Bit 7 kommt in BEIDEN Läufen vor —
+         senkrecht wird es gleich danach vom Dunkelmodul überschrieben.
+         Ein `else` statt der zweiten Bedingung lässt (8, size-8) leer; genau
+         daran sind vorher fünf Versionen unlesbar geworden. */
+      if(i<8)t[size-1-i][8]=b;
+      else t[8][size-15+i]=b;
+    }
+    t[size-8][8]=1;
+    const score=qrPenalty(t,size);
+    if(score<bestScore){bestScore=score;best=t}
+  }
+  return best;
+}
+/* Als SVG, damit der Code beliebig skaliert und sich in die Fläche einfügt. */
+function qrSVG(text,opts={}){
+  const m=qrMatrix(text);
+  if(!m)return'';
+  const size=m.length;
+  const quiet=opts.quiet===undefined?4:opts.quiet;
+  const total=size+quiet*2;
+  let d='';
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++)
+    if(m[r][c])d+=`M${c+quiet} ${r+quiet}h1v1h-1z`;
+  return`<svg class="qr-svg" viewBox="0 0 ${total} ${total}" shape-rendering="crispEdges" role="img" aria-label="QR-Code">`+
+    `<rect width="${total}" height="${total}" fill="#fff" rx="1"/><path d="${d}" fill="#0a0710"/></svg>`;
+}
+
+/* ==========================================================================
+   10. PLAN TEILEN UND IMPORTIEREN
+   Ein Plan soll zu einem anderen Menschen wandern können, ohne dass beide
+   dasselbe Profil benutzen. Deshalb gilt hier eine harte Trennung:
+
+     Geteilt wird der PLAN. Nichts sonst.
+
+   Keine Historie, keine Gewichte, keine Körperdaten, kein Sync-Code, keine
+   Einstellungen. Der Empfänger behält sein eigenes Profil vollständig — der
+   Import legt nur Trainingstage an.
+
+   Der Container trägt sich selbst: Er wird nirgends hochgeladen, es gibt
+   keinen Server dazwischen. Code, Datei und Link enthalten denselben Inhalt.
+   ========================================================================== */
+const SHARE_PREFIX='PB1';
+const SHARE_MAX_DAYS=24,SHARE_MAX_EX=60,SHARE_MAX_TEXT=400;
+
+/* Kurze Schlüssel, weil der Container in einen Link und einen QR-Code passen
+   muss. Ein ausgeschriebenes JSON wäre gut dreimal so lang. */
+function planSharePayload(dayKeys){
+  const keys=(dayKeys&&dayKeys.length?dayKeys:Object.keys(D.plan||{})).filter(k=>D.plan&&D.plan[k]);
+  /* Beim Sammelnamen die gleichen Wortanfänge nur einmal nehmen — sonst
+     heißt ein Plan aus zwei FullBody-Tagen "FullBody / FullBody / Mobility". */
+  const parts=[...new Set(keys.map(k=>planDisplayName(k).split(/[\s_]/)[0]))];
+  const name=keys.length===1?planDisplayName(keys[0]):(parts.join(' / ')||'Trainingsplan');
+  return{
+    v:1,
+    n:String(name).slice(0,SHARE_MAX_TEXT),
+    a:String((syncCode&&syncCode!=='offline')?syncCode:'').slice(0,60),
+    t:new Date().toISOString().slice(0,10),
+    d:keys.slice(0,SHARE_MAX_DAYS).map(k=>[
+      String(k).slice(0,SHARE_MAX_TEXT),
+      String((D.plan[k]||{}).day||'').slice(0,12),
+      (D.plan[k].exercises||[]).slice(0,SHARE_MAX_EX).map(e=>[
+        String(e.name||'').slice(0,SHARE_MAX_TEXT),
+        parseInt(e.sets)||3,parseInt(e.rmin)||8,parseInt(e.rmax)||12,
+        e.rir===null||e.rir===undefined?null:parseInt(e.rir),
+        String(e.type||'main'),String(e.muscle||'chest'),
+        String(e.note||'').slice(0,SHARE_MAX_TEXT)
+      ])
+    ])
+  };
+}
+function b64urlEncode(bytes){
+  let s='';
+  for(let i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64urlDecode(str){
+  const s=String(str).replace(/-/g,'+').replace(/_/g,'/');
+  const bin=atob(s+'==='.slice((s.length+3)%4));
+  const out=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);
+  return out;
+}
+/* Deflate halbiert den Container noch einmal. CompressionStream gibt es erst
+   ab Safari 16.4 — fehlt es, wird unkomprimiert geteilt. Das Präfix sagt dem
+   Empfänger, welcher Fall vorliegt, damit alte und neue Codes gemischt
+   funktionieren. */
+async function encodeSharePayload(obj){
+  const raw=new TextEncoder().encode(JSON.stringify(obj));
+  if(typeof CompressionStream==='function'){
+    try{
+      const cs=new CompressionStream('deflate-raw');
+      const w=cs.writable.getWriter();w.write(raw);w.close();
+      const buf=new Uint8Array(await new Response(cs.readable).arrayBuffer());
+      if(buf.length<raw.length)return SHARE_PREFIX+'C-'+b64urlEncode(buf);
+    }catch{}
+  }
+  return SHARE_PREFIX+'-'+b64urlEncode(raw);
+}
+async function decodeShareCode(code){
+  const clean=String(code||'').trim().replace(/\s+/g,'');
+  const m=/^PB1(C?)-(.+)$/i.exec(clean);
+  if(!m)throw new Error('Das sieht nicht nach einem Plan-Code aus.');
+  let bytes=b64urlDecode(m[2]);
+  if(m[1].toUpperCase()==='C'){
+    if(typeof DecompressionStream!=='function')throw new Error('Dieser Code braucht eine neuere Browser-Version.');
+    const ds=new DecompressionStream('deflate-raw');
+    const w=ds.writable.getWriter();w.write(bytes);w.close();
+    bytes=new Uint8Array(await new Response(ds.readable).arrayBuffer());
+  }
+  const obj=JSON.parse(new TextDecoder().decode(bytes));
+  return sanitizeSharePayload(obj);
+}
+/* Alles ab hier ist FREMDER Input. Er kommt aus einer Datei, einer
+   Zwischenablage oder einem Link — also aus einer Quelle, die niemand
+   kontrolliert. Jedes Feld wird auf Typ, Wertebereich und Länge gezwungen,
+   bevor es irgendwo landet. Escaping beim Rendern ist die zweite Verteidigung,
+   nicht die erste. */
+function sanitizeSharePayload(obj){
+  if(!obj||typeof obj!=='object')throw new Error('Der Code enthält keinen Plan.');
+  if(Number(obj.v)!==1)throw new Error('Unbekannte Version dieses Plan-Formats.');
+  const str=(v,max)=>String(v===null||v===undefined?'':v).slice(0,max||SHARE_MAX_TEXT);
+  const int=(v,lo,hi,dflt)=>{const n=parseInt(v);return Number.isFinite(n)?Math.min(hi,Math.max(lo,n)):dflt};
+  const days=Array.isArray(obj.d)?obj.d:[];
+  if(!days.length)throw new Error('Der Plan enthält keine Trainingstage.');
+  const out={
+    v:1,n:str(obj.n)||'Geteilter Plan',a:str(obj.a,60),t:str(obj.t,10),
+    d:days.slice(0,SHARE_MAX_DAYS).map(day=>{
+      const key=str(Array.isArray(day)?day[0]:'',80)||'Tag';
+      const wd=str(Array.isArray(day)?day[1]:'',12);
+      const list=Array.isArray(day)&&Array.isArray(day[2])?day[2]:[];
+      return[key,wd,list.slice(0,SHARE_MAX_EX).map(e=>{
+        const a=Array.isArray(e)?e:[];
+        const type=['main','pre','mob'].includes(a[5])?a[5]:'main';
+        const muscle=MUSCLE_LANDMARKS[a[6]]?a[6]:'chest';
+        const rmin=int(a[2],1,300,8);
+        return[
+          str(a[0])||'Übung',
+          int(a[1],1,20,3),
+          rmin,
+          Math.max(rmin,int(a[3],1,300,rmin)),
+          a[4]===null||a[4]===undefined?null:int(a[4],0,10,2),
+          type,muscle,str(a[7])
+        ];
+      }).filter(e=>e[0])];
+    }).filter(d=>d[2].length)
+  };
+  if(!out.d.length)throw new Error('Der Plan enthält keine Übungen.');
+  return out;
+}
+function sharePayloadStats(p){
+  const ex=p.d.reduce((a,d)=>a+d[2].length,0);
+  const sets=p.d.reduce((a,d)=>a+d[2].filter(e=>e[5]==='main').reduce((s,e)=>s+e[1],0),0);
+  return{days:p.d.length,exercises:ex,sets};
+}
+function shareLinkFor(code){
+  const base=location.origin+location.pathname;
+  return base+'#plan='+encodeURIComponent(code);
+}
+
+/* --- Teilen -------------------------------------------------------------- */
+let shareState={code:'',link:''};
+async function openPlanShare(dayKeys){
+  if(!Object.keys(D.plan||{}).length){toast('Erst einen Trainingsplan anlegen');return}
+  const payload=planSharePayload(dayKeys);
+  const code=await encodeSharePayload(payload);
+  const link=shareLinkFor(code);
+  shareState={code,link};
+  const st=sharePayloadStats(payload);
+  const qr=qrSVG(link);
+  document.getElementById('share-title').textContent=payload.n;
+  document.getElementById('share-body').innerHTML=
+    `<div class="share-sub">${st.days} ${st.days===1?'Trainingstag':'Trainingstage'} · ${st.exercises} Übungen · ${st.sets} Arbeitssätze pro Woche</div>`+
+    `<div class="share-note">Geteilt wird <b>nur der Plan</b>. Deine Historie, deine Gewichte und dein Profil bleiben bei dir — und der Plan wird nirgends hochgeladen, er steckt im Code selbst.</div>`+
+    (qr?`<div class="share-qr">${qr}</div>`:`<div class="share-note">Für einen QR-Code ist dieser Plan zu groß — nimm den Code oder die Datei.</div>`)+
+    `<div class="share-link">${esc(link.length>90?link.slice(0,88)+'…':link)}</div>`+
+    `<div class="share-actions">`+
+      `<button type="button" class="btn" style="margin:0" onclick="sharePlanLink()">Link teilen</button>`+
+      `<button type="button" class="btn btn-g" style="margin:0" onclick="copyShareCode()">Code kopieren</button>`+
+      `<button type="button" class="btn btn-g" style="margin:0" onclick="downloadSharePlan()">Als Datei</button>`+
+    `</div>`+
+    `<details class="share-code"><summary>Code anzeigen (${code.length} Zeichen)</summary>`+
+    `<textarea readonly rows="4" onclick="this.select()">${esc(code)}</textarea></details>`;
+  om('m-share');
+}
+async function sharePlanLink(){
+  const {link}=shareState;
+  if(!link)return;
+  try{
+    if(navigator.share){await navigator.share({title:'PUMPBRAH Trainingsplan',url:link});return}
+  }catch{return}          /* Abbruch durch den Nutzer ist kein Fehler */
+  copyText(link,'Link kopiert ✓');
+}
+function copyShareCode(){copyText(shareState.code,'Code kopiert ✓')}
+function copyText(text,okMsg){
+  if(!text)return;
+  const done=()=>{toast(okMsg);haptic(10)};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  }else fallbackCopy(text,done);
+}
+/* Ohne Clipboard-API (älteres iOS, unsicherer Kontext) bleibt der Umweg über
+   ein Textfeld — es muss sichtbar sein, sonst kopiert Safari nichts. */
+function fallbackCopy(text,done){
+  const ta=document.createElement('textarea');
+  ta.value=text;
+  ta.style.cssText='position:fixed;top:0;left:0;opacity:.01;pointer-events:none';
+  document.body.appendChild(ta);
+  ta.select();ta.setSelectionRange(0,text.length);
+  let ok=false;
+  try{ok=document.execCommand('copy')}catch{}
+  ta.remove();
+  if(ok)done();else toast('Kopieren nicht möglich — Code bitte markieren');
+}
+function downloadSharePlan(){
+  const {code}=shareState;
+  if(!code)return;
+  const name=(document.getElementById('share-title').textContent||'plan').replace(/[^\wäöüßÄÖÜ -]/g,'').trim()||'plan';
+  const blob=new Blob([code],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`PUMPBRAH ${name}.pbplan.txt`;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  toast('Datei gespeichert ✓');
+}
+
+/* --- Importieren --------------------------------------------------------- */
+let importState={payload:null,mode:'add'};
+function openPlanImport(){
+  document.getElementById('import-body').innerHTML=
+    `<div class="share-sub">Code einfügen, Datei wählen oder einen geteilten Link öffnen.</div>`+
+    `<textarea id="import-code" rows="4" placeholder="PB1C-…" spellcheck="false" autocapitalize="off"></textarea>`+
+    `<div class="share-actions">`+
+      `<button type="button" class="btn" style="margin:0" onclick="submitImportCode()">Weiter</button>`+
+      `<button type="button" class="btn btn-g" style="margin:0" onclick="document.getElementById('import-file').click()">Datei wählen</button>`+
+    `</div>`+
+    `<input type="file" id="import-file" accept=".txt,.pbplan,.json,text/plain" style="display:none" onchange="importFromFile(this)">`;
+  om('m-import');
+}
+async function submitImportCode(){
+  const el=document.getElementById('import-code');
+  if(!el)return;
+  await startPlanImport(el.value);
+}
+function importFromFile(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{startPlanImport(String(reader.result||''))};
+  reader.onerror=()=>toast('Datei konnte nicht gelesen werden');
+  reader.readAsText(file);
+  input.value='';
+}
+async function startPlanImport(code){
+  let payload;
+  try{payload=await decodeShareCode(code)}
+  catch(e){toast(e&&e.message?e.message:'Code nicht lesbar');return}
+  importState={payload,mode:'add'};
+  renderImportPreview();
+  cm('m-import');
+  om('m-importpreview');
+}
+function setImportMode(mode){
+  importState.mode=mode==='replace'?'replace':'add';
+  renderImportPreview();
+  haptic(8);
+}
+function renderImportPreview(){
+  const p=importState.payload;
+  if(!p)return;
+  const st=sharePayloadStats(p);
+  const from=p.a?`${p.a.charAt(0).toUpperCase()+p.a.slice(1)} teilt` : 'Geteilt wird';
+  document.getElementById('importpreview-title').textContent=p.n;
+  document.getElementById('importpreview-body').innerHTML=
+    `<div class="share-sub">${esc(from)} ${st.days} ${st.days===1?'Trainingstag':'Trainingstage'} · ${st.exercises} Übungen · ${st.sets} Arbeitssätze pro Woche${p.t?` · vom ${esc(p.t)}`:''}</div>`+
+    p.d.map(day=>`<div class="imp-day"><div class="imp-day-h"><span class="n">${esc(day[0].replace(/_/g,' '))}</span>`+
+      `<span class="b">${day[2].length} ${day[2].length===1?'Übung':'Übungen'}</span></div>`+
+      day[2].slice(0,4).map((e,i)=>`<div class="imp-row"><div class="d">${i+1}</div>`+
+        `<div class="n">${esc(e[0])}</div><div class="s">${esc(e[1])}×${e[2]===e[3]?esc(e[2]):esc(e[2])+'–'+esc(e[3])}</div></div>`).join('')+
+      (day[2].length>4?`<div class="imp-row more"><div class="d">…</div><div class="n">${day[2].length-4} weitere</div><div class="s"></div></div>`:'')+
+    `</div>`).join('')+
+    `<div class="share-note info">Importiert wird <b>nur der Plan</b>. Deine Historie, deine geloggten Gewichte, dein Profil und deine Einstellungen bleiben unverändert.</div>`+
+    `<div class="optrow ${importState.mode==='add'?'on':''}" onclick="setImportMode('add')"><div class="optmark"></div>`+
+      `<div><div class="optt">Als neue Tage hinzufügen</div><div class="optd">Deine bestehenden Trainingstage bleiben. Namensgleiche Tage bekommen einen Zusatz.</div></div></div>`+
+    `<div class="optrow ${importState.mode==='replace'?'on':''}" onclick="setImportMode('replace')"><div class="optmark"></div>`+
+      `<div><div class="optt">Meinen Plan ersetzen</div><div class="optd">Alle bisherigen Trainingstage werden entfernt. Deine Historie bleibt erhalten.</div></div></div>`+
+    `<div class="share-actions"><button type="button" class="btn" style="margin:0" onclick="confirmPlanImport()">Importieren</button>`+
+    `<button type="button" class="btn btn-g" style="margin:0" onclick="cm('m-importpreview')">Abbrechen</button></div>`;
+}
+function confirmPlanImport(){
+  const p=importState.payload;
+  if(!p)return;
+  if(importState.mode==='replace'&&!confirm(`Alle ${Object.keys(D.plan||{}).length} bisherigen Trainingstage entfernen und durch ${p.d.length} neue ersetzen?\n\nDeine Historie bleibt erhalten.`))return;
+  if(importState.mode==='replace')D.plan={};
+  let added=0;
+  p.d.forEach(day=>{
+    /* Ein Schlüssel darf nicht überschreiben, was schon da ist — sonst
+       verschwindet ein eigener Trainingstag stillschweigend, nur weil er
+       zufällig genauso heißt. */
+    let key=String(day[0]).replace(/[^\wäöüßÄÖÜ -]/g,'').trim().replace(/\s+/g,'_')||'Tag';
+    if(D.plan[key]){
+      let n=2;
+      while(D.plan[`${key}_${n}`])n++;
+      key=`${key}_${n}`;
+    }
+    D.plan[key]={day:day[1],exercises:day[2].map((e,i)=>({
+      id:Date.now()+i+Math.floor(Math.random()*1000),
+      name:e[0],sets:e[1],rmin:e[2],rmax:e[3],rir:e[4],type:e[5],muscle:e[6],note:e[7]
+    }))};
+    added++;
+  });
+  save();markPlanDirty();
+  curTab=Object.keys(D.plan)[0];
+  cm('m-importpreview');
+  ensureHomeUIState();
+  D.ui.homePlanOpen=true;
+  renderAll();renderPlan();syncPlanDrawerUI();
+  go('dash');
+  haptic([15,50,15]);
+  toast(`${added} ${added===1?'Trainingstag':'Trainingstage'} importiert ✓`);
+  importState={payload:null,mode:'add'};
+}
+/* Ein geteilter Link öffnet direkt die Vorschau. Das Fragment wird danach aus
+   der Adresszeile entfernt, damit ein Neuladen nicht ein zweites Mal fragt. */
+function checkSharedPlanLink(){
+  const hash=String(location.hash||'');
+  const m=/^#plan=(.+)$/.exec(hash);
+  if(!m)return;
+  const code=decodeURIComponent(m[1]);
+  try{history.replaceState(null,'',location.pathname+location.search)}catch{}
+  setTimeout(()=>startPlanImport(code),400);
+}
+
 const EG_FIELDS=['bioage','kraft','kardio','stoff','flex','bmi','gewicht','kfp','kfkg','ffm','smm','kwp','kwl','ezw','izw','bmr','vf','pw','mmal','mmar','mmbl','mmbr','mmru','mual','muar','mubl','mubr','muru'];
 function saveSetting(k,v){D.settings[k]=parseInt(v)||0;save()}
 function doLogout(){if(unsubscribe)unsubscribe();localStorage.removeItem('pb_sync');location.reload()}
