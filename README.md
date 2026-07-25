@@ -5,10 +5,11 @@ läuft per `file://` und offline. Optionaler Cloud-Sync über Firestore.
 
 ```
 index.html          Die komplette App (HTML + CSS + JS)
-assets/ex/          Übungsfotos, 560px WebP (Public Domain, siehe unten)
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Fuzzing
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
 docs/CBUM-REVIEW.md Dieselbe App aus Trainingssicht bewertet
+docs/DESIGN.md      Der visuelle Masterprompt: Regeln und Abnahmekriterien
+docs/EVIDENZ.md     Woher die Übungsvorschläge kommen — und was sie nicht behaupten
 docs/BUGS.md        Register aller je gefundenen Fehler + Regressionstests
 .claude/commands/   /check — der Masterprompt für den Testlauf
 ```
@@ -38,12 +39,22 @@ Deload-Empfehlung aus Trend, RIR und Volumen · Fitnessalter · Gewichtsverlauf 
 optionale EGYM-Körperanalyse · Kalenderhistorie
 
 **Übungsausführung**
-Echte Fotos der Start- und Endposition, überblendet zur Bewegung. Quelle:
-[Free Exercise DB](https://github.com/yuhonas/free-exercise-db) (Unlicense,
-Public Domain), lokal unter `assets/ex/` in 560px-WebP. Dreistufige
-Rückfallebene: lokale Datei → GitHub-Raw → gezeichnete Strichfigur aus der
-eigenen Pose-Engine. Dazu Zielmuskulatur, Ausführungs-Cue und Tempo-Umschalter
-(2 s / 3 s / 5 s betonte Exzentrik).
+In Listen steht je Übung eine Bewegungsmuster-Marke: ein Strich-Piktogramm für
+eines von 15 erkannten Mustern (Drücken, Ziehen, Hüftbeuge, Kniebeuge, …),
+eingefärbt nach Muskelgruppe. In der Demo läuft die animierte Strichfigur aus
+der eigenen Pose-Engine, dazu Zielmuskulatur, Ausführungs-Cue und
+Tempo-Umschalter (2 s / 3 s / 5 s betonte Exzentrik).
+
+**Volumen-Coach**
+Wochenvolumen je Muskel gegen MEV/MAV/MRV, Frequenz, fehlende
+Bewegungsmuster — im Plan wie im laufenden Workout. Fehlt Volumen, schlägt er
+eine konkrete Übung aus einem Katalog von 52 Einträgen vor, jede mit sichtbarer
+Konfidenzstufe und „warum?"-Beleg (siehe [`docs/EVIDENZ.md`](docs/EVIDENZ.md)).
+
+**Plan teilen**
+Ein Trainingsplan wird zu einem komprimierten Code, einem Link oder einem
+QR-Code (eigener Encoder, ohne Bibliothek). Beim Import zeigt die App zuerst
+eine Vorschau; Historie und eigene Daten des Empfängers bleiben unberührt.
 
 **Sync**
 Firestore mit Merge-Verfahren über alle Datentypen, Tombstones für Löschungen,
@@ -78,14 +89,14 @@ Drei Stufen:
 |---|---|
 | **Smoke** | Start, Onboarding, jeder Screen rendert |
 | **Regression** | Ein Test pro Eintrag in `docs/BUGS.md` — wächst mit jedem Fund |
-| **Fuzz** | N zufällige Aktionen über 65 Operationen, 16 Invarianten nach **jeder** Aktion |
+| **Fuzz** | N zufällige Aktionen über 68 Operationen, 17 Invarianten nach **jeder** Aktion |
 
 Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **46 Prüfungen grün** — 37 Regressionstests plus Fuzzing über
-65 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
+Aktueller Stand: **53 Prüfungen grün** — 44 Regressionstests plus Fuzzing über
+68 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
 
@@ -129,16 +140,20 @@ Solange PB-021 offen ist, gilt: **keine Daten in dieser App, die nicht
 
 ## Bildmaterial
 
-Die Übungsfotos stammen aus der
-[Free Exercise DB](https://github.com/yuhonas/free-exercise-db) und stehen unter
-der **Unlicense** (Public Domain, keine Namensnennungspflicht). Sie sind auf
-560px Breite verkleinert und als WebP in `assets/ex/` abgelegt — zusammen
-rund 0,9 MB für 26 Übungen.
+Keins. Die App lädt kein einziges Bild — weder lokal noch aus dem Netz.
 
-Fehlt eine Datei, lädt die App das Bild von `raw.githubusercontent.com` nach.
-Klappt auch das nicht — offline, oder die Übung steht nicht in der Datenbank —
-zeichnet sie eine animierte Strichfigur aus dem erkannten Bewegungsmuster.
-Die App funktioniert damit in jedem Fall, nur unterschiedlich hübsch.
+Bis Juli 2026 lagen 52 Übungsfotos aus der
+[Free Exercise DB](https://github.com/yuhonas/free-exercise-db) unter
+`assets/ex/`. Sie waren rechtlich sauber (Unlicense) und trotzdem falsch:
+Studiofotos mit fremdem Weißabgleich, fremdem Hintergrund und fremdem
+Bildstil, in einer App, deren gesamte Oberfläche aus zwei Farben und einem
+Verlauf besteht. Jedes Foto war ein Fremdkörper.
+
+An ihrer Stelle steht jetzt eine **Bewegungsmuster-Marke**: dasselbe
+Strichvokabular wie die übrigen Icons, eingefärbt nach Muskelgruppe,
+beschriftet mit dem erkannten Muster. Sie ist Vektor, skaliert beliebig,
+erbt den Akzent und kostet null Byte Netzwerk. Für die Ausführung selbst
+zeichnet die Pose-Engine weiterhin eine animierte Strichfigur.
 
 ---
 
