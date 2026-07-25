@@ -1330,6 +1330,110 @@ html,body{
 .wo-slim.done .n{text-decoration:line-through}
 .wo-slim.skipped{opacity:.4}
 
+/* ============================================================================
+   VOLUMEN-COACH
+   Eine eigene Fläche in der Mesh-Familie, aber ruhiger als der Hero: der
+   Coach soll gelesen werden, nicht angestarrt.
+   ============================================================================ */
+.coach-card{
+  position:relative;overflow:hidden;isolation:isolate;
+  border-radius:26px;padding:16px;margin:12px 0;
+  background:linear-gradient(150deg,#1d1533,#0e0b18);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),var(--shadow-2);
+}
+.coach-card::before{content:'';position:absolute;width:250px;height:250px;border-radius:50%;filter:blur(66px);top:-130px;right:-70px;z-index:0;
+  background:radial-gradient(circle,color-mix(in srgb,var(--brand-a) 42%,transparent),transparent 66%)}
+.coach-card>*{position:relative;z-index:1}
+.coach-card.compact{padding:14px;border-radius:22px}
+.coach-h{display:flex;align-items:center;gap:9px}
+.coach-h .av{
+  width:30px;height:30px;border-radius:10px;flex:0 0 30px;
+  background:linear-gradient(140deg,var(--brand-a),var(--brand-b));
+  display:flex;align-items:center;justify-content:center;
+}
+.coach-h .av .ic{stroke:#fff;stroke-width:2.2}
+.coach-h .t{font-weight:800;font-size:14px}
+.coach-h .src{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:rgba(255,255,255,.42);font-family:'JetBrains Mono',monospace}
+.coach-verdict{font-size:13px;line-height:1.5;color:rgba(255,255,255,.82);margin:10px 0 2px}
+.coach-verdict b{color:#fff}
+.coach-foot{margin-top:12px;font-size:10.5px;line-height:1.45;color:rgba(255,255,255,.42)}
+
+.coach-fix{display:flex;align-items:flex-start;gap:11px;padding:12px;border-radius:16px;margin-top:9px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
+.coach-fix .pri{
+  width:26px;height:26px;border-radius:9px;flex:0 0 26px;display:flex;align-items:center;justify-content:center;
+  font-family:'Bebas Neue',sans-serif;font-size:16px;color:#0e0b18;
+}
+.coach-fix .bd{flex:1;min-width:0}
+.coach-fix .bd .t{font-weight:800;font-size:13.5px;line-height:1.25}
+.coach-fix .bd .d{font-size:11.5px;color:rgba(255,255,255,.62);margin-top:4px;line-height:1.45}
+.coach-fix .go{
+  padding:10px 12px;border-radius:12px;border:none;cursor:pointer;flex:0 0 auto;white-space:nowrap;
+  background:var(--accent);color:#0e0b18;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:11.5px;
+  transition:transform var(--dur-micro) var(--sp);
+}
+.coach-fix .go.ghost{background:rgba(255,255,255,.10);color:rgba(255,255,255,.8)}
+.coach-fix .go:active{transform:scale(.93)}
+
+/* Matrix Muskel × Trainingstag. Die Spaltenzahl kommt aus --cols, damit bei
+   sechs Tagen nicht das Layout bricht — dann wird horizontal gescrollt. */
+.coach-matrix{margin-top:12px;border-radius:18px;overflow-x:auto;border:1px solid rgba(255,255,255,.10);-webkit-overflow-scrolling:touch}
+.coach-matrix .mx-h,.coach-matrix .mx-r{
+  display:grid;grid-template-columns:72px repeat(var(--cols,3),minmax(38px,1fr)) 44px;
+  align-items:center;min-width:100%;
+}
+.coach-matrix .mx-h{background:rgba(255,255,255,.05);padding:9px 0}
+.coach-matrix .mx-h div{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:var(--text3);text-align:center;text-transform:uppercase}
+.coach-matrix .mx-h div:first-child{text-align:left;padding-left:11px}
+.coach-matrix .mx-r{padding:9px 0;border-top:1px solid rgba(255,255,255,.06)}
+.coach-matrix .mx-r .nm{font-size:12.5px;font-weight:700;padding-left:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.coach-matrix .mx-r .c{text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.3)}
+.coach-matrix .mx-r .c.on{color:#f6f4fb;font-weight:700}
+.coach-matrix .mx-r .tot{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:22px;padding-right:8px;font-variant-numeric:tabular-nums}
+.coach-matrix .mx-r.low{background:color-mix(in srgb,var(--orange) 9%,transparent)}
+.coach-matrix .mx-r.high{background:color-mix(in srgb,var(--red) 9%,transparent)}
+.coach-legend{display:flex;gap:12px;margin-top:9px;font-size:10px;color:var(--text3);flex-wrap:wrap}
+.coach-legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* Badge an einer Planübung — eigene Zeile, damit sie den Übungsnamen nicht
+   zusammenquetscht (genau das ist beim ersten Anlauf passiert). */
+.coach-badge{
+  display:inline-block;margin-top:6px;
+  font-size:9.5px;font-weight:800;letter-spacing:.02em;padding:3px 7px;border-radius:7px;white-space:nowrap;
+  font-family:'JetBrains Mono',monospace;
+}
+.coach-badge.low{background:color-mix(in srgb,var(--orange) 16%,transparent);color:var(--orange);border:1px solid color-mix(in srgb,var(--orange) 30%,transparent)}
+.coach-badge.high{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)}
+
+/* Hinweisbalken über einem Trainingstag */
+.coach-hint{
+  display:flex;gap:9px;align-items:center;margin:0 0 10px;padding:11px 12px;border-radius:15px;
+  background:color-mix(in srgb,var(--orange) 9%,transparent);
+  border:1px solid color-mix(in srgb,var(--orange) 24%,transparent);
+  font-size:12px;line-height:1.45;color:#ffd9a1;
+}
+.coach-hint .ic-wrap{flex:0 0 auto;display:flex;align-items:center}
+.coach-hint .ic{stroke:var(--orange)}
+.coach-hint b{color:var(--orange)}
+.coach-hint .add{
+  margin-left:auto;padding:8px 11px;border-radius:11px;border:none;cursor:pointer;flex:0 0 auto;white-space:nowrap;
+  background:var(--orange);color:#1a1000;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:11px;
+  transition:transform var(--dur-micro) var(--sp);
+}
+.coach-hint .add:active{transform:scale(.93)}
+
+/* Session-Beitrag im Workout */
+.coach-sessrow{display:flex;gap:8px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.coach-sessrow::-webkit-scrollbar{display:none}
+.coach-sessrow .cs{
+  flex:0 0 auto;min-width:84px;text-align:center;padding:9px 10px;border-radius:14px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);
+}
+.coach-sessrow .cs-n{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)}
+.coach-sessrow .cs-v{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1.05;margin-top:3px;font-variant-numeric:tabular-nums}
+.coach-sessrow .cs-s{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.5)}
+
 /* --- Regel 6: Druckzustände --------------------------------------------- */
 .card,.gtile,.exr,.dtab,.optrow,.wo-cmd{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
 .btn,.btn-s{transition:transform var(--dur-micro) var(--sp),box-shadow .2s var(--ease),filter .2s}
@@ -1444,6 +1548,7 @@ html,body{
 <button class="btn btn-s plan-save-btn" id="plan-save-btn" onclick="savePlanChanges()" style="display:none">💾 Plan speichern</button>
 </div>
 <div class="plan-save-state" id="plan-save-state" style="display:none">✓ Automatisch gespeichert & synchronisiert</div>
+<div id="coach-area"></div>
 <div class="dtab-wrap"><button class="dtab-move" title="Tag nach links" onclick="movePlanDay(-1)">‹</button><div class="dtabs" id="pt"></div><button class="dtab-move" title="Tag nach rechts" onclick="movePlanDay(1)">›</button></div>
 <div id="pl"></div>
 </div>
@@ -3016,6 +3121,7 @@ function renderPlanSaveState(){
 }
 function markPlanDirty(){
   planDirty=true;
+  coachInvalidate();
   renderPlanSaveState();
   clearTimeout(window.__planFlash);
   window.__planFlash=setTimeout(()=>{planDirty=false;renderPlanSaveState();},2400);
@@ -3043,6 +3149,11 @@ function renderPlan(){
   if(active&&active.scrollIntoView)active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
   renderPL();
   renderPlanSaveState();
+  /* Der Plan kann sich zwischen zwei Renderings geändert haben, ohne dass
+     markPlanDirty lief (Sync von einem anderen Gerät). Deshalb hier immer
+     neu rechnen statt auf die Invalidierung zu vertrauen. */
+  coachInvalidate();
+  renderCoachCard();
 }
 /* Aufklapp-Zustand überlebt jetzt das Re-Rendern: vorher hat jedes Speichern
    alle geöffneten Übungen wieder zugeklappt. */
@@ -3055,8 +3166,8 @@ function renderPL(){
   const c=document.getElementById('pl');
   const p=D.plan[curTab];
   if(!c)return;
-  if(!p||!p.exercises.length){c.innerHTML='<div class="empty">Noch keine Übungen in diesem Tag.<br><br><button class="btn btn-s btn-o" onclick="openAddEx()">+ Erste Übung hinzufügen</button></div>';return}
-  let h='';
+  if(!p||!p.exercises.length){c.innerHTML=coachDayHintHTML(curTab)+'<div class="empty">Noch keine Übungen in diesem Tag.<br><br><button class="btn btn-s btn-o" onclick="openAddEx()">+ Erste Übung hinzufügen</button></div>';return}
+  let h=coachDayHintHTML(curTab);
   p.exercises.forEach((ex,i)=>{
     const iC=ex.type==='pre'?'c-pre':ex.type==='mob'?'c-mob':'c-'+ex.muscle;
     const cC=ex.type==='pre'?'pre':ex.type==='mob'?'mob':'';
@@ -3069,7 +3180,7 @@ function renderPL(){
       `<div class="exr-h" onclick="togglePlanRow(this,'${safe}')">`+
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="exr-b"><div class="exr-n">${esc(ex.name)}</div>`+
-        `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div></div>`+
+        `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div>${coachBadge(ex.muscle,ex.type)}</div>`+
         /* Vier Buttons pro Zeile haben den Übungsnamen auf "ATG: Tibialis R…"
            zusammengequetscht. Sortieren bleibt direkt erreichbar, der Rest
            wandert ins Überlaufmenü — wie in der Workout-Ansicht. */
@@ -3107,7 +3218,59 @@ function mvEx(i,d){const a=D.plan[curTab].exercises;const n=i+d;if(n<0||n>=a.len
 function openAddEx(){editIdx=null;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';om('m-add')}
 function openEditEx(i){editIdx=i;const ex=D.plan[curTab].exercises[i];document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';om('m-add')}
 function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};if(editIdx!==null){Object.assign(D.plan[curTab].exercises[editIdx],obj)}else{D.plan[curTab].exercises.push(obj)}save();markPlanDirty();cm('m-add');renderPL();toast(editIdx!==null?'Änderung gespeichert ✓':'Übung hinzugefügt ✓');editIdx=null}
-const EXLIB=[{cat:"🔥 Aufwärmen / Pre-Workout",items:[{name:"ATG: Schienbeinheben (Tibialis Raise)",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},{name:"ATG: Keilbrett-Ausfallschritt (Split Squat Slantboard)",s:3,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Keilbrett, Knie weit vor, LANGSAM"},{name:"ATG: Sitzender Guten Morgen (Seated Good Morning KH)",s:3,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Auf Bank, Hohlkreuz, Brust zwischen Beine"}]},{cat:"🫁 Brust (Chest)",items:[{name:"Bankdrücken (Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Ellenbogen 45°, Exzentrik 2-3s"},{name:"Schrägbankdrücken (Incline Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Winkel 30°, kontrolliert"}]},{cat:"🔙 Rücken (Back)",items:[{name:"Latziehen breit (Wide Lat Pulldown)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter runter, Brust raus"},{name:"Maschinenrudern eng (Machine Row Close)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter zusammen"}]},{cat:"🦵 Beine (Legs)",items:[{name:"Kniebeugen (Back Squat)",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, parallel"},{name:"Beinpresse (Leg Press)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Hüftbreit, Knie nicht locken"}]},{cat:"🏔️ Schultern (Shoulders)",items:[{name:"KH Seitheben (DB Lateral Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Kontrolliert, seitliche Delts"},{name:"Gesichtziehen (Face Pulls)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Schultergesundheit"}]},{cat:"💪 Arme",items:[{name:"KH Curls (DB Curls)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Supination, langsam exzentrisch"},{name:"Trizepsdrücken Seil (Rope Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil auseinanderziehen unten"}]},{cat:"🎯 Bauch / Core",items:[{name:"Kabelcrunches (Cable Crunch)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kniend einrollen"},{name:"Unterarmstütz (Plank)",s:3,rn:30,rx:60,rir:null,t:"main",m:"core",note:"Körper gerade. Sekunden"}]}];function filterLib(q){renderLib(q)}
+const EXLIB=[
+  {cat:"🔥 Aufwärmen / Pre-Workout",items:[
+    {name:"ATG: Schienbeinheben (Tibialis Raise)",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
+    {name:"ATG: Keilbrett-Ausfallschritt (Split Squat Slantboard)",s:3,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Keilbrett, Knie weit vor, LANGSAM"},
+    {name:"ATG: Sitzender Guten Morgen (Seated Good Morning KH)",s:3,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Auf Bank, Hohlkreuz, Brust zwischen Beine"}]},
+  {cat:"🫁 Brust (Chest)",items:[
+    {name:"Bankdrücken (Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Ellenbogen 45°, Exzentrik 2-3s"},
+    {name:"Schrägbankdrücken (Incline Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Winkel 30°, kontrolliert"},
+    {name:"KH Bankdrücken (DB Bench Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Größerer Bewegungsradius als mit Langhantel"},
+    {name:"Brustpresse Maschine (Machine Chest Press)",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Gut für die letzten Sätze, kein Ablegerisiko"},
+    {name:"Butterfly (Pec Deck)",s:3,rn:12,rx:15,rir:1,t:"main",m:"chest",note:"Isolation, gedehnte Position betonen"},
+    {name:"Kabelzug Brust tief (Low Cable Fly)",s:3,rn:12,rx:15,rir:1,t:"main",m:"chest",note:"Von unten nach oben, obere Brust"},
+    {name:"Dips Brustversion (Chest Dips)",s:3,rn:6,rx:10,rir:2,t:"main",m:"chest",note:"Oberkörper vorlehnen, tief gehen"}]},
+  {cat:"🔙 Rücken (Back)",items:[
+    {name:"Latziehen breit (Wide Lat Pulldown)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter runter, Brust raus"},
+    {name:"Maschinenrudern eng (Machine Row Close)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter zusammen"},
+    {name:"Klimmzüge (Pull Ups)",s:3,rn:5,rx:10,rir:2,t:"main",m:"back",note:"Voller Bewegungsradius, kein Schwung"},
+    {name:"LH Rudern vorgebeugt (Barbell Row)",s:3,rn:8,rx:10,rir:3,t:"main",m:"back",note:"Rumpf ca. 45°, Rücken neutral"},
+    {name:"KH Rudern einarmig (One-Arm DB Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Pro Seite, Hüfte bleibt ruhig"},
+    {name:"Rumänisches Kreuzheben (Romanian Deadlift)",s:3,rn:6,rx:10,rir:3,t:"main",m:"back",note:"Hüfte nach hinten, Stange körpernah"},
+    {name:"KH Pullover (DB Pullover)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Lat in gedehnter Position"},
+    {name:"Ring Rows",s:3,rn:8,rx:15,rir:2,t:"main",m:"back",note:"Körperwinkel bestimmt die Schwierigkeit"}]},
+  {cat:"🦵 Beine (Legs)",items:[
+    {name:"Kniebeugen (Back Squat)",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, parallel"},
+    {name:"Beinpresse (Leg Press)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Hüftbreit, Knie nicht locken"},
+    {name:"Beinstrecker (Leg Extension)",s:3,rn:12,rx:15,rir:1,t:"main",m:"legs",note:"Oben kurz halten, Quadrizeps-Isolation"},
+    {name:"Beinbeuger liegend (Lying Leg Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Hamstrings, langsam ablassen"},
+    {name:"Bulgarischer Ausfallschritt (Bulgarian Split Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Pro Bein, hinterer Fuß erhöht"},
+    {name:"Hüftheben (Hip Thrust)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Gesäß, oben 1s halten"},
+    {name:"Wadenheben stehend (Standing Calf Raise)",s:4,rn:12,rx:20,rir:1,t:"main",m:"legs",note:"Volle Dehnung unten, oben halten"}]},
+  {cat:"🏔️ Schultern (Shoulders)",items:[
+    {name:"KH Seitheben (DB Lateral Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Kontrolliert, seitliche Delts"},
+    {name:"Gesichtziehen (Face Pulls)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Schultergesundheit"},
+    {name:"Schulterdrücken KH (DB Shoulder Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Rippen unten, kein Hohlkreuz"},
+    {name:"Schulterdrücken LH (Overhead Press)",s:3,rn:5,rx:8,rir:3,t:"main",m:"shoulders",note:"Stehend, Rumpf fest"},
+    {name:"Reverse Butterfly (Reverse Pec Deck)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Hintere Schulter, meist unterentwickelt"},
+    {name:"Kabel Seitheben (Cable Lateral Raise)",s:3,rn:12,rx:15,rir:1,t:"main",m:"shoulders",note:"Gleichmäßiger Widerstand über den ganzen Weg"}]},
+  {cat:"💪 Arme",items:[
+    {name:"KH Curls (DB Curls)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Supination, langsam exzentrisch"},
+    {name:"Trizepsdrücken Seil (Rope Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil auseinanderziehen unten"},
+    {name:"Hammercurls (Hammer Curls)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Neutraler Griff, Brachialis"},
+    {name:"Stirndrücken (Skull Crusher)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Ellenbogen bleiben an Ort und Stelle"},
+    {name:"Scottcurls (Preacher Curl)",s:3,rn:10,rx:12,rir:1,t:"main",m:"arms",note:"Bizeps in gedehnter Position"},
+    {name:"Überkopf-Trizeps Kabel (Overhead Cable Extension)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Langer Trizepskopf, gedehnt"},
+    {name:"Dips Trizepsversion (Triceps Dips)",s:3,rn:6,rx:12,rir:2,t:"main",m:"arms",note:"Oberkörper aufrecht"}]},
+  {cat:"🎯 Bauch / Core",items:[
+    {name:"Kabelcrunches (Cable Crunch)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kniend einrollen"},
+    {name:"Unterarmstütz (Plank)",s:3,rn:30,rx:60,rir:null,t:"main",m:"core",note:"Körper gerade. Sekunden"},
+    {name:"Hängendes Beinheben (Hanging Leg Raise)",s:3,rn:8,rx:15,rir:2,t:"main",m:"core",note:"Becken einrollen, kein Schwung"},
+    {name:"Ab Wheel Rollout",s:3,rn:8,rx:12,rir:2,t:"main",m:"core",note:"Rippen unten, kein Durchhängen"},
+    {name:"Russian Twist",s:3,rn:15,rx:20,rir:2,t:"main",m:"core",note:"Rotation aus dem Rumpf, nicht aus den Armen"},
+    {name:"Holzhacker Kabel (Cable Wood Chop)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Diagonal, Hüfte dreht mit"}]}
+];function filterLib(q){renderLib(q)}
 function stepVal(id,delta){const el=document.getElementById(id);const v=parseFloat(el.value)||0;el.value=Math.max(0,+(v+delta).toFixed(1))}
 let stepTimer=null,stepDelay=null;
 function stepHold(id,delta){stepVal(id,delta);stepDelay=setTimeout(()=>{stepTimer=setInterval(()=>stepVal(id,delta),100)},350);const stop=(e)=>{if(e)e.preventDefault();clearTimeout(stepDelay);clearInterval(stepTimer);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop)};document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop)}
@@ -3760,6 +3923,381 @@ function weeklyLandmarks(){
     acc.mev+=l.mev;acc.mav+=l.mav;acc.mrv+=l.mrv;
     return acc;
   },{mev:0,mav:0,mrv:0});
+}
+/* ==========================================================================
+   9. VOLUMEN-COACH
+   Die Landmarks MEV/MAV/MRV lagen bisher nur als Balken herum: Der Nutzer
+   sah, dass etwas zu wenig ist, aber nicht, was er dagegen tun soll. Der
+   Coach schließt genau diese Lücke — er rechnet den PLAN durch (nicht die
+   Historie), sortiert die Probleme nach Dringlichkeit und hängt an jedes eine
+   konkrete, ausführbare Maßnahme.
+
+   Grundlagen (Renaissance Periodization / Dr. Mike Israetel):
+   · MEV — darunter passiert praktisch kein Wachstum.
+   · MAV — der produktive Korridor.
+   · MRV — darüber kommt die Erholung nicht mehr mit.
+   · Frequenz — die Proteinsynthese läuft rund 48 Stunden. Ein Muskel, der
+     nur einmal pro Woche drankommt, liegt fünf Tage brach; dasselbe Volumen
+     auf zwei Tage verteilt wirkt besser.
+
+   Wichtig: Das ist eine Heuristik auf Populationsmittelwerten, kein Gesetz.
+   Der Coach sagt das im UI auch — er gibt Empfehlungen, keine Befehle.
+   ========================================================================== */
+const COACH_FREQ_MIN=2;
+
+/* Geplantes Wochenvolumen aus D.plan. Bewusst NICHT aus der Historie: hier
+   geht es um die Frage „taugt der Plan?", nicht „was hast du gemacht?". */
+function planWeeklyVolume(includeSecondary){
+  const vol={};
+  const slot=(m)=>{
+    if(!vol[m])vol[m]={sets:0,direct:0,indirect:0,days:{},freq:0};
+    return vol[m];
+  };
+  Object.entries(D.plan||{}).forEach(([key,day])=>{
+    (day.exercises||[]).forEach(ex=>{
+      if(ex.type!=='main')return;
+      if(isCardioExercise(ex))return;
+      const sets=parseInt(ex.sets)||0;
+      if(!sets)return;
+      const m=ex.muscle||'other';
+      const s=slot(m);
+      s.sets+=sets;s.direct+=sets;
+      s.days[key]=(s.days[key]||0)+sets;
+      if(includeSecondary){
+        const sec=secondaryContribution(ex.name,m,ex.type);
+        Object.entries(sec).forEach(([sm,w])=>{
+          const t=slot(sm);
+          t.sets+=sets*w;t.indirect+=sets*w;
+          /* Indirektes Volumen zählt NICHT als Trainingstag für diesen
+             Muskel. Drei Sätze Bankdrücken sind kein Trizeps-Tag. */
+        });
+      }
+    });
+  });
+  Object.values(vol).forEach(v=>{
+    v.sets=Math.round(v.sets*10)/10;
+    v.indirect=Math.round(v.indirect*10)/10;
+    v.freq=Object.keys(v.days).length;
+  });
+  return vol;
+}
+/* Welche Übung würde die Lücke schließen? Bevorzugt ein Bewegungsmuster, das
+   im Plan noch gar nicht vorkommt — zwei Varianten derselben Bewegung geben
+   weniger neuen Reiz als eine zweite Bewegungsrichtung. */
+function coachSuggestExercise(muscle){
+  const inPlan=new Set();
+  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{
+    inPlan.add(baseNameKey(ex.name));
+    if(ex.muscle===muscle)inPlan.add('kind:'+detectMovePattern(ex.name,ex.muscle,ex.type));
+  }));
+  const candidates=[];
+  allLibraryCategories().forEach(cat=>cat.items.forEach(item=>{
+    const m=item.m||item.muscle;
+    const t=item.t||item.type||'main';
+    if(m!==muscle||t!=='main')return;
+    if(inPlan.has(baseNameKey(item.name)))return;
+    const kind=detectMovePattern(item.name,m,t);
+    candidates.push({item,fresh:!inPlan.has('kind:'+kind),kind});
+  }));
+  if(!candidates.length)return null;
+  candidates.sort((a,b)=>(b.fresh?1:0)-(a.fresh?1:0));
+  return candidates[0];
+}
+/* Auf welchen Tag gehört sie? Bei einem Volumenproblem auf den Tag, der den
+   Muskel schon trainiert (thematisch passend). Bei einem Frequenzproblem
+   ausdrücklich auf einen Tag, der ihn NOCH NICHT trainiert — sonst hebt man
+   das Volumen und lässt die Frequenz, wo sie war. */
+function coachBestDayFor(muscle,wantNewDay){
+  const keys=Object.keys(D.plan||{});
+  if(!keys.length)return null;
+  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&e.muscle===muscle);
+  const load=k=>(D.plan[k].exercises||[]).filter(e=>e.type==='main').reduce((a,e)=>a+(parseInt(e.sets)||0),0);
+  const pool=wantNewDay?keys.filter(k=>!has(k)):keys.filter(has);
+  const use=pool.length?pool:keys;
+  return use.slice().sort((a,b)=>load(a)-load(b))[0];
+}
+function coachAnalyzePlan(){
+  ensureUIState();
+  const withSecondary=D.ui.volMode!=='direct';
+  const vol=planWeeklyVolume(withSecondary);
+  const dayKeys=Object.keys(D.plan||{});
+  const muscles=Object.keys(MUSCLE_LANDMARKS).map(key=>{
+    const v=vol[key]||{sets:0,direct:0,indirect:0,days:{},freq:0};
+    const lm=MUSCLE_LANDMARKS[key];
+    return{key,name:muscleName(key),lm,state:landmarkState(v.sets,lm),
+      sets:v.sets,direct:v.direct,indirect:v.indirect,days:v.days,freq:v.freq};
+  });
+  const totalSets=Math.round(muscles.reduce((a,m)=>a+m.direct,0)*10)/10;
+  const issues=[];
+  muscles.forEach(m=>{
+    if(m.sets<=0){
+      issues.push({sev:1,muscle:m.key,color:'#ff3b5c',
+        title:`${m.name} kommt im Plan nicht vor`,
+        detail:`Kein einziger Arbeitssatz. Wenn das Absicht ist, ignorier den Punkt — sonst fehlt hier eine ganze Muskelgruppe.`,
+        action:{label:'+ Übung',call:`coachAddExercise('${jsStr(m.key)}',false)`}});
+      return;
+    }
+    if(m.state.key==='low'){
+      const gap=Math.round((m.lm.mev-m.sets)*10)/10;
+      const sug=coachSuggestExercise(m.key);
+      issues.push({sev:1,muscle:m.key,color:'#ffb020',
+        title:`${m.name}: ${m.sets} statt ${m.lm.mev} Sätze`,
+        detail:`${gap} ${gap===1?'Satz':'Sätze'} unter MEV. Unter dieser Grenze passiert praktisch kein Wachstum.`+
+          (sug?`<br>→ ${esc(sug.item.name)} ergänzen.`:''),
+        action:{label:'+ Übung',call:`coachAddExercise('${jsStr(m.key)}',false)`}});
+      return;
+    }
+    if(m.state.key==='high'){
+      const over=Math.round((m.sets-m.lm.mrv)*10)/10;
+      issues.push({sev:1,muscle:m.key,color:'#ff3b5c',
+        title:`${m.name}: ${m.sets} statt maximal ${m.lm.mrv}`,
+        detail:`${over} über MRV — die Erholung kommt nicht mehr mit.`+
+          (m.indirect>0?` Davon ${m.indirect} indirekt aus anderen Übungen.`:''),
+        action:{label:'− Satz',call:`coachTrimSet('${jsStr(m.key)}')`,ghost:true}});
+      return;
+    }
+    if(m.freq<COACH_FREQ_MIN&&dayKeys.length>=2){
+      issues.push({sev:2,muscle:m.key,color:'#ffb020',
+        title:`${m.name} nur ${m.freq}× pro Woche`,
+        detail:`Die Proteinsynthese läuft rund 48 Stunden. Dasselbe Volumen auf zwei Tage verteilt wirkt besser als alles an einem Tag.`,
+        action:{label:'Verteilen',call:`coachSpreadMuscle('${jsStr(m.key)}')`,ghost:true}});
+      return;
+    }
+    if(m.sets<m.lm.mav){
+      const room=Math.round((m.lm.mav-m.sets)*10)/10;
+      issues.push({sev:3,muscle:m.key,color:'#4ea1ff',
+        title:`${m.name}: Luft nach oben`,
+        detail:`${m.sets} Sätze — über MEV, aber ${room} unter dem Optimum. Kein Muss, aber der billigste Zuwachs im Plan.`,
+        action:{label:'+ Übung',call:`coachAddExercise('${jsStr(m.key)}',false)`,ghost:true}});
+    }
+  });
+  issues.sort((a,b)=>a.sev-b.sev);
+  const fine=muscles.filter(m=>m.sets>0&&!issues.some(i=>i.muscle===m.key));
+  return{muscles,issues,fine,totalSets,dayKeys,withSecondary};
+}
+
+/* --- Maßnahmen -----------------------------------------------------------
+   Jede greift in D.plan ein, also gilt überall dieselbe Regel: vorher genau
+   sagen, was passiert, und danach markPlanDirty() — sonst wandert die
+   Änderung zwar in die Daten, aber der Nutzer sieht keinen Speicherhinweis. */
+function coachAddExercise(muscle,newDay){
+  const sug=coachSuggestExercise(muscle);
+  if(!sug){toast('Keine passende Übung in der Bibliothek');return}
+  const dayKey=coachBestDayFor(muscle,!!newDay);
+  if(!dayKey){toast('Erst einen Trainingstag anlegen');return}
+  const it=sug.item;
+  if(!confirm(`„${it.name}" mit ${it.s||3} Sätzen zu ${planDisplayName(dayKey)} hinzufügen?`))return;
+  D.plan[dayKey].exercises.push({
+    id:Date.now(),name:it.name,sets:it.s||3,rmin:it.rn||8,rmax:it.rx||12,
+    rir:it.rir===undefined?2:it.rir,note:it.note||'',type:it.t||'main',muscle:it.m||muscle
+  });
+  save();markPlanDirty();
+  curTab=dayKey;
+  renderPlan();renderDash();
+  haptic([12,40,12]);
+  toast(`${it.name} → ${planDisplayName(dayKey)} ✓`);
+}
+function coachTrimSet(muscle){
+  /* Den Satz dort wegnehmen, wo am meisten liegt — nicht beim ersten Treffer.
+     Sonst schrumpft die Aufwärmübung und die Hauptübung bleibt bei sechs. */
+  let best=null;
+  Object.entries(D.plan||{}).forEach(([key,day])=>{
+    (day.exercises||[]).forEach((ex,i)=>{
+      if(ex.type!=='main'||ex.muscle!==muscle)return;
+      const sets=parseInt(ex.sets)||0;
+      if(sets<=1)return;
+      if(!best||sets>best.sets)best={key,i,sets,name:ex.name};
+    });
+  });
+  if(!best){toast('Kein Satz zum Streichen gefunden');return}
+  if(!confirm(`„${best.name}" von ${best.sets} auf ${best.sets-1} Sätze reduzieren?`))return;
+  D.plan[best.key].exercises[best.i].sets=best.sets-1;
+  save();markPlanDirty();
+  curTab=best.key;
+  renderPlan();renderDash();
+  haptic(10);
+  toast(`${best.name}: ${best.sets-1} Sätze ✓`);
+}
+function coachSpreadMuscle(muscle){
+  /* Frequenz erhöhen, ohne Volumen zu ändern: eine Übung dieses Muskels von
+     dem Tag, der ihn schon trägt, auf einen Tag ohne ihn verschieben. */
+  const keys=Object.keys(D.plan||{});
+  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&e.muscle===muscle);
+  const from=keys.filter(has).sort((a,b)=>
+    (D.plan[b].exercises||[]).filter(e=>e.muscle===muscle).length-
+    (D.plan[a].exercises||[]).filter(e=>e.muscle===muscle).length)[0];
+  const to=keys.filter(k=>!has(k)).sort((a,b)=>
+    (D.plan[a].exercises||[]).length-(D.plan[b].exercises||[]).length)[0];
+  if(!from||!to){
+    /* Kein freier Tag — dann ist Verteilen nicht möglich, und eine zweite
+       Übung an anderer Stelle ist die ehrlichere Empfehlung. */
+    toast('Alle Tage trainieren diesen Muskel bereits');
+    return;
+  }
+  const list=D.plan[from].exercises;
+  const idx=list.map((e,i)=>({e,i})).filter(x=>x.e.type==='main'&&x.e.muscle===muscle)
+    .sort((a,b)=>(parseInt(a.e.sets)||0)-(parseInt(b.e.sets)||0))[0].i;
+  const ex=list[idx];
+  if(!confirm(`„${ex.name}" von ${planDisplayName(from)} nach ${planDisplayName(to)} verschieben?\n\nDas Wochenvolumen bleibt gleich, ${muscleName(muscle)} kommt dann an zwei Tagen dran.`))return;
+  list.splice(idx,1);
+  D.plan[to].exercises.push(ex);
+  save();markPlanDirty();
+  curTab=to;
+  renderPlan();renderDash();
+  haptic([12,40,12]);
+  toast(`${ex.name} → ${planDisplayName(to)} ✓`);
+}
+
+/* --- Darstellung --------------------------------------------------------- */
+function coachIssueHTML(issue,rank){
+  const act=issue.action
+    ?`<button type="button" class="go${issue.action.ghost?' ghost':''}" onclick="${issue.action.call}">${esc(issue.action.label)}</button>`
+    :'';
+  return`<div class="coach-fix"><div class="pri" style="background:${issue.color}">${esc(rank)}</div>`+
+    `<div class="bd"><div class="t">${esc(issue.title)}</div><div class="d">${issue.detail}</div></div>${act}</div>`;
+}
+/* Kurze, EINDEUTIGE Spaltenüberschriften. Der naive Weg — die ersten sechs
+   Zeichen des Plannamens — macht aus "FullBody A" und "FullBody B" zweimal
+   "FULLBO". Deshalb: erst das letzte Wort probieren (das ist bei "Push A" /
+   "Push B" genau der Unterschied), dann der Wochentag, dann eine Nummer. */
+function coachDayLabels(dayKeys){
+  const uniq=arr=>new Set(arr).size===arr.length&&arr.every(Boolean);
+  const byToken=dayKeys.map(k=>{
+    const parts=String(planDisplayName(k)).split(/[\s_]+/).filter(Boolean);
+    const last=parts[parts.length-1]||'';
+    return last.slice(0,6);
+  });
+  if(uniq(byToken))return byToken;
+  /* Nicht einzelne Spalten umbenennen, sondern ALLE auf dieselbe Systematik
+     umstellen. Eine Kopfzeile aus "A · Do · Mi" ist schlimmer als eine aus
+     "Mo · Do · Mi": gemischte Benennungen liest niemand als eine Tabelle. */
+  const byDay=dayKeys.map(k=>String((D.plan[k]||{}).day||'').slice(0,3));
+  if(uniq(byDay))return byDay;
+  return dayKeys.map((_,i)=>'T'+(i+1));
+}
+function coachMatrixHTML(a){
+  if(!a.dayKeys.length)return'';
+  /* Bei mehr als fünf Tagen wird die Matrix auf dem Handy unlesbar — dann
+     lieber scrollen lassen als Spalten unter 40 px zu quetschen. */
+  const cols=a.dayKeys.length;
+  const labels=coachDayLabels(a.dayKeys);
+  return`<div class="coach-matrix" style="--cols:${cols}">`+
+    `<div class="mx-h"><div>Muskel</div>${a.dayKeys.map((k,i)=>`<div title="${attr(planDisplayName(k))}">${esc(labels[i])}</div>`).join('')}<div>Σ</div></div>`+
+    a.muscles.map(m=>{
+      const cls=m.state.key==='low'||m.sets<=0?'low':m.state.key==='high'?'high':'';
+      return`<div class="mx-r ${cls}"><div class="nm">${esc(m.name)}</div>`+
+        a.dayKeys.map(k=>{const v=m.days[k];return`<div class="c${v?' on':''}">${v?esc(v):'·'}</div>`}).join('')+
+        `<div class="tot" style="color:${m.sets<=0?'#ffb020':m.state.color}">${esc(m.sets)}</div></div>`;
+    }).join('')+
+  `</div>`+
+  `<div class="coach-legend"><span><i style="background:#ffb020"></i>unter MEV</span><span><i style="background:#2ee06a"></i>im MAV</span><span><i style="background:#4ea1ff"></i>über MAV</span><span><i style="background:#ff3b5c"></i>über MRV</span></div>`;
+}
+function renderCoachCard(){
+  const mount=document.getElementById('coach-area');
+  if(!mount)return;
+  if(!Object.keys(D.plan||{}).length){mount.innerHTML='';return}
+  const a=coachAnalyzePlan();
+  /* Zwischen „muss man ändern" (sev 1–2) und „könnte man" (sev 3) trennen.
+     Beides in einen Satz zu werfen liest sich, als wäre der halbe Plan kaputt,
+     obwohl nur zwei Muskelgruppen Luft nach oben haben. */
+  const hard=a.issues.filter(i=>i.sev<=2);
+  const soft=a.issues.filter(i=>i.sev===3);
+  const verdict=hard.length
+    ?`Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. `+
+      `${hard.length===1?'Ein Punkt liegt':`${hard.length} Punkte liegen`} klar daneben`+
+      `${soft.length?`, bei ${soft.length===1?'einer Muskelgruppe':`${soft.length} Muskelgruppen`} ist noch Luft nach oben`:''}.`
+    :soft.length
+      ?`Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. Nichts ist kaputt — bei ${soft.length===1?'einer Muskelgruppe':`${soft.length} Muskelgruppen`} wäre aber mehr drin.`
+      :`Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. Alle Muskelgruppen liegen im Korridor — nichts zu tun.`;
+  const shown=[...hard.slice(0,3),...soft.slice(0,2)];
+  const restCount=a.issues.length-shown.length;
+  mount.innerHTML=`<div class="coach-card">`+
+    `<div class="coach-h"><div class="av">${icon('chart',16)}</div><div class="t">Volumen-Coach</div><div class="src">MEV · MAV · MRV</div></div>`+
+    `<div class="coach-verdict">${verdict}</div>`+
+    coachMatrixHTML(a)+
+    shown.map((i,n)=>coachIssueHTML(i,i.sev===3?'~':String(n+1))).join('')+
+    (restCount>0?`<div class="coach-foot">${restCount} weitere${restCount===1?'r Punkt':' Punkte'} mit geringerer Dringlichkeit — sie tauchen auf, sobald die oberen erledigt sind.</div>`:'')+
+    (a.fine.length?`<div class="coach-fix"><div class="pri" style="background:#2ee06a">✓</div><div class="bd"><div class="t">${esc(a.fine.map(m=>m.name).join(', '))} im Korridor</div><div class="d">${esc(a.fine.map(m=>m.sets).join(' / '))} Sätze. Nichts zu tun.</div></div></div>`:'')+
+    `<div class="coach-foot">Richtwerte nach den Volumen-Landmarks der Renaissance-Periodization-Schule (Dr. Mike Israetel). Das sind Populationsmittel — deine eigenen Grenzen können abweichen, die Historie zeigt es dir mit der Zeit.</div>`+
+  `</div>`;
+}
+/* Badge an einer einzelnen Planübung: wie steht ihr Muskel in der Woche da? */
+function coachBadge(muscle,type){
+  if(type!=='main'||!MUSCLE_LANDMARKS[muscle])return'';
+  const a=coachCachedAnalysis();
+  const m=a.muscles.find(x=>x.key===muscle);
+  if(!m)return'';
+  /* Nur warnen, nicht bestätigen. Ein grünes „alles gut" an jeder Zeile ist
+     Rauschen — und es kostet genau die Breite, die der Übungsname braucht
+     (Regel 2 aus docs/DESIGN.md: der Akzent markiert eine Sache, nicht alle). */
+  if(m.sets>0&&m.state.key!=='low'&&m.state.key!=='high')return'';
+  const low=m.sets<=0||m.state.key==='low';
+  const txt=low
+    ?`${muscleName(muscle)} ${m.sets}/${m.lm.mev} · unter MEV`
+    :`${muscleName(muscle)} ${m.sets}/${m.lm.mrv} · über MRV`;
+  return`<div class="coach-badge ${low?'low':'high'}" title="${attr(m.name)}: ${attr(m.sets)} Sätze pro Woche">${esc(txt)}</div>`;
+}
+/* Die Analyse läuft über den ganzen Plan. Sie pro Übungszeile neu zu rechnen
+   wäre quadratisch — deshalb ein Cache, den jede Planänderung verwirft. */
+let coachCache=null;
+function coachCachedAnalysis(){
+  if(!coachCache)coachCache=coachAnalyzePlan();
+  return coachCache;
+}
+function coachInvalidate(){coachCache=null}
+/* Hinweisbalken über einem Trainingstag: was fehlt HIER? */
+function coachDayHintHTML(dayKey){
+  if(!D.plan||!D.plan[dayKey])return'';
+  const a=coachCachedAnalysis();
+  const gaps=a.issues.filter(i=>i.sev<=2);
+  if(!gaps.length)return'';
+  /* Nur Muskeln vorschlagen, die an diesem Tag thematisch passen: entweder
+     werden sie hier schon trainiert, oder der Tag ist der am wenigsten
+     beladene. Sonst landet Core-Volumen im Arm-Tag. */
+  const trained=new Set((D.plan[dayKey].exercises||[]).filter(e=>e.type==='main').map(e=>e.muscle));
+  const hit=gaps.find(g=>trained.has(g.muscle))||gaps.find(g=>coachBestDayFor(g.muscle,false)===dayKey);
+  if(!hit)return'';
+  return`<div class="coach-hint"><span class="ic-wrap">${icon('chart',15)}</span>`+
+    `<span>${hit.detail.replace(/<br>→/,' →')}</span>`+
+    (hit.action?`<button type="button" class="add" onclick="${hit.action.call}">${esc(hit.action.label)}</button>`:'')+
+  `</div>`;
+}
+/* Der Coach im laufenden Workout: was trägt DIESE Einheit zur Woche bei? */
+function coachSessionHTML(){
+  if(!D.active)return'';
+  const withSecondary=D.ui&&D.ui.volMode!=='direct';
+  const week=getWeeklyVolume(withSecondary);
+  const now={};
+  activeExercisesSafe().forEach(ex=>{
+    if(ex.type!=='main'||ex.skipped||isCardioExercise(ex))return;
+    const n=(ex.logged||[]).length;
+    if(!n)return;
+    now[ex.muscle]=(now[ex.muscle]||0)+n;
+  });
+  const rows=Object.keys(now).map(key=>{
+    const lm=MUSCLE_LANDMARKS[key];
+    if(!lm)return null;
+    /* Die Historie enthält diese Session noch nicht — sie wird erst beim
+       Beenden geschrieben. Deshalb hier addieren, sonst zeigt der Coach
+       mitten im Workout ein Wochenvolumen ohne das, was gerade läuft. */
+    const total=Math.round(((week[key]&&week[key].sets||0)+now[key])*10)/10;
+    return{key,name:muscleName(key),session:now[key],total,lm,state:landmarkState(total,lm)};
+  }).filter(Boolean);
+  if(!rows.length)return'';
+  const gap=rows.filter(r=>r.state.key==='low').sort((a,b)=>(a.lm.mev-a.total)-(b.lm.mev-b.total))[0];
+  const over=rows.find(r=>r.state.key==='high');
+  const line=gap
+    ? `Mit dieser Einheit stehst du bei <b>${esc(gap.name)} ${esc(gap.total)} / ${esc(gap.lm.mev)}</b>. ${Math.round((gap.lm.mev-gap.total)*10)/10} Sätze mehr, und die Woche liegt über MEV.`
+    : over
+      ? `<b>${esc(over.name)}</b> liegt mit ${esc(over.total)} Sätzen über MRV. Hier lieber abbrechen als noch einen Satz anhängen.`
+      : `Alles, was du heute trainierst, liegt im Wochen-Korridor. Sauber.`;
+  return`<div class="coach-card compact">`+
+    `<div class="coach-h"><div class="av">${icon('chart',16)}</div><div class="t">Diese Session</div><div class="src">WOCHE INKL. HEUTE</div></div>`+
+    `<div class="coach-verdict">${line}</div>`+
+    `<div class="coach-sessrow">${rows.map(r=>`<div class="cs"><div class="cs-n">${esc(r.name)}</div>`+
+      `<div class="cs-v" style="color:${r.state.color}">${esc(r.total)}</div>`+
+      `<div class="cs-s">+${esc(r.session)} heute</div></div>`).join('')}</div>`+
+  `</div>`;
 }
 const EG_FIELDS=['bioage','kraft','kardio','stoff','flex','bmi','gewicht','kfp','kfkg','ffm','smm','kwp','kwl','ezw','izw','bmr','vf','pw','mmal','mmar','mmbl','mmbr','mmru','mual','muar','mubl','mubr','muru'];
 function saveSetting(k,v){D.settings[k]=parseInt(v)||0;save()}
@@ -4586,7 +5124,8 @@ function renderWo(){
     `<button class="wo-cmd ib" onclick="toggleWorkoutCompact()">${icon('more',14)}${D.active.compact?'Nur Fokus':'Alle aufklappen'}</button>`+
   `</div>`+
   `<div class="wo-progress"><div class="tr"><i data-grow="${total?Math.round(doneCount/total*100):0}%"></i></div>`+
-  `<div class="n">${doneCount}/${total} Übungen</div></div>`;
+  `<div class="n">${doneCount}/${total} Übungen</div></div>`+
+  coachSessionHTML();
   let activeExIdx=-1;
   for(let i=0;i<D.active.exercises.length;i++){const e=D.active.exercises[i];if(!e.skipped&&e.logged.length<e.sets){activeExIdx=i;break}}
   /* `compact` heißt jetzt „alles aufklappen": im Fokus-Layout ist eingeklappt
