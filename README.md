@@ -19,6 +19,11 @@ docs/BUGS.md        Register aller je gefundenen Fehler + Regressionstests
 ## Funktionen
 
 **Training**
+Plan aus dem Onboarding erzeugt — Tage, Ort, Ziel und Erfahrung bestimmen ihn
+wirklich, gerechnet gegen dieselben Landmarks wie der Coach ·
+**Mesozyklus**: Volumen steigt über die Wochen von 72 % auf 100 % des Plans,
+danach eine Entlastungswoche — skaliert wird das Workout, nie der Plan ·
+Dauerschätzung je Trainingstag (einseitige Übungen zählen doppelt) ·
 Mehrere Trainingstage mit Wochentagszuordnung · Übungsbibliothek mit eigenen
 Übungen · RIR-basierte Satzerfassung · Pausentimer mit Compound-/Isolations-
 Voreinstellung · Cardio getrennt in Minuten · persönliche Notizen pro Übung ·
@@ -32,8 +37,9 @@ Trainingstag wechseln (anhängen / nur Geloggtes behalten / ersetzen) ·
 Ziel für den nächsten Satz nach doppelter Progression · Wake Lock
 
 **Auswertung**
-Wochenvolumen gegen MEV/MAV/MRV über **neun Muskeln** — Bizeps und Trizeps
-getrennt, Quadrizeps, Beinbeuger und Waden getrennt (Begründung in
+Wochenvolumen gegen MEV/MAV/MRV über **zehn Muskeln** — Bizeps und Trizeps
+getrennt, Quadrizeps, Beinbeuger und Waden getrennt, seitliche und hintere
+Schulter getrennt (Begründung in
 [`docs/EVIDENZ.md`](docs/EVIDENZ.md)) · wahlweise inklusive indirekt
 beteiligter Muskeln (0,5 Sätze) · Volumen-Radar · Tonnage- und RIR-Trends ·
 e1RM-Verlauf pro Übung statt nur Rohgewicht · PR-Erkennung · Deload-Empfehlung
@@ -97,7 +103,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **54 Prüfungen grün** — 45 Regressionstests plus Fuzzing über
+Aktueller Stand: **59 Prüfungen grün** — 50 Regressionstests plus Fuzzing über
 67 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
