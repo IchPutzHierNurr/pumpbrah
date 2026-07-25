@@ -1201,6 +1201,135 @@ html,body{
 }
 .muscle-volume-title{color:var(--text3);letter-spacing:.18em;font-size:10px}
 
+/* ============================================================================
+   WORKOUT — FOKUS-LAYOUT
+   Genau eine Übung ist groß: die, an der man gerade steht. Alles andere ist
+   eine Zeile. Wer während eines Satzes scrollen muss, um zu sehen, was er als
+   Nächstes heben soll, hat ein UI-Problem, kein Trainingsproblem.
+   ============================================================================ */
+.focus-bar{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:20px;
+  background:linear-gradient(150deg,#1d1533,#0e0b18);
+  border:1px solid rgba(255,255,255,.09);box-shadow:var(--edge);
+}
+.fb-ring{position:relative;width:56px;height:56px;flex:0 0 56px}
+.fb-ring svg{width:56px;height:56px;display:block}
+.fb-rt{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;color:var(--text);
+}
+.fb-rt.done{color:var(--green)}
+.fb-mid{flex:1;min-width:0}
+.fb-mid .t{font-weight:800;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fb-mid .s{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fb-btn{
+  min-width:44px;height:44px;padding:0 9px;border-radius:14px;flex:0 0 auto;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--text);
+  font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:transform var(--dur-micro) var(--sp);
+}
+.fb-btn.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+.fb-btn:active{transform:scale(.92)}
+
+.wo-progress{display:flex;align-items:center;gap:10px;margin:12px 2px}
+.wo-progress .tr{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
+.wo-progress .tr i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--brand-b),var(--accent));transition:width var(--dur-ring) var(--out)}
+.wo-progress .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)}
+
+/* --- die aktive Übung: dritte Mesh-Fläche, die lauteste --- */
+.wo-act{
+  position:relative;overflow:hidden;isolation:isolate;
+  border-radius:28px;padding:16px;margin-bottom:12px;
+  background:linear-gradient(140deg,var(--brand-deep) 0%,#171034 48%,#0e0b1c 100%);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 26px 60px rgba(0,0,0,.55);
+}
+.wo-act::before{content:'';position:absolute;width:280px;height:280px;border-radius:50%;filter:blur(70px);top:-140px;right:-90px;z-index:0;
+  background:radial-gradient(circle,color-mix(in srgb,var(--brand-b) 42%,transparent),transparent 66%)}
+.wo-act>*{position:relative;z-index:1}
+.wo-open{
+  border-radius:24px;padding:14px;margin-bottom:10px;
+  background:var(--mat-1),var(--bg2);border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
+}
+.wo-act.skipped,.wo-open.skipped{opacity:.5}
+.wo-act-top{display:flex;gap:12px;align-items:center}
+.wo-act-name{flex:1;min-width:0}
+.wo-act-name .n{font-size:16.5px;font-weight:800;line-height:1.15}
+.wo-act-name .m{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wo-act .wo-act-name .m{color:rgba(255,255,255,.62)}
+.wo-act-name .setdots{margin-top:7px}
+
+/* Zielangabe: die Heldenzahl dieses Screens. */
+.wo-target{
+  margin-top:14px;padding:12px 14px;border-radius:16px;display:flex;align-items:baseline;gap:9px;
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);
+}
+.wo-open .wo-target{background:rgba(255,255,255,.04);border-color:var(--line)}
+.wo-target .big{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:.85;font-variant-numeric:tabular-nums}
+.wo-target .u{font-size:13px;font-weight:700;color:var(--text2)}
+.wo-act .wo-target .u{color:rgba(255,255,255,.68)}
+.wo-target .why{margin-left:auto;font-size:11px;color:var(--text2);text-align:right;line-height:1.35;max-width:145px}
+.wo-act .wo-target .why{color:rgba(255,255,255,.62)}
+
+/* Geloggte Sätze als Chips statt als Tabellenzeilen. */
+.wo-chips{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+.wo-chips .wsr{
+  display:flex;align-items:baseline;gap:5px;padding:8px 11px;border-radius:13px;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+  cursor:pointer;transition:transform var(--dur-micro) var(--sp);
+}
+.wo-open .wo-chips .wsr{background:rgba(255,255,255,.04);border-color:var(--line)}
+.wo-chips .wsr:active{transform:scale(.94)}
+.wo-chips .wsr b{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
+.wo-chips .wsr span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2)}
+.wo-act .wo-chips .wsr span{color:rgba(255,255,255,.58)}
+.wo-chips .wsr em{font-style:normal;font-size:10px;opacity:.7}
+.wo-chips .wsr.empty{opacity:.4;cursor:default}
+.wo-chips .wsr.empty b{font-family:'JetBrains Mono',monospace;font-size:11px}
+.wo-chips .wsr.justlogged{animation:chipPop .5s var(--sp)}
+@keyframes chipPop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+
+.wo-cta{display:flex;gap:9px;margin-top:14px}
+.wo-cta .go{
+  flex:1;padding:16px;border-radius:18px;border:none;cursor:pointer;
+  background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 78%,#000));
+  color:#0e0b18;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:15px;letter-spacing:.02em;
+  box-shadow:0 12px 28px var(--accent-glow);transition:transform var(--dur-micro) var(--sp);
+}
+.wo-cta .sk{
+  padding:16px 18px;border-radius:18px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
+  color:var(--text2);font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:14px;
+  transition:transform var(--dur-micro) var(--sp);
+}
+.wo-cta .go:active,.wo-cta .sk:active{transform:scale(.97)}
+
+.wo-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.wo-note{margin-top:10px;font-size:11.5px;color:var(--purple);padding:7px 10px;background:color-mix(in srgb,var(--purple) 12%,transparent);border-radius:10px}
+.wo-act .wo-note{color:#d7cbff;background:rgba(255,255,255,.08)}
+.wo-hist{margin-top:10px}
+.wo-hist summary{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--text3);cursor:pointer;padding:6px 0;list-style:none}
+.wo-hist summary::-webkit-details-marker{display:none}
+.wo-hist summary::before{content:'▸ ';transition:.2s}
+.wo-hist[open] summary::before{content:'▾ '}
+
+/* --- eingeklappte Zeile --- */
+.wo-slim{
+  display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:18px;margin-bottom:8px;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+  transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease);
+}
+.wo-slim:active{transform:scale(.985)}
+.wo-slim .i{width:34px;height:34px;flex:0 0 34px;border-radius:12px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2)}
+.wo-slim .i .ic{stroke:var(--text3)}
+.wo-slim .n{flex:1;min-width:0;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wo-slim .r{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap}
+.wo-slim .cv{color:var(--text3);font-size:16px;flex:0 0 auto}
+.wo-slim.done{opacity:.55}
+.wo-slim.done .i{color:var(--green)}
+.wo-slim.done .n{text-decoration:line-through}
+.wo-slim.skipped{opacity:.4}
+
 /* --- Regel 6: Druckzustände --------------------------------------------- */
 .card,.gtile,.exr,.dtab,.optrow,.wo-cmd{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
 .btn,.btn-s{transition:transform var(--dur-micro) var(--sp),box-shadow .2s var(--ease),filter .2s}
@@ -1994,6 +2123,18 @@ function hydrateIcons(root){
 }let curTab=null,timerInt=null,timerStartedAt=0,timerTgt=0,logTgt=null,editIdx=null;
 function getTimerElapsed(){return timerStartedAt?Math.floor((Date.now()-timerStartedAt)/1000):0}
 function getTimerRemaining(){return Math.max(0,timerTgt-getTimerElapsed())}
+/* Nenner für den Pausenring. Beim Pausieren wandert die Restzeit nach
+   timerPausedRemaining und timerTgt wird beim Fortsetzen auf genau diesen
+   Rest gesetzt — ein naives `timerTgt` als Nenner ließe den Ring bei jedem
+   Fortsetzen auf 100 % zurückspringen. Deshalb merkt sich timerSpan den
+   größten je gesehenen Restwert und wächst mit, wenn Zeit dazukommt.
+   Das heilt sich auch nach einem Neuladen von selbst. */
+let timerSpan=0;
+function getTimerTotal(){
+  const rem=Math.max(getTimerRemaining(),timerPausedRemaining||0);
+  if(rem>timerSpan)timerSpan=rem;
+  return Math.max(1,timerSpan);
+}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function cm(id){
   const el=document.getElementById(id);
@@ -3270,7 +3411,7 @@ function startTmr(){
 }
 function resetTmr(){
   if(timerInt){clearInterval(timerInt);timerInt=null}
-  timerStartedAt=0;timerTgt=0;timerPausedRemaining=0;
+  timerStartedAt=0;timerTgt=0;timerPausedRemaining=0;timerSpan=0;
   persistTimer();
   const d=document.getElementById('td');if(d)d.textContent='0:00';
   renderWo();
@@ -4405,7 +4546,6 @@ function renderWo(){
   const tRem=getTimerRemaining();
   const tState=timerInt?'run':(timerStartedAt>0&&tRem<=0?'done':'');
   tf.style.display='';
-  tf.innerHTML=`<div class="st-inner"><div class="st-circle ${tState}" id="tc"><div class="st-time" id="td">${fmtT(tRem)}</div></div><div class="st-info"><div class="st-label">${esc(planDisplayName(D.active.planKey))}</div><div class="st-elapsed">⏱ ${el} min</div></div><div class="st-btns"><button class="st-btn" style="background:#33d04f;color:#07110a" onclick="startTmr()">${timerInt?'⏸':'▶'}</button><button class="st-btn" style="background:#2c2f3d;color:#fff" onclick="resetTmr()">⏭</button><button class="st-btn" style="background:#2c2f3d;color:#a8adbb" onclick="adjTmr(-15)">-15</button><button class="st-btn" style="background:#2c2f3d;color:#a8adbb" onclick="adjTmr(15)">+15</button><button class="st-btn" style="background:#2c2f3d;color:#a8adbb" onclick="adjTmr(30)">+30</button></div></div>`;
   if(!Array.isArray(D.active.exercises))D.active.exercises=[];
   D.active.exercises.forEach(ex=>{
     if(!Array.isArray(ex.logged))ex.logged=[];
@@ -4417,65 +4557,134 @@ function renderWo(){
   });
   const total=D.active.exercises.length;
   const doneCount=D.active.exercises.filter(e=>e.skipped||e.logged.length>=e.sets).length;
+  const setsPlanned=D.active.exercises.reduce((a,e)=>a+(e.skipped?0:e.sets),0);
+  const setsDone=loggedSetCount();
+  /* Fokus-Leiste: Restzeit als Ring, Session-Status daneben, zwei Tasten.
+     Der Ring füllt sich rückwärts — er zeigt, wie viel Pause NOCH übrig ist,
+     nicht wie viel schon herum ist. Das ist die Frage, die man sich zwischen
+     zwei Sätzen tatsächlich stellt. */
+  const restTotal=Math.max(1,getTimerTotal());
+  const restPct=Math.max(0,Math.min(1,tRem/restTotal));
+  const R=26,CIRC=2*Math.PI*R;
+  const ringCol=tState==='done'?'var(--green)':tState==='run'?'var(--accent)':'rgba(255,255,255,.28)';
+  tf.innerHTML=`<div class="focus-bar">`+
+    `<div class="fb-ring"><svg viewBox="0 0 62 62" aria-hidden="true">`+
+      `<circle cx="31" cy="31" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="5"/>`+
+      `<circle cx="31" cy="31" r="${R}" fill="none" stroke="${ringCol}" stroke-width="5" stroke-linecap="round" `+
+      `stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${(CIRC*(1-restPct)).toFixed(1)}" transform="rotate(-90 31 31)"/>`+
+    `</svg><div class="fb-rt ${tState}" id="td">${fmtT(tRem)}</div></div>`+
+    `<div class="fb-mid"><div class="t">${tState==='run'?'Pause läuft':tState==='done'?'Pause vorbei — los':esc(planDisplayName(D.active.planKey))}</div>`+
+    `<div class="s">${el} min · ${setsDone} von ${setsPlanned} Sätzen</div></div>`+
+    `<button type="button" class="fb-btn" title="Timer" onclick="startTmr()">${timerInt?'⏸':'▶'}</button>`+
+    `<button type="button" class="fb-btn" title="Pause überspringen" onclick="resetTmr()">⏭</button>`+
+    `<button type="button" class="fb-btn mono" title="30 Sekunden mehr" onclick="adjTmr(30)">+30</button>`+
+  `</div>`;
   let h=`<div class="wo-cmdbar">`+
     `<button class="wo-cmd accent ib" onclick="openWorkoutSwitch()">${icon('swap',14)}Tag wechseln</button>`+
     `<button class="wo-cmd ib" onclick="addExerciseToWorkout()">${icon('plus',14)}Übung</button>`+
-    `<button class="wo-cmd ib" onclick="jumpToActiveExercise()">${icon('target',14)}Zur aktiven Übung</button>`+
-    `<button class="wo-cmd ib" onclick="toggleWorkoutCompact()">${icon('more',14)}${D.active.compact?'Details':'Kompakt'}</button>`+
+    `<button class="wo-cmd ib" onclick="jumpToActiveExercise()">${icon('target',14)}Zur Übung</button>`+
+    `<button class="wo-cmd ib" onclick="toggleWorkoutCompact()">${icon('more',14)}${D.active.compact?'Nur Fokus':'Alle aufklappen'}</button>`+
   `</div>`+
-  `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><div style="flex:1;height:6px;border-radius:999px;background:var(--bg4);overflow:hidden"><div style="height:100%;width:${total?Math.round(doneCount/total*100):0}%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .55s var(--ease)"></div></div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)">${doneCount}/${total}</div></div>`;
+  `<div class="wo-progress"><div class="tr"><i data-grow="${total?Math.round(doneCount/total*100):0}%"></i></div>`+
+  `<div class="n">${doneCount}/${total} Übungen</div></div>`;
   let activeExIdx=-1;
   for(let i=0;i<D.active.exercises.length;i++){const e=D.active.exercises[i];if(!e.skipped&&e.logged.length<e.sets){activeExIdx=i;break}}
-  const compact=!!D.active.compact;
+  /* `compact` heißt jetzt „alles aufklappen": im Fokus-Layout ist eingeklappt
+     der Normalfall, ausgeklappt die Ausnahme. Der Feldname bleibt, weil er in
+     gespeicherten Sessions steht — nur die Bedeutung des Schalters dreht sich. */
+  const expandAll=!!D.active.compact;
+  /* Zwischenüberschriften markieren die drei Zonen: was erledigt ist, was
+     gerade dran ist, was noch kommt. Sie dürfen erst NACH der aktiven Übung
+     „Danach" heißen — sonst steht die Überschrift über der erledigten
+     Übung und behauptet das Gegenteil. */
+  let zoneShown={before:false,after:false,none:false};
   D.active.exercises.forEach((ex,ei)=>{
     const done=ex.logged.length>=ex.sets;
     const skipped=ex.skipped;
     const isActive=ei===activeExIdx;
+    const open=isActive||expandAll||D.active.openEx===ei;
     const cardio=isCardioExercise(ex);
     const safe=jsStr(ex.name);
     const hist=getAllSets(ex.name).filter(s=>s.w>0||s.r>0);
     const lastSets=hist.slice(-6);
     const series=lastSets.map(s=>cardio?(s.r||0):(s.w||0));
-    const collapsed=compact&&!isActive;
-    h+=`<div id="wo-ex-${ei}" class="${isActive?'wo-active-ex':''}" style="background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:10px;${done?'border:1px solid color-mix(in srgb,var(--green) 22%,transparent);':''}${!done&&!isActive?'border:1px solid var(--bg3);':''}${skipped?'opacity:.42':''}">`+
-      `<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">`+
+    if(activeExIdx<0){
+      if(!zoneShown.none){h+=`<div class="st">Übungen <div class="ln"></div></div>`;zoneShown.none=true}
+    }else if(ei<activeExIdx){
+      if(!zoneShown.before){h+=`<div class="st">Erledigt <div class="ln"></div></div>`;zoneShown.before=true}
+    }else if(ei>activeExIdx){
+      if(!zoneShown.after){h+=`<div class="st">Danach <div class="ln"></div></div>`;zoneShown.after=true}
+    }
+    /* --- eingeklappte Zeile: eine Zeile pro Übung, sonst nichts --- */
+    if(!open){
+      h+=`<div id="wo-ex-${ei}" class="wo-slim${done?' done':''}${skipped?' skipped':''}" onclick="toggleWoRow(${ei})">`+
+        `<div class="i">${done?'✓':skipped?'⤼':icon('target',15)}</div>`+
+        `<div class="n">${esc(ex.name)}</div>`+
+        `<div class="r">${esc(ex.sets)}×${esc(reps(ex))}${done&&ex.logged.length?` · ${esc(ex.logged[ex.logged.length-1].w)} kg`:''}</div>`+
+        `<div class="cv">›</div></div>`;
+      return;
+    }
+    /* --- aufgeklappt: aktive Übung als Mesh-Karte, andere als normale Karte --- */
+    h+=`<div id="wo-ex-${ei}" class="${isActive?'wo-act':'wo-open'}${skipped?' skipped':''}">`+
+      `<div class="wo-act-top">`+
         `<div class="exdemo-thumb" onclick="showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
-        `<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px">${esc(ex.name)}${skipped?' <span style="color:var(--text3);font-size:12px">(übersprungen)</span>':''}</div>`+
-        `<div style="font-size:12px;color:var(--text2)">${esc(ex.sets)}×${esc(reps(ex))}${ex.rir!==null?' @ RIR '+esc(ex.rir):''}${cardio?' • Cardio':''}</div>`+
-        `<div class="setdots" style="margin-top:6px">${Array.from({length:ex.sets},(_,si)=>`<span class="setdot${ex.logged[si]?' on':si===ex.logged.length&&isActive?' now':''}"></span>`).join('')}</div></div>`+
-        `<div class="wo-action-row">${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${ei})">⋯</button></div>`+
+        `<div class="wo-act-name"><div class="n">${esc(ex.name)}${skipped?' <span style="opacity:.7;font-size:12px;font-weight:600">(übersprungen)</span>':''}</div>`+
+        `<div class="m">${esc(muscleName(ex.muscle))} · ${esc(ex.sets)} Sätze · ${esc(reps(ex))} Wdh${ex.rir!==null?` @ RIR ${esc(ex.rir)}`:''}${cardio?' · Cardio':''}</div>`+
+        `<div class="setdots">${Array.from({length:ex.sets},(_,si)=>`<span class="setdot${ex.logged[si]?' on':si===ex.logged.length&&isActive?' now':''}"></span>`).join('')}</div></div>`+
+        `<div class="wo-action-row">${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}`+
+        `<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${ei})">⋯</button>`+
+        `${!isActive?`<button type="button" class="wo-icon-btn" title="Zuklappen" onclick="toggleWoRow(${ei})">▾</button>`:''}</div>`+
       `</div>`;
-    if(collapsed){h+='</div>';return}
-    h+=`<div class="wo-action-row" style="gap:6px;margin-bottom:8px;flex-wrap:wrap">`+
-      `<button type="button" class="wo-alt-btn" onclick="openAlternative(${ei})" class="wo-alt-btn ib">${icon('swap',14)}Alternative</button>`+
+    if(D.notes[ex.name])h+=`<div class="wo-note">📝 ${esc(D.notes[ex.name])}</div>`;
+    if(!skipped&&!done){
+      const tgt=nextSetTarget(ex);
+      if(tgt){
+        h+=tgt.num
+          ?`<div class="wo-target"><div class="big">${esc(tgt.num)}</div><div class="u">${tgt.unit}</div><div class="why">${tgt.why}</div></div>`
+          :`<div class="target-hint"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`;
+      }
+      h+=renderWarmup(ex);
+    }
+    if(!skipped){
+      /* Geloggte Sätze als Chips. Die Klasse .wsr bleibt: an ihr hängt die
+         Halte-Geste zum Bearbeiten eines Satzes (PB-026). */
+      const chips=[];
+      for(let si=0;si<ex.sets;si++){
+        const s=ex.logged[si];
+        if(s)chips.push(`<div class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}" onpointerdown="setLongPress(${ei},${si},event)" onpointerup="clearLongPress()" onpointercancel="clearLongPress()">`+
+          `<b>${esc(s.w)}</b><span>${esc(formatLoggedSetLine(ex,s).replace(/^\s*[\d.,]+\s*kg\s*/,''))} · RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}</div>`);
+        else chips.push(`<div class="wsr empty"><b>S${si+1}</b><span>—</span></div>`);
+      }
+      h+=`<div class="wo-chips">${chips.join('')}</div>`;
+      if(!done)h+=`<div class="wo-cta"><button type="button" class="go" onclick="openLog(${ei})">SATZ ${ex.logged.length+1} LOGGEN</button><button type="button" class="sk" onclick="skipEx(${ei})">SKIP</button></div>`;
+    }else{
+      h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:8px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
+    }
+    h+=`<div class="wo-tools">`+
+      `<button type="button" class="wo-alt-btn ib" onclick="openAlternative(${ei})">${icon('swap',14)}Alternative</button>`+
       `${ei>0?`<button type="button" class="wo-icon-btn" title="nach oben" onclick="moveActiveExercise(${ei},-1)">↑</button>`:''}`+
       `${ei<total-1?`<button type="button" class="wo-icon-btn" title="nach unten" onclick="moveActiveExercise(${ei},1)">↓</button>`:''}`+
       `<button type="button" class="wo-icon-btn" title="Sätze anpassen" onclick="adjustActiveSets(${ei},-1)">−Satz</button>`+
       `<button type="button" class="wo-icon-btn" title="Sätze anpassen" onclick="adjustActiveSets(${ei},1)">+Satz</button>`+
     `</div>`;
-    if(D.notes[ex.name])h+=`<div style="font-size:11px;color:var(--purple);margin-bottom:6px;padding:5px 9px;background:color-mix(in srgb,var(--purple) 10%,transparent);border-radius:8px">📝 ${esc(D.notes[ex.name])}</div>`;
-    if(!skipped&&!done){
-      const tgt=nextSetTarget(ex);
-      if(tgt)h+=`<div class="target-hint"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`;
-      h+=renderWarmup(ex);
-    }
     if(lastSets.length&&!skipped){
-      h+=`<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'var(--accent)'):''}</div>${lastSets.map(s=>`<div class="mini-hist-row"><span class="mh-d">${esc(s.date||'')}</span><span class="mh-v">${esc(formatLoggedSetLine(ex,s))}${cardio&&s.w?` • Stufe ${esc(s.w)}`:''}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${esc(s.rir)}</span></div>`).join('')}</div>`;
-    }
-    if(!skipped){
-      for(let si=0;si<ex.sets;si++){
-        const s=ex.logged[si];
-        if(s)h+=`<div class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}" onpointerdown="setLongPress(${ei},${si},event)" onpointerup="clearLongPress()" onpointercancel="clearLongPress()"><div class="wsn dn">S${si+1}</div><div class="wsv">${esc(formatLoggedSetLine(ex,s))}${cardio&&s.w?` • Stufe ${esc(s.w)}`:''}</div><div class="ri ${rc(s.rir)}">RIR ${esc(s.rir)}</div>${s.note?`<span style="font-size:10px;color:var(--text3)" title="${attr(s.note)}">📝</span>`:''}</div>`;
-        else h+=`<div class="wsr"><div class="wsn">S${si+1}</div><div class="wsv" style="color:var(--text3)">—</div></div>`;
-      }
-      if(!done)h+=`<div style="display:flex;gap:6px;margin-top:8px"><button type="button" class="btn" style="flex:2" onclick="openLog(${ei})">SATZ ${ex.logged.length+1} LOGGEN</button><button type="button" class="btn btn-s btn-g" style="flex:1" onclick="skipEx(${ei})">SKIP ⏭</button></div>`;
-    }else{
-      h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:6px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
+      h+=`<details class="wo-hist"><summary>Letzte ${lastSets.length} Sätze</summary>`+
+        `<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'var(--accent)'):''}</div>`+
+        lastSets.map(s=>`<div class="mini-hist-row"><span class="mh-d">${esc(s.date||'')}</span><span class="mh-v">${esc(formatLoggedSetLine(ex,s))}${cardio&&s.w?` • Stufe ${esc(s.w)}`:''}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${esc(s.rir)}</span></div>`).join('')+
+        `</div></details>`;
     }
     h+='</div>';
   });
   c.innerHTML=h;
+  runBarGrows(c);
   justLoggedKey=null;
+}
+/* Eine eingeklappte Zeile auf-/zuklappen. Nur EINE Zeile kann offen sein —
+   sonst ist man nach drei Tippern wieder bei der alten Endlosliste. */
+function toggleWoRow(ei){
+  if(!D.active)return;
+  D.active.openEx=D.active.openEx===ei?null:ei;
+  renderWo();haptic(6);
 }
 /* ==========================================================================
    7. LIVE-STEUERUNG IM WORKOUT
@@ -4734,29 +4943,40 @@ function applyDeloadToExercises(list){
 
 /* „Schlag das letzte Mal“ — konkrete Zielvorgabe statt nur Historie.
    Doppelte Progression: erst Wiederholungen bis rmax, dann Gewicht rauf. */
+/* Liefert neben dem Fließtext auch die Zielwerte einzeln (num/unit/why).
+   Der Fokus-Screen setzt die Zahl als Heldenzahl; alles andere zeigt weiter
+   den Satz. Beides aus EINER Quelle, damit große Zahl und Begründung nie
+   auseinanderlaufen. */
 function nextSetTarget(ex){
   if(deloadActive()&&!isCardioExercise(ex)){
     const last=getLastW(ex.name);
     if(last&&last.w>0){
       const grain=last.w>=60?2.5:1;
       const target=Math.round((last.w*0.65)/grain)*grain;
-      return{icon:icon('battery',17),text:`Deload: <b>${esc(target)}kg</b> statt ${esc(last.w)}kg, locker bei RIR 4. Nicht ausbelasten.`};
+      return{icon:icon('battery',17),num:String(target),unit:'kg · RIR 4',why:`Deload statt ${esc(last.w)} kg — bewusst nicht ausbelasten.`,
+        text:`Deload: <b>${esc(target)}kg</b> statt ${esc(last.w)}kg, locker bei RIR 4. Nicht ausbelasten.`};
     }
-    return{icon:icon('battery',17),text:'Deload-Woche: deutlich leichter, RIR 4. Technik statt Last.'};
+    return{icon:icon('battery',17),num:'',unit:'',why:'Deload-Woche: deutlich leichter, RIR 4.',
+      text:'Deload-Woche: deutlich leichter, RIR 4. Technik statt Last.'};
   }
   if(isCardioExercise(ex))return null;
   const setNr=ex.logged.length;
   const prevInSession=setNr>0?ex.logged[setNr-1]:null;
   const last=getLastW(ex.name);
   const ref=prevInSession&&prevInSession.w>0?prevInSession:last;
-  if(!ref||!ref.w)return{icon:icon('target',17),text:`Erste Referenz setzen: <b>${esc(ex.rmin)}–${esc(ex.rmax)}</b> Wdh${ex.rir!==null?` bei RIR ${esc(ex.rir)}`:''}.`};
+  if(!ref||!ref.w)return{icon:icon('target',17),num:'',unit:`${esc(ex.rmin)}–${esc(ex.rmax)} Wdh`,why:'Noch keine Referenz — dieser Satz setzt sie.',
+    text:`Erste Referenz setzen: <b>${esc(ex.rmin)}–${esc(ex.rmax)}</b> Wdh${ex.rir!==null?` bei RIR ${esc(ex.rir)}`:''}.`};
   const rmax=parseInt(ex.rmax)||12,rmin=parseInt(ex.rmin)||8;
   const w=parseFloat(ref.w)||0,r=parseInt(ref.r)||0;
   if(r>=rmax){
     const step=w>=60?2.5:w>=20?2:1;
-    return{icon:icon('trend',17),text:`Letztes Mal <b>${esc(w)}kg × ${esc(r)}</b> — obere Grenze erreicht. Jetzt <b>${esc((w+step).toFixed(1).replace(/\.0$/,''))}kg</b> bei ${esc(rmin)} Wdh.`};
+    const nw=(w+step).toFixed(1).replace(/\.0$/,'');
+    return{icon:icon('trend',17),num:String(nw),unit:`kg × ${esc(rmin)}`,why:`${esc(w)} kg × ${esc(r)} war die obere Grenze — Gewicht hoch.`,
+      text:`Letztes Mal <b>${esc(w)}kg × ${esc(r)}</b> — obere Grenze erreicht. Jetzt <b>${esc(nw)}kg</b> bei ${esc(rmin)} Wdh.`};
   }
-  return{icon:icon('target',17),text:`Ziel: <b>${esc(w)}kg × ${esc(Math.min(rmax,r+1))}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${ref.rir!==undefined?` @ RIR ${esc(ref.rir)}`:''}.`};
+  const tr=Math.min(rmax,r+1);
+  return{icon:icon('target',17),num:String(w),unit:`kg × ${esc(tr)}`,why:`Letztes Mal ${esc(w)} kg × ${esc(r)}${ref.rir!==undefined?` bei RIR ${esc(ref.rir)}`:''} — eine Wdh drauf.`,
+    text:`Ziel: <b>${esc(w)}kg × ${esc(tr)}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${ref.rir!==undefined?` @ RIR ${esc(ref.rir)}`:''}.`};
 }
 function normalizeAltItem(item,source){
   return{
