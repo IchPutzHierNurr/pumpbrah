@@ -925,6 +925,98 @@ const REGRESSIONS = [
       });
       return [r.volBefore === r.volAfter && r.freqAfter > r.freqBefore && r.floor >= 1, JSON.stringify(r)];
     }
+  },
+  {
+    id: 'PB-041', title: 'QR-Encoder liefert unveraenderte Referenzcodes',
+    run: async () => {
+      // Der QR-Encoder ist selbst gebaut. Beim Bauen sind zwei Fehler
+      // aufgetreten, die man einem Code NICHT ansieht - er sieht in beiden
+      // Faellen aus wie ein QR-Code, nur liest ihn kein Scanner (PB-041).
+      // Verifiziert wurde er ausserhalb dieses Harnischs gegen zwei
+      // unabhaengige Decoder (ZXing, OpenCV): 110 Zufallsnutzlasten,
+      // Versionen 1-29, alle korrekt dekodiert. Dieser Test friert das
+      // Ergebnis als Pruefsumme ein, damit ein spaeterer Umbau auffaellt.
+      const r = await page.evaluate(() => {
+        const hash = t => {
+          const m = qrMatrix(t);
+          if (!m) return null;
+          const flat = m.map(row => row.join('')).join('');
+          let h = 5381;
+          for (let k = 0; k < flat.length; k++) h = ((h * 33) ^ flat.charCodeAt(k)) >>> 0;
+          return { size: m.length, hash: h };
+        };
+        return {
+          a: hash('PUMPBRAH'),
+          b: hash('https://example.org/#plan=PB1-AbCdEf'),
+          c: hash('Ü'.repeat(120)),
+          tooBig: qrMatrix('x'.repeat(3000))
+        };
+      });
+      const ok = r.a && r.a.size === 21 && r.a.hash === 755334356
+        && r.b && r.b.size === 29 && r.b.hash === 928709332
+        && r.c && r.c.size === 57 && r.c.hash === 3855587988
+        && r.tooBig === null;
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-042', title: 'Import uebernimmt nur den Plan und haertet fremde Daten',
+    run: async () => {
+      // Ein importierter Plan kommt aus einer fremden Datei oder einem fremden
+      // Link. Zwei Zusagen macht das UI: (1) Historie, Gewichte, Profil und
+      // Einstellungen bleiben unveraendert, (2) kaputte oder boesartige Werte
+      // landen nicht im Datenmodell.
+      const r = await page.evaluate(async () => {
+        const before = {
+          history: JSON.stringify(D.history),
+          bio: JSON.stringify(D.bio),
+          settings: JSON.stringify(D.settings),
+          plan: JSON.parse(JSON.stringify(D.plan))
+        };
+        // Container mit absichtlich unmoeglichen Werten.
+        const evil = {
+          v: 1, n: '<img src=x onerror=alert(1)>', a: 'mallory', t: '2026-01-01',
+          d: [['Tag<script>', 'Mo', [
+            ['"><svg onload=alert(1)>', 999, -5, 1, 42, 'boese', 'einhorn', 'x'.repeat(5000)],
+            ['', 3, 8, 12, 2, 'main', 'chest', ''],
+            ['Bankdrücken', 'drei', null, undefined, null, 'main', 'chest', 'ok']
+          ]]]
+        };
+        const code = await encodeSharePayload(evil);
+        await startPlanImport(code);
+        importState.mode = 'add';
+        confirmPlanImport();
+        const keys = Object.keys(D.plan);
+        const added = keys.filter(k => !before.plan[k]);
+        const ex = added.flatMap(k => D.plan[k].exercises);
+        const res = {
+          historyUntouched: JSON.stringify(D.history) === before.history,
+          bioUntouched: JSON.stringify(D.bio) === before.bio,
+          settingsUntouched: JSON.stringify(D.settings) === before.settings,
+          oldDaysKept: Object.keys(before.plan).every(k => !!D.plan[k]),
+          addedCount: added.length,
+          setsInRange: ex.every(e => e.sets >= 1 && e.sets <= 20),
+          repsSane: ex.every(e => e.rmin >= 1 && e.rmax >= e.rmin),
+          rirSane: ex.every(e => e.rir === null || (e.rir >= 0 && e.rir <= 10)),
+          typesKnown: ex.every(e => ['main', 'pre', 'mob'].includes(e.type)),
+          musclesKnown: ex.every(e => !!MUSCLE_LANDMARKS[e.muscle]),
+          notesClamped: ex.every(e => (e.note || '').length <= 400),
+          emptyNamesDropped: ex.every(e => !!e.name),
+          // Der Übungsname landet als Text im DOM - nicht als Markup.
+          noInjectedNodes: (() => {
+            go('dash'); renderPlan();
+            const scope = document.getElementById('main-app');
+            return scope.querySelectorAll('script,iframe,object,embed').length === 0;
+          })()
+        };
+        // Aufräumen: importierte Tage wieder entfernen.
+        added.forEach(k => { delete D.plan[k]; });
+        save(); coachInvalidate(); renderPlan();
+        return res;
+      });
+      const ok = Object.entries(r).every(([k, v]) => k === 'addedCount' ? v === 1 : v === true);
+      return [ok, JSON.stringify(r)];
+    }
   }
 ];
 
