@@ -2300,6 +2300,79 @@ const SYNC_TESTS = [
         return [Object.values(out).every(v => v === true), JSON.stringify(out)];
       } finally { await a.ctx.close(); }
     }
+  },
+  {
+    id: 'PB-071', title: 'Der Erst-Sync beim Anmelden ueberschreibt keine fremden Saetze',
+    run: async () => {
+      /* Der Zwilling von PB-069, gefunden durch die Frage, die das Grundgesetz
+         nach jedem Fix stellt: wer macht dasselbe noch? `startSync()` hat
+         dieselbe Form — get, zusammenfuehren, set — und schrieb mit einem
+         nackten ref.set() zurueck. Schreibt ein anderes Geraet zwischen
+         diesem get und diesem set, ist dessen Satz weg.
+
+         Aufbau: B meldet sich an (langsame Verbindung, das get laeuft), und
+         waehrenddessen loggt A einen Satz. B's Rueckschreiben darf A's Satz
+         nicht verschlucken. */
+      fs.reset();
+      const a = await openDevice('A');
+      const b = await openDevice('B');
+      const out = {};
+      try {
+        await login(a, 'athlet1'); await onboard(a);
+        await logSession(a, 'altbekannt');
+        await a.page.waitForTimeout(500);
+
+        // B hat eigene lokale Daten, die es beim Anmelden mitbringt.
+        await b.page.click('text=Offline-Modus (ohne Sync)');
+        await b.page.waitForTimeout(300);
+        await onboard(b);
+        await logSession(b, 'vonB');
+        await b.page.waitForTimeout(300);
+
+        /* Jetzt der Wettlauf. B bekommt den Sync-Code und startet neu — das
+           ist der Weg, den ein wiederkehrendes Geraet echt nimmt (autoResume
+           -> startSync).
+
+           Gebaut wird die Verschraenkung mit einer BARRIERE, nicht mit
+           Wartezeiten. Der erste Versuch benutzte sleep() und war gruen,
+           weil im Protokoll alle Schreibvorgaenge von A *vollstaendig vor*
+           B's Lesen lagen — der Test hatte nichts geprueft. Die Barriere
+           haelt B's Rueckschreiben an, egal ob es als nacktes `set` oder als
+           `tx-commit` kommt; nur so prueft die Gegenprobe dasselbe wie der
+           Test. */
+        await b.page.evaluate(() => localStorage.setItem('pb_sync', 'athlet1'));
+        const sperre = fs.holdNext({ op: ['set', 'tx-commit'], who: 'B' });
+        const neustart = b.page.reload();
+        out.barriereZugeschnappt = await fs.awaitHold(sperre, 15000);
+        if (!out.barriereZugeschnappt) {
+          fs.releaseAll(); await neustart.catch(() => {});
+          return [false, 'B hat beim Anmelden nicht zurueckgeschrieben — '
+            + 'die Verschraenkung wurde nicht getroffen, der Test beweist nichts.'];
+        }
+        // B haengt in seinem Schreibvorgang. Genau jetzt schreibt A.
+        await logSession(a, 'mittendrin');
+        await a.page.waitForTimeout(900);
+        out.cloudWaehrendBHing = cloudMarken();
+        fs.release(sperre);
+        await neustart.catch(() => {});
+        await b.page.waitForTimeout(1000);
+        await a.page.waitForTimeout(500);
+        await fs.flush(5);
+
+        out.cloud = cloudMarken();
+        out.aSatzUeberlebt = out.cloud.includes('mittendrin');
+        out.bSatzAngekommen = out.cloud.includes('vonB');
+        out.alterSatzNochDa = out.cloud.includes('altbekannt');
+        out.bSchriebTransaktional = fs.ops('tx-commit').some(o => o.who === 'B');
+        out.nackteSets = fs.ops('set').length;
+        if (!out.bSchriebTransaktional) return [false,
+          'B schreibt beim Anmelden noch mit einem nackten set() — '
+          + 'ein blindes Schreiben macht die Transaktion des anderen Geraets wertlos. '
+          + JSON.stringify(out)];
+        return [out.aSatzUeberlebt && out.bSatzAngekommen && out.alterSatzNochDa,
+          JSON.stringify(out)];
+      } finally { fs.setLatency(0); await a.ctx.close(); await b.ctx.close(); }
+    }
   }
 ];
 

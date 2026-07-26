@@ -111,7 +111,7 @@ Vier Stufen:
 |---|---|
 | **Smoke** | Start, Onboarding, jeder Screen rendert |
 | **Regression** | Ein Test pro Eintrag in `docs/BUGS.md` — wächst mit jedem Fund |
-| **Sync** | Anmelden, Cloud, **zwei Geräte auf einem Konto** — gegen eine gefälschte Firestore |
+| **Sync** | Anmelden, Cloud, **zwei Geräte auf einem Konto** — gegen eine gefälschte Firestore, mit Barrieren für echte Wettläufe |
 | **Fuzz** | N zufällige Aktionen über 91 Operationen, 22 Invarianten nach **jeder** Aktion |
 
 ### Der Sync wird gegen ein Double geprüft
@@ -121,15 +121,18 @@ Vier Stufen:
 [`test/fakestore.mjs`](test/fakestore.mjs) bildet die **sieben** SDK-Methoden
 nach, die die App überhaupt benutzt, hält den Store in Node (damit zwei
 Browser-Contexts ihn wirklich teilen) und stellt `onSnapshot`-Benachrichtigungen
-erst auf Abruf zu. Damit lässt sich eine Verschränkung von Lesen und Schreiben
-**bauen** statt erhoffen — so wurde PB-022 zum ersten Mal reproduziert und dann
-behoben.
+erst auf Abruf zu. Dazu **Barrieren**: `holdNext({op:'set', who:'B'})` hält
+einen Schreibvorgang an, bis der Test ihn freigibt. Damit wird eine
+Verschränkung von Lesen und Schreiben **gebaut** statt erhofft — so wurden
+PB-022 und sein Zwilling PB-071 zum ersten Mal reproduziert und dann behoben.
+Ohne Barriere war der erste Anlauf grün, während im Protokoll alle
+Schreibvorgänge des einen Geräts vollständig vor dem Lesen des anderen lagen.
 
 Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **74 Prüfungen grün** — 58 Regressionstests, 4 Sync-Tests über
+Aktueller Stand: **75 Prüfungen grün** — 58 Regressionstests, 5 Sync-Tests über
 zwei Geräte und Fuzzing über 91 Operationen, verifiziert über vierzehn
 unabhängige Kampagnen mit insgesamt 80.000 Aktionen.
 
@@ -158,7 +161,7 @@ Vier Grenzen, die keine Zahl sichtbar macht:
 
 * **„Erreicht" ist nicht „geprüft".** Die 220 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
-  58 Regressionstests, die 4 Sync-Tests und die 22 Invarianten — nicht die
+  58 Regressionstests, die 5 Sync-Tests und die 22 Invarianten — nicht die
   Abdeckungszahl.
 * **Chromium ist nicht Safari.** Der Harness kennt `--browser=webkit`, aber in
   abgeschotteten Umgebungen lässt sich das WebKit-Paket nicht herunterladen

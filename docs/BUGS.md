@@ -113,6 +113,7 @@
 | [PB-068](#pb-068) | Zwei Geräte auf einem Konto — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-069](#pb-069) | Gleichzeitiges Schreiben verlor einen Satz (PB-022) | **hoch** | Datenverlust | ✅ |
 | [PB-070](#pb-070) | Zurücksetzen — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-071](#pb-071) | Der Erst-Sync beim Anmelden überschrieb fremde Sätze | **hoch** | Datenverlust | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2586,6 +2587,79 @@ sieben Methoden ist ein Double billiger als die Ausrede.
 
 ---
 
+### PB-071
+
+**Der Erst-Sync beim Anmelden überschrieb die Sätze des anderen Geräts**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Datenverlust / Nebenläufigkeit |
+| **Gefunden** | durch die Geschwisterfrage nach dem Fix von PB-069 |
+| **Status** | ✅ behoben |
+
+**Wie er gefunden wurde.** Nicht durch einen Testlauf, sondern durch die Frage,
+die Phase 3 des `/check` nach jedem Fix stellt: *wer macht dasselbe noch?*
+`startSync()` hat dieselbe Form wie `queueCloudSave()` — lesen, zusammenführen,
+schreiben — und schrieb mit einem nackten `ref.set()` zurück.
+
+**Symptom.** Ein zweites Gerät meldet sich am Konto an. Zwischen seinem Lesen
+und seinem Zurückschreiben loggt das erste Gerät einen Satz. Der Satz ist weg —
+und kommt nicht zurück.
+
+**Warum die Transaktion aus PB-022 nicht half.** Sie schützt den, der sie
+benutzt. Ein **blindes `set()` von der anderen Seite überschreibt sie einfach.**
+Eine Transaktion sichert nur zu, dass *zwischen ihrem* Lesen und Schreiben
+nichts passiert ist — sie kann niemanden daran hindern, danach stumpf
+draufzuschreiben. Nebenläufigkeitsschutz ist keine Eigenschaft einer
+Funktion, sondern eine Eigenschaft **aller** Schreibpfade auf dasselbe
+Dokument. Einer, der nicht mitmacht, hebt alle anderen auf.
+
+**Fix.** Die beiden Rückschreibungen in `startSync()` gehen über
+`queueCloudSave()` — damit über die Transaktion und mit einem erneuten
+Zusammenführen unmittelbar vor dem Schreiben. Ein Schreibpfad statt zwei.
+
+**Der Nachweis war das eigentliche Stück Arbeit.** Der erste Versuch benutzte
+Wartezeiten und war **grün** — und im Protokoll lagen alle Schreibvorgänge des
+einen Geräts *vollständig vor* dem Lesen des anderen:
+
+```
+tx-commit A · tx-commit A · tx-commit A · get B · set B      ← nichts geprüft
+```
+
+Also bekam das Double **Barrieren**: `holdNext({op:['set','tx-commit'], who:'B'})`
+hält B's Rückschreiben an, bis der Test es freigibt. Damit wird die
+Verschränkung gebaut statt erhofft:
+
+```
+get B · hold B · tx-commit A ×3 · released B · set B
+Cloud vorher : [altbekannt, mittendrin]
+Cloud nachher: [altbekannt, vonB]        ← „mittendrin" ist weg
+```
+
+Das `op`-Feld darf ein Array sein, und das ist kein Komfort: Der Fix
+verwandelt B's `set` in ein `tx-commit`. Träfe die Barriere nur `set`, würde
+sie nach dem Fix nicht mehr zuschnappen — die Gegenprobe wäre dann nicht mehr
+dieselbe Prüfung wie der Test.
+
+**Lektion.** Zwei, und die zweite ist die teurere:
+
+1. **Ein Wettlauf-Test ohne Barriere ist ein Zufallsgenerator mit Häkchen.**
+   `sleep()` synchronisiert nichts. Wer eine Verschränkung prüfen will, muss
+   sie anhalten können — und der Test muss scheitern, wenn die Barriere nicht
+   zuschnappt.
+2. **Ein Schutz, den nur ein Pfad benutzt, ist kein Schutz.** Nach jedem
+   Nebenläufigkeits-Fix gehört ein `grep` über *alle* Schreibstellen desselben
+   Ziels. Hier waren es drei: eine war schon transaktional, zwei nicht.
+
+**Test.** `PB-071` — B meldet sich mit eigenen lokalen Daten an, seine
+Rückschreibung wird angehalten, A schreibt hinein, dann Freigabe. Danach müssen
+**alle drei** Sätze in der Cloud stehen. Der Test scheitert ausdrücklich, wenn
+die Barriere nicht zuschnappt oder wenn B noch mit einem nackten `set()`
+schreibt.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -2718,7 +2792,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **23
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **24
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -2747,7 +2821,8 @@ gestellt werden sollten:
 | 20 | **Test mit zu kleiner Reichweite** | PB-066 | Wie viele gleichartige Stellen gibt es — und prüft der Test sie alle oder nur die eine, an der es aufgefallen ist? |
 | 21 | **Risikoeinschätzung ohne Test** | PB-022, PB-069 | Ist das gemessen oder geschätzt? Ein „praktisch geringes Risiko" ohne Reproduktion ist eine Meinung. |
 | 22 | **„Nicht testbar" als Ausrede** | PB-067–PB-070 | Wie viele Methoden gehen hier nach draußen? Bei einer Handvoll ist ein Double billiger als die Begründung, warum es nicht geht. |
-| 23 | **Test, der nicht belegt, dass er stattfand** | PB-069 | Wäre dieser Test auch grün, wenn die Bedingung nie eingetreten ist? Dann fehlt der Nachweis, nicht der Vertrag. |
+| 23 | **Test, der nicht belegt, dass er stattfand** | PB-069, PB-071 | Wäre dieser Test auch grün, wenn die Bedingung nie eingetreten ist? Dann fehlt der Nachweis, nicht der Vertrag. Bei Nebenläufigkeit: Barriere statt `sleep`. |
+| 24 | **Schutz, den nur ein Pfad benutzt** | PB-071 | Wie viele Stellen schreiben auf dasselbe Ziel — und machen sie alle mit? Einer, der blind schreibt, hebt die Transaktionen aller anderen auf. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

@@ -194,7 +194,7 @@ Kurz und ehrlich:
 CHECK-BERICHT
 ─────────────
 Regressionen:  58/58 bestanden
-Sync:          4/4 bestanden (zwei Geräte, Transaktion, Zurücksetzen)
+Sync:          5/5 bestanden (zwei Geräte, Transaktion, Barrieren, Zurücksetzen)
 Fuzzing:       12 × 2500 + 2 × 25000 Iterationen über 91 Operationen
 Invarianten:   22 × je Aktion
 Abdeckung:     0 Funktionen am Knopf ohne Testaufruf (test/coverage.mjs)

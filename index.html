@@ -2756,10 +2756,17 @@ function startSync(){
       D=mergeSyncedData(remote);
       normalizeData();
       localStorage.setItem('pb_data',JSON.stringify(D));
-      if(JSON.stringify(D)!==before)ref.set(cloudSafeData()).catch(()=>{});
+      /* Früher stand hier ein nacktes ref.set(). Das war derselbe Fehler wie
+         PB-022, nur an einer anderen Stelle — und ein blindes set() macht die
+         Transaktion des ANDEREN Geräts wertlos: es überschreibt sie einfach.
+         Nachgewiesen als PB-071 mit einer Barriere: liest B hier, schreibt A
+         dazwischen und schreibt B dann zurück, ist A's Satz weg.
+         Der Weg über queueCloudSave() führt vor dem Schreiben erneut
+         zusammen — in einer Transaktion. */
+      if(JSON.stringify(D)!==before)queueCloudSave();
     }else{
       normalizeData();
-      ref.set(cloudSafeData()).catch(()=>{});
+      queueCloudSave();
     }
     renderAll();
     updateSyncPill(true);

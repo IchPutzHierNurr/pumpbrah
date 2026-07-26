@@ -44,13 +44,63 @@ export function createFakeFirestore() {
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const bump = path => vers.set(path, (vers.get(path) || 0) + 1);
 
+  /* --- Barrieren -----------------------------------------------------------
+     Verzögerungen und `sleep` reichen für Nebenläufigkeitstests nicht. Der
+     erste Versuch, den Zwilling von PB-069 nachzuweisen, war grün — und beim
+     Nachsehen im Protokoll lagen alle Schreibvorgänge des einen Geräts
+     *vollständig vor* dem Lesen des anderen. Der Test hatte nichts geprüft.
+
+     Eine Barriere hält eine bestimmte Operation an, bis der Test sie
+     freigibt. Damit wird die Verschränkung nicht erhofft, sondern gebaut:
+     „B hängt in seinem Schreibvorgang — jetzt schreibt A." */
+  const holds = [];
+  /* `op` darf ein Array sein. Das ist kein Komfort, sondern nötig: derselbe
+     Test muss den alten Pfad (`set`) und den transaktionalen (`tx-commit`)
+     treffen — sonst wäre die Gegenprobe nicht dieselbe Prüfung wie der Test. */
+  const passt = (muster, wert) => !muster
+    || (Array.isArray(muster) ? muster.includes(wert) : muster === wert);
+  async function maybeHold(op, who) {
+    const h = holds.find(x => !x.getroffen && passt(x.op, op) && passt(x.who, who));
+    if (!h) return;
+    h.getroffen = true;
+    log.push({ op: 'hold', haelt: op, who, t: log.length });
+    await new Promise(r => { h.freigeben = r; });
+    log.push({ op: 'released', haelt: op, who, t: log.length });
+  }
+
   const api = {
     docs, log,
     /** Verzögerung für jeden get/set — macht Wettläufe reproduzierbar. */
     setLatency(ms) { latency = Math.max(0, ms | 0); },
-    reset() { docs.clear(); vers.clear(); subs.length = 0; pending.length = 0; log.length = 0; latency = 0; },
+    reset() {
+      holds.splice(0).forEach(h => h.freigeben && h.freigeben());
+      docs.clear(); vers.clear(); subs.length = 0; pending.length = 0; log.length = 0; latency = 0;
+    },
     /** Wie viele onSnapshot-Beobachter hängen noch dran? (Für Abmelde-Tests.) */
     subCount() { return subs.length; },
+
+    /**
+     * Hält die nächste passende Operation an. `{op:'set', who:'B'}` blockiert
+     * B's nächstes Schreiben, bis `release()` kommt.
+     * Rückgabewert ist der Griff für `awaitHold()` und `release()`.
+     */
+    holdNext(match = {}) { const h = { ...match, getroffen: false }; holds.push(h); return h; },
+    /** Wartet, bis die Barriere wirklich zugeschnappt ist. */
+    async awaitHold(h, timeoutMs = 8000) {
+      const bis = Date.now() + timeoutMs;
+      while (!h.getroffen) {
+        if (Date.now() > bis) return false;
+        await wait(20);
+      }
+      return true;
+    },
+    /** Gibt die angehaltene Operation frei. */
+    release(h) {
+      const i = holds.indexOf(h);
+      if (i >= 0) holds.splice(i, 1);
+      if (h.freigeben) h.freigeben();
+    },
+    releaseAll() { holds.splice(0).forEach(h => h.freigeben && h.freigeben()); },
 
     /** Direkter Blick in den Store, ohne über die Seite zu gehen. */
     read(path) { const s = docs.get(path); return s === undefined ? null : JSON.parse(s); },
@@ -59,12 +109,14 @@ export function createFakeFirestore() {
     ops(kind) { return kind ? log.filter(o => o.op === kind) : log.slice(); },
 
     async _get(path, who) {
+      await maybeHold('get', who);
       if (latency) await wait(latency);
       log.push({ op: 'get', path, who, t: log.length });
       const s = docs.get(path);
       return { exists: s !== undefined, data: s === undefined ? null : s };
     },
     async _set(path, json, who) {
+      await maybeHold('set', who);
       if (latency) await wait(latency);
       log.push({ op: 'set', path, who, bytes: json.length, t: log.length });
       docs.set(path, json); bump(path);
@@ -109,9 +161,10 @@ export function createFakeFirestore() {
     },
     /** true = festgeschrieben, false = Konflikt, der Rumpf muss neu laufen. */
     async _txCommit(id, writes) {
-      if (latency) await wait(latency);
       const tx = txs.get(id);
       if (!tx) throw new Error('Unbekannte Transaktion ' + id);
+      await maybeHold('tx-commit', tx.who);
+      if (latency) await wait(latency);
       txs.delete(id);
       for (const [path, gelesen] of tx.reads) {
         if ((vers.get(path) || 0) !== gelesen) {
