@@ -1050,6 +1050,45 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-062', title: 'Einklappbare Abschnitte merken sich ihren Zustand',
+    run: async () => {
+      // Der Zustand liegt in D.ui und nicht in einer Modulvariablen - sonst
+      // klappt jeder Screen bei jedem Reload wieder auf und die Einstellung
+      // ist auf dem zweiten Geraet weg. Die Volumenkarte traegt eingeklappt
+      // zusaetzlich eine Kurzfassung: sonst muesste man aufklappen, nur um
+      // zu sehen, ob ueberhaupt etwas fehlt.
+      const r = await page.evaluate(() => {
+        ensureUIState();
+        const before = JSON.parse(JSON.stringify(D.ui.sections || {}));
+        D.ui.sections = {};
+        go('dash');            // sonst hat die Karte auf einem inaktiven Screen keine Hoehe
+        renderDash();
+        const card = () => document.querySelector('#d-muscle-volume .muscle-volume-card');
+        const hoeheOffen = Math.round(card().getBoundingClientRect().height);
+        toggleSection('volumen');
+        const zu = card();
+        const hoeheZu = Math.round(zu.getBoundingClientRect().height);
+        const body = document.getElementById('volumen-body');
+        const res = {
+          gespeichert: D.ui.sections.volumen === true,
+          rumpfVersteckt: !!body && body.classList.contains('sec-collapsed'),
+          kurzfassung: !!zu.querySelector('.mv-sum'),
+          hatHoehe: hoeheOffen > 100,
+          deutlichKleiner: hoeheZu < hoeheOffen - 100,
+          // Neu zeichnen darf den Zustand nicht verlieren
+          ueberlebtRender: (() => { renderDash(); const b = document.getElementById('volumen-body');
+            return !!b && b.classList.contains('sec-collapsed'); })()
+        };
+        toggleSection('volumen');
+        res.wiederOffen = !document.getElementById('volumen-body').classList.contains('sec-collapsed');
+        D.ui.sections = before; save(); renderDash();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-061', title: 'Jedes Sheet bleibt bedienbar, auch mit eingeblendeter Tastatur',
     run: async () => {
       // "Satz loggen" war 590 px hoch und lag auf einem iPhone SE (667 px) mit

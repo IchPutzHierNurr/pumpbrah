@@ -49,7 +49,7 @@ Schulter getrennt (Begründung in
 beteiligter Muskeln (0,5 Sätze) · Volumen-Radar · Tonnage- und RIR-Trends ·
 e1RM-Verlauf pro Übung statt nur Rohgewicht · PR-Erkennung · Deload-Empfehlung
 aus Trend, RIR und Volumen · Fitnessalter · Gewichtsverlauf · EGYM-BioAge in
-Altersdifferenzen statt Rohwerten · Kalenderhistorie · einklappbare Abschnitte
+Altersdifferenzen statt Rohwerten · Kalenderhistorie · einklappbare Abschnitte (auch die Volumenkarte auf dem Startbildschirm, eingeklappt mit Kurzfassung)
 
 **Übungsausführung**
 In Listen steht je Übung eine Bewegungsmuster-Marke: ein Strich-Piktogramm für
@@ -113,7 +113,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **66 Prüfungen grün** — 57 Regressionstests plus Fuzzing über
+Aktueller Stand: **67 Prüfungen grün** — 58 Regressionstests plus Fuzzing über
 67 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
