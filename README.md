@@ -113,7 +113,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **67 Prüfungen grün** — 58 Regressionstests plus Fuzzing über
+Aktueller Stand: **68 Prüfungen grün** — 59 Regressionstests plus Fuzzing über
 67 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
