@@ -1012,8 +1012,12 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .radar-label{font-size:10px;fill:var(--text3);font-family:'Space Grotesk',sans-serif;font-weight:700}
 
 /* --- Plan-Editor / Tag-Modal --- */
-.chipgrid{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}
-.daychip{padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;min-width:48px;text-align:center}
+/* Sieben Tage, eine Zeile. Mit Umbruch landete der Sonntag auf einem
+   375-px-Gerät in Zeile zwei — und dort hinter der klebenden Aktionszeile.
+   Ein Wochentag, den man wegscrollen muss, ist ein Wochentag, den niemand
+   findet. Die Chips teilen sich stattdessen die Breite. */
+.chipgrid{display:flex;gap:6px;margin-top:6px}
+.daychip{flex:1 1 0;min-width:0;padding:10px 2px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
 .daychip:active{transform:scale(.94)}
 .daychip.on{background:color-mix(in srgb,var(--accent) 17%,var(--bg3));border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
 .dtab-wrap{display:flex;align-items:center;gap:8px;margin-bottom:14px}
@@ -2356,7 +2360,7 @@ html,body{
 <div class="ir"><div class="ig"><label>Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
 <div class="ir"><div class="ig"><label>Notiz</label><input type="text" id="a-note" placeholder="Ausführungshinweis"></div></div>
 <div style="font-size:12px;color:var(--text2);margin-bottom:8px" id="a-target"></div>
-<button class="btn" id="a-btn" onclick="confirmAddEx()">+ HINZUFÜGEN</button>
+<div class="sheet-cta"><button class="btn" id="a-btn" onclick="confirmAddEx()">+ HINZUFÜGEN</button></div>
 </div></div>
 <div class="mbg" id="m-lib"><div class="mdl" style="max-height:90vh">
 <div class="mt">ÜBUNGSBIBLIOTHEK <button class="mc" onclick="cm('m-lib')">✕</button></div>
@@ -2417,6 +2421,11 @@ html,body{
 <div class="ig"><label>Muskelgruppe</label><select id="libe-muscle"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div>
 </div>
 <div class="ir"><div class="ig"><label>Notiz</label><input id="libe-note" type="text" placeholder="Ausführung, Gerät, Setup"></div></div>
+<!-- Bewusst KEIN .sheet-cta: der Knopf gehört zur Formularkarte, und nach der
+     Karte kommen noch Suchfeld und Liste. Ein sticky Element klebt nur,
+     solange sein Elternteil im Bild ist — es würde also mitten im Sheet
+     hängen bleiben statt unten. Der Vertrag hier ist Nähe, nicht Kleben:
+     der Knopf steht direkt unter dem letzten Feld. Siehe PB-066. -->
 <div style="display:flex;gap:8px;align-items:center">
 <button class="btn" id="libe-save" style="flex:1" onclick="addLibraryExercise()">+ Übung speichern</button>
 <button class="btn btn-g" id="libe-cancel" style="display:none;flex:.55" onclick="resetLibraryEditorForm()">Abbrechen</button>
@@ -2435,8 +2444,8 @@ html,body{
 <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:12px 0 0">Wochentage</label>
 <div class="chipgrid" id="pd-days"></div>
 <div style="font-size:11px;color:var(--text3);margin-top:8px" id="pd-hint">Mehrfachauswahl möglich. Der nächste Tag wird auf dem Dashboard vorgeschlagen.</div>
-<button class="btn" id="pd-save" style="margin-top:14px" onclick="savePlanDay()">✓ SPEICHERN</button>
-<button class="btn btn-g" style="margin-top:6px" onclick="cm('m-planday')">Abbrechen</button>
+<div class="sheet-cta"><button class="btn" id="pd-save" onclick="savePlanDay()">✓ SPEICHERN</button>
+<button class="btn btn-g" onclick="cm('m-planday')">Abbrechen</button></div>
 </div></div>
 <div class="mbg" id="m-woswitch"><div class="mdl">
 <div class="mt">TRAININGSTAG WECHSELN <button class="mc" onclick="cm('m-woswitch')">✕</button></div>
@@ -2619,6 +2628,20 @@ function normalizeExercise(ex){
   if(ex.logged&&!Array.isArray(ex.logged))ex.logged=[];
   return ex;
 }
+/* Eine Supersatz-Kennung ist eine Aussage über ZWEI Übungen. Der Partner
+   kann auf ein Dutzend Wege verschwinden — gelöscht, getauscht, per Import
+   ersetzt, aus der Cloud wegverschmolzen — und keiner dieser Wege weiß vom
+   Supersatz. Zurück bliebe eine Marke „A" neben einer Übung, mit der sich
+   niemand abwechselt. Statt jeden Weg einzeln zu reparieren, wird die Regel
+   an einer Stelle durchgesetzt: beim Normalisieren, also bei jedem save().
+   Siehe PB-065. */
+function pruneLoneSupersets(list){
+  if(!Array.isArray(list))return list;
+  const n={};
+  list.forEach(e=>{if(e&&e.ss)n[e.ss]=(n[e.ss]||0)+1});
+  list.forEach(e=>{if(e&&e.ss&&n[e.ss]<2)e.ss=null});
+  return list;
+}
 function normalizeData(){
   if(!D||typeof D!=='object')D={};
   /* Die Onboarding-Antworten sind Profildaten, kein Wegwerfzustand — sie
@@ -2629,6 +2652,7 @@ function normalizeData(){
     if(!day||typeof day!=='object')return;
     if(!Array.isArray(day.exercises))day.exercises=[];
     day.exercises=day.exercises.map(normalizeExercise);
+    pruneLoneSupersets(day.exercises);
   });
   if(!Array.isArray(D.history))D.history=[];
   D.history.forEach(session=>{
@@ -2665,7 +2689,10 @@ function normalizeData(){
   if(D.active&&(!D.active.startTime||Date.now()-D.active.startTime>24*3600e3))D.active=null;
   if(D.active){
     if(!Array.isArray(D.active.exercises)){D.active=null}
-    else D.active.exercises=D.active.exercises.map(ex=>{const n=normalizeExercise(ex);if(!Array.isArray(n.logged))n.logged=[];return n});
+    else{
+      D.active.exercises=D.active.exercises.map(ex=>{const n=normalizeExercise(ex);if(!Array.isArray(n.logged))n.logged=[];return n});
+      pruneLoneSupersets(D.active.exercises);
+    }
   }
   ensureLibraryState();
   ensureTombstoneState();
@@ -4216,7 +4243,6 @@ function showExDemo(name,muscle,type){
   om('m-exdemo');
 }
 /* Rückwärtskompatibler Name — alte Aufrufstellen zeigen jetzt die Demo. */
-function showExImg(name,muscle,type){showExDemo(name,muscle,type)}
 function setDemoSpeed(s){exDemoState.speed=s;renderExDemo();haptic(8)}
 function toggleDemoPlay(){exDemoState.paused=!exDemoState.paused;renderExDemo()}
 function openExWebSearch(){
@@ -6148,7 +6174,12 @@ async function encodeSharePayload(obj){
   if(typeof CompressionStream==='function'){
     try{
       const cs=new CompressionStream('deflate-raw');
-      const w=cs.writable.getWriter();w.write(raw);w.close();
+      const w=cs.writable.getWriter();
+      /* write() und close() liefern EIGENE Promises. Ohne Handler wird aus
+         ihrer Ablehnung ein „Uncaught (in promise)" — der eigentliche Fehler
+         kommt eine Zeile tiefer aus dem Response-Aufruf und wird dort
+         behandelt. Siehe PB-064. */
+      w.write(raw).catch(()=>{});w.close().catch(()=>{});
       const buf=new Uint8Array(await new Response(cs.readable).arrayBuffer());
       if(buf.length<raw.length)return SHARE_PREFIX+'C-'+b64urlEncode(buf);
     }catch{}
@@ -6163,7 +6194,11 @@ async function decodeShareCode(code){
   if(m[1].toUpperCase()==='C'){
     if(typeof DecompressionStream!=='function')throw new Error('Dieser Code braucht eine neuere Browser-Version.');
     const ds=new DecompressionStream('deflate-raw');
-    const w=ds.writable.getWriter();w.write(bytes);w.close();
+    const w=ds.writable.getWriter();
+    /* Ein abgeschnittener Code lässt close() ablehnen. Unbeachtet landet das
+       als unbehandelte Ablehnung in der Konsole, während der Nutzer nur die
+       freundliche Meldung sieht — ein Fehler, der sich versteckt. PB-064. */
+    w.write(bytes).catch(()=>{});w.close().catch(()=>{});
     bytes=new Uint8Array(await new Response(ds.readable).arrayBuffer());
   }
   const obj=JSON.parse(new TextDecoder().decode(bytes));
@@ -6292,7 +6327,7 @@ function openPlanImport(){
   document.getElementById('import-body').innerHTML=
     `<div class="share-sub">Code einfügen, Datei wählen oder einen geteilten Link öffnen.</div>`+
     `<textarea id="import-code" rows="4" placeholder="PB1C-…" spellcheck="false" autocapitalize="off"></textarea>`+
-    `<div class="share-actions">`+
+    `<div class="share-actions sheet-cta">`+
       `<button type="button" class="btn" style="margin:0" onclick="submitImportCode()">Weiter</button>`+
       `<button type="button" class="btn btn-g" style="margin:0" onclick="document.getElementById('import-file').click()">Datei wählen</button>`+
     `</div>`+
@@ -8838,6 +8873,11 @@ function commitSwap(persistToPlan){
   });
   swapped.logged=[];
   const hadLogs=(old.logged||[]).length>0;
+  /* Die Kopplung hängt am Platz im Ablauf, nicht am Namen: wer eine Übung
+     aus einem Supersatz austauscht, will weiter im Wechsel arbeiten. Bleibt
+     die alte Übung mit ihren geloggten Sätzen stehen, behält SIE die
+     Kennung — sonst stünden drei Übungen in einem Zweier-Supersatz. */
+  if(!hadLogs)swapped.ss=old.ss||null;
   if(hadLogs){
     /* Geloggte Sätze bleiben unter der Originalübung stehen: das Training
        hat stattgefunden, also gehört es in die Historie. Die alte Übung
@@ -8851,7 +8891,7 @@ function commitSwap(persistToPlan){
     const day=D.plan[D.active.planKey];
     if(day&&Array.isArray(day.exercises)){
       const pi=day.exercises.findIndex(e=>libKey(e.name)===libKey(old.name));
-      if(pi>=0)day.exercises[pi]=normalizeExercise({...swapped,logged:undefined});
+      if(pi>=0)day.exercises[pi]=normalizeExercise({...swapped,ss:day.exercises[pi].ss||null,logged:undefined});
       markPlanDirty();
     }
   }

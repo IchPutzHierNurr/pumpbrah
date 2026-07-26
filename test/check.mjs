@@ -37,7 +37,11 @@ const arg = (name, dflt) => {
   const hit = process.argv.find(a => a.startsWith('--' + name + '='));
   return hit ? hit.split('=')[1] : dflt;
 };
-const ITERATIONS = parseInt(arg('iterations', '1000'), 10);
+/* 2500 statt 1000, seit der zweite Coverage-Audit den Operationsvorrat von
+   67 auf 91 gehoben hat: bei 1000 Runden bekommt jede Operation im Mittel nur
+   elf Treffer, und die Streuung allein lässt dann regelmäßig eine unter die
+   Mindestschwelle rutschen — ein rotes Ergebnis ohne Fund. */
+const ITERATIONS = parseInt(arg('iterations', '2500'), 10);
 const SEED = parseInt(arg('seed', String(Date.now() % 1e9)), 10);
 const SMOKE_ONLY = process.argv.includes('--smoke-only');
 
@@ -1140,18 +1144,69 @@ const REGRESSIONS = [
       for (const [w, h] of sizes) {
         await page.setViewportSize({ width: w, height: h });
         const r = await page.evaluate(async kb => {
+          /* Alle Sheets, nicht nur die fuenf aus dem urspruenglichen Fund:
+             was sich oeffnen laesst, muss auch bedienbar sein. Die Liste wird
+             unten gegen die im Markup vorhandenen .mbg-Elemente abgeglichen,
+             damit ein neues Sheet nicht stillschweigend durchrutscht. */
+          const wo = () => { D.active = null; startWorkout(Object.keys(D.plan)[0]); };
+          const ersteUebung = () => D.plan[Object.keys(D.plan)[0]].exercises[0];
+          /* Das dritte Feld trennt zwei Sorten Sheet:
+             'formular' — man tippt etwas ein und schliesst mit einer Aktion ab.
+                          Hier gilt der volle Vertrag: klebende Aktionszeile,
+                          Hauptaktion trotz Tastatur erreichbar.
+             'auswahl'  — man tippt hoechstens einen Suchbegriff und tippt dann
+                          auf einen Listeneintrag. Eine klebende Aktionszeile
+                          waere hier eine Leerzeile: es gibt keine Aktion.
+             'inline'   — Formular UND Liste im selben Sheet. Kleben geht hier
+                          nicht (ein sticky Element klebt nur, solange sein
+                          Elternteil im Bild ist), also gilt der Vertrag der
+                          Naehe: die Aktion steht direkt unter dem letzten
+                          Eingabefeld und ist mit ihm zusammen sichtbar. */
           const sheets = [
-            ['m-log', () => { D.active = null; startWorkout(Object.keys(D.plan)[0]); openLog(0); }],
-            ['m-timebudget', () => { D.active = null; startWorkout(Object.keys(D.plan)[0]); openTimeBudget(); }],
-            ['m-exnote', () => openExNote('Bankdrücken')],
-            ['m-egym', () => openEgymEntry()],
-            ['m-plates', () => openPlates(87.5)]
+            ['m-log', () => { wo(); openLog(0); }, 'formular'],
+            ['m-timebudget', () => { wo(); openTimeBudget(); }, 'formular'],
+            ['m-exnote', () => openExNote('Bankdrücken'), 'formular'],
+            ['m-egym', () => openEgymEntry(), 'formular'],
+            ['m-plates', () => openPlates(87.5), 'formular'],
+            ['m-add', () => { curTab = Object.keys(D.plan)[0]; openAddEx(); }, 'formular'],
+            ['m-planday', () => openPlanDayModal('add'), 'formular'],
+            ['m-import', () => openPlanImport(), 'formular'],
+            ['m-lib-edit', () => openLibraryEditor(), 'inline'],
+            ['m-alt', () => { wo(); openAlternative(0); }, 'auswahl'],
+            ['m-evidence', () => showEvidence(EVIDENCE_DB[0].n), 'auswahl'],
+            ['m-exdemo', () => { const e = ersteUebung(); showExDemo(e.name, e.muscle, e.type); }, 'auswahl'],
+            ['m-exhist', () => showExHist(ersteUebung().name), 'auswahl'],
+            ['m-lib', () => openLibrary(), 'auswahl'],
+            // Der Auswahl-Dialog erscheint nur ohne laufendes Workout —
+            // sonst geht startWorkout() direkt in den Wechsel-Dialog.
+            ['m-pick', () => { D.active = null; D.health.sick = false; startWorkout(); }, 'auswahl'],
+            ['m-rotation', () => proposeRotation(), 'auswahl'],
+            ['m-woswitch', () => { wo(); openWorkoutSwitch(); }, 'auswahl'],
+            ['m-share', async () => { await openPlanShare([Object.keys(D.plan)[0]]); }, 'auswahl'],
+            ['m-importpreview', async () => {
+              const c = await encodeSharePayload({ v: 1, n: 'T', a: '', t: '2026-01-01',
+                d: [['A', 'Mo', [['Bankdrücken', 3, 8, 12, 2, 'main', 'chest', '']]]] });
+              await startPlanImport(c);
+            }, 'auswahl'],
+            ['m-wosummary', () => {
+              /* Die Zusammenfassung erscheint nach dem Beenden - dafuer muss
+                 mindestens ein Satz geloggt sein, sonst gibt es nichts zu
+                 zeigen. */
+              wo(); openLog(0);
+              document.getElementById('log-w').value = '60';
+              document.getElementById('log-r').value = '10';
+              document.getElementById('log-rir').value = '2';
+              confirmLog(); cm('m-log'); endWorkout();
+            }, 'auswahl']
           ];
           const out = [];
-          for (const [id, open] of sheets) {
+          for (const [id, open, art] of sheets) {
             document.querySelectorAll('.mbg.show').forEach(m => m.classList.remove('show'));
             document.documentElement.style.setProperty('--kb', '0px');
-            try { open(); } catch (e) { out.push({ id, err: String(e.message) }); continue; }
+            try { await open(); } catch (e) { out.push({ id, err: String(e.message) }); continue; }
+            if (!document.getElementById(id).classList.contains('show')) {
+              out.push({ id, err: 'liess sich nicht oeffnen' }); continue;
+            }
             // Das Sheet faehrt mit 0,32 s ein - vorher gemessen misst man die
             // Animation, nicht die Position.
             await new Promise(r => setTimeout(r, 420));
@@ -1161,15 +1216,41 @@ const REGRESSIONS = [
             const ohne = Math.round(dlg.getBoundingClientRect().height);
             const cta = dlg.querySelector('.sheet-cta .btn') ||
                         [...dlg.querySelectorAll('.btn')].pop();
+            /* Die Tastatur erscheint nur, wo man etwas eintippen kann. Bei
+               einem Sheet ohne Eingabefeld die Hauptaktion gegen ein
+               Tastaturlimit zu messen, misst nichts. */
+            const hatEingabe = !!dlg.querySelector(
+              'input:not([readonly]):not([type=file]):not([type=checkbox]):not([type=radio]), textarea:not([readonly])');
             document.documentElement.style.setProperty('--kb', kb + 'px');
             void dlg.offsetHeight;
             const box = cta ? cta.getBoundingClientRect() : null;
             document.documentElement.style.setProperty('--kb', '0px');
-            out.push({ id, vh, ohne, ctaUnten: box ? Math.round(box.bottom) : null,
+            /* Bei 'inline' zaehlt der Abstand zwischen dem letzten Feld des
+               Formularblocks und der Aktion — nicht die absolute Position. */
+            const felder = [...dlg.querySelectorAll('input:not([type=file]):not([type=checkbox]), textarea, select')];
+            const letztesVorCta = cta
+              ? felder.filter(f => f.compareDocumentPosition(cta) & Node.DOCUMENT_POSITION_FOLLOWING).pop()
+              : null;
+            const abstand = letztesVorCta && box
+              ? Math.round(box.top - letztesVorCta.getBoundingClientRect().bottom) : null;
+            /* Eine Auswahlleiste, die umbricht, schiebt ihre letzte Option
+               hinter die klebende Aktionszeile — der Sonntag war so auf
+               375 px nicht mehr zu sehen. */
+            const chips = [...dlg.querySelectorAll('.chipgrid .daychip')];
+            const chipZeilen = new Set(chips.map(c => Math.round(c.getBoundingClientRect().top))).size;
+            out.push({ id, art, vh, ohne, hatEingabe, abstand,
+                       chips: chips.length, chipZeilen,
+                       chipUeberlauf: chips.some(c => c.scrollWidth > c.clientWidth + 1),
+                       ctaUnten: box ? Math.round(box.bottom) : null,
                        limit: vh - kb, hatCta: !!dlg.querySelector('.sheet-cta') });
           }
           document.querySelectorAll('.mbg.show').forEach(m => m.classList.remove('show'));
           D.active = null; save();
+          /* Vollstaendigkeit: ein neu gebautes Sheet, das hier nicht in der
+             Liste steht, wuerde sonst nie geprueft und niemandem auffallen. */
+          const alle = [...document.querySelectorAll('.mbg')].map(m => m.id).filter(Boolean);
+          const fehlt = alle.filter(id => !sheets.some(s => s[0] === id));
+          if (fehlt.length) out.push({ id: fehlt.join(','), err: 'Sheet nicht in der Prueflise' });
           return out;
         }, KB);
         r.forEach(x => {
@@ -1177,12 +1258,23 @@ const REGRESSIONS = [
           if (x.err) { bad.push(tag + ': ' + x.err); return; }
           // Ohne Tastatur darf kein Sheet hoeher sein als der Bildschirm
           if (x.ohne > x.vh) bad.push(`${tag}: ${x.ohne} > ${x.vh}`);
-          // Mit Tastatur muss die Hauptaktion sichtbar bleiben
+          // Wochentagsleiste: eine Zeile, und keine Beschriftung abgeschnitten
+          if (x.chips) {
+            if (x.chipZeilen !== 1) bad.push(`${tag}: ${x.chips} Chips auf ${x.chipZeilen} Zeilen`);
+            if (x.chipUeberlauf) bad.push(tag + ': Chip-Beschriftung abgeschnitten');
+          }
+          if (x.art === 'inline') {
+            // Formular plus Liste: die Aktion muss beim Formular stehen.
+            if (x.abstand === null) bad.push(tag + ': keine Aktion beim Formular');
+            else if (x.abstand > 120) bad.push(`${tag}: Aktion ${x.abstand} px unter dem letzten Feld`);
+            return;
+          }
+          if (x.art !== 'formular') return;
+          // Wo man tippt und abschliesst, muss die Aktion trotz Tastatur erreichbar sein
           if (x.ctaUnten !== null && x.ctaUnten > x.limit)
             bad.push(`${tag}: Knopf bei ${x.ctaUnten}, Limit ${x.limit}`);
-          // Sheets mit Eingabefeldern brauchen eine klebende Aktionszeile
-          if (['m-log', 'm-egym', 'm-exnote', 'm-timebudget'].includes(x.id) && !x.hatCta)
-            bad.push(tag + ': keine klebende Aktionszeile');
+          // ... und zwar ueber eine klebende Aktionszeile, nicht durch Zufall
+          if (!x.hatCta) bad.push(tag + ': Formular ohne klebende Aktionszeile');
         });
       }
       await page.setViewportSize({ width: 390, height: 844 });
@@ -1804,6 +1896,126 @@ const REGRESSIONS = [
       const ok = Object.entries(r).every(([k, v]) => k === 'addedCount' ? v === 1 : v === true);
       return [ok, JSON.stringify(r)];
     }
+  },
+  {
+    id: 'PB-064', title: 'Kaputter Plan-Code erzeugt keine unbehandelte Ablehnung',
+    run: async () => {
+      // Ein abgeschnittener Code laesst den Deflate-Strom scheitern. Die
+      // Meldung an den Nutzer stimmte immer - aber close() liefert ein
+      // EIGENES Promise, und dessen Ablehnung fing niemand. Ergebnis: eine
+      // freundliche Meldung im UI und ein "Uncaught (in promise)" daneben.
+      const before = R.errors.length;
+      const r = await page.evaluate(async () => {
+        document.querySelectorAll('.mbg.show').forEach(m => cm(m.id));
+        // Einen echten komprimierten Code bauen und dann abschneiden - so
+        // sieht ein halb kopierter Code aus der Zwischenablage aus.
+        const full = await encodeSharePayload({ v: 1, n: 'Test', a: '', t: '2026-01-01',
+          d: [['A', 'Mo', [['Bankdrücken', 3, 8, 12, 2, 'main', 'chest', '']]]] });
+        const broken = [
+          full.slice(0, Math.floor(full.length * 0.6)),
+          'PB1C-' + 'AAAAAAAAAAAAAAAA',
+          'PB1C-nicht_base64_!!!',
+          'PB1C-'
+        ];
+        const toasts = [];
+        for (const code of broken) {
+          try { await startPlanImport(code); toasts.push('ok'); }
+          catch (e) { toasts.push('throw:' + e.message); }
+        }
+        return { toasts, previewOpen: document.getElementById('m-importpreview').classList.contains('show') };
+      });
+      // Ablehnungen kommen einen Tick spaeter als der abgelehnte Aufruf.
+      await page.waitForTimeout(300);
+      const rejections = R.errors.slice(before);
+      /* Aus der Gesamtbilanz nehmen: sonst meldet die Schlussrechnung
+         denselben Fund ein zweites Mal, und ein Test, der den Fehler
+         absichtlich provoziert, darf ihn nicht doppelt zaehlen. */
+      R.errors.length = before;
+      const noThrow = r.toasts.every(t => t === 'ok');
+      return [rejections.length === 0 && noThrow && !r.previewOpen,
+        `unbehandelt: ${JSON.stringify(rejections)} · startPlanImport: ${JSON.stringify(r.toasts)}`
+        + ` · Vorschau offen: ${r.previewOpen}`];
+    }
+  },
+  {
+    id: 'PB-065', title: 'Supersatz-Kennung bleibt paarweise oder verschwindet',
+    run: async () => {
+      // Gefunden vom Fuzzer nach "swapCommit": eine Uebung aus einem
+      // Supersatz tauschen liess den Partner mit einer Kennung allein
+      // zurueck - eine Kopplung im UI, mit der sich niemand abwechselt.
+      const r = await page.evaluate(() => {
+        document.querySelectorAll('.mbg.show').forEach(m => cm(m.id));
+        const key = Object.keys(D.plan)[0];
+        curTab = key;
+        const paare = () => {
+          const bad = [];
+          Object.entries(D.plan).forEach(([k, d]) => {
+            const n = {};
+            (d.exercises || []).forEach(e => { if (e.ss) n[e.ss] = (n[e.ss] || 0) + 1; });
+            Object.entries(n).forEach(([ss, c]) => { if (c < 2) bad.push(`${k}/${ss}=${c}`); });
+          });
+          if (D.active) {
+            const n = {};
+            D.active.exercises.forEach(e => { if (e.ss) n[e.ss] = (n[e.ss] || 0) + 1; });
+            Object.entries(n).forEach(([ss, c]) => { if (c < 2) bad.push(`active/${ss}=${c}`); });
+          }
+          return bad;
+        };
+        const out = {};
+        // Einen echten Supersatz herstellen: die erste Uebung, fuer die
+        // toggleSuperset einen Partner findet.
+        let gekoppelt = -1;
+        for (let i = 0; i < D.plan[key].exercises.length; i++) {
+          toggleSuperset(i);
+          if (D.plan[key].exercises[i].ss) { gekoppelt = i; break; }
+        }
+        out.konnteKoppeln = gekoppelt >= 0;
+        if (gekoppelt < 0) return out;
+        const ssKey = D.plan[key].exercises[gekoppelt].ss;
+        const partnerIdx = D.plan[key].exercises.findIndex((e, i) => i !== gekoppelt && e.ss === ssKey);
+
+        // (1) Partner aus dem Plan loeschen.
+        delEx(partnerIdx);
+        out.nachLoeschen = paare();
+
+        // (2) Neu koppeln und den Partner im laufenden Workout tauschen.
+        let g2 = -1;
+        for (let i = 0; i < D.plan[key].exercises.length; i++) {
+          toggleSuperset(i);
+          if (D.plan[key].exercises[i].ss) { g2 = i; break; }
+        }
+        out.konnteErneutKoppeln = g2 >= 0;
+        if (g2 < 0) return out;
+        const ss2 = D.plan[key].exercises[g2].ss;
+        const p2 = D.plan[key].exercises.findIndex((e, i) => i !== g2 && e.ss === ss2);
+
+        startWorkout(key);
+        const aktivIdx = D.active.exercises.findIndex(e => e.ss === ss2);
+        openAlternative(aktivIdx);
+        out.hatAlternativen = altState.list.length > 0;
+        if (out.hatAlternativen) {
+          swapActiveExercise(altState.ei, 0);
+          commitSwap(true);
+        }
+        out.nachTausch = paare();
+        // Der Tausch soll die Kopplung ERHALTEN, nicht nur aufraeumen.
+        out.kopplungUeberlebt = D.active.exercises.filter(e => e.ss === ss2).length === 2;
+
+        // (3) Fremde Daten: ein Import kann eine einsame Kennung mitbringen.
+        D.plan[key].exercises[0].ss = 'SZ';
+        D.plan[key].exercises.forEach((e, i) => { if (i > 0 && e.ss === 'SZ') e.ss = null; });
+        save();
+        out.nachImportartigemZustand = paare();
+
+        endWorkout();
+        out.p2 = p2;
+        return out;
+      });
+      const ok = r.konnteKoppeln && r.konnteErneutKoppeln
+        && !r.nachLoeschen.length && !r.nachTausch.length && !r.nachImportartigemZustand.length
+        && (!r.hatAlternativen || r.kopplungUeberlebt);
+      return [ok, JSON.stringify(r)];
+    }
   }
 ];
 
@@ -1835,6 +2047,19 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
   // Dialoge automatisch beantworten — sonst blockiert der Fuzzer.
   const realConfirm = window.confirm, realPrompt = window.prompt, realAlert = window.alert;
   window.confirm = () => true; window.alert = () => {}; window.prompt = () => 'Fuzz' + int(1, 999);
+  /* Downloads und neue Tabs: CSV-Export, Backup und Plan-Datei bauen ein
+     <a download> und klicken es an, die Web-Suche ruft window.open. Beides
+     würde der Fuzzer tausendfach auslösen. Gestubbt wird nur der letzte
+     Schritt — alles davor (Serialisierung, Escaping, Blob) läuft echt. */
+  const realOpen = window.open;
+  const realAClick = HTMLAnchorElement.prototype.click;
+  let downloads = 0, popups = 0;
+  window.open = () => { popups++; return null; };
+  HTMLAnchorElement.prototype.click = function () { if (this.download !== undefined && this.href) downloads++; };
+  const restore = () => {
+    window.confirm = realConfirm; window.prompt = realPrompt; window.alert = realAlert;
+    window.open = realOpen; HTMLAnchorElement.prototype.click = realAClick;
+  };
 
   const NASTY = ['<img src=x onerror=alert(1)>', '"><script>alert(1)</script>', "O'Brien \"quote\"",
                  '　', '', '   ', 'ÄÖÜ äöü ß', '💪🔥', 'a'.repeat(300), '../../etc/passwd',
@@ -1913,7 +2138,7 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
     ['renderAll', () => { renderAll(); renderHist(); renderAna(); renderSettings(); }],
     ['closeModals', () => document.querySelectorAll('.mbg.show').forEach(m => cm(m.id))],
     // --- Neue Funktionen: Deload, Volumenmodus, Aufwärmrampe, Plattform ---
-    ['deload', () => { if (rnd() < 0.5) startDeload(); else endDeload(); }],
+    ['deloadToggle', () => { if (rnd() < 0.5) startDeload(); else endDeload(); }],
     ['volMode', () => setVolumeMode(pick(['direct', 'total', 'quatsch']))],
     ['warmup', () => {
       // Grenzwerte: 0, negativ, winzig, riesig, NaN
@@ -2018,6 +2243,189 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       if (remote.history.length && rnd() < .5) remote.history[0].updatedAt = Date.now() + 1000;
       const merged = mergeSyncedSnapshot(cloneData(D), remote);
       if (!merged || typeof merged !== 'object') throw new Error('Merge lieferte kein Objekt');
+    }],
+
+    /* ------------------------------------------------------------------
+       Zweiter Coverage-Audit (Juli 2026)
+       Anlass war die Frage „ist wirklich jede Funktion getestet?". Ein
+       grep über alle `function name(` in index.html gegen die Aufrufe in
+       dieser Datei fand 32 Funktionen, die zwar per onclick in der
+       Oberfläche hängen, aber von keinem Test je aufgerufen wurden — fast
+       alles, was seit dem Mesozyklus dazugekommen ist. Gezielte
+       Regressionstests gab es dafür; im Fuzzer, wo sie mit fremdem
+       Zustand kollidieren, standen sie nicht.
+       ------------------------------------------------------------------ */
+    ['timeBudget', () => {
+      if (!D.active) return;
+      remainingMinutes();
+      openTimeBudget();
+      setEl('tb-min', pick([String(int(-20, 300)), pick(NASTY), '', '0']));
+      applyTimeBudget();
+    }],
+    ['superset', () => {
+      curTab = pick(Object.keys(D.plan));
+      const p = D.plan[curTab];
+      if (p && p.exercises.length) toggleSuperset(int(0, p.exercises.length - 1));
+    }],
+    ['meso', () => pick([
+      () => startMeso(pick([2, 3, 5, 8, 99, -1, 'x', null])),
+      () => stopMeso(),
+      () => setMesoWeeks(pick([-1, 1])),
+      () => { mesoState(); renderMeso(); }
+    ])()],
+    ['rotation', () => {
+      rotationCandidates(pick([0, 1, 3, 99, 'x']));
+      proposeRotation();
+      const box = document.getElementById('rot-list');
+      if (box) box.querySelectorAll('input[type=checkbox]').forEach(c => { c.checked = rnd() < .6; });
+      applyRotation();
+    }],
+    ['plates', () => {
+      setEl('plate-w', pick([String(int(-20, 400)), String(rnd() * 200), pick(NASTY)]));
+      setEl('plate-bar', pick(['20', '15', '10', '0', '-5', pick(NASTY)]));
+      openPlates(pick([null, '80', pick(NASTY)]), rnd() < .5);
+      renderPlates();
+      if (rnd() < .5) platesToLog();
+    }],
+    ['sections', () => {
+      toggleSection(pick([...Object.keys(SECTION_BODY), 'gibtsnicht']));
+      applyAllSections(); toggleTrendAll();
+    }],
+    ['csv', () => exportCSV()],
+    ['backup', () => { backupDue(); if (rnd() < .3) markBackupDone(); exportData(); }],
+    ['planRow', () => {
+      // togglePlanRow bekommt das geklickte Element — hier nachgebaut.
+      const wrap = document.createElement('div'), el = document.createElement('div');
+      wrap.appendChild(el);
+      const p = D.plan[curTab];
+      const nm = p && p.exercises.length ? pick(p.exercises).name : 'Unbekannt';
+      togglePlanRow(el, nm); if (rnd() < .5) togglePlanRow(el, nm);
+    }],
+    ['dayChips', () => {
+      addPlanDay();
+      togglePlanDayChip(pick(WEEKDAYS)); togglePlanDayChip(pick(WEEKDAYS));
+      curTab = pick(Object.keys(D.plan));
+      if (rnd() < .5) renamePlanDay(); else duplicatePlanDay();
+      cm('m-planday');
+    }],
+    ['escaping', () => {
+      /* Die drei Escaping-Funktionen sind die erste Verteidigung der ganzen
+         App. Sie werden zwar millionenfach indirekt aufgerufen, standen aber
+         in keinem Test als eigener Vertrag. */
+      const probe = document.createElement('div');
+      NASTY.concat(['</textarea>', '`${x}`', 'a"b\'c<d>e&f', '&amp;', null, undefined])
+        .forEach(s => {
+          const erwartet = String(s === null || s === undefined ? '' : s);
+          [['esc', esc(s)], ['attr', attr(s)]].forEach(([wie, h]) => {
+            if (/[<>"']/.test(h)) throw new Error(`${wie}: aktives Zeichen durchgelassen ${JSON.stringify(h)}`);
+            if (/&(?!(amp|lt|gt|quot|#39);)/.test(h)) throw new Error(`${wie}: rohes & durchgelassen ${JSON.stringify(h)}`);
+            /* Der eigentliche Vertrag: aus der Nutzlast entstehen keine
+               Elemente, und der Text kommt unverändert wieder heraus. */
+            probe.innerHTML = h;
+            if (probe.querySelectorAll('*').length) throw new Error(`${wie} erzeugte Elemente aus ${JSON.stringify(s)}`);
+            if (probe.textContent !== erwartet) throw new Error(`${wie} veränderte den Text: ${JSON.stringify(probe.textContent)}`);
+          });
+          const j = jsStr(s);
+          if (/[<>"']/.test(j) || /[\r\n]/.test(j))
+            throw new Error(`jsStr bricht aus dem String aus: ${JSON.stringify(j)}`);
+        });
+      probe.innerHTML = '';
+    }],
+    ['backupRoundtrip', () => {
+      /* Der echte Weg über <input type=file>: importData liest e.target.files.
+         Nur gültiges JSON — der kaputte Zweig loggt bewusst console.error und
+         würde die Fehlerbilanz des Laufs verfälschen. */
+      const before = D.history.length;
+      const json = JSON.stringify(D);
+      importData({ target: { files: [new File([json], 'backup.json', { type: 'application/json' })] } });
+      if (D.history.length < before) throw new Error('Backup-Import verlor Sessions');
+    }],
+    ['rirCircles', () => {
+      const mk = () => { const e = document.createElement('div'); e.className = 'rir-c'; return e; };
+      pickRir(mk(), int(0, 5)); pickRirAdd(mk(), int(0, 5));
+    }],
+    ['stepHold', () => {
+      stepHold(pick(['log-w', 'log-r', 'a-sets', 'plate-w']), pick([-2.5, -1, 1, 2.5]));
+      // Ohne pointerup bliebe der Wiederhol-Timer für immer registriert.
+      document.dispatchEvent(new Event('pointerup'));
+    }],
+    ['longPress', () => {
+      if (!D.active) return;
+      const ei = D.active.exercises.findIndex(e => (e.logged || []).length);
+      if (ei < 0) return;
+      /* Der Halten-Timer feuert nach 500 ms — der Fuzzer läuft aber
+         synchron, der Rückruf käme erst nach dem Lauf. Für diesen einen
+         Aufruf wird setTimeout sofort ausgeführt. */
+      const realTO = window.setTimeout;
+      window.setTimeout = fn => { fn(); return 0; };
+      try { setLongPress(ei, 0, { preventDefault() {} }); }
+      finally { window.setTimeout = realTO; }
+      const pop = document.getElementById('set-popup');
+      if (!pop) throw new Error('Langes Drücken erzeugte kein Bearbeiten-Popup');
+      pop.remove();
+    }],
+    ['libEdit', () => {
+      const all = allLibraryCategories().flatMap(c => c.items);
+      if (!all.length) return;
+      const it = pick(all);
+      openLibraryEditor(); editLibraryExercise(it.name);
+      if (rnd() < .5) { setEl('libe-name', pick(NASTY) + int(1, 99)); addLibraryExercise(); }
+      else resetLibraryEditorForm();
+    }],
+    ['libPick', () => {
+      const all = allLibraryCategories().flatMap(c => c.items);
+      if (!all.length) return;
+      if (rnd() < .4 && D.active) addExerciseToWorkout();
+      pickLibraryItem(encodeURIComponent(pick(all).name));
+    }],
+    ['sharePlan', async () => {
+      curTab = pick(Object.keys(D.plan));
+      await openPlanShare(rnd() < .5 ? [curTab] : Object.keys(D.plan));
+      copyShareCode(); downloadSharePlan();
+      cm('m-share');
+    }],
+    ['importPlan', async () => {
+      openPlanImport();
+      setEl('import-code', pick([shareState.code || '', pick(NASTY), 'PB1C-kaputt', '']));
+      await submitImportCode();
+      setImportMode(pick(['add', 'replace', 'quatsch']));
+      /* Der Import darf die Historie nie anfassen — die Invariante unten
+         prüft das nach jeder Aktion, hier wird er tatsächlich ausgeführt. */
+      if (rnd() < .4) confirmPlanImport();
+      cm('m-import'); cm('m-importpreview');
+    }],
+    ['importFile', () => {
+      // importFromFile liest input.files[0] — ein einfaches Objekt reicht.
+      const code = pick([shareState.code || 'PB1C-x', pick(NASTY)]);
+      importFromFile({ files: [new File([code], 'plan.pbplan.txt', { type: 'text/plain' })], value: '' });
+    }],
+    ['woSwitchUI', () => { if (D.active) openWorkoutSwitch(); }],
+    ['exWebSearch', () => { exDemoState.name = pick(['Bankdrücken (Bench Press)', pick(NASTY), '']); openExWebSearch(); }],
+    ['onboardingGen', () => {
+      /* Der Generator gegen unsinnige Antworten: fehlende Felder, Werte
+         außerhalb jeder Auswahl, Tageszahlen jenseits der Vorlagen. */
+      const ob = { gender: pick(['male', 'female', '', 'x']), days: pick([0, 1, 2, 3, 4, 5, 6, 9, 'drei', null]),
+        location: pick(['gym', 'home', 'mars', '']), focus: pick(['hypertrophy', 'strength', 'balanced', 'recomp', 'bbp', '', 'x']),
+        experience: pick(['beginner', 'intermediate', 'advanced', '', 'gott']),
+        height: int(0, 260), weight: int(0, 300), birthday: pick(['1990-01-01', '', 'x']) };
+      const plan = buildPlanFromOnboarding(ob);
+      if (!plan || !Object.keys(plan).length) throw new Error('Generator ohne Plan: ' + JSON.stringify(ob));
+      Object.entries(plan).forEach(([k, d]) => (d.exercises || []).forEach(e => {
+        if (!e.name || !(parseInt(e.sets) >= 1) || !(e.rmax >= e.rmin))
+          throw new Error(`Generator: kaputte Übung in ${k}: ${JSON.stringify(e)}`);
+      }));
+      if (document.getElementById('ob-content')) { obStep = int(0, 7); renderObStep(); }
+    }],
+    ['duration', () => {
+      Object.keys(D.plan || {}).forEach(k => {
+        const m = estimatedDuration(k);
+        if (!Number.isFinite(m) || m < 0) throw new Error(`estimatedDuration(${k}) = ${m}`);
+      });
+      ['Bankdrücken', 'Ausfallschritt je Seite', pick(NASTY), ''].forEach(n => {
+        const s = setSides(n); if (s !== 1 && s !== 2) throw new Error('setSides = ' + s);
+        const r = restSecondsFor(n, pick(EX_MUSCLES), pick(['main', 'pre', 'mob']));
+        if (!Number.isFinite(r) || r < 0) throw new Error('restSecondsFor = ' + r);
+      });
     }]
   ];
 
@@ -2076,17 +2484,54 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       const fig = document.querySelector('.exdemo svg, #demo-stage svg');
       return !fig || fig.querySelectorAll('line,circle,polyline,polygon,path').length > 0; }],
     ['Tombstone-Listen bleiben Arrays', () => ['history', 'weights', 'egym', 'libraryCustom']
-      .every(k => Array.isArray(D.deleted[k]))]
+      .every(k => Array.isArray(D.deleted[k]))],
+    /* Eine Supersatz-Kennung ist eine Aussage über ZWEI Übungen. Bleibt
+       eine allein zurück (Partner gelöscht, Tag ersetzt, Import), zeigt die
+       Oberfläche eine Kopplung an, die es nicht gibt, und die Dauer-
+       schätzung rechnet mit einer geteilten Pause, die niemand teilt. */
+    ['Supersatz-Kennungen bleiben paarweise', () => Object.values(D.plan || {}).every(day => {
+      const n = {};
+      (day.exercises || []).forEach(e => { if (e.ss) n[e.ss] = (n[e.ss] || 0) + 1; });
+      return Object.values(n).every(c => c >= 2);
+    })],
+    ['Zeitschätzung ist endlich und nicht negativ', () => Object.keys(D.plan || {}).every(k => {
+      const m = estimatedDuration(k); return Number.isFinite(m) && m >= 0;
+    }) && Number.isFinite(remainingMinutes()) && remainingMinutes() >= 0],
+    ['Mesozyklus-Faktor bleibt zwischen 0 und 1', () => {
+      const st = mesoState();
+      return !st || (st.factor > 0 && st.factor <= 1 && st.week >= 1 && st.weeks >= 3 && st.weeks <= 8);
+    }],
+    /* Der Scheibenrechner darf nie eine Summe zeigen, die nicht aufgeht —
+       das ist der ganze Zweck des Rechners (PB-055). */
+    ['Scheibenplan geht exakt auf', () => [0, 20, 21.25, 60, 87.5, 100, 302.5].every(w => {
+      const r = platePlan(w, 20);
+      if (!r.ok) return true;
+      const sum = r.plates.reduce((a, x) => a + x.p * x.n, 0);
+      return Math.abs(sum + r.rest - r.perSide) < 1e-6;
+    })],
+    ['UI-Zustand bleibt serialisierbar und vollständig', () => {
+      ensureUIState();
+      return D.ui && typeof D.ui.sections === 'object' && D.ui.sections !== null;
+    }]
   ];
+
+  /* Zwei Operationen mit demselben Namen zählen auf denselben Statistikeintrag —
+     eine davon verschwindet aus dem Bericht, und niemand merkt es. Genau das
+     war bei "deload" ein halbes Jahr lang der Fall. */
+  const doppelt = ACTIONS.map(a => a[0]).filter((n, i, all) => all.indexOf(n) !== i);
+  if (doppelt.length) throw new Error('Doppelte Operationsnamen im Fuzzer: ' + [...new Set(doppelt)].join(', '));
 
   const stats = {}; const log = [];
   for (let i = 0; i < iterations; i++) {
     const [name, fn] = pick(ACTIONS);
     stats[name] = (stats[name] || 0) + 1;
     log.push(name); if (log.length > 25) log.shift();
-    try { fn(); }
+    /* await, weil Teilen und Importieren echt asynchron sind (Kompression,
+       Datei lesen). Nebeneffekt und Absicht zugleich: zwischen zwei Runden
+       dürfen jetzt auch Timer feuern — genau wie in echter Bedienung. */
+    try { await fn(); }
     catch (e) {
-      window.confirm = realConfirm; window.prompt = realPrompt; window.alert = realAlert;
+      restore();
       return { ok: false, kind: 'exception', iteration: i, action: name,
                message: e.message, stack: String(e.stack || '').split('\n').slice(0, 3).join(' <- '),
                trail: log.slice(-12), stats };
@@ -2095,23 +2540,31 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       let held = false;
       try { held = !!test(); } catch (e) { held = false; }
       if (!held) {
-        window.confirm = realConfirm; window.prompt = realPrompt; window.alert = realAlert;
+        restore();
         return { ok: false, kind: 'invariant', iteration: i, action: name,
                  invariant: inv, trail: log.slice(-12), stats };
       }
     }
   }
-  window.confirm = realConfirm; window.prompt = realPrompt; window.alert = realAlert;
-  return { ok: true, iterations, stats, invariants: INVARIANTS.length, actions: ACTIONS.length };
+  restore();
+  return { ok: true, iterations, stats, invariants: INVARIANTS.length, actions: ACTIONS.length,
+           downloads, popups };
 }, { iterations: ITERATIONS, seed: SEED });
 
 if (fuzz.ok) {
   check('fuzz', `${fuzz.iterations} Aktionen über ${fuzz.actions} Operationen ohne Ausnahme`, true);
   check('fuzz', `${fuzz.invariants} Invarianten nach jeder Aktion gehalten `
     + `(${(fuzz.iterations * fuzz.invariants).toLocaleString('de-DE')} Prüfungen)`, true);
-  const cold = Object.entries(fuzz.stats).filter(([, n]) => n < 3).map(([k]) => k);
-  check('fuzz', 'Jede Operation wurde ausreichend oft getroffen', cold.length === 0,
-    cold.length ? 'selten getroffen: ' + cold.join(', ') : '');
+  /* Die Schwelle wächst mit dem Lauf, nicht mit der Zahl der Operationen:
+     ein Viertel der Gleichverteilung. Fest verdrahtete 3 waren bei kleinen
+     Läufen ein Fehlalarm und bei großen keine Aussage mehr. */
+  const soll = Math.max(1, Math.floor(fuzz.iterations / fuzz.actions / 4));
+  const cold = Object.entries(fuzz.stats).filter(([, n]) => n < soll).map(([k, n]) => `${k} (${n}×)`);
+  const nie = fuzz.actions - Object.keys(fuzz.stats).length;
+  check('fuzz', `Jede der ${fuzz.actions} Operationen mindestens ${soll}× getroffen`,
+    cold.length === 0 && nie === 0,
+    (nie ? `${nie} Operationen nie ausgeführt · ` : '')
+    + (cold.length ? 'zu selten: ' + cold.join(', ') : ''));
 } else if (fuzz.kind === 'exception') {
   check('fuzz', `Ausnahme in "${fuzz.action}" (Iteration ${fuzz.iteration})`, false,
     `${fuzz.message}\n      ${fuzz.stack}\n      Aktionsfolge: ${fuzz.trail.join(' → ')}`

@@ -106,6 +106,9 @@
 | [PB-061](#pb-061) | „Satz loggen" passte nicht auf den Bildschirm | **hoch** | iOS / Layout | ✅ |
 | [PB-062](#pb-062) | Einklappbare Abschnitte — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-063](#pb-063) | Der Scheibenrechner öffnete hinter dem Log-Dialog | mittel | Darstellung | ✅ |
+| [PB-064](#pb-064) | Kaputter Plan-Code erzeugte eine unbehandelte Ablehnung | niedrig | Fehlerbehandlung | ✅ |
+| [PB-065](#pb-065) | Supersatz-Kennung blieb allein zurück | mittel | Datenmodell | ✅ |
+| [PB-066](#pb-066) | Vier weitere Sheets hatten das Tastaturproblem aus PB-061 | **hoch** | iOS / Layout | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2316,6 +2319,190 @@ erscheint der Rückweg-Knopf gar nicht erst.
 
 ---
 
+### PB-064
+
+**Ein kaputter Plan-Code erzeugte eine unbehandelte Promise-Ablehnung**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Fehlerbehandlung / asynchrone Ränder |
+| **Gefunden** | vom Fuzzer, nachdem der Import überhaupt erst in den Fuzzer aufgenommen wurde |
+| **Status** | ✅ behoben |
+
+**Symptom.** Fügt man einen halb kopierten Plan-Code ein, erscheint die
+richtige Meldung („Code nicht lesbar") — und **daneben** ein
+`Uncaught (in promise): Compressed input was truncated` in der Konsole.
+Sichtbar war der Fehler nur dort; funktional lief alles korrekt weiter.
+
+**Ursache.** Das Dekomprimieren läuft über einen Stream:
+
+```js
+const w=ds.writable.getWriter();
+w.write(bytes);w.close();                 // zwei Promises, beide ignoriert
+bytes=await new Response(ds.readable).arrayBuffer();   // dieses wird gefangen
+```
+
+`write()` und `close()` liefern **eigene** Promises. Bei abgeschnittenem Input
+schlägt der Strom fehl, und *alle drei* lehnen ab. Der `try/catch` um den
+`await` fängt genau eines davon. Die anderen beiden haben keinen Handler und
+werden zu unbehandelten Ablehnungen.
+
+**Fix.** `w.write(bytes).catch(()=>{}); w.close().catch(()=>{});` — die
+Ablehnung wird bewusst verworfen, weil der aussagekräftige Fehler eine Zeile
+tiefer aus dem `Response`-Aufruf kommt und dort in eine Nutzermeldung
+übersetzt wird. Dieselbe Stelle gab es beim Komprimieren; auch dort korrigiert,
+obwohl sie in der Praxis kaum auslöst.
+
+**Warum das nicht kosmetisch ist.** Eine unbehandelte Ablehnung ist ein Fehler
+ohne Empfänger. Heute steht sie nur in der Konsole; sobald jemand
+`window.onunhandledrejection` einhängt — für Absturzberichte, für einen
+Fehler-Banner — wird aus einem korrekt behandelten Nutzerfehler eine gemeldete
+Störung. Und der Weg dahin ist kurz.
+
+**Lektion.** Eine asynchrone API kann **mehr Promises zurückgeben, als der
+Aufruf sichtbar macht**. Bei Streams ist die Regel: jedes zurückgegebene
+Promise braucht einen Handler, auch das, dessen Ergebnis niemanden
+interessiert. `await` auf eines davon deckt die anderen nicht mit ab.
+
+**Test.** `PB-064` — vier Arten kaputter Codes (abgeschnitten, falsches
+Base64, gültiges Base64 mit Müllinhalt, leer) durch `startPlanImport`; danach
+darf die Fehlerliste des Harnesses leer und die Vorschau geschlossen sein.
+
+---
+
+### PB-065
+
+**Eine Supersatz-Kennung blieb allein zurück**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Datenmodell / Beziehung ohne Hüter |
+| **Gefunden** | vom Fuzzer, Iteration 673, nach `swapCommit` |
+| **Status** | ✅ behoben |
+
+**Symptom.** Nach dem Tauschen einer Übung, die Teil eines Supersatzes war,
+trug die Partnerübung weiter die Marke „A" — für einen Wechsel mit einer
+Übung, die es nicht mehr gab. Dasselbe beim Löschen des Partners aus dem Plan
+und bei Plänen, die per Import oder Cloud-Merge hereinkamen.
+
+**Ursache.** `ex.ss` ist ein String, und **ein String weiß nichts von seinem
+Gegenüber**. Die Kopplung existierte nur als übereinstimmender Wert in zwei
+Objekten; kein Code war dafür zuständig, dass es zwei bleiben. `commitSwap`
+baute die neue Übung aus den Feldern der Alternative zusammen — `ss` war
+darunter nicht, also fiel es weg. Drei weitere Wege (Löschen, Import,
+Merge) hätten dasselbe getan.
+
+**Fix, zweistufig:**
+
+1. **Die Absicht.** `commitSwap` nimmt die Kennung mit. Wer eine Übung im
+   Supersatz austauscht, will weiter im Wechsel arbeiten. Nur wenn die alte
+   Übung mit geloggten Sätzen stehen bleibt, behält *sie* die Kennung — sonst
+   stünden drei Übungen in einem Zweier-Supersatz.
+2. **Das Netz darunter.** `pruneLoneSupersets()` in `normalizeData()`, also
+   bei **jedem** `save()`: eine Kennung, die nur einmal vorkommt, wird
+   entfernt. Das greift auch für die Wege, die nichts vom Supersatz wissen —
+   fremde Pläne aus dem Import eingeschlossen.
+
+**Warum beides.** Nur Schritt 2 hätte die Invariante ebenfalls gehalten, aber
+die Kopplung beim Tauschen still gelöscht — Muster 6, stille
+Datenvernichtung. Nur Schritt 1 hätte den einen bekannten Weg repariert und
+die drei unbekannten offen gelassen.
+
+**Was der Zufall dabei half.** Die Rechnung war nie betroffen:
+`remainingMinutes()` gruppiert nach Kennung, und eine Einergruppe kostet
+`rest + 25 s × max(0, n−1)` = genau dasselbe wie keine Gruppe. Der Schaden lag
+allein in der Anzeige — eine Kopplung behaupten, die es nicht gibt.
+
+**Lektion.** Eine Beziehung zwischen zwei Objekten, die nur als
+übereinstimmender Wert existiert, braucht **eine Stelle, die sie durchsetzt**.
+Sonst muss jeder Weg, der eines der beiden Objekte anfasst, von der Beziehung
+wissen — und einer weiß es nie.
+
+**Test.** `PB-065` — koppeln, Partner löschen; neu koppeln, Partner im
+laufenden Workout tauschen (die Kopplung muss den Tausch **überleben**);
+zuletzt eine einsame Kennung von Hand setzen und speichern. Dazu die
+Fuzz-Invariante „Supersatz-Kennungen bleiben paarweise" nach jeder der 89
+Operationen.
+
+---
+
+### PB-066
+
+**Vier weitere Sheets hatten genau das Problem, das PB-061 behoben hatte**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | iOS / Layout — und Testreichweite |
+| **Gefunden** | beim Ausweiten des PB-061-Tests von 5 auf 20 Sheets |
+| **Status** | ✅ behoben |
+
+**Symptom.** Auf einem iPhone SE (375 × 667) mit eingeblendeter Tastatur lag
+der Bestätigen-Knopf außerhalb des Bildschirms — bei **„Übung hinzufügen"**
+(587 px, sichtbar bis 331) und **„Trainingstag anlegen"** (413 px). Zwei
+weitere Formulare, **„Plan importieren"** und der **Bibliotheks-Editor**,
+hatten keine klebende Aktionszeile und wären beim nächsten längeren Inhalt
+genauso gelaufen.
+
+**Ursache.** Nicht der Code — der **Test**. PB-061 hat das Problem für
+„Satz loggen" korrekt behoben, und der zugehörige Regressionstest prüfte
+danach fünf Sheets. Die App hat zwanzig. Fünfzehn davon standen in keiner
+Prüfliste, also war „PB-061 grün" eine Aussage über 25 % der Dialoge, die
+sich wie eine Aussage über alle las.
+
+**Fix.** `.sheet-cta` um die Aktionszeile von `m-add`, `m-planday` und
+`m-import`. Derselbe Mechanismus wie bei PB-061, keine neue Technik.
+
+**Beim Bibliotheks-Editor war er die falsche Lösung.** Dort steht der
+Speichern-Knopf *in* der Formularkarte, und danach kommen noch Suchfeld und
+Übungsliste. `position: sticky` klebt nur, solange sein Elternteil im Bild
+ist — der Knopf hing also mitten im Sheet statt unten. Ein Screenshot zeigte
+das sofort, die Zahl im Test nicht. Hier gilt ein anderer Vertrag: nicht
+Kleben, sondern **Nähe** — der Knopf steht 20 px unter dem letzten Feld, beide
+sind immer zusammen sichtbar. Der Test kennt dafür jetzt eine dritte Sorte
+Sheet (`inline`) und misst den Abstand statt der absoluten Position.
+
+**Und ein zweiter Fund aus demselben Screenshot.** Die Wochentagsleiste in
+„Trainingstag anlegen" hatte `flex-wrap: wrap` und `min-width: 48px`. Bei
+375 px passen damit nur sechs Chips in die Zeile — der **Sonntag** rutschte in
+Zeile zwei und stand dort hinter der frisch eingebauten klebenden
+Aktionszeile. Ein Wochentag, den man wegscrollen muss, ist ein Wochentag, den
+niemand findet. Die Chips teilen sich jetzt die Breite (`flex: 1 1 0`) und
+stehen von 320 px an in einer Zeile.
+
+**Der eigentliche Fix ist der Test.** Er deckt jetzt alle zwanzig Sheets ab
+und trennt dabei zwei Sorten:
+
+* **Formular** — man tippt und schließt mit einer Aktion ab. Voller Vertrag:
+  klebende Aktionszeile, Hauptaktion trotz Tastatur erreichbar.
+* **Auswahl** — man tippt höchstens einen Suchbegriff und tippt dann auf einen
+  Listeneintrag. Eine klebende Aktionszeile wäre hier eine Leerzeile.
+
+Dazu eine Vollständigkeitsprüfung: Der Test liest alle `.mbg`-Elemente aus dem
+Dokument und schlägt fehl, wenn eines davon nicht in seiner Liste steht. Ein
+neu gebautes Sheet kann nicht mehr stillschweigend ungeprüft bleiben.
+
+**Lektion.** Ein grüner Test ist nur so viel wert wie seine **Reichweite**.
+Nach einem Fix lautet die Frage nicht „läuft der Test?", sondern „**wie viele
+gleichartige Stellen gibt es, und prüft der Test sie alle?**" Wo die Antwort
+eine Liste ist, gehört eine Vollständigkeitsprüfung dazu — sonst misst der
+Test den Stand am Tag seiner Entstehung.
+
+**Zweite Lektion, aus dem Bibliotheks-Editor und dem Sonntag:** Der Fix zu
+einem Layoutfehler ist selbst ein Layoutfehler-Risiko. Beide Folgeprobleme
+entstanden **durch** die klebende Aktionszeile, und beide hat kein Assert
+gesehen — nur ein angeschauter Screenshot. Nach einem Layoutfix gilt: einmal
+hinsehen, nicht nur nachmessen.
+
+**Test.** `PB-061` (erweitert) — 20 Sheets × 3 Bildschirmgrößen, Höhe ohne
+Tastatur, Hauptaktion mit Tastatur, klebende Aktionszeile bei Formularen,
+Abstand Feld↔Aktion bei `inline`-Sheets, Wochentagsleiste einzeilig und ohne
+abgeschnittene Beschriftung, plus Abgleich gegen alle `.mbg` im Dokument.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
@@ -2427,7 +2614,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die 20 behobenen Fehler nach Ursache sortiert, bleiben **fünf
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **19
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -2444,13 +2631,16 @@ gestellt werden sollten:
 | 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049, PB-053, PB-055 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
-| 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 |
-| 17 | **Rangfolge, die aus der Dateistruktur stammt** | PB-063 | Ist diese Reihenfolge gewollt — oder nur die, in der es zufällig im Dokument steht? | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
+| 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
 | 12 | **Ausgabe, die für Menschen nicht prüfbar ist** | PB-041 | Kann ich diesem Ergebnis ansehen, ob es stimmt? Wenn nein: Welche unabhängige Gegenimplementierung prüft es — und reicht eine? |
 | 13 | **Anzeige, die nur bei der aktuellen Datenmenge stimmt** | PB-048 | Stimmt das auch bei drei statt zwei, bei Wiederholungen, bei null? Oder beschreibt es nur zufällig den Ist-Zustand? |
 | 14 | **Zwei Rechnungen für dieselbe Frage** | PB-051 | Gibt es diese Aussage noch woanders — und kommt dort dasselbe heraus? |
 | 15 | **Erklärtext ohne Deckung im Code** | PB-050 | Behauptet ein Hilfetext etwas über die Rechnung? Dann ist der Satz ein Testfall. |
 | 16 | **Erhobene Daten ohne Wirkung** | PB-052 | Wird jede abgefragte Antwort irgendwo gelesen? Wenn nein: benutzen oder nicht fragen. |
+| 17 | **Rangfolge, die aus der Dateistruktur stammt** | PB-063 | Ist diese Reihenfolge gewollt — oder nur die, in der es zufällig im Dokument steht? |
+| 18 | **Mehr Promises, als der Aufruf sichtbar macht** | PB-064 | Gibt diese API noch andere Promises zurück als das, auf das ich warte? Jedes braucht einen Handler. |
+| 19 | **Beziehung ohne Hüter** | PB-065 | Diese Verbindung existiert nur als übereinstimmender Wert in zwei Objekten. Welche *eine* Stelle sorgt dafür, dass sie zwei bleiben? |
+| 20 | **Test mit zu kleiner Reichweite** | PB-066 | Wie viele gleichartige Stellen gibt es — und prüft der Test sie alle oder nur die eine, an der es aufgefallen ist? |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

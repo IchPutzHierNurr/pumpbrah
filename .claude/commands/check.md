@@ -12,7 +12,7 @@ damit derselbe Fehler nie wieder unbemerkt zurückkommt.
 Argumente (optional): `$ARGUMENTS`
 — z. B. `5000` für die Iterationszahl, `--seed=12345` zum Nachstellen eines
 Laufs, `--fokus=workout` um einen Bereich besonders zu beackern. Ohne
-Argumente gilt der Standard: 3000 Iterationen, zufälliger Seed.
+Argumente gilt der Standard: 2500 Iterationen, zufälliger Seed.
 
 ---
 
@@ -46,7 +46,7 @@ Dinge, die geprüft werden. Bugs von vor einem Jahr werden heute noch getestet.
 ### Phase 1 — Den Harness laufen lassen
 
 ```bash
-node test/check.mjs --iterations=3000
+node test/check.mjs --iterations=2500
 ```
 
 Der Harness hat drei Stufen (Details im Kopf der Datei):
@@ -68,14 +68,25 @@ Der Harness deckt viel ab, aber nicht automatisch das, was **du gerade neu
 gebaut hast**. Prüfe aktiv:
 
 1. **Deckt der Fuzzer jede öffentliche Funktion ab?**
-   Vergleiche die Funktionen in `index.html` gegen das `ACTIONS`-Array:
 
    ```bash
-   grep -oE '^function [a-zA-Z0-9_]+' index.html | sed 's/function //' | sort > /tmp/fns.txt
+   node test/coverage.mjs          # scheitert, sobald ein Knopf ungetestet ist
+   node test/coverage.mjs --alle   # mit vollständigen Listen
    ```
 
-   Jede aufrufbare Funktion, die Zustand ändert oder rendert, gehört als
-   Aktion in den Fuzzer. Reine Hilfsfunktionen nicht.
+   Das Skript zählt alle `function name(` in `index.html` und sucht sie im
+   Testskript. Die harte Regel steht in seinem Rückgabewert: **eine Funktion,
+   die an einem `onclick` hängt und von keinem Test aufgerufen wird, lässt den
+   Lauf scheitern.** Sie ist per Definition benutzbar, also auch prüfbar.
+
+   Was nicht in der Seite testbar ist (Firebase, Reload, Service Worker),
+   gehört mit Begründung in die `AUSSERHALB`-Tabelle des Skripts — nicht
+   stillschweigend übergangen.
+
+   Und die Warnung dazu: **„aufgerufen" ist nicht „geprüft".** Ein Aufruf ohne
+   Zusicherung zählt in der Statistik mit und sichert nichts zu. Die
+   Abdeckungszahl sagt dir, wo du gar nicht hinschaust — nicht, wie gut du
+   hinschaust.
 
 2. **Fehlt eine Invariante?** Für jede neue Datenstruktur gilt: Welche
    Eigenschaft muss **immer** gelten? Die gehört ins `INVARIANTS`-Array.
@@ -175,18 +186,19 @@ Kurz und ehrlich:
 ```
 CHECK-BERICHT
 ─────────────
-Regressionen:  20/20 bestanden
-Fuzzing:       4 × 2500 + 1 × 10000 Iterationen, 20.000 Aktionen
-Invarianten:   16 × je Aktion = 320.000 Prüfungen
+Regressionen:  58/58 bestanden
+Fuzzing:       12 × 2500 + 2 × 25000 Iterationen über 91 Operationen
+Invarianten:   22 × je Aktion
+Abdeckung:     0 Funktionen am Knopf ohne Testaufruf (test/coverage.mjs)
 Neue Fehler:   2 gefunden, 2 behoben
-               PB-021 — <Titel> (kritisch, Sicherheit)
-               PB-022 — <Titel> (mittel, Zustand)
-Register:      23 Einträge, davon 3 offen (Backend)
-Offen:         PB-024 (Firestore-Auth) — braucht Konfigurationsänderung
+               PB-064 — <Titel> (niedrig, Fehlerbehandlung)
+               PB-065 — <Titel> (mittel, Datenmodell)
+Register:      66 Einträge, davon 3 offen (Backend)
+Offen:         PB-021 (Firestore-Auth) — vom Betreiber als Risiko akzeptiert
 ```
 
 Wurde **nichts** gefunden: das ebenso klar sagen — und dazu, was das *nicht*
-beweist. Ein grüner Lauf heißt „diese 3000 Pfade sind sauber", nicht „die App
+beweist. Ein grüner Lauf heißt „diese 2500 Pfade sind sauber", nicht „die App
 ist fehlerfrei". Ehrlich benennen, welcher Bereich am schwächsten abgedeckt ist,
 und beim nächsten `/check` dort ansetzen.
 
@@ -247,7 +259,7 @@ Das sind die Aussagen, die nach **jeder** Aktion gelten müssen. Sie sind das
 schärfste Werkzeug des Fuzzers — ein Assert am Ende eines Testfalls prüft einen
 Zustand, eine Invariante prüft alle.
 
-Aktuell 16 Stück, siehe `INVARIANTS` in `test/check.mjs`. Kern davon:
+Aktuell 22 Stück, siehe `INVARIANTS` in `test/check.mjs`. Kern davon:
 
 - `D` bleibt serialisierbar (keine Zyklen, kein `undefined` an kritischer Stelle)
 - Plan hat mindestens einen Tag, alle Übungen normalisiert (`rmax >= rmin`, `sets >= 1`)
@@ -257,6 +269,9 @@ Aktuell 16 Stück, siehe `INVARIANTS` in `test/check.mjs`. Kern davon:
 - Timer-Zeiten nie negativ
 - **Keine injizierten `<script>`, Event-Handler-Attribute oder Fremdelemente im DOM**
 - Tombstone-Listen bleiben Arrays
+- Supersatz-Kennungen bleiben paarweise (eine Kopplung braucht zwei Übungen)
+- Zeitschätzung endlich und nicht negativ, Mesozyklus-Faktor in (0, 1]
+- Scheibenplan geht exakt auf (Scheiben + Rest = Zielgewicht pro Seite)
 
 Bei neuen Features: Was muss hier immer gelten? Rein damit.
 

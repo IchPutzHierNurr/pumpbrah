@@ -95,7 +95,8 @@ wichtigsten stehen hier, damit sie nicht unter den Tisch fallen:
 * **Muskelgruppen zu grob.** ~~`legs` enthält Quadrizeps, Beinbeuger, Gesäß und
   Waden; `arms` Bizeps und Trizeps. Vier Sätze Wadenheben zählen damit wie
   vier Sätze Kniebeugen.~~ **Behoben (Juli 2026).** Der Coach rechnet jetzt in
-  neun Volumengruppen: Brust, Rücken, Schultern, Bizeps, Trizeps, Quadrizeps,
+  zehn Volumengruppen: Brust, Rücken, Schultern, hintere Schulter, Bizeps,
+  Trizeps, Quadrizeps,
   Beinbeuger, Waden, Core. Die Übung behält ihren gespeicherten Muskel — die
   Gruppe wird aus Muskel und Bewegungsmuster abgeleitet. Warum das nötig war,
   steht unten.
