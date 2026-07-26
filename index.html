@@ -3213,11 +3213,18 @@ const IS_IOS=/iP(hone|ad|od)/.test(navigator.platform||'')||
 function registerServiceWorker(){
   if(!('serviceWorker' in navigator))return;
   if(!location.protocol.startsWith('http'))return;
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(err=>{
-      console.warn('PUMPBRAH: Offline-Cache nicht aktiv',err);
-    });
+  const los=()=>navigator.serviceWorker.register('sw.js').catch(err=>{
+    console.warn('PUMPBRAH: Offline-Cache nicht aktiv',err);
   });
+  /* Hier stand nur `addEventListener('load',…)`. Das ging genau so lange gut,
+     wie showApp() während des Seitenaufbaus lief — also beim wiederkehrenden
+     Nutzer. Wer sich neu anmeldet, klickt sich erst durch acht
+     Onboarding-Schritte; bis showApp() kommt, ist `load` längst gefeuert, und
+     ein Zuhörer, der sich NACH dem Ereignis anmeldet, läuft nie. Ergebnis:
+     Der Offline-Cache war für jeden neuen Nutzer tot — unsichtbar, weil die
+     App online ja funktioniert. Siehe PB-073. */
+  if(document.readyState==='complete')los();
+  else window.addEventListener('load',los,{once:true});
 }
 const IS_STANDALONE=window.navigator.standalone===true||
   (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);

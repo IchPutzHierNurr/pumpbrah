@@ -35,6 +35,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { createFakeFirestore } from './fakestore.mjs';
+import { serve } from './httpserve.mjs';
 
 const C_ERR = '\x1b[31m', C_OFF = '\x1b[0m';
 
@@ -2529,6 +2530,132 @@ for (const t of SYNC_TESTS) {
   catch (e) { ok = false; detail = 'Ausnahme: ' + e.message + ' @ ' + String(e.stack||'').split('\n')[1]; }
   check('sync', `${t.id} — ${t.title}`, ok, ok ? '' : detail);
 }
+}
+
+// ============================================================ 2c. OFFLINE
+/* Der Service Worker war der letzte Eintrag auf der Liste „außerhalb des
+   Harnesses" — nicht weil er schwer zu prüfen wäre, sondern weil es ihn unter
+   `file://` nicht gibt. Ein dreißigzeiliger HTTP-Server (test/httpserve.mjs)
+   räumt das aus, und er kann obendrein die ausgelieferte Seite verändern:
+   damit wird prüfbar, ob nach einer Änderung die NEUE Fassung ankommt. Das
+   ist die unangenehmste Fehlerart einer installierten Web-App — niemand kann
+   sie melden, weil niemand merkt, dass er eine alte Version sieht. */
+if (!SMOKE_ONLY) {
+stage('OFFLINE — Service Worker, Cache und neue Fassungen');
+
+const srv = await serve(resolve(__dirname, '..'));
+
+/** Ein frischer Nutzer: Server, Onboarding, App. */
+async function neuerNutzer() {
+  const c = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const p = await c.newPage();
+  p.on('dialog', d => d.accept());
+  await p.goto(srv.url);
+  await p.waitForTimeout(500);
+  await p.click('text=Offline-Modus (ohne Sync)');
+  await p.waitForTimeout(300);
+  for (let i = 0; i < 8; i++) {
+    if (i === 1) await p.fill('#ob-birthday', '1993-06-21');
+    if (i === 2) await p.fill('#ob-height', '181');
+    if (i === 3) await p.fill('#ob-weight', '82');
+    await p.click('#ob-content .btn');
+    await p.waitForTimeout(100);
+  }
+  await p.waitForTimeout(900);
+  return { ctx: c, page: p };
+}
+const marke = p => p.evaluate(() => {
+  const m = document.querySelector('meta[name=pb-marke]');
+  return m ? m.content : null;
+});
+
+const OFFLINE_TESTS = [
+  {
+    id: 'PB-073', title: 'Der Offline-Cache greift auch beim neuen Nutzer',
+    run: async () => {
+      /* Gefunden beim ersten Lauf dieser Stufe: `registerServiceWorker()`
+         hing sich an window.addEventListener('load'). Beim wiederkehrenden
+         Nutzer läuft showApp() während des Seitenaufbaus — da passt das.
+         Wer sich neu anmeldet, klickt sich erst durch acht Onboarding-
+         Schritte; bis showApp() kommt, ist `load` längst gefeuert, und ein
+         Zuhörer, der sich NACH dem Ereignis anmeldet, läuft nie.
+
+         Der Offline-Cache war damit für jeden neuen Nutzer tot — und zwar
+         unsichtbar, weil die App online ja funktioniert. Aufgefallen wäre es
+         erst im Keller-Studio ohne Empfang, also genau dort, wofür es ihn
+         gibt. */
+      srv.setzeOffline(false); srv.setzeMarke('A');
+      const a = await neuerNutzer();
+      try {
+        const r = await a.page.evaluate(async () => {
+          const zustand = document.readyState;
+          const reg = await navigator.serviceWorker.getRegistration();
+          if (!reg) return { zustand, registriert: false };
+          await navigator.serviceWorker.ready;
+          return { zustand, registriert: true, aktiv: reg.active ? reg.active.state : null };
+        });
+        return [r.registriert === true && r.aktiv === 'activated',
+          JSON.stringify(r) + ' — ein Zuhörer nach dem Ereignis läuft nie'];
+      } finally { await a.ctx.close(); }
+    }
+  },
+  {
+    id: 'PB-074', title: 'Eine neue Fassung kommt an, der Cache haelt sie nicht fest',
+    run: async () => {
+      /* Netz zuerst für die Navigation. Ginge der Cache vor, sähe der Nutzer
+         nach jeder Änderung noch die alte App — bei einer App aus einer
+         einzigen Datei betrifft das JEDE Änderung. */
+      srv.setzeOffline(false); srv.setzeMarke('A');
+      const a = await neuerNutzer();
+      try {
+        const out = { vorher: await marke(a.page) };
+        await a.page.evaluate(() => navigator.serviceWorker.ready);
+        srv.setzeMarke('B');
+        await a.page.reload({ waitUntil: 'load' });
+        await a.page.waitForTimeout(500);
+        out.nachAenderung = await marke(a.page);
+        out.neueFassungKam = out.nachAenderung === 'B';
+        return [out.vorher === 'A' && out.neueFassungKam, JSON.stringify(out)];
+      } finally { await a.ctx.close(); }
+    }
+  },
+  {
+    id: 'PB-075', title: 'Ohne Netz laeuft die App aus dem Cache weiter',
+    run: async () => {
+      /* Der eigentliche Zweck: kein Empfang, App muss trotzdem starten. Der
+         Server trennt die Verbindungen hart — realistischer als ein sauberes
+         503, so verhält sich ein totes Funkloch. */
+      srv.setzeOffline(false); srv.setzeMarke('A');
+      const a = await neuerNutzer();
+      try {
+        await a.page.evaluate(() => navigator.serviceWorker.ready);
+        // Einmal laden, damit die Seite sicher im Cache liegt
+        await a.page.reload({ waitUntil: 'load' });
+        await a.page.waitForTimeout(400);
+        srv.setzeOffline(true);
+        const out = {};
+        try {
+          await a.page.reload({ waitUntil: 'load', timeout: 20000 });
+          out.geladen = true;
+        } catch (e) { out.geladen = false; out.fehler = e.message.split('\n')[0]; }
+        await a.page.waitForTimeout(500);
+        out.appSichtbar = await a.page.isVisible('#login-screen')
+                       || await a.page.isVisible('#main-app')
+                       || await a.page.isVisible('#onboard-screen');
+        out.markeAusCache = await marke(a.page);
+        return [out.geladen === true && out.appSichtbar === true, JSON.stringify(out)];
+      } finally { srv.setzeOffline(false); await a.ctx.close(); }
+    }
+  }
+];
+
+for (const t of OFFLINE_TESTS) {
+  let ok = false, detail = '';
+  try { [ok, detail] = await t.run(); }
+  catch (e) { ok = false; detail = 'Ausnahme: ' + e.message.split('\n')[0]; }
+  check('offline', `${t.id} — ${t.title}`, ok, ok ? '' : detail);
+}
+await srv.stop();
 }
 
 // ================================================================ 3. FUZZ

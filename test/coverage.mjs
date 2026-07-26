@@ -29,13 +29,12 @@ const test = fs.readFileSync(path.join(here, 'check.mjs'), 'utf8');
 const ALLE = process.argv.includes('--alle');
 
 /* Nicht in der Seite testbar — jeder Eintrag mit Begründung.
-   Seit die gefälschte Firestore existiert (test/fakestore.mjs) ist diese Liste
-   von acht auf einen Eintrag geschrumpft: Anmeldung, Cloud-Schreiben,
-   Abmelden und Zurücksetzen laufen jetzt gegen ein Double. */
-const AUSSERHALB = {
-  registerServiceWorker: 'Service Worker gibt es unter file:// nicht — '
-    + 'braucht einen HTTP-Server, siehe README'
-};
+   Die Liste ist leer, und das ist die Pointe des ganzen Audits: Sie stand
+   einmal bei acht. Sieben fielen weg, als die gefälschte Firestore kam
+   (test/fakestore.mjs), der achte mit einem dreißigzeiligen HTTP-Server
+   (test/httpserve.mjs) — beide Male war „nicht testbar" nur eine Abkürzung
+   für „noch niemand hat nachgesehen, wie klein die Schnittstelle ist". */
+const AUSSERHALB = {};
 
 /* Funktionen, die kein Test beim Namen nennt, weil sie über einen Klick
    angesteuert werden. Ohne diese Liste meldet das Skript einen Fehlalarm —

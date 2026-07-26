@@ -69,6 +69,13 @@ self.addEventListener('fetch', event => {
         caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
       }
       return res;
-    }).catch(() => hit))
+    }).catch(() => {
+      /* Hier stand `.catch(() => hit)` — und `hit` ist in diesem Zweig
+         zwangsläufig leer, sonst wären wir gar nicht hier. `respondWith`
+         bekam also `undefined`, was der Browser als Netzwerkfehler behandelt:
+         zufällig das richtige Verhalten, aber aus dem falschen Grund und
+         ohne erkennbare Absicht. Jetzt steht da eine echte Antwort. */
+      return new Response('', { status: 504, statusText: 'offline, nicht im Cache' });
+    }))
   );
 });

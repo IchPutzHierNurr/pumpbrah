@@ -115,6 +115,9 @@
 | [PB-070](#pb-070) | Zurücksetzen — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-071](#pb-071) | Der Erst-Sync beim Anmelden überschrieb fremde Sätze | **hoch** | Datenverlust | ✅ |
 | [PB-072](#pb-072) | PB-061 ging in WebKit mal grün, mal rot — eine Uhr im Test | mittel | Testgüte | ✅ |
+| [PB-073](#pb-073) | Der Offline-Cache registrierte sich beim neuen Nutzer nie | **hoch** | Zustand | ✅ |
+| [PB-074](#pb-074) | Neue Fassung kommt an — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-075](#pb-075) | App läuft ohne Netz — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2734,6 +2737,85 @@ und dass es **reicht** (fünf Messungen, ein Wert). Fällt jemand auf
 
 ---
 
+### PB-073 bis PB-075
+
+**Der Offline-Cache war für jeden neuen Nutzer tot**
+
+| | |
+|---|---|
+| **Schwere** | hoch (PB-073) · Vorbeugung (PB-074, PB-075) |
+| **Klasse** | Zustand — ein Zuhörer nach dem Ereignis |
+| **Gefunden** | beim allerersten Lauf der Offline-Stufe |
+| **Status** | ✅ behoben |
+
+**Symptom.** `navigator.serviceWorker.getRegistration()` liefert nichts. Kein
+Cache, keine Offline-Fähigkeit. Und zwar nur für Nutzer, die sich **neu**
+anmelden — wer wiederkommt, bei dem greift alles.
+
+**Ursache.**
+
+```js
+window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+```
+
+Aufgerufen wird das aus `showApp()`. Beim wiederkehrenden Nutzer läuft
+`showApp()` während des Seitenaufbaus — da ist `load` noch nicht gefeuert, der
+Zuhörer kommt rechtzeitig. Wer sich neu anmeldet, klickt sich erst durch acht
+Onboarding-Schritte. Bis `showApp()` kommt, steht `document.readyState` auf
+`complete`, und **ein Zuhörer, der sich nach dem Ereignis anmeldet, läuft nie.**
+
+Gemessen, beide Fälle nebeneinander:
+
+| | `readyState` bei `showApp()` | Service Worker |
+|---|---|---|
+| neuer Nutzer | `complete` | **nicht registriert** |
+| wiederkehrender Nutzer | (im Aufbau) | registriert |
+
+**Warum das monatelang niemandem auffiel.** Weil die App online einwandfrei
+funktioniert. Der Ausfall zeigt sich ausschließlich ohne Empfang — also
+genau in der Situation, für die es den Cache überhaupt gibt, und in der
+niemand Lust hat, einen Fehlerbericht zu schreiben. Der Kommentar am Kopf von
+`sw.js` beschreibt diese Situation sogar wörtlich („im Keller-Studio").
+
+**Fix.** `if (document.readyState === 'complete') los(); else
+window.addEventListener('load', los, { once: true });`
+
+**Ein zweiter Fund beim Lesen derselben Datei.** In `sw.js` stand im
+Nicht-Navigations-Zweig `.catch(() => hit)` — und `hit` ist dort zwangsläufig
+leer, sonst wäre man gar nicht in diesem Zweig. `respondWith(undefined)`
+behandelt der Browser als Netzwerkfehler: zufällig das richtige Verhalten,
+aber aus dem falschen Grund. Jetzt steht dort eine echte Antwort (504).
+
+**Warum das eine Wiederholung ist.** PB-008 hieß „Async-Guard vor statt im
+Callback". Hier ist es dieselbe Familie: **eine Annahme über den zeitlichen
+Ablauf, die nur in einem von zwei Wegen durch die App stimmt.** Beide Male
+funktionierte der häufigere Weg, und beide Male fiel der seltenere durch.
+Muster 5 im Register, seit Monaten notiert — und trotzdem wieder passiert.
+Ein Register verhindert nichts, es macht nur den Rückblick kürzer.
+
+**Was PB-074 und PB-075 absichern**, damit die Strategie in `sw.js` nicht
+still kippt:
+
+* **PB-074** — Der Testserver liefert die Seite mit einer Marke im `<head>`
+  aus und ändert sie zwischen zwei Aufrufen. Kommt die neue Fassung an? Wäre
+  der Cache vor dem Netz, sähe der Nutzer nach jeder Änderung noch die alte
+  App — bei einer App aus **einer einzigen Datei** betrifft das jede Änderung.
+* **PB-075** — Der Server trennt die Verbindungen hart, realistischer als ein
+  sauberes 503. Die App muss trotzdem starten.
+
+**Lektion.** Wenn ein Stück Code nur unter Bedingungen läuft, die der Test
+nicht herstellt, ist es unbewiesen — egal wie einfach es aussieht.
+`registerServiceWorker` sind sechs Zeilen und stand als „nicht testbar" auf
+der Liste. Die Liste war das Problem, nicht die Sechs Zeilen: **„braucht einen
+Server" ist kein Grund, es nicht zu prüfen, sondern eine Aufgabe von dreißig
+Zeilen.**
+
+**Test.** `PB-073` Registrierung nach dem Onboarding · `PB-074` neue Fassung
+kommt an · `PB-075` ohne Netz startet die App. Alle drei gegen einen echten
+HTTP-Server (`test/httpserve.mjs`).
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -2866,7 +2948,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **26
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **27
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -2899,6 +2981,7 @@ gestellt werden sollten:
 | 24 | **Schutz, den nur ein Pfad benutzt** | PB-071 | Wie viele Stellen schreiben auf dasselbe Ziel — und machen sie alle mit? Einer, der blind schreibt, hebt die Transaktionen aller anderen auf. |
 | 25 | **Zeit als Ersatz für eine Bedingung** | PB-072 | Wartet dieser Test auf eine Uhr oder auf das, was tatsächlich passieren muss? Jedes `setTimeout` ist eine Wette auf die Maschine. |
 | 26 | **Ein Fehlschlag als Befund gelesen** | PB-072 | Ist das reproduzierbar? Bei einer neuen Prüfmethode ist die Methode unverdächtiger als das Geprüfte — erst mehrere Läufe, dann die Diagnose. |
+| 27 | **„Nicht testbar" als Selbstauskunft** | PB-073 | Was genau fehlt zum Prüfen — und wie viel Arbeit ist das wirklich? Hier waren es dreißig Zeilen HTTP-Server für einen Fehler der Schwere hoch. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
