@@ -9,6 +9,7 @@ sw.js               Service Worker: die App läuft auch ohne Empfang
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Sync, Fuzzing
 test/fakestore.mjs  Gefälschte Firestore — macht den Sync und zwei Geräte prüfbar
 test/coverage.mjs   Abdeckung: welche Funktion ruft überhaupt jemand auf?
+.github/workflows/  CI: derselbe Harness in Chromium UND WebKit, bei jedem Push
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
 docs/CBUM-REVIEW.md Dieselbe App aus Trainingssicht bewertet
 docs/DESIGN.md      Der visuelle Masterprompt: Regeln und Abnahmekriterien
@@ -136,6 +137,28 @@ Aktueller Stand: **75 Prüfungen grün** — 58 Regressionstests, 5 Sync-Tests �
 zwei Geräte und Fuzzing über 91 Operationen, verifiziert über vierzehn
 unabhängige Kampagnen mit insgesamt 80.000 Aktionen.
 
+### Zwei Engines, ein Vergleich
+
+Die Entwicklungsumgebung darf WebKit nicht herunterladen — die Netzwerk-
+Richtlinie sperrt `cdn.playwright.dev`. Der Lauf wandert deshalb dorthin, wo
+das Netz offen ist: [`.github/workflows/check.yml`](.github/workflows/check.yml)
+fährt bei jedem Push **Chromium und WebKit nebeneinander**.
+
+Der Sinn liegt im Vergleich, nicht in der zweiten Engine allein:
+
+| Ergebnis | Bedeutung |
+|---|---|
+| beide rot | echter Fehler in der App |
+| nur WebKit rot | Engine-Unterschied — also ein iOS-Problem |
+| nur Chromium rot | etwas an der Prüfung selbst stimmt nicht |
+
+Ohne diesen Vergleich müsste man bei jedem roten Lauf erst raten. Der Seed ist
+die Commit-Nummer, jeder CI-Lauf ist also exakt nachstellbar. CI fährt 1.500
+Runden für eine schnelle Antwort; die großen Kampagnen laufen weiter von Hand.
+
+Die Datei liegt **nicht** auf `main` — dort stehen nur App-Dateien, weil `main`
+über GitHub Pages ausgeliefert wird.
+
 ### Was der Test *nicht* prüft
 
 Auf die Frage „ist jede Funktion geprüft?" gibt es eine Zahl statt einer
@@ -163,13 +186,11 @@ Vier Grenzen, die keine Zahl sichtbar macht:
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
   58 Regressionstests, die 5 Sync-Tests und die 22 Invarianten — nicht die
   Abdeckungszahl.
-* **Chromium ist nicht Safari.** Der Harness kennt `--browser=webkit`, aber in
-  abgeschotteten Umgebungen lässt sich das WebKit-Paket nicht herunterladen
-  (`cdn.playwright.dev` gesperrt). **Bis das nachgeholt ist, lief kein einziger
-  Test in einer WebKit-Engine** — bei einer App, deren Zweck eine
-  Home-Screen-Installation auf dem iPhone ist. Tastatur-Ausweichen, Sheet-Gesten
-  und Safe-Area sind gegen `visualViewport` und Media Queries geprüft, nicht
-  gegen echtes iOS.
+* **WebKit ist nicht iOS Safari.** Seit Juli 2026 läuft derselbe Harness in CI
+  zusätzlich in WebKit (siehe unten) — Engine-Unterschiede werden damit
+  gefunden. Was weiter fehlt: echte Tastatur, echtes Safe-Area, echter
+  Gummiband-Scroll, echte Finger. Dafür gibt es kein Ersatzverfahren, nur ein
+  Gerät.
 * **Das Double ist nicht Firestore.** Es bildet die sieben benutzten Methoden
   samt optimistischer Transaktion nach. Ob Googles SDK sich genauso verhält,
   prüft niemand. Sobald PB-021 angegangen wird (Auth + Security Rules), reicht

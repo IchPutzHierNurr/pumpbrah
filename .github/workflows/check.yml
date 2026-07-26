@@ -1,0 +1,89 @@
+# Warum diese Datei existiert
+#
+# PUMPBRAH ist eine Home-Screen-App fürs iPhone. Bis Juli 2026 lief trotzdem
+# jeder einzelne Test in Chromium — weil die Entwicklungsumgebung den WebKit-
+# Download nicht erlaubt (die Netzwerk-Richtlinie sperrt cdn.playwright.dev).
+# Der Lauf wandert deshalb dorthin, wo das Netz offen ist.
+#
+# Chromium bleibt trotzdem dabei, und das ist Absicht: Zwei Engines im
+# gleichen Lauf ergeben eine AUSSAGE, die eine allein nicht hergibt.
+#   beide rot  -> echter Fehler in der App
+#   nur WebKit -> Engine-Unterschied, also ein iOS-Problem
+#   nur Chrome -> etwas an der Prüfung selbst stimmt nicht
+# Ohne den Vergleich müsste man bei jedem roten Lauf erst raten, welcher Fall
+# vorliegt.
+#
+# Die Datei liegt bewusst NICHT auf `main`: dort stehen nur App-Dateien
+# (index.html, README.md, sw.js), weil `main` per GitHub Pages ausgeliefert
+# wird. Folge davon: der „Run workflow"-Knopf erscheint nicht, weil GitHub ihn
+# nur für Workflows des Standard-Zweigs anzeigt. Ausgelöst wird also durch
+# Pushen.
+
+name: check
+
+on:
+  push:
+    branches: ['claude/**']
+  pull_request:
+  workflow_dispatch:      # greift erst, wenn die Datei je auf main liegt
+
+# Ein neuer Push macht den Lauf davor überflüssig — sonst stapeln sich
+# Ergebnisse zu Ständen, die niemanden mehr interessieren.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  abdeckung:
+    name: Abdeckung
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Braucht keinen Browser: liest nur index.html gegen test/check.mjs.
+      - name: Hängt eine Funktion an einem Knopf, ohne geprüft zu sein?
+        run: node test/coverage.mjs
+
+  harness:
+    name: ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+    strategy:
+      # Kein fail-fast: das Ergebnis der einen Engine ist die Einordnung der
+      # anderen. Bricht Chromium ab, sobald WebKit rot ist, fehlt genau die
+      # Information, für die dieser Lauf gebaut wurde.
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Lokal (in der Entwicklungs-Sandbox) liegt Playwright als globales
+      # Modul unter festem Pfad, hier als normales Paket. test/check.mjs
+      # probiert beides der Reihe nach — deshalb reicht eine Installation ins
+      # Projekt, ohne dass eine package.json ins Repo muss.
+      - name: Playwright installieren
+        run: npm install --no-save playwright@1.56.1
+
+      - name: Browser holen
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Harness
+        # Weniger Runden als lokal (dort 2500): CI soll schnell antworten. Die
+        # großen Kampagnen laufen weiter von Hand. Der Seed ist die Commit-
+        # Nummer — damit ist jeder CI-Lauf exakt nachstellbar.
+        run: |
+          node test/check.mjs \
+            --browser=${{ matrix.browser }} \
+            --iterations=1500 \
+            --seed=$(( 0x$(git rev-parse --short=6 HEAD) ))
+
+      - name: Bildschirmfoto bei Fehlschlag
+        if: failure()
+        run: |
+          echo "Nachstellen:"
+          echo "  node test/check.mjs --browser=${{ matrix.browser }} --iterations=1500 --seed=$(( 0x$(git rev-parse --short=6 HEAD) ))"

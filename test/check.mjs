@@ -31,7 +31,6 @@
  * Exit-Code 0 = alles grün. Alles andere = mindestens ein Fehler.
  */
 
-import * as pw from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { existsSync } from 'node:fs';
@@ -39,8 +38,27 @@ import { createFakeFirestore } from './fakestore.mjs';
 
 const C_ERR = '\x1b[31m', C_OFF = '\x1b[0m';
 
+/* Playwright liegt je nach Umgebung woanders: in dieser Entwicklungs-Sandbox
+   als globales Modul unter einem festen Pfad, in CI als normales
+   node_modules-Paket. Ein statisches `import` könnte nur eines von beidem —
+   deshalb der Reihe nach probieren. `PW_MODULE` überschreibt alles. */
+const pw = await (async () => {
+  const kandidaten = [process.env.PW_MODULE, 'playwright',
+    '/opt/node22/lib/node_modules/playwright/index.mjs'];
+  const fehler = [];
+  for (const spec of kandidaten) {
+    if (!spec) continue;
+    try { return await import(spec); } catch (e) { fehler.push(`${spec}: ${e.code || e.message}`); }
+  }
+  console.error(`${C_ERR}Playwright nicht gefunden.${C_OFF}\n  Versucht:\n    `
+    + fehler.join('\n    ') + `\n  Abhilfe: npm i -D playwright, oder PW_MODULE=<Pfad> setzen.\n`);
+  process.exit(4);
+})();
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APP_URL = 'file://' + resolve(__dirname, '..', 'index.html');
+/* Der Chromium-Pfad der Sandbox gilt nur dort. Existiert er nicht, sucht
+   Playwright seinen eigenen Browser — so läuft derselbe Harness in CI. */
 const CHROME = process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 
 const arg = (name, dflt) => {
@@ -53,7 +71,10 @@ const arg = (name, dflt) => {
    Safe-Area, kein Gummiband-Scroll — aber es ist dieselbe Engine-Familie und
    findet damit die Klasse Fehler, die aus Engine-Unterschieden kommt:
    color-mix(), backdrop-filter, 100dvh, sticky in Flex, CompressionStream. */
-const BROWSERS = { chromium: { launch: { executablePath: CHROME } }, webkit: {}, firefox: {} };
+const BROWSERS = {
+  chromium: existsSync(CHROME) ? { launch: { executablePath: CHROME } } : {},
+  webkit: {}, firefox: {}
+};
 const BROWSER = arg('browser', 'chromium');
 if (!BROWSERS[BROWSER]) {
   console.error(`Unbekannter Browser "${BROWSER}". Erlaubt: ${Object.keys(BROWSERS).join(', ')}`);
