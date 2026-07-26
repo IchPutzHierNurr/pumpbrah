@@ -1294,7 +1294,21 @@ const REGRESSIONS = [
                375 px nicht mehr zu sehen. */
             const chips = [...dlg.querySelectorAll('.chipgrid .daychip')];
             const chipZeilen = new Set(chips.map(c => Math.round(c.getBoundingClientRect().top))).size;
-            out.push({ id, art, vh, ohne, hatEingabe, abstand,
+            /* Diagnose fuer Engine-Unterschiede. WebKit meldete „Knopf bei
+               590, Limit 331", wo Chromium 311 liefert — ohne diese Werte
+               waere die Ursache Ratearbeit, und WebKit laeuft nur in CI. */
+            const cs = getComputedStyle(dlg);
+            const diag = {
+              maxHeight: cs.maxHeight,
+              kbVar: getComputedStyle(document.documentElement).getPropertyValue('--kb').trim(),
+              kbOpen: document.documentElement.classList.contains('kb-open'),
+              ctaPos: cta ? getComputedStyle(cta.closest('.sheet-cta') || cta).position : null,
+              dvh: CSS.supports('height', '100dvh'),
+              minInMax: CSS.supports('max-height', 'min(10px, 20px)'),
+              varInCalcInMin: CSS.supports('max-height', 'min(88vh, calc(100dvh - var(--kb, 0px) - 16px))'),
+              innerHeight: window.innerHeight
+            };
+            out.push({ id, art, vh, ohne, hatEingabe, abstand, diag,
                        chips: chips.length, chipZeilen,
                        chipUeberlauf: chips.some(c => c.scrollWidth > c.clientWidth + 1),
                        ctaUnten: box ? Math.round(box.bottom) : null,
@@ -1328,7 +1342,7 @@ const REGRESSIONS = [
           if (x.art !== 'formular') return;
           // Wo man tippt und abschliesst, muss die Aktion trotz Tastatur erreichbar sein
           if (x.ctaUnten !== null && x.ctaUnten > x.limit)
-            bad.push(`${tag}: Knopf bei ${x.ctaUnten}, Limit ${x.limit}`);
+            bad.push(`${tag}: Knopf bei ${x.ctaUnten}, Limit ${x.limit} · ${JSON.stringify(x.diag)}`);
           // ... und zwar ueber eine klebende Aktionszeile, nicht durch Zufall
           if (!x.hatCta) bad.push(tag + ': Formular ohne klebende Aktionszeile');
         });
