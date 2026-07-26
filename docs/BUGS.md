@@ -114,6 +114,7 @@
 | [PB-069](#pb-069) | Gleichzeitiges Schreiben verlor einen Satz (PB-022) | **hoch** | Datenverlust | ✅ |
 | [PB-070](#pb-070) | Zurücksetzen — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-071](#pb-071) | Der Erst-Sync beim Anmelden überschrieb fremde Sätze | **hoch** | Datenverlust | ✅ |
+| [PB-072](#pb-072) | PB-061 ging in WebKit mal grün, mal rot — eine Uhr im Test | mittel | Testgüte | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2660,6 +2661,79 @@ schreibt.
 
 ---
 
+### PB-072
+
+**Derselbe Test ging in WebKit mal grün, mal rot — eine Uhr im Test**
+
+| | |
+|---|---|
+| **Schwere** | mittel (Testgüte, nicht App) |
+| **Klasse** | Zeit als Ersatz für eine Bedingung |
+| **Gefunden** | weil zwei Engines widersprachen — CI-Lauf 1 gegen CI-Lauf 2 |
+| **Status** | ✅ behoben |
+
+**Der Ablauf, weil er die Lehre trägt.** Der erste CI-Lauf mit WebKit meldete
+PB-061 rot: „`m-log`: Knopf bei 590, Limit 331". Chromium lieferte an
+derselben Stelle 311 und grün. Die Einordnung schien eindeutig — nur WebKit
+rot heißt Engine-Unterschied, also ein iOS-Problem. Und es traf ausgerechnet
+den Fehler, den der Nutzer selbst gemeldet hatte.
+
+**Der zweite Lauf war grün.** Über praktisch demselben Code, nur mit
+ergänzten Diagnosewerten. Damit war die Aussage „in Safari kaputt" hinfällig,
+und die eigentliche Frage eine andere: warum widerspricht sich der Test?
+
+**Ursache.** `.mdl` fährt mit `animation: su .32s` von unten herein
+(`translateY(100%)` → `0`). Der Test wartete mit `setTimeout(420)`. Das ist
+großzügig gerechnet und trotzdem falsch: in CI teilen sich drei Läufe einen
+Rechner, und die Animation startet gelegentlich später. **590 − 311 ist genau
+eine Sheet-Höhe** — die Messung fiel mitten ins Einfahren.
+
+Nachgemessen, deterministisch:
+
+| Wartezeit | Knopf bei |
+|---|---|
+| 0 ms | 591 |
+| 50 ms | 591 |
+| 150 ms | 247 |
+| 250 ms | 276 |
+| 420 ms | 276 |
+| bis zur Ruhe | **276** (stabil, Limit 331) |
+
+Die 590 aus CI sind exakt der Wert der ersten ~50–150 ms. Und der stabile Wert
+liegt **unter** dem Limit: **der PB-061-Fix wirkt auch in WebKit.** Das
+Satz-Loggen war auf dem iPhone nie kaputt.
+
+**Fix.** `setTimeout` raus, Bedingung rein: erst alle laufenden Animationen
+über die Web Animations API abwarten (`el.getAnimations()`, in beiden Engines
+vorhanden), dann messen, bis zwei aufeinanderfolgende Bilder dieselbe
+Geometrie liefern. Kommt die Geometrie in 60 Bildern nicht zur Ruhe, meldet
+der Test das — statt eine Zahl zu erfinden.
+
+Dazu ein Fehler in meiner eigenen Diagnose, der beinahe zur zweiten Fehlspur
+geführt hätte: die Diagnosewerte wurden erhoben, **nachdem** `--kb` schon
+zurückgesetzt war. Eine Diagnose, die den Fehlerfall nicht sieht, ist keine.
+
+**Lektion.** Drei, in aufsteigender Wichtigkeit:
+
+1. **Zeit ist kein Ersatz für eine Bedingung.** Jedes `setTimeout` in einem
+   Test ist eine Wette auf die Geschwindigkeit der Maschine. Sie geht so lange
+   auf, bis der Test auf einem langsameren Rechner läuft.
+2. **Ein widersprüchlicher Test ist schlimmer als ein roter.** Rot heißt „hier
+   ist etwas". Mal so, mal so heißt „diesem Test kann man nicht glauben" — und
+   damit ist auch sein Grün wertlos.
+3. **Ein einzelner Fehlschlag ist kein Befund, sondern ein Verdacht.** Ich habe
+   nach dem ersten roten Lauf berichtet, das Satz-Loggen sei auf dem iPhone
+   kaputt. Das war falsch, und die Korrektur kostete einen zweiten Lauf. Bei
+   einer neuen Prüfmethode gehören **mehrere Läufe** vor die Diagnose — die
+   Methode ist am Anfang unverdächtiger als das, was sie prüft.
+
+**Test.** `PB-072` — misst dieselbe Stelle einmal ohne und fünfmal mit Warten.
+Verlangt beides: dass Warten **nötig** ist (ohne Warten kommt ein anderer Wert)
+und dass es **reicht** (fünf Messungen, ein Wert). Fällt jemand auf
+`setTimeout` zurück, schlägt der Stabilitätsteil an.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -2792,7 +2866,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **24
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **26
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -2823,6 +2897,8 @@ gestellt werden sollten:
 | 22 | **„Nicht testbar" als Ausrede** | PB-067–PB-070 | Wie viele Methoden gehen hier nach draußen? Bei einer Handvoll ist ein Double billiger als die Begründung, warum es nicht geht. |
 | 23 | **Test, der nicht belegt, dass er stattfand** | PB-069, PB-071 | Wäre dieser Test auch grün, wenn die Bedingung nie eingetreten ist? Dann fehlt der Nachweis, nicht der Vertrag. Bei Nebenläufigkeit: Barriere statt `sleep`. |
 | 24 | **Schutz, den nur ein Pfad benutzt** | PB-071 | Wie viele Stellen schreiben auf dasselbe Ziel — und machen sie alle mit? Einer, der blind schreibt, hebt die Transaktionen aller anderen auf. |
+| 25 | **Zeit als Ersatz für eine Bedingung** | PB-072 | Wartet dieser Test auf eine Uhr oder auf das, was tatsächlich passieren muss? Jedes `setTimeout` ist eine Wette auf die Maschine. |
+| 26 | **Ein Fehlschlag als Befund gelesen** | PB-072 | Ist das reproduzierbar? Bei einer neuen Prüfmethode ist die Methode unverdächtiger als das Geprüfte — erst mehrere Läufe, dann die Diagnose. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

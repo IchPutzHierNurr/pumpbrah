@@ -133,9 +133,8 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **75 Prüfungen grün** — 58 Regressionstests, 5 Sync-Tests über
-zwei Geräte und Fuzzing über 91 Operationen, verifiziert über vierzehn
-unabhängige Kampagnen mit insgesamt 80.000 Aktionen.
+Aktueller Stand: **76 Prüfungen grün** — 59 Regressionstests, 5 Sync-Tests über
+zwei Geräte und Fuzzing über 91 Operationen, in Chromium und WebKit.
 
 ### Zwei Engines, ein Vergleich
 
@@ -153,7 +152,13 @@ Der Sinn liegt im Vergleich, nicht in der zweiten Engine allein:
 | nur Chromium rot | etwas an der Prüfung selbst stimmt nicht |
 
 Ohne diesen Vergleich müsste man bei jedem roten Lauf erst raten. Der Seed ist
-die Commit-Nummer, jeder CI-Lauf ist also exakt nachstellbar. CI fährt 1.500
+die Commit-Nummer, jeder CI-Lauf ist also exakt nachstellbar.
+
+Der erste WebKit-Lauf meldete prompt einen Fehler — und der **zweite war
+grün**, über praktisch demselben Code. Damit war der Befund kein
+Engine-Unterschied, sondern eine Uhr im Test (PB-072). Auch das ist ein
+Ergebnis: eine Prüfmethode ist am Anfang unverdächtiger als das, was sie
+prüft. CI fährt 1.500
 Runden für eine schnelle Antwort; die großen Kampagnen laufen weiter von Hand.
 
 Die Datei liegt **nicht** auf `main` — dort stehen nur App-Dateien, weil `main`
@@ -184,7 +189,7 @@ Vier Grenzen, die keine Zahl sichtbar macht:
 
 * **„Erreicht" ist nicht „geprüft".** Die 220 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
-  58 Regressionstests, die 5 Sync-Tests und die 22 Invarianten — nicht die
+  59 Regressionstests, die 5 Sync-Tests und die 22 Invarianten — nicht die
   Abdeckungszahl.
 * **WebKit ist nicht iOS Safari.** Seit Juli 2026 läuft derselbe Harness in CI
   zusätzlich in WebKit (siehe unten) — Engine-Unterschiede werden damit

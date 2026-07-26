@@ -1255,6 +1255,28 @@ const REGRESSIONS = [
               confirmLog(); cm('m-log'); endWorkout();
             }, 'auswahl']
           ];
+          /* Wartet, bis an einem Element wirklich nichts mehr passiert:
+             erst alle laufenden Animationen abwarten (Web Animations API,
+             in Chromium und WebKit vorhanden), dann messen bis zwei
+             aufeinanderfolgende Bilder dieselbe Geometrie liefern.
+             Eine Zeitangabe wäre hier immer entweder zu kurz oder Verschwendung. */
+          const naechstesBild = () => new Promise(r => requestAnimationFrame(() => r()));
+          async function warteAufRuhe(el, maxBilder = 60) {
+            if (el.getAnimations) {
+              try { await Promise.all(el.getAnimations().map(a => a.finished.catch(() => {}))); }
+              catch { /* abgebrochene Animation ist kein Fehler */ }
+            }
+            let vorher = null;
+            for (let i = 0; i < maxBilder; i++) {
+              await naechstesBild();
+              const r = el.getBoundingClientRect();
+              const jetzt = Math.round(r.top) + 'x' + Math.round(r.height);
+              if (jetzt === vorher) return true;
+              vorher = jetzt;
+            }
+            return false;   // nie zur Ruhe gekommen — der Test meldet es unten
+          }
+
           const out = [];
           for (const [id, open, art] of sheets) {
             document.querySelectorAll('.mbg.show').forEach(m => m.classList.remove('show'));
@@ -1263,11 +1285,21 @@ const REGRESSIONS = [
             if (!document.getElementById(id).classList.contains('show')) {
               out.push({ id, err: 'liess sich nicht oeffnen' }); continue;
             }
-            // Das Sheet faehrt mit 0,32 s ein - vorher gemessen misst man die
-            // Animation, nicht die Position.
-            await new Promise(r => setTimeout(r, 420));
             const dlg = document.querySelector('#' + id + ' .mdl');
             if (!dlg) { out.push({ id, err: 'kein Sheet' }); continue; }
+            /* Das Sheet fährt mit `animation: su .32s` von unten herein
+               (translateY(100%) -> 0). Wer vorher misst, misst die Animation.
+               Hier stand einmal `setTimeout(420)` — großzügig gerechnet und
+               trotzdem falsch: in CI, wo drei Läufe sich einen Rechner teilen,
+               startet die Animation gelegentlich später. Ergebnis war ein
+               Fehlschlag mit „Knopf bei 590" statt 311, und 590 − 311 ist
+               genau eine Sheet-Höhe: die Momentaufnahme mitten im Einfahren.
+               Ein grüner und ein roter Lauf über demselben Code — schlimmer
+               als ein durchgehend roter. Siehe PB-072.
+
+               Statt einer Uhr also die Bedingung selbst abwarten, und danach
+               bis zur Ruhe messen. */
+            const ruhigOffen = await warteAufRuhe(dlg);
             const vh = window.innerHeight;
             const ohne = Math.round(dlg.getBoundingClientRect().height);
             const cta = dlg.querySelector('.sheet-cta .btn') ||
@@ -1278,8 +1310,27 @@ const REGRESSIONS = [
             const hatEingabe = !!dlg.querySelector(
               'input:not([readonly]):not([type=file]):not([type=checkbox]):not([type=radio]), textarea:not([readonly])');
             document.documentElement.style.setProperty('--kb', kb + 'px');
-            void dlg.offsetHeight;
+            /* `void dlg.offsetHeight` erzwingt ein Layout, garantiert aber
+               nicht, dass der Browser mit allem fertig ist. Also auch hier
+               bis zur Ruhe warten. */
+            const ruhigMitKb = await warteAufRuhe(dlg);
             const box = cta ? cta.getBoundingClientRect() : null;
+            /* Diagnose erheben, WÄHREND --kb gesetzt ist. Vorher stand sie
+               weiter unten und las damit den zurückgesetzten Zustand — eine
+               Diagnose, die den Fehlerfall nicht sieht, ist keine. */
+            const cs = getComputedStyle(dlg);
+            const diag = {
+              maxHeight: cs.maxHeight,
+              hoeheMitKb: Math.round(dlg.getBoundingClientRect().height),
+              kbVar: getComputedStyle(document.documentElement).getPropertyValue('--kb').trim(),
+              kbOpen: document.documentElement.classList.contains('kb-open'),
+              ctaPos: cta ? getComputedStyle(cta.closest('.sheet-cta') || cta).position : null,
+              dvh: CSS.supports('height', '100dvh'),
+              minInMax: CSS.supports('max-height', 'min(10px, 20px)'),
+              varInCalcInMin: CSS.supports('max-height', 'min(88vh, calc(100dvh - var(--kb, 0px) - 16px))'),
+              innerHeight: window.innerHeight,
+              ruhig: [ruhigOffen, ruhigMitKb]
+            };
             document.documentElement.style.setProperty('--kb', '0px');
             /* Bei 'inline' zaehlt der Abstand zwischen dem letzten Feld des
                Formularblocks und der Aktion — nicht die absolute Position. */
@@ -1294,20 +1345,6 @@ const REGRESSIONS = [
                375 px nicht mehr zu sehen. */
             const chips = [...dlg.querySelectorAll('.chipgrid .daychip')];
             const chipZeilen = new Set(chips.map(c => Math.round(c.getBoundingClientRect().top))).size;
-            /* Diagnose fuer Engine-Unterschiede. WebKit meldete „Knopf bei
-               590, Limit 331", wo Chromium 311 liefert — ohne diese Werte
-               waere die Ursache Ratearbeit, und WebKit laeuft nur in CI. */
-            const cs = getComputedStyle(dlg);
-            const diag = {
-              maxHeight: cs.maxHeight,
-              kbVar: getComputedStyle(document.documentElement).getPropertyValue('--kb').trim(),
-              kbOpen: document.documentElement.classList.contains('kb-open'),
-              ctaPos: cta ? getComputedStyle(cta.closest('.sheet-cta') || cta).position : null,
-              dvh: CSS.supports('height', '100dvh'),
-              minInMax: CSS.supports('max-height', 'min(10px, 20px)'),
-              varInCalcInMin: CSS.supports('max-height', 'min(88vh, calc(100dvh - var(--kb, 0px) - 16px))'),
-              innerHeight: window.innerHeight
-            };
             out.push({ id, art, vh, ohne, hatEingabe, abstand, diag,
                        chips: chips.length, chipZeilen,
                        chipUeberlauf: chips.some(c => c.scrollWidth > c.clientWidth + 1),
@@ -1326,6 +1363,11 @@ const REGRESSIONS = [
         r.forEach(x => {
           const tag = `${w}×${h} ${x.id}`;
           if (x.err) { bad.push(tag + ': ' + x.err); return; }
+          /* Kommt die Geometrie in 60 Bildern nicht zur Ruhe, ist die
+             folgende Messung wertlos — dann lieber sagen, dass nicht
+             gemessen werden konnte, als eine Zahl erfinden. */
+          if (x.diag && x.diag.ruhig && x.diag.ruhig.some(r => r === false))
+            bad.push(`${tag}: Geometrie kam nicht zur Ruhe ${JSON.stringify(x.diag.ruhig)}`);
           // Ohne Tastatur darf kein Sheet hoeher sein als der Bildschirm
           if (x.ohne > x.vh) bad.push(`${tag}: ${x.ohne} > ${x.vh}`);
           // Wochentagsleiste: eine Zeile, und keine Beschriftung abgeschnitten
@@ -1965,6 +2007,76 @@ const REGRESSIONS = [
       });
       const ok = Object.entries(r).every(([k, v]) => k === 'addedCount' ? v === 1 : v === true);
       return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-072', title: 'Sheet-Messungen warten auf die Animation, nicht auf eine Uhr',
+    run: async () => {
+      /* Gefunden, weil zwei Engines widersprachen: PB-061 war in WebKit rot
+         („Knopf bei 590"), in Chromium gruen (311) — und im naechsten Lauf
+         ueber DENSELBEN Code war WebKit gruen. Ein Test, der mal so und mal
+         so ausgeht, ist schlimmer als ein roter: er verdeckt echte Fehler und
+         meldet erfundene.
+
+         Ursache war kein Engine-Unterschied, sondern eine Uhr im Test. Das
+         Sheet faehrt mit `animation: su .32s` von unten herein; ein festes
+         `setTimeout(420)` reichte lokal und in CI unter Last gelegentlich
+         nicht. 590 minus 311 ist genau eine Sheet-Hoehe — die Momentaufnahme
+         mitten im Einfahren.
+
+         Dieser Test sichert die Behebung ab: die Bedingung wird abgewartet,
+         nicht die Zeit. Er prueft beides — dass Warten NOETIG ist (ohne
+         Warten kommt ein anderer Wert heraus) und dass es REICHT (mehrfach
+         gemessen immer derselbe Wert). Faellt jemand auf setTimeout zurueck,
+         schlaegt der Stabilitaetsteil hier zu. */
+      await page.setViewportSize({ width: 375, height: 667 });
+      const r = await page.evaluate(async () => {
+        const KB = 336;
+        const naechstesBild = () => new Promise(r => requestAnimationFrame(() => r()));
+        async function warteAufRuhe(el, max = 60) {
+          if (el.getAnimations) {
+            try { await Promise.all(el.getAnimations().map(a => a.finished.catch(() => {}))); } catch {}
+          }
+          let v = null;
+          for (let i = 0; i < max; i++) {
+            await naechstesBild();
+            const b = el.getBoundingClientRect();
+            const j = Math.round(b.top) + 'x' + Math.round(b.height);
+            if (j === v) return true;
+            v = j;
+          }
+          return false;
+        }
+        const messen = async (mitWarten) => {
+          document.querySelectorAll('.mbg.show').forEach(m => m.classList.remove('show'));
+          document.documentElement.style.setProperty('--kb', '0px');
+          D.active = null;
+          startWorkout(Object.keys(D.plan)[0]);
+          openLog(0);
+          const dlg = document.querySelector('#m-log .mdl');
+          if (mitWarten) await warteAufRuhe(dlg);
+          const cta = dlg.querySelector('.sheet-cta .btn');
+          document.documentElement.style.setProperty('--kb', KB + 'px');
+          if (mitWarten) await warteAufRuhe(dlg); else void dlg.offsetHeight;
+          const unten = Math.round(cta.getBoundingClientRect().bottom);
+          document.documentElement.style.setProperty('--kb', '0px');
+          return unten;
+        };
+        const ohneWarten = await messen(false);
+        const mitWarten = [];
+        for (let i = 0; i < 5; i++) mitWarten.push(await messen(true));
+        document.querySelectorAll('.mbg.show').forEach(m => cm(m.id));
+        D.active = null; save();
+        return { limit: window.innerHeight - KB, ohneWarten, mitWarten };
+      });
+      await page.setViewportSize({ width: 390, height: 844 });
+      const stabil = new Set(r.mitWarten).size === 1;
+      const unterLimit = r.mitWarten.every(v => v <= r.limit);
+      // Ohne Warten MUSS ein anderer Wert herauskommen — sonst prueft der
+      // Test die Bedingung nicht, die den Fehlschlag verursacht hat.
+      const wartenNoetig = r.ohneWarten !== r.mitWarten[0];
+      return [stabil && unterLimit && wartenNoetig,
+        `${JSON.stringify(r)} · stabil=${stabil} unterLimit=${unterLimit} wartenNoetig=${wartenNoetig}`];
     }
   },
   {
