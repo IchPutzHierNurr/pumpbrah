@@ -103,6 +103,7 @@
 | [PB-058](#pb-058) | Zeitbudget — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-059](#pb-059) | Autoregulation — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-060](#pb-060) | Stagnations-Aktionen — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-061](#pb-061) | „Satz loggen" passte nicht auf den Bildschirm | **hoch** | iOS / Layout | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2188,6 +2189,64 @@ einem Namen, der in keinem Trainingstag steht, nicht abstürzt.
 
 **Test.** `PB-060`
 
+
+---
+
+### PB-061
+
+**„Satz loggen" passte nicht auf den Bildschirm**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** — betrifft die Handlung, die man pro Training 25-mal macht |
+| **Klasse** | iOS / Layout |
+| **Gefunden** | vom Nutzer, beim Loggen am Gerät |
+| **Status** | ✅ behoben |
+
+**Symptom.** Das Sheet war **590 px** hoch. Auf einem iPhone SE (667 px) füllte
+es fast den ganzen Bildschirm und scrollte intern; mit eingeblendeter Tastatur
+lag der Speichern-Knopf **290 px unter der Kante** — unerreichbar, ohne im
+Sheet zu scrollen, während die Tastatur die Sicht nimmt.
+
+**Zwei Ursachen, beide strukturell:**
+
+1. **Die Tastatur bekam Platz an der falschen Stelle.** Die Ausweichlogik
+   setzte `--kb` als zusätzliches **Padding am Sheet**. Das Sheet wuchs damit
+   nach unten *hinter* die Tastatur, statt darüber zu rutschen. Jetzt bekommt
+   der **Container** das Padding (das Sheet sitzt an dessen unterem Rand) und
+   die Maximalhöhe schrumpft um dieselbe Strecke.
+2. **Der Inhalt war zu üppig für seinen Zweck.** Übungsname, Cue, „letztes
+   Mal", PR, geschätztes 1RM, Zielvorgabe und die Demo-Vorschau standen in
+   je einer eigenen Zeile — 168 von 590 Pixeln allein für Kontext. Zusammen-
+   gefasst zu einer Kopfzeile mit Vorschaubild und einer einzeiligen
+   Zielvorgabe: **40 statt 168**.
+
+**Dazu drei Maßnahmen, die für alle Sheets gelten:**
+
+* Die Hauptaktion sitzt in einer **klebenden Aktionszeile** am unteren Rand des
+  Sheets. Ein Dialog, dessen Bestätigen-Knopf man suchen muss, ist auf einem
+  Telefon kein Dialog.
+* Bei offener Tastatur blendet das Log-Sheet aus, was gerade nicht gebraucht
+  wird (Kopfzeile, Notizfeld, Begründungstext, Zweitaktion) — sonst deckt die
+  Aktionszeile genau die Felder zu, um die es geht.
+* Die Notiz klappt auf Wunsch auf, statt dauerhaft eine Zeile zu kosten.
+
+**Ergebnis.** 590 → **484 px**. Ohne Tastatur passt alles auf einen Bildschirm,
+auch auf dem kleinsten iPhone. Mit Tastatur bleiben Zielvorgabe, beide Felder,
+RIR und der Speichern-Knopf sichtbar.
+
+**Lektion.** „Weicht der Tastatur aus" ist keine Eigenschaft, die man einmal
+einbaut und abhakt — sie gilt pro Dialog und pro Bildschirmgröße. Und ein
+Formular, das auf dem Entwicklungsgerät passt, sagt nichts über das kleinste
+Gerät, auf dem es benutzt wird.
+
+**Test.** `PB-061` — drei iPhone-Größen (SE, 14, 15 Pro Max) × fünf Sheets:
+Ohne Tastatur darf kein Sheet höher sein als der Bildschirm; mit simulierter
+Tastatur (336 px) muss die Hauptaktion sichtbar bleiben; Sheets mit
+Eingabefeldern brauchen eine klebende Aktionszeile. Beim Bauen hat außerdem
+der bestehende Test **PB-026** zugeschlagen: Das neue Notizfeld hatte 13,3 px
+und hätte iOS beim Fokussieren hineinzoomen lassen.
+
 ---
 
 ## Offene Punkte (Backend-Änderung nötig)
@@ -2314,7 +2373,7 @@ gestellt werden sollten:
 | 4 | **Neuer Datentyp in alte Rechenwege** | PB-004, PB-029, PB-031, PB-046 | Wer alles liest dieses Feld — und stimmt die Rechnung für den neuen Fall? |
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
 | 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040, PB-054, PB-057, PB-058, PB-060 | Was geht hier verloren, und weiß der Nutzer es? |
-| 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
+| 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027, PB-061 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
 | 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049, PB-053, PB-055 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |

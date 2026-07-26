@@ -1050,6 +1050,68 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-061', title: 'Jedes Sheet bleibt bedienbar, auch mit eingeblendeter Tastatur',
+    run: async () => {
+      // "Satz loggen" war 590 px hoch und lag auf einem iPhone SE (667 px) mit
+      // Tastatur zu weit unten: der Speichern-Knopf war nicht erreichbar. Die
+      // Tastatur bekam zusaetzliches PADDING am Sheet statt Platz DAVOR - das
+      // Sheet wuchs also nach unten hinter die Tastatur.
+      const sizes = [[375, 667], [390, 844], [430, 932]];
+      const KB = 336;                        // iOS-Tastatur inkl. Vorschlagsleiste
+      const bad = [];
+      for (const [w, h] of sizes) {
+        await page.setViewportSize({ width: w, height: h });
+        const r = await page.evaluate(async kb => {
+          const sheets = [
+            ['m-log', () => { D.active = null; startWorkout(Object.keys(D.plan)[0]); openLog(0); }],
+            ['m-timebudget', () => { D.active = null; startWorkout(Object.keys(D.plan)[0]); openTimeBudget(); }],
+            ['m-exnote', () => openExNote('Bankdrücken')],
+            ['m-egym', () => openEgymEntry()],
+            ['m-plates', () => openPlates(87.5)]
+          ];
+          const out = [];
+          for (const [id, open] of sheets) {
+            document.querySelectorAll('.mbg.show').forEach(m => m.classList.remove('show'));
+            document.documentElement.style.setProperty('--kb', '0px');
+            try { open(); } catch (e) { out.push({ id, err: String(e.message) }); continue; }
+            // Das Sheet faehrt mit 0,32 s ein - vorher gemessen misst man die
+            // Animation, nicht die Position.
+            await new Promise(r => setTimeout(r, 420));
+            const dlg = document.querySelector('#' + id + ' .mdl');
+            if (!dlg) { out.push({ id, err: 'kein Sheet' }); continue; }
+            const vh = window.innerHeight;
+            const ohne = Math.round(dlg.getBoundingClientRect().height);
+            const cta = dlg.querySelector('.sheet-cta .btn') ||
+                        [...dlg.querySelectorAll('.btn')].pop();
+            document.documentElement.style.setProperty('--kb', kb + 'px');
+            void dlg.offsetHeight;
+            const box = cta ? cta.getBoundingClientRect() : null;
+            document.documentElement.style.setProperty('--kb', '0px');
+            out.push({ id, vh, ohne, ctaUnten: box ? Math.round(box.bottom) : null,
+                       limit: vh - kb, hatCta: !!dlg.querySelector('.sheet-cta') });
+          }
+          document.querySelectorAll('.mbg.show').forEach(m => m.classList.remove('show'));
+          D.active = null; save();
+          return out;
+        }, KB);
+        r.forEach(x => {
+          const tag = `${w}×${h} ${x.id}`;
+          if (x.err) { bad.push(tag + ': ' + x.err); return; }
+          // Ohne Tastatur darf kein Sheet hoeher sein als der Bildschirm
+          if (x.ohne > x.vh) bad.push(`${tag}: ${x.ohne} > ${x.vh}`);
+          // Mit Tastatur muss die Hauptaktion sichtbar bleiben
+          if (x.ctaUnten !== null && x.ctaUnten > x.limit)
+            bad.push(`${tag}: Knopf bei ${x.ctaUnten}, Limit ${x.limit}`);
+          // Sheets mit Eingabefeldern brauchen eine klebende Aktionszeile
+          if (['m-log', 'm-egym', 'm-exnote', 'm-timebudget'].includes(x.id) && !x.hatCta)
+            bad.push(tag + ': keine klebende Aktionszeile');
+        });
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      return [bad.length === 0, bad.slice(0, 6).join(' | ')];
+    }
+  },
+  {
     id: 'PB-059', title: 'Autoregulation reagiert auf RIR, aber nicht auf Rauschen',
     run: async () => {
       // RIR wurde bisher nur protokolliert. Jetzt steuert die Abweichung vom
