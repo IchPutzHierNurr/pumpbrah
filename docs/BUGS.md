@@ -97,6 +97,12 @@
 | [PB-052](#pb-052) | Onboarding warf vier von acht Antworten weg | mittel | Funktion | ✅ |
 | [PB-053](#pb-053) | „Klimmzüge" zählten als Rudern | mittel | Klassifikation | ✅ |
 | [PB-054](#pb-054) | Mesozyklus — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-055](#pb-055) | Scheibenrechner rundete den Rest, Summe ging nicht auf | niedrig | Berechnung | ✅ |
+| [PB-056](#pb-056) | CSV-Export — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-057](#pb-057) | Supersätze — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-058](#pb-058) | Zeitbudget — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-059](#pb-059) | Autoregulation — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-060](#pb-060) | Stagnations-Aktionen — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2050,6 +2056,138 @@ dann dauerhaft weg, ohne dass es jemand bemerkt.
 Entlastungswoche liegt darunter, der Plan bleibt zeichengleich, und ohne
 laufenden Zyklus greift kein Faktor.
 
+
+---
+
+### PB-055
+
+**Der Scheibenrechner rundete den Rest — und die Summe ging nicht mehr auf**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Berechnung / Rundung |
+| **Gefunden** | vom eigenen Test, beim Durchfahren aller Gewichte von 20 bis 250 kg |
+| **Status** | ✅ behoben |
+
+**Symptom.** 21,25 kg auf einer 20-kg-Stange sind 0,625 kg pro Seite — nicht
+darstellbar. Der Rechner rundete diesen Rest auf 0,63, und damit ergaben
+Scheiben plus Stange 21,26 kg statt 21,25.
+
+**Warum das zählt.** Ein Rechner, dessen Summe nicht aufgeht, ist im Studio
+schlimmer als keiner: Man legt auf und wundert sich über die Differenz zum
+Logbuch. Gerundet wird jetzt erst beim Anzeigen, nie in der Rechnung.
+
+**Lektion.** Rundung gehört an die Oberfläche, nicht in die Zwischenschritte.
+Der Fehler war beim Blick auf das Ergebnis unsichtbar — gefunden hat ihn erst
+die Invariante „Scheiben + Stange = Zielgewicht", über den ganzen Bereich
+geprüft statt an drei Beispielen.
+
+**Test.** `PB-055` — vier Einzelfälle mit eindeutiger Lösung plus ein Durchlauf
+von 20 bis 250 kg in 1,25-kg-Schritten: Summe stimmt exakt, der nicht
+darstellbare Rest ist immer kleiner als die kleinste Scheibe, Reihenfolge
+absteigend.
+
+---
+
+### PB-056
+
+**CSV-Export — Test vor dem Fehler**
+
+| | |
+|---|---|
+| **Schwere** | — (vorbeugend) |
+| **Klasse** | Vorbeugung |
+| **Status** | ✅ abgesichert |
+
+Ein Semikolon oder Zeilenumbruch in einer Notiz verschiebt in einer CSV alle
+folgenden Spalten — **still**, erst in der Tabelle fällt es auf. Der Test
+schreibt deshalb genau solche Zeichen in Übungsname und Notiz und zählt
+danach die Spalten außerhalb von Anführungszeichen; außerdem BOM (sonst
+zerlegt Excel die Umlaute) und Dezimalkomma.
+
+**Test.** `PB-056`
+
+---
+
+### PB-057
+
+**Supersätze sparen Pause, nicht Volumen**
+
+| | |
+|---|---|
+| **Schwere** | — (vorbeugend) |
+| **Klasse** | Vorbeugung |
+| **Status** | ✅ abgesichert |
+
+Der Zweck der Kopplung ist Zeit: dieselben Sätze, eine gemeinsame Pause. Ein
+Supersatz, der nebenbei das Volumen verändert, wäre ein heimlicher
+Volumenschnitt — dieselbe Klasse wie PB-030 (Deload) und PB-054 (Mesozyklus).
+Zusätzlich prüft der Test die Kopplungsregel: zwei schwere Grundübungen dürfen
+nicht gekoppelt werden, zwei Übungen derselben Volumengruppe auch nicht.
+
+**Test.** `PB-057`
+
+---
+
+### PB-058
+
+**Das Zeitbudget kürzt von der richtigen Seite**
+
+| | |
+|---|---|
+| **Schwere** | — (vorbeugend) |
+| **Klasse** | Vorbeugung |
+| **Status** | ✅ abgesichert |
+
+Wer selbst kürzt, hört hinten auf — und hinten stehen Arme, Waden und Rumpf.
+Nach drei solchen Wochen fehlt genau dort das Volumen. Die Funktion muss
+deshalb nachweisbar anders kürzen: Grundübungen zuletzt, nie unter zwei Sätze,
+und der Plan bleibt unberührt.
+
+**Test.** `PB-058`
+
+---
+
+### PB-059
+
+**Autoregulation reagiert auf RIR, aber nicht auf Rauschen**
+
+| | |
+|---|---|
+| **Schwere** | — (vorbeugend) |
+| **Klasse** | Vorbeugung |
+| **Status** | ✅ abgesichert |
+
+RIR wurde bis jetzt nur protokolliert. Die Vorgabe für den nächsten Satz zieht
+ihn jetzt heran — aber erst ab einer ganzen Stufe Abweichung. Ohne diese
+Schwelle würde jede Selbsteinschätzung die Vorgabe verschieben, und die
+Zielzahl wäre nicht mehr wiederzuerkennen.
+
+**Test.** `PB-059` — RIR 0 senkt das Gewicht, RIR 2 (Ziel) und RIR 3 lassen
+die normale doppelte Progression stehen, RIR 4 gibt zwei Wiederholungen statt
+einer.
+
+---
+
+### PB-060
+
+**Stagnations-Aktionen greifen in den Plan und lassen die Historie**
+
+| | |
+|---|---|
+| **Schwere** | — (vorbeugend) |
+| **Klasse** | Vorbeugung |
+| **Status** | ✅ abgesichert |
+
+Drei Handgriffe gegen eine stagnierende Übung — tauschen, Wiederholungsbereich
+verschieben, einen Satz zurücknehmen — verändern alle den **Plan**. Keiner
+davon darf geloggte Sätze anfassen: Die Historie ist das einzige, was sich
+nicht wiederherstellen lässt. Der Test prüft zusätzlich, dass ein Aufruf mit
+einem Namen, der in keinem Trainingstag steht, nicht abstürzt.
+
+**Test.** `PB-060`
+
 ---
 
 ## Offene Punkte (Backend-Änderung nötig)
@@ -2175,9 +2313,9 @@ gestellt werden sollten:
 | 3b | **Fernwirkung auf Nachfahren** | PB-024, PB-032 | Welche Vorfahren-Eigenschaft (overflow, transform, filter, Spezifität) wirkt hier hinein? |
 | 4 | **Neuer Datentyp in alte Rechenwege** | PB-004, PB-029, PB-031, PB-046 | Wer alles liest dieses Feld — und stimmt die Rechnung für den neuen Fall? |
 | 5 | **Zustand außerhalb des Modells** | PB-006, PB-007, PB-008, PB-020, PB-025 | Wo lebt dieser Zustand — und überlebt er Reload, Re-Render, Nebenläufigkeit und asynchrone APIs? |
-| 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040 | Was geht hier verloren, und weiß der Nutzer es? |
+| 6 | **Stille Datenvernichtung** | PB-002, PB-010, PB-011, PB-012, PB-030, PB-040, PB-054, PB-057, PB-058, PB-060 | Was geht hier verloren, und weiß der Nutzer es? |
 | 7 | **Plattformverhalten mit dem falschen Schalter bekämpft** | PB-026, PB-027 | Unter welcher *Bedingung* tut die Plattform das — statt: welcher Schalter stellt es ab? |
-| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049, PB-053 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
+| 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049, PB-053, PB-055 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
 | 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |

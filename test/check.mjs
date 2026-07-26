@@ -1050,6 +1050,247 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-059', title: 'Autoregulation reagiert auf RIR, aber nicht auf Rauschen',
+    run: async () => {
+      // RIR wurde bisher nur protokolliert. Jetzt steuert die Abweichung vom
+      // Ziel-RIR die naechste Vorgabe - aber erst ab einer ganzen Stufe,
+      // sonst schwankt sie mit jeder Selbsteinschaetzung.
+      const r = await page.evaluate(() => {
+        const beforeHist = JSON.parse(JSON.stringify(D.history));
+        const beforePlan = JSON.parse(JSON.stringify(D.plan));
+        D.history = []; D.ui.deload = { active: false, since: 0, until: 0 };
+        D.ui.meso = { active: false, start: 0, weeks: 5 };
+        const mk = rir => ({ name: 'Bankdrücken', sets: 4, rmin: 6, rmax: 10, rir: 2,
+          type: 'main', muscle: 'chest', note: '',
+          logged: [{ w: 100, r: 8, rir, nr: 1 }] });
+        const zuSchwer = nextSetTarget(mk(0));
+        const passend = nextSetTarget(mk(2));
+        const knapp = nextSetTarget(mk(3));
+        const zuLeicht = nextSetTarget(mk(4));
+        D.history = beforeHist; D.plan = beforePlan; save();
+        const num = t => parseFloat(String(t.num).replace(',', '.'));
+        return {
+          // RIR 0 statt 2: Gewicht runter, nicht eine Wiederholung mehr
+          schwererSatzSenkt: num(zuSchwer) < 100 && /RIR 0/.test(zuSchwer.why),
+          // RIR 2 = Ziel: normale doppelte Progression, Gewicht bleibt
+          zielUnveraendert: num(passend) === 100 && /× 9/.test(passend.unit),
+          // Eine Stufe drueber ist noch kein Signal
+          eineStufeIgnoriert: num(knapp) === 100 && /× 9/.test(knapp.unit),
+          // Zwei Stufen drueber: zwei Wiederholungen mehr
+          zuLeichtSteigt: num(zuLeicht) === 100 && /× 10/.test(zuLeicht.unit)
+        };
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-060', title: 'Stagnations-Aktionen greifen in den Plan und lassen die Historie',
+    run: async () => {
+      // Der Befund allein hilft nicht. Die drei Handgriffe muessen wirken -
+      // und sie duerfen nur den Plan aendern, nie geloggte Saetze.
+      const r = await page.evaluate(() => {
+        const beforePlan = JSON.parse(JSON.stringify(D.plan));
+        const beforeHist = JSON.parse(JSON.stringify(D.history));
+        D.plan = { Tag_A: { day: 'Mo', exercises: [
+          { id: 1, name: 'Bankdrücken', sets: 4, rmin: 6, rmax: 10, rir: 2,
+            type: 'main', muscle: 'chest', note: '', ss: null }] } };
+        D.history = [{ id: 'S1', updatedAt: Date.now(), date: '01.07.2026', planKey: 'Tag_A',
+          duration: 40, sets: [{ ex: 'Bankdrücken', nr: 1, w: 100, r: 8, rir: 2, note: '',
+            muscle: 'chest', type: 'main', mode: '' }] }];
+        save();
+        const histVorher = JSON.stringify(D.history);
+        shiftRepRange('Bankdrücken', 2);
+        const nachRange = { ...D.plan.Tag_A.exercises[0] };
+        easeStaleExercise('Bankdrücken');
+        const nachSets = D.plan.Tag_A.exercises[0].sets;
+        // Tausch: bestaetigen erzwingen, ohne Dialog
+        const origConfirm = window.confirm; window.confirm = () => true;
+        const alt = alternativeFor(D.plan.Tag_A.exercises[0], new Set(['bankdrucken']));
+        swapStaleExercise('Bankdrücken');
+        window.confirm = origConfirm;
+        const nachName = D.plan.Tag_A.exercises[0].name;
+        const res = {
+          rangeVerschoben: nachRange.rmin === 8 && nachRange.rmax === 12,
+          satzWeniger: nachSets === 3,
+          altGefunden: !!alt,
+          getauscht: !alt || nachName !== 'Bankdrücken',
+          gleichesMuster: !alt || detectMovePattern(nachName, 'chest', 'main') === 'push',
+          historieUnberuehrt: JSON.stringify(D.history) === histVorher,
+          ohnePlanKeinAbsturz: (() => { try { shiftRepRange('Gibt Es Nicht', 2); return true; } catch (e) { return false; } })()
+        };
+        D.plan = beforePlan; D.history = beforeHist; save();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-057', title: 'Supersatz spart Pause, nicht Volumen',
+    run: async () => {
+      // Der Zweck ist Zeit, nicht weniger Arbeit: dieselben Saetze, eine
+      // gemeinsame Pause. Wenn die Kopplung das VOLUMEN aendert, ist sie ein
+      // heimlicher Volumenschnitt.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.plan));
+        const mk = (id, name, muscle, sets, ss) =>
+          ({ id, name, sets, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle, note: '', ss: ss || null });
+        D.plan = { Tag_A: { day: 'Mo', exercises: [
+          mk(1, 'Wadenheben stehend', 'legs', 4), mk(2, 'Kabelcrunches', 'core', 4)] } };
+        save();
+        const volOhne = planWeeklyVolume(true);
+        const zeitOhne = estimatedDuration('Tag_A');
+        D.plan.Tag_A.exercises[0].ss = 'SA';
+        D.plan.Tag_A.exercises[1].ss = 'SA';
+        save();
+        const volMit = planWeeklyVolume(true);
+        const zeitMit = estimatedDuration('Tag_A');
+        const paar = D.plan.Tag_A.exercises;
+        const res = {
+          volumenGleich: volOhne.calves.sets === volMit.calves.sets && volOhne.core.sets === volMit.core.sets,
+          zeitKuerzer: zeitMit < zeitOhne,
+          // Zwei schwere Grunduebungen darf er nicht koppeln
+          keinDoppelCompound: supersetFits(
+            { name: 'Bankdrücken', muscle: 'chest', type: 'main' },
+            { name: 'Beinpresse', muscle: 'legs', type: 'main' }) === false,
+          // Gleiche Muskelgruppe ebenfalls nicht
+          keinGleicherMuskel: supersetFits(
+            { name: 'Kabelcrunches', muscle: 'core', type: 'main' },
+            { name: 'Hängendes Beinheben', muscle: 'core', type: 'main' }) === false,
+          passendErlaubt: supersetFits(paar[0], paar[1]) === true
+        };
+        D.plan = before; save();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-058', title: 'Zeitbudget kuerzt von der richtigen Seite',
+    run: async () => {
+      // Wer selbst kuerzt, hoert hinten auf - und hinten stehen Arme, Waden
+      // und Rumpf. Die Funktion muss stattdessen Grunduebungen zuletzt
+      // antasten und darf nie unter zwei Saetze gehen.
+      const r = await page.evaluate(() => {
+        const beforePlan = JSON.parse(JSON.stringify(D.plan));
+        const mk = (id, name, muscle, sets) =>
+          ({ id, name, sets, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle, note: '' });
+        D.plan = { Tag_A: { day: 'Mo', exercises: [
+          mk(1, 'Bankdrücken', 'chest', 5),
+          mk(2, 'Beinpresse', 'legs', 5),
+          mk(3, 'KH Seitheben', 'shoulders', 5),
+          mk(4, 'Kabelcrunches', 'core', 5)] } };
+        save();
+        D.active = null; startWorkout('Tag_A');
+        const vorher = remainingMinutes();
+        const planVorher = JSON.stringify(D.plan);
+        const res = trimWorkoutTo(30);
+        const nach = remainingMinutes();
+        const sets = {};
+        D.active.exercises.forEach(e => { sets[e.name] = e.skipped ? 0 : e.sets; });
+        const out = {
+          kuerzer: nach < vorher,
+          zielErreicht: nach <= 32,
+          nichtUnterZwei: D.active.exercises.every(e => e.skipped || e.sets >= 2),
+          grunduebungBleibt: sets['Bankdrücken'] >= 2 && sets['Beinpresse'] >= 2,
+          isolationGabZuerstAb: sets['KH Seitheben'] <= sets['Bankdrücken'],
+          planUnberuehrt: JSON.stringify(D.plan) === planVorher,
+          etwasPassiert: !!res && res.changes.length > 0
+        };
+        D.active = null; D.plan = beforePlan; save();
+        return out;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-055', title: 'Scheibenrechner rechnet exakt oder sagt, dass er es nicht kann',
+    run: async () => {
+      // Ein Rechner, der ungefragt rundet, ist schlimmer als keiner: man legt
+      // auf und wundert sich ueber 1,25 kg Differenz zum Logbuch.
+      const r = await page.evaluate(() => {
+        const bad = [];
+        // Einzelfaelle, bei denen es genau eine sinnvolle Loesung gibt
+        const exact = [
+          [87.5, 20, [[25, 1], [5, 1], [2.5, 1], [1.25, 1]], 0],
+          [22.5, 20, [[1.25, 1]], 0],
+          [20, 20, [], 0],                   // nur die Stange
+          [61, 20, [[20, 1]], 0.5]           // 20,5 pro Seite -> 0,5 nicht darstellbar
+        ];
+        exact.forEach(([total, bar, want, rest]) => {
+          const p = platePlan(total, bar);
+          if (!p.ok) { bad.push(total + ': nicht berechnet'); return; }
+          const got = p.plates.map(x => [x.p, x.n]);
+          if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(total + ': ' + JSON.stringify(got));
+          if (Math.abs(p.rest - rest) > 1e-9) bad.push(total + ': Rest ' + p.rest);
+        });
+        // Und ueber den ganzen Bereich die Invarianten: Summe stimmt, der
+        // nicht darstellbare Rest ist immer kleiner als die kleinste Scheibe,
+        // und die Scheiben stehen von schwer nach leicht.
+        for (let t = 20; t <= 250; t += 1.25) {
+          const p = platePlan(Math.round(t * 100) / 100, 20);
+          if (!p.ok) { bad.push(t + ': nicht berechnet'); break; }
+          const sum = 20 + 2 * (p.plates.reduce((a, x) => a + x.p * x.n, 0) + p.rest);
+          if (Math.abs(sum - t) > 1e-6) { bad.push(t + ': Summe ' + sum); break; }
+          if (p.rest >= 1.25) { bad.push(t + ': Rest zu gross ' + p.rest); break; }
+          if (p.plates.some((x, i, a) => i > 0 && x.p >= a[i - 1].p)) { bad.push(t + ': Reihenfolge'); break; }
+        }
+        if (platePlan(10, 20).ok) bad.push('leichter als Stange wurde berechnet');
+        return bad;
+      });
+      return [r.length === 0, r.join(' | ')];
+    }
+  },
+  {
+    id: 'PB-056', title: 'CSV-Export bleibt bei fiesen Zeichen spaltentreu',
+    run: async () => {
+      // Ein Semikolon oder Zeilenumbruch in einer Notiz wuerde die Spalten
+      // verschieben - und zwar still, erst in der Tabelle faellt es auf.
+      const r = await page.evaluate(() => {
+        const before = JSON.parse(JSON.stringify(D.history));
+        let captured = '';
+        const origBlob = window.Blob;
+        window.Blob = function (parts, opts) { captured = String(parts[0]); return new origBlob(parts, opts); };
+        const origCreate = URL.createObjectURL, origRevoke = URL.revokeObjectURL;
+        URL.createObjectURL = () => 'blob:test';
+        URL.revokeObjectURL = () => {};
+        const origClick = HTMLAnchorElement.prototype.click;
+        HTMLAnchorElement.prototype.click = function () {};
+        D.history = [{ id: 'CSV1', updatedAt: Date.now(), date: '01.07.2026', planKey: 'FullBody_A',
+          duration: 40, sets: [
+            { ex: 'Bankdrücken;fies', nr: 1, w: 82.5, r: 8, rir: 2, note: 'Zeile1\nZeile2;mit "Anführung"',
+              muscle: 'chest', type: 'main', mode: '' }] }];
+        exportCSV();
+        window.Blob = origBlob; URL.createObjectURL = origCreate; URL.revokeObjectURL = origRevoke;
+        HTMLAnchorElement.prototype.click = origClick;
+        D.history = before; save();
+        const lines = captured.replace(/^﻿/, '').split('\r\n').filter(Boolean);
+        // Spalten zaehlen: Semikolons ausserhalb von Anfuehrungszeichen
+        const cols = line => {
+          let n = 1, q = false;
+          for (let i = 0; i < line.length; i++) {
+            const c = line[i];
+            if (c === '"') { if (q && line[i + 1] === '"') i++; else q = !q; }
+            else if (c === ';' && !q) n++;
+          }
+          return n;
+        };
+        return {
+          bom: captured.charCodeAt(0) === 0xfeff,
+          zeilen: lines.length === 2,
+          spalten: lines.every(l => cols(l) === cols(lines[0])),
+          dezimalkomma: /;82,5;/.test(lines[1]),
+          gruppe: lines[1].includes('chest')
+        };
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-054', title: 'Mesozyklus skaliert das Workout, nicht den Plan',
     run: async () => {
       // Der Zyklus darf denselben Fehler nicht machen wie ein naiver Deload:
@@ -1060,6 +1301,9 @@ const REGRESSIONS = [
         const beforeUi = JSON.parse(JSON.stringify(D.ui.meso || {}));
         D.plan = { Tag_A: { day: 'Mo', exercises: [
           { id: 1, name: 'Bankdrücken', sets: 6, rmin: 6, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' }] } };
+        // Erst normalisieren, dann vergleichen: sonst misst der Test das
+        // Ergaenzen von Standardfeldern statt einer Aenderung am Volumen.
+        save();
         const planVorher = JSON.stringify(D.plan);
         const res = { verlauf: [] };
         startMeso(5);
