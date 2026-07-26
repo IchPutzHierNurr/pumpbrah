@@ -101,6 +101,11 @@ if (!BROWSERS[BROWSER]) {
 const ITERATIONS = parseInt(arg('iterations', '2500'), 10);
 const SEED = parseInt(arg('seed', String(Date.now() % 1e9)), 10);
 const SMOKE_ONLY = process.argv.includes('--smoke-only');
+/* --stages=smoke,regression fährt nur einen Teil. Gebraucht wird das von der
+   Mutationsstichprobe (test/mutate.mjs): dort laufen Dutzende Varianten der
+   App gegeneinander, und ein voller Lauf je Variante wäre Stunden. */
+const STAGES = arg('stages', '').split(',').map(x => x.trim()).filter(Boolean);
+const laeuft = name => !SMOKE_ONLY && (!STAGES.length || STAGES.includes(name));
 
 // ---------------------------------------------------------------- reporting
 const R = { pass: 0, fail: 0, failures: [], errors: [] };
@@ -188,7 +193,7 @@ await page.evaluate(() => {
 await page.waitForTimeout(400);
 
 // ============================================================ 2. REGRESSION
-if (!SMOKE_ONLY) {
+if (laeuft('regression')) {
 stage('REGRESSION — ein Test pro Eintrag in docs/BUGS.md');
 
 /**
@@ -2208,6 +2213,11 @@ for (const t of REGRESSIONS) {
   catch (e) { ok = false; detail = 'Ausnahme: ' + e.message; }
   check('regression', `${t.id} — ${t.title}`, ok, ok ? '' : detail);
 }
+}   /* Ende REGRESSION. Diese Klammer fehlte: die Stufe umschloss bis Juli 2026
+       auch Sync, Offline und Fuzz. Solange es nur `--smoke-only` gab, fiel das
+       nicht auf — alle vier hingen an derselben Bedingung. Mit --stages wurde
+       daraus ein stiller Fehler: `--stages=sync` sprang aus der Regression
+       heraus und ließ damit auch Sync aus, ohne ein Wort zu sagen. */
 
 // ============================================================ 2b. SYNC
 /* Der Sync war bis Juli 2026 der größte ungeprüfte Teil der App — und der,
@@ -2216,7 +2226,7 @@ for (const t of REGRESSIONS) {
    zurück. Hier hängt eine Nachbildung der sieben benutzten SDK-Methoden in den
    Browser (siehe fakestore.mjs) — damit läuft der Sync-Pfad zum ersten Mal
    wirklich, und zwei Geräte auf einem Konto werden prüfbar. */
-if (!SMOKE_ONLY) {
+if (laeuft('sync')) {
 stage('SYNC — Anmeldung, Cloud und zwei Geräte auf einem Konto');
 
 const fs = createFakeFirestore();
@@ -2540,7 +2550,7 @@ for (const t of SYNC_TESTS) {
    damit wird prüfbar, ob nach einer Änderung die NEUE Fassung ankommt. Das
    ist die unangenehmste Fehlerart einer installierten Web-App — niemand kann
    sie melden, weil niemand merkt, dass er eine alte Version sieht. */
-if (!SMOKE_ONLY) {
+if (laeuft('offline')) {
 stage('OFFLINE — Service Worker, Cache und neue Fassungen');
 
 const srv = await serve(resolve(__dirname, '..'));
@@ -2659,6 +2669,7 @@ await srv.stop();
 }
 
 // ================================================================ 3. FUZZ
+if (laeuft('fuzz')) {
 stage(`FUZZ — ${ITERATIONS} zufällige Aktionen (seed=${SEED})`);
 
 /**
