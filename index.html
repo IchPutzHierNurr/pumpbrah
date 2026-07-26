@@ -2293,13 +2293,15 @@ html,body{
 </div>
 <div id="plate-out"></div>
 <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">Scheiben pro Seite, gierig von schwer nach leicht. Verfügbar: 25 · 20 · 15 · 10 · 5 · 2,5 · 1,25 kg.</div>
+<div class="sheet-cta" id="plate-back" style="display:none"><button class="btn" onclick="platesToLog()">Gewicht übernehmen</button>
+<button type="button" class="cta-sub" onclick="cm('m-plates')">Zurück zum Satz</button></div>
 </div></div>
 <div class="mbg" id="m-log"><div class="mdl mdl-log">
 <div class="mt">SATZ LOGGEN <button class="mc" onclick="cm('m-log')">✕</button></div>
 <div class="log-head">
 <span class="exdemo-thumb log-thumb" id="log-demo"></span>
 <div><div id="log-name"></div><div id="log-hint"></div></div>
-<button type="button" class="setbtn" onclick="openPlates(document.getElementById('log-w').value)">Scheiben</button>
+<button type="button" class="setbtn" onclick="openPlates(document.getElementById('log-w').value,true)">Scheiben</button>
 </div>
 <div id="log-target"></div>
 <div class="ir">
@@ -3032,16 +3034,29 @@ function getTimerTotal(){
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function cm(id){
   const el=document.getElementById(id);
-  if(el)el.classList.remove('show');
+  if(el){
+    el.classList.remove('show');
+    el.style.zIndex='';
+    /* Der Zähler läuft zurück, sobald das oberste Sheet geht — sonst wächst
+       er über eine lange Session immer weiter. */
+    if(!document.querySelector('.mbg.show'))modalZ=200;
+  }
   /* Bibliothek offen gelassen, ohne etwas zu wählen? Dann darf der
      „Übung ins Workout“-Modus nicht als Falle stehen bleiben. */
   if(id==='m-lib')addToWorkoutMode=false;
   if(id==='m-alt'){pendingSwap=null}
   if(id==='m-woswitch')pendingSwitchKey=null;
 }
+/* Sheets stapeln sich in der Reihenfolge, in der sie geöffnet werden — nicht
+   in der, in der sie zufällig im Dokument stehen. Der Scheibenrechner steht
+   im Markup vor dem Log-Dialog; ohne diese Zeile öffnete er sich HINTER ihm,
+   und man musste erst den Log-Dialog schließen, um ihn überhaupt zu sehen.
+   Beide liegen auf z-index 200, bei Gleichstand gewinnt die Dokumentreihenfolge. */
+let modalZ=200;
 function om(id){
   const el=document.getElementById(id);
   if(!el)return;
+  el.style.zIndex=String(++modalZ);
   el.classList.add('show');
   try{history.pushState({pbModal:id},'')}catch{}
 }
@@ -6449,11 +6464,24 @@ function plateHTML(total,bar){
     `<div class="pl-sum">${esc(String(Math.round(r.perSide*100)/100).replace('.',','))} kg pro Seite · Stange ${esc(r.bar)} kg`+
     (r.rest>1e-9?` · <b style="color:var(--orange)">${esc(String(Math.round(r.rest*100)/100).replace('.',','))} kg nicht darstellbar</b>`:'')+`</div></div>`;
 }
-function openPlates(prefill){
+function openPlates(prefill,fromLog){
   const w=document.getElementById('plate-w');
   if(w&&prefill)w.value=prefill;
+  /* Aus dem Log-Dialog heraus soll das Ergebnis auch zurückwandern — sonst
+     rechnet man um und tippt die Zahl daneben noch einmal ab. */
+  const back=document.getElementById('plate-back');
+  if(back)back.style.display=fromLog?'':'none';
+  plateFromLog=!!fromLog;
   renderPlates();
   om('m-plates');
+}
+let plateFromLog=false;
+function platesToLog(){
+  const w=parseFloat((document.getElementById('plate-w')||{}).value);
+  const target=document.getElementById('log-w');
+  if(target&&Number.isFinite(w)&&w>0)target.value=w;
+  cm('m-plates');
+  toast(Number.isFinite(w)&&w>0?`${String(w).replace('.',',')} kg übernommen`:'Kein Gewicht eingetragen');
 }
 function renderPlates(){
   const w=parseFloat((document.getElementById('plate-w')||{}).value);

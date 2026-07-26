@@ -1050,6 +1050,45 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-063', title: 'Sheets stapeln sich in der Reihenfolge, in der man sie oeffnet',
+    run: async () => {
+      // Der Scheibenrechner steht im Markup VOR dem Log-Dialog. Beide lagen
+      // auf z-index 200 - bei Gleichstand gewinnt die Dokumentreihenfolge,
+      // also oeffnete sich der Rechner HINTER dem Dialog, aus dem er
+      // aufgerufen wurde. Man musste erst den Dialog schliessen, um ihn zu
+      // sehen. Die Reihenfolge im Dokument ist keine Rangfolge.
+      const r = await page.evaluate(() => {
+        document.querySelectorAll('.mbg.show').forEach(m => { m.classList.remove('show'); m.style.zIndex = ''; });
+        D.active = null; startWorkout(Object.keys(D.plan)[0]);
+        openLog(0);
+        document.getElementById('log-w').value = '87.5';
+        openPlates('87.5', true);
+        const z = id => parseInt(getComputedStyle(document.getElementById(id)).zIndex) || 0;
+        const res = {
+          beideOffen: document.getElementById('m-log').classList.contains('show')
+                      && document.getElementById('m-plates').classList.contains('show'),
+          rechnerObenauf: z('m-plates') > z('m-log'),
+          uebernehmenSichtbar: document.getElementById('plate-back').style.display !== 'none'
+        };
+        // Uebernehmen schreibt zurueck und laesst den Log-Dialog stehen
+        document.getElementById('plate-w').value = '92.5';
+        platesToLog();
+        res.rechnerZu = !document.getElementById('m-plates').classList.contains('show');
+        res.logNochOffen = document.getElementById('m-log').classList.contains('show');
+        res.wertUebernommen = document.getElementById('log-w').value === '92.5';
+        // Aus dem Setup heraus (ohne Log) gibt es keinen Rueckweg-Knopf
+        cm('m-log');
+        openPlates(100);
+        res.ohneLogKeinKnopf = document.getElementById('plate-back').style.display === 'none';
+        cm('m-plates');
+        D.active = null; save();
+        return res;
+      });
+      const ok = Object.values(r).every(v => v === true);
+      return [ok, JSON.stringify(r)];
+    }
+  },
+  {
     id: 'PB-062', title: 'Einklappbare Abschnitte merken sich ihren Zustand',
     run: async () => {
       // Der Zustand liegt in D.ui und nicht in einer Modulvariablen - sonst

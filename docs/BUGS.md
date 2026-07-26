@@ -104,6 +104,8 @@
 | [PB-059](#pb-059) | Autoregulation — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-060](#pb-060) | Stagnations-Aktionen — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-061](#pb-061) | „Satz loggen" passte nicht auf den Bildschirm | **hoch** | iOS / Layout | ✅ |
+| [PB-062](#pb-062) | Einklappbare Abschnitte — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-063](#pb-063) | Der Scheibenrechner öffnete hinter dem Log-Dialog | mittel | Darstellung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2247,6 +2249,71 @@ Eingabefeldern brauchen eine klebende Aktionszeile. Beim Bauen hat außerdem
 der bestehende Test **PB-026** zugeschlagen: Das neue Notizfeld hatte 13,3 px
 und hätte iOS beim Fokussieren hineinzoomen lassen.
 
+
+---
+
+### PB-062
+
+**Einklappbare Abschnitte — Test vor dem Fehler**
+
+| | |
+|---|---|
+| **Schwere** | — (vorbeugend) |
+| **Klasse** | Vorbeugung |
+| **Status** | ✅ abgesichert |
+
+Der Zustand eines eingeklappten Abschnitts liegt in `D.ui`, nicht in einer
+Modulvariablen — sonst klappt bei jedem Reload alles wieder auf und die
+Einstellung fehlt auf dem zweiten Gerät. Die Volumenkarte trägt eingeklappt
+zusätzlich eine Kurzfassung; ohne sie müsste man aufklappen, nur um zu sehen,
+ob überhaupt etwas fehlt — dann hätte das Einklappen nichts gebracht.
+
+**Test.** `PB-062` — Zustand gespeichert, Rumpf versteckt, Kurzfassung
+vorhanden, Karte messbar kleiner, Zustand überlebt ein Neuzeichnen.
+
+---
+
+### PB-063
+
+**Der Scheibenrechner öffnete sich hinter dem Log-Dialog**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Darstellung / Schichtung |
+| **Gefunden** | vom Nutzer, beim Umrechnen mitten im Satz |
+| **Status** | ✅ behoben |
+
+**Symptom.** Ruft man den Scheibenrechner aus „Satz loggen" auf, erscheint er
+**hinter** dem Dialog, aus dem man ihn gerade geöffnet hat. Man muss erst den
+Log-Dialog schließen, um den Rechner zu sehen — und danach den Satz neu
+öffnen.
+
+**Ursache.** Beide Sheets liegen auf `z-index: 200`. Bei Gleichstand
+entscheidet die **Dokumentreihenfolge**, und `m-plates` steht im Markup vor
+`m-log`. Die Reihenfolge im Dokument war damit die Rangfolge auf dem
+Bildschirm — obwohl sie über die Zeit nur davon abhing, wo neue Dialoge
+eingefügt wurden.
+
+**Fix.** Ein Zähler in `om()` vergibt beim Öffnen die nächsthöhere Ebene;
+`cm()` räumt sie wieder ab und setzt den Zähler zurück, sobald kein Sheet mehr
+offen ist. Sheets stapeln sich damit in der Reihenfolge, in der man sie
+öffnet.
+
+**Dazu der fehlende Rückweg.** Aus dem Log-Dialog heraus zeigt der Rechner
+jetzt „Gewicht übernehmen" — er schreibt das Ergebnis ins Gewichtsfeld und
+schließt sich, der Satz-Dialog steht mit den restlichen Eingaben noch da.
+Vorher hätte man die Zahl abgelesen und daneben noch einmal eingetippt.
+
+**Lektion.** Wenn zwei Elemente denselben `z-index` haben, ist die
+Stapelreihenfolge ein **Nebenprodukt der Dateistruktur**. Das fällt erst auf,
+wenn zwei davon gleichzeitig offen sind — bei Dialogen also erst, wenn einer
+den anderen aufruft.
+
+**Test.** `PB-063` — Rechner aus dem Log-Dialog: beide offen, Rechner obenauf,
+Übernehmen schreibt zurück und lässt den Log-Dialog stehen; ohne Log-Kontext
+erscheint der Rückweg-Knopf gar nicht erst.
+
 ---
 
 ## Offene Punkte (Backend-Änderung nötig)
@@ -2377,7 +2444,8 @@ gestellt werden sollten:
 | 8 | **Reihenfolge- und Rundungsannahmen** | PB-015, PB-028, PB-031, PB-033, PB-047, PB-049, PB-053, PB-055 | Gilt die Invariante auch noch *nach* Runden, Sortieren, Formatieren — und ist die Reihenfolge von Regeln selbst Bedeutung? |
 | 9 | **Teil-Umstellung: nur die halbe Sache angefasst** | PB-004, PB-025, PB-034 | Wer sonst hängt an dem, was ich gerade umgestellt habe? |
 | 10 | **Bedingung aus einer Verneinung statt aus der Bedeutung** | PB-038 | Prüft diese Bedingung wirklich den Fall, den sie behauptet — oder nur, dass ein anderer Fall nicht vorliegt? |
-| 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
+| 11 | **Gekürzte Beschriftung ohne Eindeutigkeitsprüfung** | PB-039 |
+| 17 | **Rangfolge, die aus der Dateistruktur stammt** | PB-063 | Ist diese Reihenfolge gewollt — oder nur die, in der es zufällig im Dokument steht? | Ist das ein Text oder ein Bezeichner? Bezeichner brauchen eine Kollisionsprüfung — und der Fallback gilt für die ganze Menge, nicht für den Einzelfall. |
 | 12 | **Ausgabe, die für Menschen nicht prüfbar ist** | PB-041 | Kann ich diesem Ergebnis ansehen, ob es stimmt? Wenn nein: Welche unabhängige Gegenimplementierung prüft es — und reicht eine? |
 | 13 | **Anzeige, die nur bei der aktuellen Datenmenge stimmt** | PB-048 | Stimmt das auch bei drei statt zwei, bei Wiederholungen, bei null? Oder beschreibt es nur zufällig den Ist-Zustand? |
 | 14 | **Zwei Rechnungen für dieselbe Frage** | PB-051 | Gibt es diese Aussage noch woanders — und kommt dort dasselbe heraus? |
