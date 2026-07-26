@@ -49,12 +49,13 @@ Dinge, die geprüft werden. Bugs von vor einem Jahr werden heute noch getestet.
 node test/check.mjs --iterations=2500
 ```
 
-Der Harness hat drei Stufen (Details im Kopf der Datei):
+Der Harness hat vier Stufen (Details im Kopf der Datei):
 
 | Stufe | Was sie tut | Wenn sie fehlschlägt |
 |---|---|---|
 | **SMOKE** | App starten, Onboarding, jeder Screen | Abbruch — alles Weitere ist Rauschen |
 | **REGRESSION** | Ein Test pro `PB-NNN` aus `BUGS.md` | Ein alter Fehler ist zurück. Höchste Priorität. |
+| **SYNC** | Anmelden, Cloud, zwei Geräte auf einem Konto (gefälschte Firestore) | Datenverlust im Sync. Sofort. |
 | **FUZZ** | N zufällige Aktionen, nach **jeder** alle Invarianten | Neuer Fehler. Seed notieren. |
 
 Bei einem Fehlschlag liefert der Report immer:
@@ -90,6 +91,12 @@ gebaut hast**. Prüfe aktiv:
 
 2. **Fehlt eine Invariante?** Für jede neue Datenstruktur gilt: Welche
    Eigenschaft muss **immer** gelten? Die gehört ins `INVARIANTS`-Array.
+
+2b. **Belegt ein Nebenläufigkeitstest, dass die Nebenläufigkeit stattfand?**
+   Ein Wettlauf-Test, der auch grün ist, wenn die Verschränkung nicht eintritt,
+   prüft nichts — er ist ein Zufallsgenerator mit Häkchen. Also erst den
+   Nachweis (`fs.ops('tx-conflict').length > 0`), dann den Vertrag. Siehe
+   PB-069.
 
 3. **Ist der Zufall breit genug?** Neue Eingabefelder brauchen Einträge in
    `NASTY`: leer, nur Leerzeichen, negativ, `NaN`, `Infinity`, 300 Zeichen,
@@ -187,6 +194,7 @@ Kurz und ehrlich:
 CHECK-BERICHT
 ─────────────
 Regressionen:  58/58 bestanden
+Sync:          4/4 bestanden (zwei Geräte, Transaktion, Zurücksetzen)
 Fuzzing:       12 × 2500 + 2 × 25000 Iterationen über 91 Operationen
 Invarianten:   22 × je Aktion
 Abdeckung:     0 Funktionen am Knopf ohne Testaufruf (test/coverage.mjs)

@@ -11,23 +11,33 @@
  *                  Bug wird hier für immer nachgeprüft. Das ist der
  *                  "automatisch mitgelernt"-Teil: ein Fix ohne Eintrag hier
  *                  gilt als nicht erledigt.
+ *   2b. SYNC       Anmelden, Cloud-Schreiben und ZWEI Geräte auf einem Konto,
+ *                  gegen eine gefälschte Firestore (test/fakestore.mjs). Der
+ *                  Sync lief bis Juli 2026 in keinem Test, weil `db` ohne
+ *                  geladenes SDK null bleibt — und in ihm wohnen die stillen
+ *                  Datenverluste.
  *   3. FUZZ        N zufällige Aktionen gegen den echten Anwendungszustand.
  *                  Nach JEDER Aktion werden alle Invarianten geprüft. Findet
  *                  die Fehler, an die beim Schreiben der Testfälle keiner
  *                  gedacht hat.
  *
  * Aufruf:
- *   node test/check.mjs                 # 1000 Fuzz-Iterationen (Standard)
+ *   node test/check.mjs                 # 2500 Fuzz-Iterationen (Standard)
  *   node test/check.mjs --iterations=5000
  *   node test/check.mjs --seed=12345    # exakte Wiederholung eines Laufs
+ *   node test/check.mjs --browser=webkit   # andere Engine, falls installiert
  *   node test/check.mjs --smoke-only
  *
  * Exit-Code 0 = alles grün. Alles andere = mindestens ein Fehler.
  */
 
-import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
+import * as pw from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { createFakeFirestore } from './fakestore.mjs';
+
+const C_ERR = '\x1b[31m', C_OFF = '\x1b[0m';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const APP_URL = 'file://' + resolve(__dirname, '..', 'index.html');
@@ -37,6 +47,31 @@ const arg = (name, dflt) => {
   const hit = process.argv.find(a => a.startsWith('--' + name + '='));
   return hit ? hit.split('=')[1] : dflt;
 };
+/* --browser=webkit ist kein Luxus, sondern der Kern der Sache: PUMPBRAH ist
+   eine Home-Screen-App fürs iPhone, und bis Juli 2026 lief jeder einzelne Test
+   in Chromium. WebKit ist nicht iOS Safari — keine echte Tastatur, kein echtes
+   Safe-Area, kein Gummiband-Scroll — aber es ist dieselbe Engine-Familie und
+   findet damit die Klasse Fehler, die aus Engine-Unterschieden kommt:
+   color-mix(), backdrop-filter, 100dvh, sticky in Flex, CompressionStream. */
+const BROWSERS = { chromium: { launch: { executablePath: CHROME } }, webkit: {}, firefox: {} };
+const BROWSER = arg('browser', 'chromium');
+if (!BROWSERS[BROWSER]) {
+  console.error(`Unbekannter Browser "${BROWSER}". Erlaubt: ${Object.keys(BROWSERS).join(', ')}`);
+  process.exit(2);
+}
+/* Playwright nennt für jede Engine einen Pfad, auch wenn dort nichts liegt —
+   der Fehlschlag käme sonst als Stacktrace aus der Tiefe. Lieber vorher
+   nachsehen und sagen, was fehlt. */
+{
+  const p = BROWSERS[BROWSER].launch?.executablePath || pw[BROWSER].executablePath();
+  if (!existsSync(p)) {
+    console.error(`\n${C_ERR}Für "${BROWSER}" ist kein Browser installiert.${C_OFF}`);
+    console.error(`  erwartet: ${p}`);
+    console.error(`  Nachinstallieren: npx playwright install ${BROWSER}`);
+    console.error(`  (In abgeschotteten Umgebungen kann der Download blockiert sein.)\n`);
+    process.exit(3);
+  }
+}
 /* 2500 statt 1000, seit der zweite Coverage-Audit den Operationsvorrat von
    67 auf 91 gehoben hat: bei 1000 Runden bekommt jede Operation im Mittel nur
    elf Treffer, und die Streuung allein lässt dann regelmäßig eine unter die
@@ -59,7 +94,7 @@ function check(stage, name, ok, detail = '') {
 function stage(title) { console.log(`\n${C.y}▸ ${title}${C.x}`); }
 
 // ---------------------------------------------------------------- boot
-const browser = await chromium.launch({ executablePath: CHROME });
+const browser = await pw[BROWSER].launch(BROWSERS[BROWSER].launch || {});
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
 const page = await ctx.newPage();
 
@@ -2026,6 +2061,256 @@ for (const t of REGRESSIONS) {
   check('regression', `${t.id} — ${t.title}`, ok, ok ? '' : detail);
 }
 
+// ============================================================ 2b. SYNC
+/* Der Sync war bis Juli 2026 der größte ungeprüfte Teil der App — und der,
+   in dem stille Datenverluste wohnen. Grund: `db` bleibt null, solange das
+   Firebase-SDK nicht geladen ist, also kehrte `queueCloudSave()` in Zeile eins
+   zurück. Hier hängt eine Nachbildung der sieben benutzten SDK-Methoden in den
+   Browser (siehe fakestore.mjs) — damit läuft der Sync-Pfad zum ersten Mal
+   wirklich, und zwei Geräte auf einem Konto werden prüfbar. */
+if (!SMOKE_ONLY) {
+stage('SYNC — Anmeldung, Cloud und zwei Geräte auf einem Konto');
+
+const fs = createFakeFirestore();
+
+/** Ein „Gerät": eigener Context, eigener localStorage, gemeinsamer Store. */
+async function openDevice(who) {
+  const c = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await fs.install(c, who);
+  const p = await c.newPage();
+  p.on('dialog', d => d.accept());
+  p.on('pageerror', e => R.errors.push(`pageerror[${who}]: ${e.message}`));
+  p.on('console', m => {
+    if (m.type() !== 'error') return;
+    const t = m.text();
+    if (/gstatic|firebase|net::ERR|Failed to load resource/i.test(t)) return;
+    R.errors.push(`console[${who}]: ${t}`);
+  });
+  await p.goto(APP_URL);
+  await p.waitForTimeout(400);
+  return { ctx: c, page: p, who };
+}
+async function login(dev, code) {
+  await dev.page.fill('#sync-code', code);
+  await dev.page.click('text=LOS GEHT\'S');
+  await dev.page.waitForTimeout(500);
+}
+async function onboard(dev) {
+  for (let i = 0; i < 8; i++) {
+    if (i === 1) await dev.page.fill('#ob-birthday', '1993-06-21');
+    if (i === 2) await dev.page.fill('#ob-height', '181');
+    if (i === 3) await dev.page.fill('#ob-weight', '82');
+    await dev.page.click('#ob-content .btn');
+    await dev.page.waitForTimeout(110);
+  }
+  await dev.page.waitForTimeout(600);
+}
+/** Eine Session mit erkennbarem Namen in die Historie schreiben. */
+async function logSession(dev, marke) {
+  return dev.page.evaluate(async m => {
+    const k = Object.keys(D.plan)[0];
+    D.active = null;
+    startWorkout(k);
+    const e = D.active.exercises[0];
+    e.logged.push({ w: 60, r: 8, rir: 2, note: m, ts: Date.now() });
+    D.active.id = 'sess-' + m;
+    endWorkout();
+    save();
+    return D.history.length;
+  }, marke);
+}
+const marken = dev => dev.page.evaluate(() =>
+  D.history.flatMap(s => (s.sets || []).map(x => x.note)).filter(Boolean).sort());
+const cloudMarken = () => {
+  const d = fs.read('pumpbrah/athlet1');
+  return d ? (d.history || []).flatMap(s => (s.sets || []).map(x => x.note)).filter(Boolean).sort() : [];
+};
+
+const SYNC_TESTS = [
+  {
+    id: 'PB-067', title: 'Anmelden, in der Cloud landen, abmelden, wiederkommen',
+    run: async () => {
+      fs.reset();
+      const a = await openDevice('A');
+      const out = {};
+      try {
+        await login(a, 'athlet1');
+        // Unbekannter Name -> Onboarding, nicht direkt in die App
+        out.onboardingBeiNeuemKonto = await a.page.isVisible('#onboard-screen');
+        await onboard(a);
+        out.appSichtbar = await a.page.isVisible('#main-app');
+        out.dokumentAngelegt = fs.has('pumpbrah/athlet1');
+        const cloud = fs.read('pumpbrah/athlet1') || {};
+        out.planInDerCloud = Object.keys(cloud.plan || {}).length >= 2;
+        // Das Profilbild gehört NICHT in die Cloud (cloudSafeSnapshot)
+        await a.page.evaluate(() => { D.ui.avatar = 'data:image/png;base64,AAAA'; save(); });
+        await a.page.waitForTimeout(400);
+        out.avatarNichtInDerCloud = !((fs.read('pumpbrah/athlet1') || {}).ui || {}).avatar;
+
+        await logSession(a, 'erste');
+        await a.page.waitForTimeout(500);
+        out.satzInDerCloud = cloudMarken().includes('erste');
+
+        /* Abmelden. `doLogout()` endet mit `location.reload()`, und ein
+           seiteninternes reload kommt unter `file://` in headless Chromium
+           nie an (nachgemessen: kein load-Ereignis nach 8 s). Also wird der
+           prüfbare Teil geprüft — Beobachter abgemeldet, Code entfernt,
+           lokale Daten unberührt — und der Neustart von außen gefahren. */
+        const beobachterVorher = fs.subCount();
+        await a.page.evaluate(() => doLogout()).catch(() => {});
+        await a.page.waitForTimeout(300);
+        out.beobachterWarDa = beobachterVorher > 0;
+        out.beobachterAbgemeldet = fs.subCount() === 0;
+        out.syncCodeEntfernt = await a.page.evaluate(() => !localStorage.getItem('pb_sync'));
+        out.lokaleDatenBleiben = await a.page.evaluate(() => !!localStorage.getItem('pb_data'));
+        await a.page.reload(); await a.page.waitForTimeout(600);
+        out.nachLogoutLoginScreen = await a.page.isVisible('#login-screen');
+
+        // Wiederkommen: die Daten müssen aus der Cloud zurückkommen
+        await a.page.evaluate(() => localStorage.removeItem('pb_data'));
+        await login(a, 'athlet1');
+        await a.page.waitForTimeout(700);
+        out.appNachWiederkehr = await a.page.isVisible('#main-app');
+        out.satzZurueck = (await marken(a)).includes('erste');
+        out.getSetPaare = { get: fs.ops('get').length, set: fs.ops('set').length };
+        return [Object.entries(out).every(([k, v]) =>
+          k === 'getSetPaare' ? true : v === true), JSON.stringify(out)];
+      } finally { await a.ctx.close(); }
+    }
+  },
+  {
+    id: 'PB-068', title: 'Zwei Geräte, ein Konto — kein Satz geht verloren',
+    run: async () => {
+      fs.reset();
+      const a = await openDevice('A');
+      const b = await openDevice('B');
+      const out = {};
+      try {
+        await login(a, 'athlet1'); await onboard(a);
+        // B meldet sich am bestehenden Konto an und bekommt den Plan
+        await login(b, 'athlet1');
+        await b.page.waitForTimeout(700);
+        out.bOhneOnboarding = await b.page.isVisible('#main-app');
+        const planA = await a.page.evaluate(() => Object.keys(D.plan).sort().join(','));
+        const planB = await b.page.evaluate(() => Object.keys(D.plan).sort().join(','));
+        out.gleicherPlan = planA === planB && planA.length > 0;
+
+        // Beide loggen etwas Eigenes, hintereinander, mit Zustellung dazwischen
+        await logSession(a, 'vonA');
+        await a.page.waitForTimeout(400);
+        await fs.flush();
+        await logSession(b, 'vonB');
+        await b.page.waitForTimeout(400);
+        await fs.flush();
+        await fs.flush();
+
+        const mA = await marken(a), mB = await marken(b), mC = cloudMarken();
+        out.aHatBeide = mA.includes('vonA') && mA.includes('vonB');
+        out.bHatBeide = mB.includes('vonA') && mB.includes('vonB');
+        out.cloudHatBeide = mC.includes('vonA') && mC.includes('vonB');
+        out.stand = { A: mA, B: mB, Cloud: mC };
+        return [out.gleicherPlan && out.bOhneOnboarding
+          && out.aHatBeide && out.bHatBeide && out.cloudHatBeide, JSON.stringify(out)];
+      } finally { await a.ctx.close(); await b.ctx.close(); }
+    }
+  },
+  {
+    id: 'PB-069', title: 'Gleichzeitiges Schreiben zweier Geräte verliert keinen Satz',
+    run: async () => {
+      /* Der Kern von PB-022: queueCloudSave liest, führt zusammen, schreibt —
+         ohne Transaktion. Faengt B seinen Schreibvorgang an, nachdem A gelesen
+         hat, aber bevor A schreibt, dann ueberschreibt A das Ergebnis mit einem
+         Merge, der B nie gesehen hat. Hier wird diese Verschraenkung
+         absichtlich gebaut, statt auf sie zu hoffen. */
+      fs.reset();
+      const a = await openDevice('A');
+      const b = await openDevice('B');
+      const out = {};
+      try {
+        await login(a, 'athlet1'); await onboard(a);
+        await login(b, 'athlet1'); await b.page.waitForTimeout(700);
+        await fs.flush();
+
+        // Latenz macht das Fenster zwischen get und set breit genug, um es
+        // zuverlaessig zu treffen.
+        fs.setLatency(300);
+        await Promise.all([logSession(a, 'gleichA'), logSession(b, 'gleichB')]);
+        await a.page.waitForTimeout(1600);
+        await b.page.waitForTimeout(200);
+        out.direktNachDemWettlauf = cloudMarken();
+
+        // Ohne weitere Zustellung: was steht jetzt in der Cloud?
+        out.beideDirektInDerCloud = out.direktNachDemWettlauf.includes('gleichA')
+                                 && out.direktNachDemWettlauf.includes('gleichB');
+        // Mit Zustellung: holen die Listener den verlorenen Satz zurueck?
+        await fs.flush(5);
+        fs.setLatency(0);
+        await fs.flush(5);
+        out.nachZustellung = cloudMarken();
+        out.beideNachZustellung = out.nachZustellung.includes('gleichA')
+                               && out.nachZustellung.includes('gleichB');
+        out.aLokal = await marken(a);
+        out.bLokal = await marken(b);
+        /* Ohne diesen Nachweis wäre der Test wertlos: er könnte grün sein,
+           weil die Verschränkung gar nicht eintrat. Mindestens eine
+           Transaktion MUSS auf einen Konflikt gelaufen und wiederholt worden
+           sein — sonst hat der Wettlauf nicht stattgefunden. */
+        out.konflikteAbgefangen = fs.ops('tx-conflict').length;
+        out.transaktionenGenutzt = fs.ops('tx-commit').length;
+        if (!out.transaktionenGenutzt) return [false,
+          'Es liefen gar keine Transaktionen — der Sync nimmt noch den alten Weg: ' + JSON.stringify(out)];
+        if (!out.konflikteAbgefangen) return [false,
+          'Kein Konflikt aufgetreten — die Verschränkung wurde nicht getroffen, '
+          + 'der Test beweist nichts. Latenz erhöhen. ' + JSON.stringify(out)];
+        return [out.beideNachZustellung
+          && out.aLokal.includes('gleichA') && out.aLokal.includes('gleichB')
+          && out.bLokal.includes('gleichA') && out.bLokal.includes('gleichB'),
+          JSON.stringify(out)];
+      } finally { fs.setLatency(0); await a.ctx.close(); await b.ctx.close(); }
+    }
+  },
+  {
+    id: 'PB-070', title: 'Alles zuruecksetzen loescht lokal UND in der Cloud',
+    run: async () => {
+      /* resetAll war bis hierher ungetestet — eine Funktion, die alle Daten
+         vernichtet. Mit dem Double ist auch die Cloud-Seite pruefbar: das
+         Dokument muss wirklich weg sein, nicht nur der lokale Speicher. */
+      fs.reset();
+      const a = await openDevice('A');
+      const out = {};
+      try {
+        await login(a, 'athlet1'); await onboard(a);
+        await logSession(a, 'vorher');
+        await a.page.waitForTimeout(500);
+        out.dokumentDa = fs.has('pumpbrah/athlet1');
+        out.satzDrin = cloudMarken().includes('vorher');
+
+        await a.page.evaluate(() => resetAll()).catch(() => {});
+        await a.page.waitForTimeout(600);
+        out.dokumentGeloescht = !fs.has('pumpbrah/athlet1');
+        out.loeschVorgangProtokolliert = fs.ops('delete').length >= 1;
+
+        /* location.reload() aus der Seite kommt unter file:// nicht an, also
+           von aussen neu laden — danach muss die App wie beim ersten Start
+           aussehen. */
+        await a.page.reload(); await a.page.waitForTimeout(700);
+        out.loginScreen = await a.page.isVisible('#login-screen');
+        out.speicherLeer = await a.page.evaluate(() =>
+          !localStorage.getItem('pb_data') && !localStorage.getItem('pb_sync'));
+        return [Object.values(out).every(v => v === true), JSON.stringify(out)];
+      } finally { await a.ctx.close(); }
+    }
+  }
+];
+
+for (const t of SYNC_TESTS) {
+  let ok = false, detail = '';
+  try { [ok, detail] = await t.run(); }
+  catch (e) { ok = false; detail = 'Ausnahme: ' + e.message + ' @ ' + String(e.stack||'').split('\n')[1]; }
+  check('sync', `${t.id} — ${t.title}`, ok, ok ? '' : detail);
+}
+}
+
 // ================================================================ 3. FUZZ
 stage(`FUZZ — ${ITERATIONS} zufällige Aktionen (seed=${SEED})`);
 
@@ -2568,11 +2853,11 @@ if (fuzz.ok) {
 } else if (fuzz.kind === 'exception') {
   check('fuzz', `Ausnahme in "${fuzz.action}" (Iteration ${fuzz.iteration})`, false,
     `${fuzz.message}\n      ${fuzz.stack}\n      Aktionsfolge: ${fuzz.trail.join(' → ')}`
-    + `\n      Nachstellen: node test/check.mjs --seed=${SEED}`);
+    + `\n      Nachstellen: node test/check.mjs --browser=${BROWSER} --seed=${SEED}`);
 } else {
   check('fuzz', `Invariante verletzt nach "${fuzz.action}" (Iteration ${fuzz.iteration})`, false,
     `Invariante: ${fuzz.invariant}\n      Aktionsfolge: ${fuzz.trail.join(' → ')}`
-    + `\n      Nachstellen: node test/check.mjs --seed=${SEED}`);
+    + `\n      Nachstellen: node test/check.mjs --browser=${BROWSER} --seed=${SEED}`);
 }
 
 // Nach dem Fuzzing muss die App noch bedienbar sein.
@@ -2589,7 +2874,7 @@ await browser.close();
 
 console.log('\n' + '─'.repeat(64));
 console.log(`${R.fail === 0 ? C.g + 'ALLES GRÜN' : C.r + 'FEHLER GEFUNDEN'}${C.x}`
-  + `   ${R.pass} bestanden, ${R.fail} fehlgeschlagen   ${C.d}seed=${SEED}${C.x}`);
+  + `   ${R.pass} bestanden, ${R.fail} fehlgeschlagen   ${C.d}${BROWSER} · seed=${SEED}${C.x}`);
 if (R.failures.length) {
   console.log('\nFehlgeschlagen:');
   R.failures.forEach(f => console.log(`  [${f.stage}] ${f.name}${f.detail ? '\n      ' + f.detail : ''}`));

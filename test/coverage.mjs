@@ -28,16 +28,26 @@ const app = fs.readFileSync(path.join(here, '..', 'index.html'), 'utf8');
 const test = fs.readFileSync(path.join(here, 'check.mjs'), 'utf8');
 const ALLE = process.argv.includes('--alle');
 
-/* Nicht in der Seite testbar — jeder Eintrag mit Begründung. */
+/* Nicht in der Seite testbar — jeder Eintrag mit Begründung.
+   Seit die gefälschte Firestore existiert (test/fakestore.mjs) ist diese Liste
+   von acht auf einen Eintrag geschrumpft: Anmeldung, Cloud-Schreiben,
+   Abmelden und Zurücksetzen laufen jetzt gegen ein Double. */
 const AUSSERHALB = {
-  resetAll: 'löscht localStorage und lädt die Seite neu',
-  offlineMode: 'lädt neu und startet je nach Zustand das Onboarding',
-  doLogin: 'braucht eine echte Firebase-Verbindung',
-  doLogout: 'braucht eine echte Firebase-Verbindung',
-  initFirebase: 'braucht eine echte Firebase-Verbindung',
-  startSync: 'braucht eine echte Firebase-Verbindung',
-  queueCloudSave: 'schreibt in Firestore',
-  registerServiceWorker: 'Service Worker gibt es unter file:// nicht'
+  registerServiceWorker: 'Service Worker gibt es unter file:// nicht — '
+    + 'braucht einen HTTP-Server, siehe README'
+};
+
+/* Funktionen, die kein Test beim Namen nennt, weil sie über einen Klick
+   angesteuert werden. Ohne diese Liste meldet das Skript einen Fehlalarm —
+   und genau das tat es: `offlineMode` läuft in JEDEM Lauf (der SMOKE-Schritt
+   klickt „Offline-Modus"), das grep sah nur `name(` und fand nichts.
+   Ein Eintrag hier ist eine Behauptung mit Adresse: wer sie prüfen will,
+   findet den Test. */
+const UEBER_DIE_OBERFLAECHE = {
+  offlineMode: 'SMOKE — click(text=Offline-Modus (ohne Sync))',
+  doLogin: 'SYNC PB-067/068/069/070 — click(text=LOS GEHT\'S)',
+  obNext: 'SMOKE + SYNC — click(#ob-content .btn) durch alle acht Schritte',
+  finishOnboarding: 'SMOKE + SYNC — letzter Onboarding-Schritt'
 };
 
 const fns = [...app.matchAll(/^function ([A-Za-z_$][\w$]*)\s*\(/gm)].map(m => m[1]);
@@ -46,15 +56,19 @@ const inTest = n => new RegExp('\\b' + n + '\\s*\\(').test(test);
 const inMarkup = n => new RegExp('(onclick|oninput|onchange|onpointerdown|ontouchstart|onsubmit)="[^"]*\\b'
   + n + '\\s*\\(').test(app);
 
-const rows = uniq.map(n => ({ n, test: inTest(n), ui: inMarkup(n), aus: !!AUSSERHALB[n] }));
+const rows = uniq.map(n => ({ n, test: inTest(n) || !!UEBER_DIE_OBERFLAECHE[n],
+  perKlick: !inTest(n) && !!UEBER_DIE_OBERFLAECHE[n],
+  ui: inMarkup(n), aus: !!AUSSERHALB[n] }));
 const getestet = rows.filter(r => r.test);
+const perKlick = rows.filter(r => r.perKlick);
 const nurUi = rows.filter(r => !r.test && r.ui && !r.aus);
 const intern = rows.filter(r => !r.test && !r.ui && !r.aus);
 const aussen = rows.filter(r => !r.test && r.aus);
 
 const p = (a, b) => (a / b * 100).toFixed(1).replace('.', ',') + ' %';
 console.log(`Funktionen in index.html         : ${uniq.length}`);
-console.log(`vom Test aufgerufen              : ${getestet.length}  (${p(getestet.length, uniq.length)})`);
+console.log(`vom Test erreicht                : ${getestet.length}  (${p(getestet.length, uniq.length)})`);
+console.log(`  davon nur über einen Klick     : ${perKlick.length}`);
 console.log(`im UI verdrahtet, nie aufgerufen : ${nurUi.length}`);
 console.log(`nur intern erreichbar            : ${intern.length}`);
 console.log(`außerhalb des Harnesses          : ${aussen.length}`);
@@ -63,9 +77,25 @@ if (nurUi.length) {
   console.log('\n⚠  Hängt an einem Knopf, aber kein Test ruft es auf:');
   console.log('   ' + nurUi.map(r => r.n).join(', '));
 }
+if (perKlick.length) {
+  console.log('\n▸  Über die Oberfläche gefahren (kein Aufruf beim Namen):');
+  perKlick.forEach(r => console.log(`   ${r.n} — ${UEBER_DIE_OBERFLAECHE[r.n]}`));
+}
 if (aussen.length) {
   console.log('\n○  Bewusst außerhalb (Grund je Eintrag):');
   aussen.forEach(r => console.log(`   ${r.n} — ${AUSSERHALB[r.n]}`));
+}
+/* Ein Eintrag in UEBER_DIE_OBERFLAECHE, den der Test doch beim Namen nennt,
+   ist veraltet — er würde eine Lücke verdecken, die es nicht mehr gibt. */
+const ueberholt = Object.keys(UEBER_DIE_OBERFLAECHE).filter(n => inTest(n));
+if (ueberholt.length) {
+  console.log('\n⚠  Veraltete Einträge in UEBER_DIE_OBERFLAECHE (Test ruft sie direkt auf):');
+  console.log('   ' + ueberholt.join(', '));
+}
+const fehlend = Object.keys(AUSSERHALB).filter(n => !uniq.includes(n));
+if (fehlend.length) {
+  console.log('\n⚠  In AUSSERHALB genannt, aber gibt es nicht mehr:');
+  console.log('   ' + fehlend.join(', '));
 }
 if (ALLE && intern.length) {
   console.log('\n·  Nur intern erreichbar (Hilfsfunktionen, Renderer, Merge-Teile):');
@@ -75,4 +105,4 @@ if (ALLE && intern.length) {
 /* Ein Knopf ohne jeden Testaufruf ist der einzige Fall, der hier hart
    fehlschlägt: die Funktion ist per Definition benutzbar, also auch
    prüfbar — es hat nur niemand getan. */
-process.exit(nurUi.length === 0 ? 0 : 1);
+process.exit(nurUi.length === 0 && ueberholt.length === 0 && fehlend.length === 0 ? 0 : 1);

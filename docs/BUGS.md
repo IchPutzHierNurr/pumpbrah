@@ -109,8 +109,12 @@
 | [PB-064](#pb-064) | Kaputter Plan-Code erzeugte eine unbehandelte Ablehnung | niedrig | Fehlerbehandlung | ✅ |
 | [PB-065](#pb-065) | Supersatz-Kennung blieb allein zurück | mittel | Datenmodell | ✅ |
 | [PB-066](#pb-066) | Vier weitere Sheets hatten das Tastaturproblem aus PB-061 | **hoch** | iOS / Layout | ✅ |
+| [PB-067](#pb-067) | Cloud-Anmeldung — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-068](#pb-068) | Zwei Geräte auf einem Konto — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-069](#pb-069) | Gleichzeitiges Schreiben verlor einen Satz (PB-022) | **hoch** | Datenverlust | ✅ |
+| [PB-070](#pb-070) | Zurücksetzen — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
-| [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ⚠️ offen |
+| [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
 **39 von 39 im Frontend behebbaren Fehlern sind behoben.**
@@ -2503,10 +2507,95 @@ abgeschnittene Beschriftung, plus Abgleich gegen alle `.mbg` im Dokument.
 
 ---
 
+### PB-067 bis PB-070
+
+**Der Sync bekommt Tests — durch eine gefälschte Firestore**
+
+| | |
+|---|---|
+| **Schwere** | — (PB-067, PB-068, PB-070: Vorbeugung) · **hoch** (PB-069) |
+| **Klasse** | Nebenläufigkeit / Datenverlust |
+| **Gefunden** | beim Schließen der Lücke, die der Abdeckungs-Audit benannt hatte |
+| **Status** | ✅ |
+
+**Der Anlass.** Nach dem Audit (PB-064 ff.) blieben acht Funktionen als „nicht
+prüfbar" stehen — fast alle rund um Firebase. Der Grund war banal und
+peinlich: `db` ist nur gesetzt, wenn das SDK von einem CDN geladen wurde. Unter
+`file://` ohne Netz passiert das nie, also nahm `initFirebase()` **immer** den
+`catch`-Zweig und `queueCloudSave()` kehrte in Zeile eins zurück. Tausende
+Fuzz-Runden über eine Funktion, die nichts tat.
+
+**Die Lösung war kleiner als erwartet.** Die App berührt vom SDK **sieben**
+Methoden:
+
+```
+firebase.initializeApp · firebase.firestore
+db.collection(c).doc(id) → .get() · .set() · .delete() · .onSnapshot()
+```
+
+Eine Nachbildung davon (`test/fakestore.mjs`) ist kürzer als ihre Begründung.
+Der Store liegt in **Node**, nicht in der Seite — nur so teilen zwei
+Browser-Contexts ihn wirklich, und genau das braucht der interessante Test.
+`onSnapshot`-Benachrichtigungen werden **nicht** automatisch zugestellt,
+sondern gesammelt und per `flush()` freigegeben: die spannenden Fehler stecken
+in einer *bestimmten* Verschränkung von Lesen und Schreiben, und die muss ein
+Test bauen können, statt auf sie zu hoffen.
+
+**Was dabei herauskam.**
+
+| | |
+|---|---|
+| **PB-067** | Anmelden mit unbekanntem Namen → Onboarding, nicht in die App · Plan landet in der Cloud · das Profilbild **nicht** (`cloudSafeSnapshot`) · Abmelden meldet den Beobachter ab und lässt lokale Daten stehen · Wiederkommen holt die Historie zurück |
+| **PB-068** | Zwei Geräte, ein Konto: B bekommt A's Plan ohne Onboarding, beide loggen Eigenes, danach hat **jede** Seite und die Cloud beide Sätze |
+| **PB-069** | **Der Fund.** Absichtlich gebaute Verschränkung → ein Satz verschwand aus der Cloud und kam nicht zurück. Das ist PB-022, erstmals reproduziert statt nur vermutet. |
+| **PB-070** | `resetAll` löscht wirklich beides — lokalen Speicher *und* das Cloud-Dokument |
+
+**Der Fix zu PB-069** steht bei [PB-022](#pb-022): `db.runTransaction()`. Der
+Wettlauf verlor je nach Timing mal den Satz des einen, mal den des anderen
+Geräts — beide Richtungen in der Gegenprobe gesehen.
+
+**Die wichtigste Zeile im Test steht nicht im Vertrag, sondern im Nachweis:**
+
+```js
+if (!fs.ops('tx-conflict').length) return [false, 'Kein Konflikt aufgetreten
+  — die Verschränkung wurde nicht getroffen, der Test beweist nichts.'];
+```
+
+Ohne sie wäre PB-069 grün geworden, sobald die Verschränkung *nicht* eintritt —
+also genau dann, wenn der Test nichts geprüft hat. Ein Nebenläufigkeitstest
+muss belegen, dass die Nebenläufigkeit stattgefunden hat. Sonst ist er ein
+Zufallsgenerator mit Häkchen.
+
+**Was das Double nicht prüft.** Ob das echte SDK sich so verhält wie die
+Nachbildung. Das ist die bewusst gewählte Lücke: die Fehler lagen historisch in
+*unserer* Merge-Logik, nicht in Googles Bibliothek. Sobald PB-021 angegangen
+wird (Auth + Security Rules), reicht das Double nicht mehr — Rules kann man nur
+gegen den echten Emulator testen.
+
+**Und eine Grenze der Umgebung, gemessen statt vermutet.** `location.reload()`
+aus der Seite heraus kommt unter `file://` in headless Chromium nie an (kein
+`load`-Ereignis nach 8 s, `#login-screen` bleibt null). `doLogout()` und
+`resetAll()` werden deshalb aufgerufen und an ihren *beobachtbaren* Wirkungen
+geprüft — Beobachter abgemeldet, Speicher geleert, Cloud-Dokument gelöscht —
+der Neustart selbst kommt von außen. Auf GitHub Pages über `https` gibt es das
+Problem nicht.
+
+**Lektion.** Wenn ein Teil der App „nicht testbar" scheint, ist die nächste
+Frage nicht *ob*, sondern **wie klein die Schnittstelle nach draußen ist.** Bei
+sieben Methoden ist ein Double billiger als die Ausrede.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
-Diese drei sind **nicht im Frontend lösbar**. Sie brauchen Änderungen an der
+Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
 Firebase-Konfiguration und stehen hier, damit sie nicht vergessen werden.
+
+> Es waren drei. PB-022 stand hier zweieinhalb Monate zu Unrecht — der Fix war
+> eine Client-API. Seit Juli 2026 ist er behoben. Die Lehre daraus steht in
+> seinem [Eintrag](#pb-022) und als Muster 21 in der Tabelle unten: eine
+> Einschätzung ohne Test ist eine Meinung, und in einer Liste echter
+> Backend-Punkte fällt eine falsche nicht auf.
 
 ### PB-021
 
@@ -2561,7 +2650,7 @@ Angreifer sie nicht editieren kann.
 |---|---|
 | **Schwere** | mittel |
 | **Klasse** | Nebenläufigkeit |
-| **Status** | ⚠️ offen |
+| **Status** | ✅ behoben (Juli 2026) — Reproduktion und Fix unter [PB-069](#pb-069) |
 
 **Symptom.** Schreiben zwei Geräte gleichzeitig, kann ein Schreibvorgang
 verloren gehen.
@@ -2570,14 +2659,29 @@ verloren gehen.
 beiden Netzwerkoperationen liegt ein Fenster. Die `cloudWriteQueue`
 serialisiert nur innerhalb eines Tabs.
 
-**Lösungsweg.** `db.runTransaction()` — macht Lesen und Schreiben atomar und
-wiederholt bei Konflikt automatisch.
+**Fix.** `db.runTransaction()` — macht Lesen und Schreiben atomar und
+wiederholt bei Konflikt automatisch. Ausgeführt im Juli 2026.
 
-**Praktisches Risiko:** gering, weil beide Seiten ohnehin mergen und das
-Fenster klein ist. Aber „gering" ist nicht „null".
+**Zwei Dinge an diesem Eintrag waren falsch, und beide sind lehrreicher als
+der Fehler selbst:**
+
+1. **„Nicht im Frontend lösbar."** Stand so im README, war nie wahr.
+   `runTransaction()` ist eine Client-API des Firestore-SDK — der Fix sind
+   sechs Zeilen und keine Backend-Änderung. Der Satz war eine Vermutung, die
+   sich als Tatsache maskiert hat, weil er zwischen zwei echten
+   Backend-Punkten stand (PB-021 braucht Security Rules, PB-023 braucht ein
+   anderes Datenmodell). **Nachbarschaft ist kein Beleg.**
+2. **„Praktisches Risiko gering, weil beide Seiten ohnehin mergen."** Auch
+   falsch, und zwar nachprüfbar: `onSnapshot` führt zusammen und schreibt
+   **nicht zurück**. Es gibt also keinen Reparaturlauf. Der verlorene Satz
+   bleibt aus der Cloud verschwunden, bis dasselbe Gerät zufällig noch einmal
+   speichert. Wer die App danach schließt und auf einem neuen Gerät
+   weitermacht, hat den Satz nie wieder.
 
 **Lektion.** Read-Modify-Write über Netzwerk ist immer eine Race Condition.
-Transaktionen sind keine Optimierung, sondern die Korrektheitsbedingung.
+Transaktionen sind keine Optimierung, sondern die Korrektheitsbedingung. Und:
+**eine Risikoeinschätzung ohne Test ist eine Meinung.** Diese hier stand
+zweieinhalb Monate im Register und war in beiden Behauptungen daneben.
 
 ---
 
@@ -2614,7 +2718,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **19
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **23
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -2641,6 +2745,9 @@ gestellt werden sollten:
 | 18 | **Mehr Promises, als der Aufruf sichtbar macht** | PB-064 | Gibt diese API noch andere Promises zurück als das, auf das ich warte? Jedes braucht einen Handler. |
 | 19 | **Beziehung ohne Hüter** | PB-065 | Diese Verbindung existiert nur als übereinstimmender Wert in zwei Objekten. Welche *eine* Stelle sorgt dafür, dass sie zwei bleiben? |
 | 20 | **Test mit zu kleiner Reichweite** | PB-066 | Wie viele gleichartige Stellen gibt es — und prüft der Test sie alle oder nur die eine, an der es aufgefallen ist? |
+| 21 | **Risikoeinschätzung ohne Test** | PB-022, PB-069 | Ist das gemessen oder geschätzt? Ein „praktisch geringes Risiko" ohne Reproduktion ist eine Meinung. |
+| 22 | **„Nicht testbar" als Ausrede** | PB-067–PB-070 | Wie viele Methoden gehen hier nach draußen? Bei einer Handvoll ist ein Double billiger als die Begründung, warum es nicht geht. |
+| 23 | **Test, der nicht belegt, dass er stattfand** | PB-069 | Wäre dieser Test auch grün, wenn die Bedingung nie eingetreten ist? Dann fehlt der Nachweis, nicht der Vertrag. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
