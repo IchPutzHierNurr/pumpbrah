@@ -7,6 +7,7 @@ läuft per `file://` und offline. Optionaler Cloud-Sync über Firestore.
 index.html          Die komplette App (HTML + CSS + JS)
 sw.js               Service Worker: die App läuft auch ohne Empfang
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Fuzzing
+test/coverage.mjs   Abdeckung: welche Funktion ruft überhaupt jemand auf?
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
 docs/CBUM-REVIEW.md Dieselbe App aus Trainingssicht bewertet
 docs/DESIGN.md      Der visuelle Masterprompt: Regeln und Abnahmekriterien
@@ -93,10 +94,11 @@ respektiert „Bewegung reduzieren", „Transparenz reduzieren" und
 ## Testen
 
 ```bash
-node test/check.mjs                    # 1000 Fuzz-Iterationen
-node test/check.mjs --iterations=10000
+node test/check.mjs                    # 2500 Fuzz-Iterationen
+node test/check.mjs --iterations=25000
 node test/check.mjs --seed=12345       # Lauf exakt wiederholen
 node test/check.mjs --smoke-only
+node test/coverage.mjs                 # welche Funktion ruft überhaupt jemand auf?
 ```
 
 Voraussetzung: Chromium + Playwright. Pfad ggf. über `PW_CHROMIUM` setzen.
@@ -107,14 +109,47 @@ Drei Stufen:
 |---|---|
 | **Smoke** | Start, Onboarding, jeder Screen rendert |
 | **Regression** | Ein Test pro Eintrag in `docs/BUGS.md` — wächst mit jedem Fund |
-| **Fuzz** | N zufällige Aktionen über 67 Operationen, 17 Invarianten nach **jeder** Aktion |
+| **Fuzz** | N zufällige Aktionen über 91 Operationen, 22 Invarianten nach **jeder** Aktion |
 
 Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **68 Prüfungen grün** — 59 Regressionstests plus Fuzzing über
-67 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
+Aktueller Stand: **70 Prüfungen grün** — 58 Regressionstests plus Fuzzing über
+91 Operationen, verifiziert über vierzehn unabhängige Kampagnen mit insgesamt
+80.000 Aktionen.
+
+### Was der Test *nicht* prüft
+
+Auf die Frage „ist jede Funktion geprüft?" gibt es eine Zahl statt einer
+Meinung: `test/coverage.mjs` liest alle Funktionsdefinitionen aus `index.html`
+und sucht sie im Testskript.
+
+| | |
+|---|---|
+| Funktionen in `index.html` | 376 |
+| von einem Test aufgerufen | 213 |
+| **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
+| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 155 |
+| außerhalb des Harnesses | 8 |
+
+Die letzte Zeile ist die ehrliche: **Firebase-Anmeldung, Cloud-Schreiben,
+Offline-Umschalten, „Alles zurücksetzen" und der Service Worker** laufen in
+keinem Test. Die ersten vier laden die Seite neu oder brauchen eine echte
+Verbindung, der fünfte existiert unter `file://` nicht. Jeder Eintrag steht
+mit Begründung in `test/coverage.mjs`.
+
+Drei weitere Grenzen, die keine Zahl sichtbar macht:
+
+* **„Aufgerufen" ist nicht „geprüft".** Die 213 enthalten Funktionen, die der
+  Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
+  58 Regressionstests und die 22 Invarianten — nicht die Abdeckungszahl.
+* **Chromium ist nicht Safari.** Tastatur-Ausweichen, Sheet-Gesten und
+  Safe-Area werden gegen `visualViewport` und Media Queries geprüft, nicht
+  gegen echtes iOS.
+* **Der Sync hat keinen zweiten Client.** Die Merge-Funktionen werden mit
+  synthetischen Gegenständen getestet; zwei echte Geräte, die gleichzeitig
+  schreiben, prüft niemand (siehe PB-022).
 
 ---
 
