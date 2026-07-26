@@ -237,6 +237,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
    erst danach abgeschnitten — die Zeile wächst um wenige Pixel, der Name
    bleibt lesbar. */
 .exr-n{font-weight:700;font-size:14px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.exr-n .ssb{color:#4ea1ff;background:color-mix(in srgb,#4ea1ff 15%,transparent)}
 .exr-n .uni{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:800;letter-spacing:.04em;
   color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);
   border-radius:6px;padding:1px 5px;margin-left:6px;vertical-align:1px;white-space:nowrap}
@@ -1666,6 +1667,21 @@ html,body{
   font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;letter-spacing:.02em;
 }
 .trend-more:active{transform:scale(.985);color:var(--text)}
+.rep-acts{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.rep-acts button{padding:7px 11px;border-radius:11px;cursor:pointer;font-size:11.5px;font-weight:700;
+  font-family:'Space Grotesk',sans-serif;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--text)}
+.rep-acts button:active{transform:scale(.96)}
+.rot-row{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--bg3);cursor:pointer}
+.rot-row:last-child{border-bottom:none}
+.rot-row input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--accent);font-size:16px}
+.rot-row span{flex:1;min-width:0;font-size:13.5px;line-height:1.4}
+.rot-row small{display:block;font-size:11px;color:var(--text3);margin-top:3px}
+.plate-out{margin-top:12px}
+.plate-out.empty{color:var(--text3);font-size:12px}
+.pl-row{display:flex;flex-wrap:wrap;gap:8px}
+.pl{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;padding:9px 13px;border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent)}
+.pl-sum{font-size:12px;color:var(--text2);margin-top:9px}
 
 /* ============================================================================
    MESOZYKLUS
@@ -2128,8 +2144,12 @@ html,body{
 <div class="sr-bd"><b>Sync-Code</b><span>Dein Code ist zugleich dein Konto. Wer ihn kennt, sieht deine Daten.</span></div>
 <code class="sr-code" id="show-sync"></code>
 </div>
+<div class="sr">
+<div class="sr-bd"><b>Sicherung</b><span id="backup-note">Noch nie exportiert.</span></div>
+</div>
 <div class="sr sr-last" style="flex-wrap:wrap;gap:8px">
-<button class="setbtn" onclick="exportData()">Export</button>
+<button class="setbtn" onclick="exportData()">Backup (JSON)</button>
+<button class="setbtn" onclick="exportCSV()">Sätze (CSV)</button>
 <button class="setbtn" onclick="document.getElementById('imp').click()">Import</button>
 <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
 <button class="setbtn" onclick="doLogout()">Abmelden</button>
@@ -2174,10 +2194,36 @@ html,body{
 <div class="ig" style="margin-bottom:6px"><label>Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
 <button class="btn" style="margin-top:12px" onclick="saveEgymEntry()">✓ MESSUNG SPEICHERN</button>
 </div></div>
+<div class="mbg" id="m-rotation"><div class="mdl">
+<div class="mt">NEUER BLOCK — ÜBUNGEN ROTIEREN <button class="mc" onclick="cm('m-rotation')">✕</button></div>
+<div style="font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px">Gleiche Bewegung, anderer Winkel oder anderes Gerät. Vorgeschlagen wird, was zuletzt nicht mehr gestiegen ist — deine Historie zur alten Übung bleibt vollständig erhalten.</div>
+<div id="rot-list"></div>
+<button class="btn" style="margin-top:12px" onclick="applyRotation()">Ausgewählte tauschen</button>
+<button class="btn btn-g" style="margin-top:6px" onclick="cm('m-rotation')">Diesmal nicht</button>
+</div></div>
+<div class="mbg" id="m-timebudget"><div class="mdl">
+<div class="mt">WENIG ZEIT <button class="mc" onclick="cm('m-timebudget')">✕</button></div>
+<div id="tb-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
+<div class="ir"><div class="ig"><label>Verfügbare Minuten</label><input type="number" inputmode="numeric" id="tb-min" step="5"></div></div>
+<div style="font-size:11.5px;color:var(--text3);line-height:1.5;margin:8px 0 12px">Gekürzt wird nach Priorität: zuerst Sätze bei Muskeln, die über dem Minimum liegen, dann Isolation bis auf zwei Sätze. Grundübungen zuletzt. Der Plan bleibt unverändert — nur die heutige Einheit wird kleiner.</div>
+<button class="btn" onclick="applyTimeBudget()">Einheit anpassen</button>
+</div></div>
+<div class="mbg" id="m-plates"><div class="mdl">
+<div class="mt">SCHEIBENRECHNER <button class="mc" onclick="cm('m-plates')">✕</button></div>
+<div class="ir">
+<div class="ig"><label>Zielgewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="plate-w" oninput="renderPlates()"></div>
+<div class="ig"><label>Stange (kg)</label><input type="number" inputmode="decimal" step="0.5" id="plate-bar" value="20" oninput="renderPlates()"></div>
+</div>
+<div id="plate-out"></div>
+<div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">Scheiben pro Seite, gierig von schwer nach leicht. Verfügbar: 25 · 20 · 15 · 10 · 5 · 2,5 · 1,25 kg.</div>
+</div></div>
 <div class="mbg" id="m-log"><div class="mdl">
 <div class="mt">SATZ LOGGEN <button class="mc" onclick="cm('m-log')">✕</button></div>
 <div id="log-name" style="font-size:14px;color:var(--text2);margin-bottom:4px"></div>
-<div id="log-hint" style="font-size:11px;color:var(--text3);margin-bottom:12px"></div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+<div id="log-hint" style="font-size:11px;color:var(--text3);flex:1"></div>
+<button class="setbtn" style="flex:0 0 auto;min-width:0;padding:7px 11px;font-size:11.5px" onclick="openPlates(document.getElementById('log-w').value)">Scheiben</button>
+</div>
 <div class="ir">
 <div class="ig"><label>Gewicht (kg)</label><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-w',-2.5)">−</button><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-w',2.5)">+</button></div></div>
 <div class="ig"><label>Wiederholungen</label><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-r',-1)">−</button><input type="number" inputmode="numeric" id="log-r" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-r',1)">+</button></div></div>
@@ -2478,6 +2524,11 @@ function normalizeExercise(ex){
   if(!ex.muscle)ex.muscle='chest';
   if(ex.rir===undefined)ex.rir=ex.type==='main'?2:null;
   if(ex.note===undefined)ex.note='';
+  /* Supersatz-Kennung: gleiche Kennung = im Wechsel ausführen. Bewusst ein
+     kurzer String statt einer Referenz — der Plan wird geteilt, importiert
+     und zusammengeführt, und dabei überleben nur Werte, keine Verweise. */
+  if(ex.ss!==undefined&&ex.ss!==null)ex.ss=String(ex.ss).slice(0,8)||null;
+  else ex.ss=null;
   if(ex.logged&&!Array.isArray(ex.logged))ex.logged=[];
   return ex;
 }
@@ -2626,6 +2677,7 @@ function showApp(){normalizeData();document.getElementById('login-screen').style
   checkSharedPlanLink();
   hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachSheetGestures();attachReveals();
   if(IS_STANDALONE)document.documentElement.classList.add('standalone');
+  registerServiceWorker();
 }
 let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym',birthday:null};
 function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';obStep=0;renderObStep()}
@@ -2998,6 +3050,19 @@ function runCountUps(root){
    ========================================================================== */
 const IS_IOS=/iP(hone|ad|od)/.test(navigator.platform||'')||
   (navigator.userAgent.includes('Mac')&&'ontouchend'in document);
+/* Service Worker nur dort, wo er überhaupt zulässig ist: sicherer Kontext
+   und http(s). Unter file:// gibt es keinen — dort ist die Datei aber ohnehin
+   lokal und damit offline verfügbar. Ein Fehlschlag ist kein Drama: dann
+   läuft die App wie vorher, nur ohne Offline-Sicherheit. */
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator))return;
+  if(!location.protocol.startsWith('http'))return;
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(err=>{
+      console.warn('PUMPBRAH: Offline-Cache nicht aktiv',err);
+    });
+  });
+}
 const IS_STANDALONE=window.navigator.standalone===true||
   (window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
 
@@ -3933,7 +3998,9 @@ function renderPL(){
     h+=`<div class="exr ${cC}${openCls}" style="animation:riseIn .34s var(--ease) both;animation-delay:${Math.min(i*30,240)}ms">`+
       `<div class="exr-h" onclick="togglePlanRow(this,'${safe}')">`+
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
-        `<div class="exr-b"><div class="exr-n">${esc(ex.name)}${isUnilateral(ex.name,ex)?'<span class="uni">pro Seite</span>':''}</div>`+
+        `<div class="exr-b"><div class="exr-n">${esc(ex.name)}`+
+          (ex.ss?`<span class="uni ssb">Supersatz ${esc(ex.ss)}</span>`:'')+
+          (isUnilateral(ex.name,ex)?'<span class="uni">pro Seite</span>':'')+`</div>`+
         `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
         /* Vier Buttons pro Zeile haben den Übungsnamen auf "ATG: Tibialis R…"
            zusammengequetscht. Sortieren bleibt direkt erreichbar, der Rest
@@ -3964,6 +4031,9 @@ function openPlanExMenu(i){
     row('edit','Übung bearbeiten','Sätze, Wiederholungen, RIR, Notiz',`openEditEx(${i})`)+
     row('note','Persönliche Notiz','Wird bei jeder Session angezeigt',`openExNote('${safe}')`)+
     row('chart','Verlauf','Alle bisherigen Sätze und e1RM',`showExHist('${safe}')`)+
+    row('copy',ex.ss?'Kopplung lösen':'Als Supersatz koppeln',
+      ex.ss?`Zurzeit gekoppelt (${ex.ss}) — eine gemeinsame Pause`
+           :'Im Wechsel mit einer passenden Übung, spart Pausenzeit',`toggleSuperset(${i})`)+
     row('trash','Aus dem Plan entfernen','Deine Historie bleibt erhalten',`delEx(${i})`,true);
   om('m-alt');
 }
@@ -5027,11 +5097,24 @@ function secondaryContribution(name,muscle,type){
 function estimatedDuration(dayKey){
   const day=(D.plan||{})[dayKey];
   if(!day)return 0;
+  const list=day.exercises||[];
   let sec=0;
-  (day.exercises||[]).forEach(e=>{
+  /* Gekoppelte Übungen laufen im Wechsel: Arbeitszeit addiert sich, die lange
+     Pause fällt aber nur EINMAL pro Runde an, dazwischen nur der Wechsel. */
+  const groups={};
+  list.forEach(e=>{
     const sets=parseInt(e.sets)||0;
     if(!sets)return;
-    sec+=sets*(40*setSides(e.name,e)+restSecondsFor(e.name,e.muscle,e.type));
+    const work=sets*40*setSides(e.name,e);
+    const rest=restSecondsFor(e.name,e.muscle,e.type);
+    if(e.ss){
+      if(!groups[e.ss])groups[e.ss]={work:0,rest:0,rounds:0,n:0};
+      const g=groups[e.ss];
+      g.work+=work;g.rest=Math.max(g.rest,rest);g.rounds=Math.max(g.rounds,sets);g.n++;
+    }else sec+=work+sets*rest;
+  });
+  Object.values(groups).forEach(g=>{
+    sec+=g.work+g.rounds*(g.rest+SUPERSET_GAP*Math.max(0,g.n-1));
   });
   return Math.round(sec/60);
 }
@@ -5041,6 +5124,65 @@ function estimatedDuration(dayKey){
    der Schätzung 20 Minuten länger als in Wirklichkeit. Systemermüdung hängt
    am Bewegungsmuster: mehrgelenkig lang, eingelenkig kurz. */
 const COMPOUND_PATTERNS=['push','pushh','pulld','row','hinge','squat'];
+/* --------------------------------------------------------------------------
+   SUPERSÄTZE
+   Das eigentliche Problem an einem vollen Plan ist nicht das Volumen, sondern
+   die Zeit: Acht Sätze Waden sind zwölf Minuten, in denen der Rest des Körpers
+   nichts tut. Zwei Übungen im Wechsel teilen sich EINE Pause — die Arbeitszeit
+   bleibt, die Wartezeit halbiert sich.
+
+   Gekoppelt wird über eine gemeinsame Kennung an beiden Übungen. Die Reihen-
+   folge im Tag bleibt, wie sie ist; die Kennung sagt nur „diese beiden im
+   Wechsel". Sinnvoll ist das für Übungen, die sich NICHT behindern — die
+   Kopplung wird deshalb nicht automatisch vergeben, sondern vorgeschlagen.
+   -------------------------------------------------------------------------- */
+const SUPERSET_GAP=25;          /* Sekunden zwischen den Partnern */
+function supersetPartners(list,ex){
+  if(!ex||!ex.ss)return[];
+  return (list||[]).filter(e=>e!==ex&&e.ss&&e.ss===ex.ss);
+}
+/* Zwei Übungen taugen als Supersatz, wenn sie verschiedene Volumengruppen
+   treffen und höchstens eine davon mehrgelenkig ist. Brust und Rücken im
+   Wechsel geht; zwei schwere Kniebeugen-Muster nicht. */
+function supersetFits(a,b){
+  if(!a||!b||a===b)return false;
+  if(a.type!=='main'||b.type!=='main')return false;
+  const ga=volGroupOf(a.name,a.muscle,a.type),gb=volGroupOf(b.name,b.muscle,b.type);
+  if(!ga||!gb||ga===gb)return false;
+  const heavy=x=>COMPOUND_PATTERNS.includes(detectMovePattern(x.name,x.muscle,x.type));
+  return !(heavy(a)&&heavy(b));
+}
+function nextSupersetKey(list){
+  const used=new Set((list||[]).map(e=>e.ss).filter(Boolean));
+  for(let i=0;i<26;i++){const k='S'+String.fromCharCode(65+i);if(!used.has(k))return k}
+  return 'S'+Date.now().toString(36).slice(-3);
+}
+/* Koppelt eine Übung mit der nächsten passenden im selben Tag. */
+function toggleSuperset(idx){
+  const day=D.plan[curTab];
+  if(!day)return;
+  const list=day.exercises||[];
+  const ex=list[idx];
+  if(!ex)return;
+  if(ex.ss){
+    const partners=supersetPartners(list,ex);
+    ex.ss=null;
+    /* Ein Supersatz zu zweit: löst man einen, bleibt der andere allein
+       zurück — dann ist die Kennung sinnlos und kommt mit weg. */
+    if(partners.length===1)partners[0].ss=null;
+    save();markPlanDirty();renderPlan();renderDash();
+    toast('Kopplung gelöst');
+    return;
+  }
+  const partner=list.slice(idx+1).find(e=>!e.ss&&supersetFits(ex,e))
+            || list.slice(0,idx).reverse().find(e=>!e.ss&&supersetFits(ex,e));
+  if(!partner){toast('Keine passende Partnerübung an diesem Tag');return}
+  const key=nextSupersetKey(list);
+  ex.ss=key;partner.ss=key;
+  save();markPlanDirty();renderPlan();renderDash();
+  haptic([10,30,10]);
+  toast(`Supersatz: ${ex.name} + ${partner.name}`);
+}
 function restSecondsFor(name,muscle,type){
   const c=Math.max(0,parseInt(D.settings&&D.settings.compound)||150);
   const i=Math.max(0,parseInt(D.settings&&D.settings.isolation)||90);
@@ -5872,7 +6014,8 @@ function planSharePayload(dayKeys){
         parseInt(e.sets)||3,parseInt(e.rmin)||8,parseInt(e.rmax)||12,
         e.rir===null||e.rir===undefined?null:parseInt(e.rir),
         String(e.type||'main'),String(e.muscle||'chest'),
-        String(e.note||'').slice(0,SHARE_MAX_TEXT)
+        String(e.note||'').slice(0,SHARE_MAX_TEXT),
+        e.ss?String(e.ss).slice(0,8):null
       ])
     ])
   };
@@ -5948,7 +6091,10 @@ function sanitizeSharePayload(obj){
           rmin,
           Math.max(rmin,int(a[3],1,300,rmin)),
           a[4]===null||a[4]===undefined?null:int(a[4],0,10,2),
-          type,muscle,str(a[7])
+          type,muscle,str(a[7]),
+          /* Supersatz-Kennung: nur harmlose Zeichen, kurz, sonst null.
+             Ein fremder Plan darf hier keine Struktur einschleusen. */
+          a[8]?String(a[8]).replace(/[^A-Za-z0-9_-]/g,'').slice(0,8)||null:null
         ];
       }).filter(e=>e[0])];
     }).filter(d=>d[2].length)
@@ -6114,7 +6260,7 @@ function confirmPlanImport(){
     }
     D.plan[key]={day:day[1],exercises:day[2].map((e,i)=>({
       id:Date.now()+i+Math.floor(Math.random()*1000),
-      name:e[0],sets:e[1],rmin:e[2],rmax:e[3],rir:e[4],type:e[5],muscle:e[6],note:e[7]
+      name:e[0],sets:e[1],rmin:e[2],rmax:e[3],rir:e[4],type:e[5],muscle:e[6],note:e[7],ss:e[8]||null
     }))};
     added++;
   });
@@ -6144,6 +6290,105 @@ const EG_FIELDS=['bioage','kraft','kardio','stoff','flex','bmi','gewicht','kfp',
 function saveSetting(k,v){D.settings[k]=parseInt(v)||0;save()}
 function doLogout(){if(unsubscribe)unsubscribe();localStorage.removeItem('pb_sync');location.reload()}
 function resetAll(){if(useFirebase&&db&&syncCode)db.collection('pumpbrah').doc(syncCode).delete().catch(()=>{});localStorage.clear();location.reload()}
+/* --------------------------------------------------------------------------
+   CSV-EXPORT
+   JSON ist das vollständige Backup, aber niemand rechnet damit in einer
+   Tabelle. Eine Zeile pro Satz, Semikolon als Trenner und Komma als
+   Dezimalzeichen — so öffnet Excel die Datei in deutscher Umgebung ohne
+   Import-Dialog. BOM davor, sonst zerlegt Excel die Umlaute.
+   -------------------------------------------------------------------------- */
+function exportCSV(){
+  normalizeData();
+  const rows=[['Datum','Trainingstag','Übung','Muskel','Volumengruppe','Satz','Gewicht_kg','Wiederholungen','RIR','Typ','Notiz']];
+  (D.history||[]).forEach(s=>{
+    (s.sets||[]).forEach((x,i)=>{
+      rows.push([
+        s.date||'', planDisplayName(s.planKey||''), x.ex||'', x.muscle||'',
+        volGroupOf(x.ex,x.muscle,x.type)||'', x.nr||(i+1),
+        String(x.w===undefined||x.w===null?'':x.w).replace('.',','),
+        x.r===undefined||x.r===null?'':x.r,
+        x.rir===undefined||x.rir===null?'':x.rir,
+        x.type||'main', (x.note||'').replace(/[\r\n;]/g,' ')
+      ]);
+    });
+  });
+  /* Semikolons und Anführungszeichen im Feld würden die Spalten verschieben. */
+  const esc2=v=>{const t=String(v);return /[";\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
+  const csv='﻿'+rows.map(r=>r.map(esc2).join(';')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='pumpbrah_saetze_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast(`${rows.length-1} Sätze als CSV exportiert`);
+}
+/* --------------------------------------------------------------------------
+   SCHEIBENRECHNER
+   „87,5 kg" ist im Studio keine Zahl, sondern eine Rechenaufgabe: Was muss
+   pro Seite drauf? Der Rechner nimmt das Stangengewicht ab, halbiert und
+   zerlegt den Rest gierig in die vorhandenen Scheiben. Gierig reicht, weil
+   die Scheibenreihe so gewählt ist, dass jede kleinere in die nächstgrößere
+   passt — bei 1,25/2,5/5/10/15/20/25 gibt es keinen Fall, in dem eine
+   kleinere Auswahl besser wäre.
+   -------------------------------------------------------------------------- */
+const PLATES=[25,20,15,10,5,2.5,1.25];
+function platePlan(total,bar){
+  const b=Number.isFinite(bar)?bar:20;
+  const t=parseFloat(total)||0;
+  if(t<b)return{ok:false,reason:t<=0?'':'leichter als die Stange'};
+  let side=(t-b)/2;
+  const out=[];
+  PLATES.forEach(p=>{
+    const n=Math.floor(side/p+1e-9);
+    if(n>0){out.push({p,n});side-=n*p}
+  });
+  /* Der Rest bleibt UNGERUNDET. Gerundet ergäben Scheiben plus Stange nicht
+     mehr exakt das Zielgewicht — und ein Rechner, dessen Summe nicht aufgeht,
+     ist im Studio schlimmer als keiner. Gerundet wird erst beim Anzeigen. */
+  return{ok:true,plates:out,rest:Math.abs(side)<1e-9?0:side,bar:b,perSide:(t-b)/2};
+}
+function plateHTML(total,bar){
+  const r=platePlan(total,bar);
+  if(!r.ok)return`<div class="plate-out empty">${esc(r.reason||'Gewicht eingeben')}</div>`;
+  if(!r.plates.length)return`<div class="plate-out">Nur die Stange (${esc(r.bar)} kg).</div>`;
+  return`<div class="plate-out">`+
+    `<div class="pl-row">${r.plates.map(x=>`<span class="pl" data-w="${attr(x.p)}">${esc(x.n)}×${esc(String(x.p).replace('.',','))}</span>`).join('')}</div>`+
+    `<div class="pl-sum">${esc(String(Math.round(r.perSide*100)/100).replace('.',','))} kg pro Seite · Stange ${esc(r.bar)} kg`+
+    (r.rest>1e-9?` · <b style="color:var(--orange)">${esc(String(Math.round(r.rest*100)/100).replace('.',','))} kg nicht darstellbar</b>`:'')+`</div></div>`;
+}
+function openPlates(prefill){
+  const w=document.getElementById('plate-w');
+  if(w&&prefill)w.value=prefill;
+  renderPlates();
+  om('m-plates');
+}
+function renderPlates(){
+  const w=parseFloat((document.getElementById('plate-w')||{}).value);
+  const bar=parseFloat((document.getElementById('plate-bar')||{}).value);
+  const out=document.getElementById('plate-out');
+  if(out)out.innerHTML=plateHTML(w,bar);
+}
+/* --------------------------------------------------------------------------
+   BACKUP-ERINNERUNG
+   Die Daten liegen in localStorage und in einem Firestore-Dokument ohne
+   Authentifizierung (PB-021). Beides kann weg sein, ohne dass jemand etwas
+   tut — ein geleerter Browser-Speicher reicht. Deshalb einmal im Monat ein
+   Hinweis, nicht öfter, und nur wenn es überhaupt etwas zu sichern gibt.
+   -------------------------------------------------------------------------- */
+const BACKUP_INTERVAL=30*864e5;
+function backupDue(){
+  ensureUIState();
+  if(!(D.history||[]).length)return false;
+  const last=parseInt(D.ui.lastBackup)||0;
+  return Date.now()-last>BACKUP_INTERVAL;
+}
+function markBackupDone(){
+  ensureUIState();
+  D.ui.lastBackup=Date.now();
+  save();
+  renderSettings();
+}
 function exportData(){
   normalizeData();
   const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
@@ -6152,6 +6397,7 @@ function exportData(){
   a.download='pumpbrah_'+new Date().toISOString().slice(0,10)+'.json';
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  markBackupDone();
   toast('Exportiert!');
 }
 function importData(e){
@@ -6558,6 +6804,80 @@ function weeklyMuscleBarsHTML(){
     `<span><i style="background:#2ee06a"></i>im MAV</span><span><i style="background:#4ea1ff"></i>über MAV</span>`+
     `<span><i style="background:#ff3b5c"></i>über MRV</span></div></div>`;
 }
+/* --------------------------------------------------------------------------
+   STAGNATION: DREI HANDGRIFFE STATT EINES HINWEISES
+   Eine Übung, die vier Einheiten lang keinen Bestwert mehr bringt, hat genau
+   drei sinnvolle Antworten — und alle drei greifen in den PLAN, nicht in die
+   Historie: eine andere Übung desselben Musters, ein anderer
+   Wiederholungsbereich, oder für eine Weile weniger Sätze.
+   -------------------------------------------------------------------------- */
+function planLocationOf(name){
+  const key=baseNameKey(name);
+  for(const [dayKey,day] of Object.entries(D.plan||{})){
+    const idx=(day.exercises||[]).findIndex(e=>baseNameKey(e.name)===key);
+    if(idx>=0)return{dayKey,idx};
+  }
+  return null;
+}
+/* Sucht eine Übung, die denselben Muskel mit derselben Bewegung trifft und
+   noch nicht im Plan steht — bevorzugt aus dem Evidenzkatalog, sonst aus der
+   Bibliothek. Sätze, Wiederholungen und eine bestehende Supersatz-Kopplung
+   bleiben; getauscht wird nur die Übung selbst. */
+function alternativeFor(ex,inPlanNames){
+  const pat=detectMovePattern(ex.name,ex.muscle,ex.type);
+  const group=volGroupOf(ex.name,ex.muscle,ex.type);
+  const taken=inPlanNames||new Set();
+  const fits=(n,m,p)=>m===ex.muscle&&p===pat&&!taken.has(baseNameKey(n))
+    &&volGroupOf(n,m,'main')===group;
+  const db=EVIDENCE_DB.filter(it=>fits(it.n,it.m,it.p))
+    .sort((a,b)=>({A:0,B:1,C:2}[a.t]||3)-({A:0,B:1,C:2}[b.t]||3)||(b.c||0)-(a.c||0));
+  if(db.length)return{name:db[0].n,note:db[0].cue||'',source:'Katalog'};
+  let found=null;
+  allLibraryCategories().forEach(cat=>cat.items.forEach(it=>{
+    if(found)return;
+    const m=it.m||it.muscle,t=it.t||it.type||'main';
+    if(t!=='main')return;
+    if(fits(it.name,m,detectMovePattern(it.name,m,t)))found={name:it.name,note:it.note||'',source:'Bibliothek'};
+  }));
+  return found;
+}
+function swapStaleExercise(name){
+  const loc=planLocationOf(name);
+  if(!loc){toast('Übung steht in keinem Trainingstag');return}
+  const ex=D.plan[loc.dayKey].exercises[loc.idx];
+  const taken=new Set();
+  Object.values(D.plan||{}).forEach(d=>(d.exercises||[]).forEach(e=>taken.add(baseNameKey(e.name))));
+  const alt=alternativeFor(ex,taken);
+  if(!alt){toast('Keine passende Alternative gefunden');return}
+  if(!confirm(`„${ex.name}" gegen „${alt.name}" tauschen?\n\nSätze, Wiederholungen und RIR bleiben. Deine Historie zur alten Übung bleibt erhalten.`))return;
+  ex.name=alt.name;
+  if(alt.note)ex.note=alt.note;
+  save();markPlanDirty();coachInvalidate();
+  curTab=loc.dayKey;renderPlan();renderDash();renderAna();
+  haptic([12,40,12]);
+  toast(`Getauscht: ${alt.name}`);
+}
+function shiftRepRange(name,delta){
+  const loc=planLocationOf(name);
+  if(!loc)return;
+  const ex=D.plan[loc.dayKey].exercises[loc.idx];
+  const d=parseInt(delta)||2;
+  ex.rmin=Math.max(1,Math.min(50,(parseInt(ex.rmin)||8)+d));
+  ex.rmax=Math.max(ex.rmin,Math.min(60,(parseInt(ex.rmax)||12)+d));
+  save();markPlanDirty();coachInvalidate();
+  curTab=loc.dayKey;renderPlan();renderDash();renderAna();
+  toast(`${ex.name}: jetzt ${ex.rmin}–${ex.rmax} Wdh`);
+}
+function easeStaleExercise(name){
+  const loc=planLocationOf(name);
+  if(!loc)return;
+  const ex=D.plan[loc.dayKey].exercises[loc.idx];
+  if((parseInt(ex.sets)||3)<=2){toast('Schon bei zwei Sätzen — hier hilft eher ein Tausch');return}
+  ex.sets=(parseInt(ex.sets)||3)-1;
+  save();markPlanDirty();coachInvalidate();
+  curTab=loc.dayKey;renderPlan();renderDash();renderAna();
+  toast(`${ex.name}: ${ex.sets} Sätze — weniger Ermüdung, mehr Qualität`);
+}
 function renderAnaReport(){
   const mount=document.getElementById('ana-report');
   if(!mount)return;
@@ -6609,16 +6929,26 @@ function renderAnaReport(){
   if(!good.length)good.push({ico:'✓',col:'var(--text3)',t:'Noch keine Vergleichswerte',
     d:'Ab der zweiten Woche mit denselben Übungen steht hier, was besser geworden ist.'});
   const bad=[];
+  /* Der Befund allein hat nie jemandem geholfen: „stagniert seit vier
+     Einheiten" ist richtig und folgenlos. Daneben gehören die drei Dinge,
+     die man dagegen tun kann — als Knopf, nicht als Ratschlag. */
   stale.slice(0,2).forEach(p=>bad.push({ico:'▼',col:'var(--red)',cls:'warn-red',
     t:`${esc(p.name)} stagniert`,
-    d:`${p.stale} Einheiten ohne neuen Bestwert. Das ist selten ein Erholungsproblem — eher Übungsauswahl oder Ausführung.`}));
+    d:`${p.stale} Einheiten ohne neuen Bestwert. Das ist selten ein Erholungsproblem — eher Übungsauswahl oder Ausführung.`,
+    acts:planLocationOf(p.name)?[
+      {label:'Übung tauschen',call:`swapStaleExercise('${jsStr(p.name)}')`},
+      {label:'Wdh-Bereich hoch',call:`shiftRepRange('${jsStr(p.name)}',2)`},
+      {label:'Sätze −1',call:`easeStaleExercise('${jsStr(p.name)}')`}
+    ]:[]}));
   low.slice(0,2).forEach(m=>bad.push({ico:'!',col:'var(--orange)',cls:'warn-orange',
     t:`${esc(muscleName(m.k))} unter MEV`,
     d:`${m.sets} von ${m.lm.mev} Sätzen. Der Volumen-Coach im Plan schlägt eine passende Übung vor.`}));
   if(rir&&rir<1)bad.push({ico:'!',col:'var(--orange)',cls:'warn-orange',t:'Ø RIR unter 1',
     d:'Du trainierst dauerhaft am Muskelversagen. Das kostet mehr Erholung, als es an Reiz bringt.'});
   const row=x=>`<div class="rep ${x.cls||''}"><div class="rep-i" style="color:${x.col};background:color-mix(in srgb,${x.col} 16%,transparent)">${x.ico}</div>`+
-    `<div><div class="t">${x.t}</div><div class="d">${x.d}</div></div></div>`;
+    `<div style="flex:1;min-width:0"><div class="t">${x.t}</div><div class="d">${x.d}</div>`+
+    (x.acts&&x.acts.length?`<div class="rep-acts">${x.acts.map(a=>`<button type="button" onclick="${a.call}">${esc(a.label)}</button>`).join('')}</div>`:'')+
+    `</div></div>`;
   mount.innerHTML=`<div class="mesh-hero">`+
     `<div class="cap">Diese Woche</div>`+
     `<div class="mesh-row"><div class="mesh-num">${esc(grade)}</div>`+
@@ -6842,6 +7172,16 @@ function buildWeekGauge(totalSets){
   }
   if(!D.egym)D.egym={enabled:false,measurements:[]};
   toggleEgym(D.egym.enabled);
+  const bn=document.getElementById('backup-note');
+  if(bn){
+    ensureUIState();
+    const last=parseInt(D.ui.lastBackup)||0;
+    const days=last?Math.floor((Date.now()-last)/864e5):null;
+    bn.textContent=!(D.history||[]).length?'Noch keine Daten zum Sichern.'
+      :last?(days===0?'Heute gesichert.':`Letzte Sicherung vor ${days} ${days===1?'Tag':'Tagen'}.`)
+      :'Noch nie exportiert — deine Daten liegen nur im Browser und in der Cloud.';
+    bn.style.color=backupDue()?'var(--orange)':'';
+  }
   /* Die Design-Karte wird eingehängt statt fest im Markup zu stehen, weil sie
      die Akzentliste selbst erzeugt. Anker ist der Abschnitt „Daten" — der
      Bezug lief früher über den Text „SYNC", der nicht mehr existiert. */
@@ -7300,7 +7640,13 @@ function confirmLog(){
   justLoggedKey=logTgt.exIdx+':'+(ex.logged.length-1);
   save();
   cm('m-log');
-  timerTgt=restSecondsFor(ex.name,ex.muscle,ex.type);
+  /* Im Supersatz folgt kein Ausruhen, sondern der Partner: kurze Umbauzeit
+     statt voller Pause. Die lange Pause kommt erst nach dem letzten Partner
+     der Runde — erkennbar daran, dass er gleich viele Sätze geloggt hat. */
+  const partners=D.active?supersetPartners(D.active.exercises,ex):[];
+  const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&!p.skipped);
+  timerTgt=pending.length?SUPERSET_GAP:restSecondsFor(ex.name,ex.muscle,ex.type);
+  if(pending.length)toast(`Supersatz — weiter mit ${pending[0].name}`);
   if(timerInt){clearInterval(timerInt);timerInt=null}
   timerStartedAt=0;timerPausedRemaining=0;
   startTmr();
@@ -7314,6 +7660,92 @@ function confirmLog(){
     toast(`✓ ${a}kg × ${b} @ RIR ${rir}`);haptic(12);
   }
   if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx);
+}
+/* --------------------------------------------------------------------------
+   ZEITBUDGET — „ich habe heute nur X Minuten"
+   Ohne diese Funktion kürzt man selbst, und zwar immer gleich: Man hört
+   irgendwann auf. Was hinten steht, fällt weg — und hinten stehen Arme,
+   Waden und Rumpf. Nach drei solchen Wochen fehlt genau dort das Volumen.
+
+   Die Funktion kürzt stattdessen von oben nach Priorität: erst Sätze von
+   Muskeln, die ohnehin über dem Optimum liegen, dann Isolationsübungen bis
+   auf zwei Sätze, und erst als Letztes fällt eine Übung ganz weg — nie
+   jedoch die letzte eines Musters, und Grundübungen zuletzt.
+   -------------------------------------------------------------------------- */
+function remainingMinutes(){
+  if(!D.active)return 0;
+  let sec=0;
+  const groups={};
+  D.active.exercises.forEach(e=>{
+    if(e.skipped)return;
+    const open=Math.max(0,(parseInt(e.sets)||0)-((e.logged||[]).length));
+    if(!open)return;
+    const work=open*40*setSides(e.name,e);
+    const rest=restSecondsFor(e.name,e.muscle,e.type);
+    if(e.ss){
+      if(!groups[e.ss])groups[e.ss]={work:0,rest:0,rounds:0,n:0};
+      const g=groups[e.ss];
+      g.work+=work;g.rest=Math.max(g.rest,rest);g.rounds=Math.max(g.rounds,open);g.n++;
+    }else sec+=work+open*rest;
+  });
+  Object.values(groups).forEach(g=>{sec+=g.work+g.rounds*(g.rest+SUPERSET_GAP*Math.max(0,g.n-1))});
+  return Math.round(sec/60);
+}
+function trimWorkoutTo(budget){
+  if(!D.active)return null;
+  const min=Math.max(10,parseInt(budget)||0);
+  const before=remainingMinutes();
+  const changes=[];
+  const heavy=e=>COMPOUND_PATTERNS.includes(detectMovePattern(e.name,e.muscle,e.type));
+  const openOf=e=>Math.max(0,(parseInt(e.sets)||0)-((e.logged||[]).length));
+  /* Wie viel Volumen hat der Muskel dieser Übung diese Woche schon — und wie
+     weit ist er über dem Minimum? Wer weit drüber liegt, gibt zuerst ab. */
+  const vol=planWeeklyVolume(true);
+  const slack=e=>{
+    const g=volGroupOf(e.name,e.muscle,e.type);
+    if(!g||!MUSCLE_LANDMARKS[g])return 0;
+    return ((vol[g]&&vol[g].sets)||0)-MUSCLE_LANDMARKS[g].mev;
+  };
+  for(let guard=0;guard<400&&remainingMinutes()>min;guard++){
+    const cand=D.active.exercises
+      .filter(e=>!e.skipped&&openOf(e)>0&&(parseInt(e.sets)||0)>2)
+      .sort((a,b)=>(heavy(a)-heavy(b))||(slack(b)-slack(a))||(b.sets-a.sets))[0];
+    if(!cand)break;
+    cand.sets=(parseInt(cand.sets)||3)-1;
+    changes.push(cand.name);
+  }
+  /* Reicht das Kürzen nicht, fällt am Ende doch eine Übung weg — aber die
+     mit dem geringsten Verlust: Isolation, deren Muskel am weitesten über
+     dem Minimum liegt, und nie die letzte offene Übung. */
+  for(let guard=0;guard<40&&remainingMinutes()>min;guard++){
+    const open=D.active.exercises.filter(e=>!e.skipped&&openOf(e)>0);
+    if(open.length<=1)break;
+    const drop=open.filter(e=>!heavy(e)).sort((a,b)=>slack(b)-slack(a))[0]
+             ||open.sort((a,b)=>slack(b)-slack(a))[0];
+    if(!drop)break;
+    drop.skipped=true;
+    changes.push('− '+drop.name);
+  }
+  save();renderWo();
+  return{before,after:remainingMinutes(),changes};
+}
+function openTimeBudget(){
+  if(!D.active){toast('Kein aktives Workout');return}
+  const rest=remainingMinutes();
+  const el=document.getElementById('tb-info');
+  if(el)el.textContent=`Noch ${rest} Minuten geplant. Wie viel Zeit hast du?`;
+  const inp=document.getElementById('tb-min');
+  if(inp&&!inp.value)inp.value=Math.max(20,Math.round(rest/10)*10-20);
+  om('m-timebudget');
+}
+function applyTimeBudget(){
+  const inp=document.getElementById('tb-min');
+  const r=trimWorkoutTo(inp&&inp.value);
+  cm('m-timebudget');
+  if(!r)return;
+  if(!r.changes.length){toast('Passt schon in dein Zeitfenster');return}
+  toast(`${r.before} → ${r.after} min · ${r.changes.length} Anpassungen`);
+  haptic([12,40,12]);
 }
 function renderWo(){
   applyVisualTheme();
@@ -7367,6 +7799,7 @@ function renderWo(){
     `<button class="wo-cmd accent ib" onclick="openWorkoutSwitch()">${icon('swap',14)}Tag wechseln</button>`+
     `<button class="wo-cmd ib" onclick="addExerciseToWorkout()">${icon('plus',14)}Übung</button>`+
     `<button class="wo-cmd ib" onclick="jumpToActiveExercise()">${icon('target',14)}Zur Übung</button>`+
+    `<button class="wo-cmd ib" onclick="openTimeBudget()">${icon('battery',14)}Wenig Zeit</button>`+
     `<button class="wo-cmd ib" onclick="toggleWorkoutCompact()">${icon('more',14)}${D.active.compact?'Nur Fokus':'Alle aufklappen'}</button>`+
   `</div>`+
   `<div class="wo-progress"><div class="tr"><i data-grow="${total?Math.round(doneCount/total*100):0}%"></i></div>`+
@@ -7761,9 +8194,73 @@ function startMeso(weeks){
   m.weeks=Math.min(8,Math.max(3,parseInt(weeks)||MESO_DEFAULT_WEEKS));
   m.start=Date.now();
   m.active=true;
+  m.block=(parseInt(m.block)||0)+1;
   save();renderDash();
   toast(`Mesozyklus gestartet — ${m.weeks} Wochen`);
   haptic([12,40,12]);
+  /* Ein neuer Block ist der natürliche Moment für frische Reize. Vorschlagen,
+     nicht durchführen: Welche Übung man behalten will, weiß nur der Nutzer. */
+  if(m.block>1)setTimeout(()=>proposeRotation(),400);
+}
+/* --------------------------------------------------------------------------
+   ÜBUNGSROTATION ZUM BLOCKWECHSEL
+   Zwischen zwei Blöcken zwei bis drei Übungen gegen Varianten desselben
+   Musters tauschen — dieselbe Bewegung, anderer Winkel oder anderes Gerät.
+   Ausgewählt werden die Kandidaten nach Stagnation: Was seit dem längsten
+   ohne Bestwert läuft, kommt zuerst dran. Was noch steigt, bleibt.
+   -------------------------------------------------------------------------- */
+function rotationCandidates(limit){
+  const taken=new Set();
+  Object.values(D.plan||{}).forEach(d=>(d.exercises||[]).forEach(e=>taken.add(baseNameKey(e.name))));
+  const out=[];
+  Object.entries(D.plan||{}).forEach(([dayKey,day])=>{
+    (day.exercises||[]).forEach((ex,idx)=>{
+      if(ex.type!=='main')return;
+      const prog=exerciseProgress(ex.name);
+      /* Übungen, die noch steigen, fasst niemand an. */
+      if(prog&&prog.dir==='up')return;
+      const alt=alternativeFor(ex,taken);
+      if(!alt)return;
+      out.push({dayKey,idx,from:ex.name,to:alt.name,note:alt.note,
+        stale:prog?prog.stale||0:0,sessions:prog?prog.sessions:0});
+    });
+  });
+  out.sort((a,b)=>b.stale-a.stale||b.sessions-a.sessions);
+  return out.slice(0,Math.max(1,parseInt(limit)||3));
+}
+let rotationPlan=[];
+function proposeRotation(){
+  rotationPlan=rotationCandidates(3);
+  const box=document.getElementById('rot-list');
+  if(!box)return;
+  if(!rotationPlan.length){
+    box.innerHTML='<div class="empty">Alles im Fluss — keine Übung, die einen Wechsel nötig hätte.</div>';
+  }else{
+    box.innerHTML=rotationPlan.map((r,i)=>
+      `<label class="rot-row"><input type="checkbox" checked data-i="${i}">`+
+      `<span><b>${esc(r.from)}</b> → <b style="color:var(--accent)">${esc(r.to)}</b>`+
+      `<small>${esc(planDisplayName(r.dayKey))}${r.stale?` · ${r.stale} Einheiten ohne Bestwert`:' · kein Fortschritt zuletzt'}</small></span></label>`
+    ).join('');
+  }
+  om('m-rotation');
+}
+function applyRotation(){
+  const box=document.getElementById('rot-list');
+  if(!box){cm('m-rotation');return}
+  const picked=[...box.querySelectorAll('input[type=checkbox]')].filter(c=>c.checked)
+    .map(c=>rotationPlan[parseInt(c.dataset.i)]).filter(Boolean);
+  if(!picked.length){cm('m-rotation');toast('Nichts getauscht');return}
+  picked.forEach(r=>{
+    const ex=(D.plan[r.dayKey]||{exercises:[]}).exercises[r.idx];
+    if(!ex||ex.name!==r.from)return;
+    ex.name=r.to;
+    if(r.note)ex.note=r.note;
+  });
+  save();markPlanDirty();coachInvalidate();
+  renderPlan();renderDash();renderAna();
+  cm('m-rotation');
+  haptic([12,40,12]);
+  toast(`${picked.length} ${picked.length===1?'Übung':'Übungen'} rotiert`);
 }
 function stopMeso(){
   const m=ensureMesoState();
@@ -7829,9 +8326,35 @@ function nextSetTarget(ex){
     return{icon:icon('trend',17),num:String(nw),unit:`kg × ${esc(rmin)}`,why:`${esc(w)} kg × ${esc(r)} war die obere Grenze — Gewicht hoch.`,
       text:`Letztes Mal <b>${esc(w)}kg × ${esc(r)}</b> — obere Grenze erreicht. Jetzt <b>${esc(nw)}kg</b> bei ${esc(rmin)} Wdh.`};
   }
+  /* --- Autoregulation ------------------------------------------------------
+     RIR wurde bisher nur protokolliert. Wenn der letzte Satz mit RIR 0 kam,
+     obwohl 2 das Ziel war, ist die Vorgabe „eine Wiederholung mehr" falsch:
+     Der Satz ging bereits bis ans Limit. Umgekehrt bei RIR 4 — da liegt
+     mehr drin, als die doppelte Progression vorsieht.
+     Die Abweichung wird nur ab einer ganzen Stufe berücksichtigt; sonst
+     schwankt die Vorgabe mit jeder Selbsteinschätzung. */
+  const targetRir=ex.rir===null||ex.rir===undefined?null:parseInt(ex.rir);
+  const gotRir=ref.rir===undefined||ref.rir===null?null:parseInt(ref.rir);
+  const dev=(targetRir!==null&&gotRir!==null)?gotRir-targetRir:0;
+  if(dev<=-1){
+    /* Zu schwer: Wiederholungen halten, Gewicht eine Stufe zurück. */
+    const step=w>=60?2.5:w>=20?2:1;
+    const nw=Math.max(step,+(w-step).toFixed(1));
+    return{icon:icon('warn',17),num:String(String(nw).replace(/\.0$/,'')),unit:`kg × ${esc(r||rmin)}`,
+      why:`Letzter Satz RIR ${esc(gotRir)} statt ${esc(targetRir)} — der ging schon bis ans Limit.`,
+      text:`Letzter Satz kam mit <b>RIR ${esc(gotRir)}</b> statt ${esc(targetRir)}. Heute <b>${esc(nw)}kg × ${esc(r||rmin)}</b> — erst die Ausführung zurückholen, dann wieder rauf.`};
+  }
+  if(dev>=2&&r<rmax){
+    /* Deutlich zu leicht: zwei Wiederholungen statt einer, aber nie über rmax. */
+    const tr2=Math.min(rmax,r+2);
+    return{icon:icon('trend',17),num:String(w),unit:`kg × ${esc(tr2)}`,
+      why:`Letzter Satz RIR ${esc(gotRir)} statt ${esc(targetRir)} — da liegt mehr drin.`,
+      text:`Letzter Satz war mit <b>RIR ${esc(gotRir)}</b> zu leicht. Heute <b>${esc(w)}kg × ${esc(tr2)}</b> statt nur einer Wiederholung mehr.`};
+  }
   const tr=Math.min(rmax,r+1);
-  return{icon:icon('target',17),num:String(w),unit:`kg × ${esc(tr)}`,why:`Letztes Mal ${esc(w)} kg × ${esc(r)}${ref.rir!==undefined?` bei RIR ${esc(ref.rir)}`:''} — eine Wdh drauf.`,
-    text:`Ziel: <b>${esc(w)}kg × ${esc(tr)}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${ref.rir!==undefined?` @ RIR ${esc(ref.rir)}`:''}.`};
+  return{icon:icon('target',17),num:String(w),unit:`kg × ${esc(tr)}`,
+    why:`Letztes Mal ${esc(w)} kg × ${esc(r)}${gotRir!==null?` bei RIR ${esc(gotRir)}`:''} — eine Wiederholung mehr.`,
+    text:`Ziel: <b>${esc(w)}kg × ${esc(tr)}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${gotRir!==null?` @ RIR ${esc(gotRir)}`:''}.`};
 }
 function normalizeAltItem(item,source){
   return{

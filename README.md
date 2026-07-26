@@ -5,6 +5,7 @@ läuft per `file://` und offline. Optionaler Cloud-Sync über Firestore.
 
 ```
 index.html          Die komplette App (HTML + CSS + JS)
+sw.js               Service Worker: die App läuft auch ohne Empfang
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Fuzzing
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
 docs/CBUM-REVIEW.md Dieselbe App aus Trainingssicht bewertet
@@ -31,6 +32,10 @@ Aufwärmrampe je Hauptübung (zählt nicht ins Volumen) · Deload-Modus, der die
 Workouts sieben Tage lang automatisch reduziert und den Plan unberührt lässt
 
 **Im laufenden Workout**
+„Wenig Zeit": kürzt die Einheit auf ein Zeitbudget — Grundübungen zuletzt,
+nie unter zwei Sätze, der Plan bleibt unverändert ·
+Autoregulation: weicht der RIR vom Ziel ab, ändert sich die nächste Vorgabe ·
+Supersätze mit gemeinsamer Pause · Scheibenrechner ·
 Trainingstag wechseln (anhängen / nur Geloggtes behalten / ersetzen) ·
 Übung tauschen ohne Verlust geloggter Sätze, optional dauerhaft in den Plan ·
 Übung live ergänzen, entfernen, umsortieren · Sätze ± · Kompaktmodus ·
@@ -63,6 +68,11 @@ Konfidenzstufe und „warum?"-Beleg (siehe [`docs/EVIDENZ.md`](docs/EVIDENZ.md))
 Ein Trainingsplan wird zu einem komprimierten Code, einem Link oder einem
 QR-Code (eigener Encoder, ohne Bibliothek). Beim Import zeigt die App zuerst
 eine Vorschau; Historie und eigene Daten des Empfängers bleiben unberührt.
+
+**Daten**
+JSON-Backup mit Erinnerung, wenn länger als 30 Tage nichts gesichert wurde ·
+CSV-Export aller Sätze (Semikolon, Dezimalkomma, BOM — öffnet in Excel ohne
+Import-Dialog)
 
 **Sync**
 Firestore mit Merge-Verfahren über alle Datentypen, Tombstones für Löschungen,
@@ -103,7 +113,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **59 Prüfungen grün** — 50 Regressionstests plus Fuzzing über
+Aktueller Stand: **65 Prüfungen grün** — 56 Regressionstests plus Fuzzing über
 67 Operationen, verifiziert über mehr als zehn unabhängige Kampagnen.
 
 ---
