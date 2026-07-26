@@ -1735,6 +1735,19 @@ html,body{
 .rep-acts button{padding:7px 11px;border-radius:11px;cursor:pointer;font-size:11.5px;font-weight:700;
   font-family:'Space Grotesk',sans-serif;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--text)}
 .rep-acts button:active{transform:scale(.96)}
+/* Der Kopf der Volumenkarte ist der Schalter. Eingeklappt trägt er die
+   Kurzfassung — sonst müsste man aufklappen, um zu sehen, ob etwas fehlt. */
+.muscle-volume-head.mv-toggle{cursor:pointer;user-select:none;-webkit-user-select:none;align-items:center}
+.muscle-volume-head.mv-toggle:active{opacity:.75}
+.muscle-volume-head .chev{font-size:12px;color:var(--text3);flex:0 0 auto;
+  transition:transform var(--dur-el) var(--out);transform-origin:50% 55%}
+.muscle-volume-head.closed .chev{transform:rotate(-90deg)}
+.mv-sum{display:block;font-family:'Space Grotesk',sans-serif;font-size:11.5px;font-weight:600;
+  color:var(--text3);letter-spacing:0;text-transform:none;margin-top:3px}
+/* Eingeklappt soll die Karte auch wirklich klein sein — sonst bleibt ein
+   leerer Kasten stehen und man hat nichts gewonnen. */
+.muscle-volume-card.is-closed{padding-bottom:14px}
+.muscle-volume-card.is-closed .muscle-volume-head{margin-bottom:0}
 .rot-row{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--bg3);cursor:pointer}
 .rot-row:last-child{border-bottom:none}
 .rot-row input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--accent);font-size:16px}
@@ -4971,7 +4984,7 @@ function ensureUIState(){
    Zustand liegt bewusst in den Daten und nicht in einer Modulvariablen:
    sonst klappt der Screen bei jedem Reload wieder auf und die Einstellung
    ist auf dem zweiten Gerät weg. */
-const SECTION_BODY={egym:'egym-body',egymhist:'egym-history',trend:'ana-progress',balance:'ana-muscles',koerper:'koerper-body',gewicht:'bio-entries-list'};
+const SECTION_BODY={egym:'egym-body',egymhist:'egym-history',trend:'ana-progress',balance:'ana-muscles',koerper:'koerper-body',gewicht:'bio-entries-list',volumen:'volumen-body'};
 function applySectionState(key){
   ensureUIState();
   const chev=document.getElementById('chev-'+key);
@@ -4985,7 +4998,10 @@ function toggleSection(key){
   ensureUIState();
   D.ui.sections[key]=!D.ui.sections[key];
   save();
-  applySectionState(key);
+  /* Die Volumenkarte zeigt eingeklappt eine Kurzfassung im Kopf — dafür muss
+     sie neu gezeichnet werden, nicht nur ein- und ausgeblendet. */
+  if(key==='volumen'&&typeof renderMuscleVolumeCard==='function')renderMuscleVolumeCard();
+  else applySectionState(key);
   haptic(8);
 }
 function accentPresets(){
@@ -7323,13 +7339,28 @@ function renderMuscleVolumeCard(){
   ensureUIState();
   const withSec=D.ui.volMode!=='direct';
   const vol=getWeeklyVolume(withSec);
-  const muscleNames={chest:'Brust',back:'Rücken',legs:'Beine',shoulders:'Schultern',arms:'Arme',core:'Core'};
+  const muscleNames=Object.fromEntries(Object.keys(MUSCLE_LANDMARKS).map(k=>[k,(VOL_GROUP_META[k]||{}).mx||muscleName(k)]));
   const muscleIcons=k=>`<span class="ic-wrap" style="width:30px;height:30px;flex:0 0 30px;border-radius:10px">${icon(k,17)}</span>`;
   /* Eine einzige Quelle für die Landmarks statt einer zweiten, abweichenden
      Tabelle. Vorher stand hier core.mev = 0 — dadurch galten 0 Core-Sätze
      als „im MAV“, weil 0 < 0 falsch ist. */
   const RP=MUSCLE_LANDMARKS;
-  mount.innerHTML=`<div class="muscle-volume-card"><div class="muscle-volume-head"><div class="muscle-volume-title">Volumen · Muskelgruppe</div><button class="muscle-volume-link" onclick="go('ana')">Alles ansehen →</button></div>`+
+  /* Zehn Muskelgruppen sind zehn Zeilen — auf dem Startbildschirm ist das
+     der längste Block. Er klappt jetzt zu; der Zustand liegt wie bei den
+     anderen Abschnitten in D.ui und überlebt Reload und Sync. */
+  ensureUIState();
+  const volClosed=!!D.ui.sections.volumen;
+  const worst=Object.keys(MUSCLE_LANDMARKS)
+    .map(k=>({k,sets:(vol[k]&&vol[k].sets)||0,lm:MUSCLE_LANDMARKS[k]}))
+    .filter(x=>landmarkState(x.sets,x.lm).key!=='mid'&&landmarkState(x.sets,x.lm).key!=='ok');
+  mount.innerHTML=`<div class="muscle-volume-card${volClosed?' is-closed':''}">`+
+    `<div class="muscle-volume-head mv-toggle${volClosed?' closed':''}" onclick="toggleSection('volumen')">`+
+      `<div class="muscle-volume-title">Volumen · Muskelgruppe`+
+      (volClosed?`<span class="mv-sum">${worst.length?worst.length+(worst.length===1?' Gruppe':' Gruppen')+' außerhalb':'alles im Korridor'}</span>`:'')+
+      `</div>`+
+      `<span class="chev" id="chev-volumen">▾</span></div>`+
+    `<div id="volumen-body">`+
+    `<div style="display:flex;justify-content:flex-end;margin:-4px 0 6px"><button class="muscle-volume-link" onclick="event.stopPropagation();go('ana')">Alles ansehen →</button></div>`+
     segmentedControl('vol-seg',[{key:'total',label:'Inkl. indirekt'},{key:'direct',label:'Nur direkt'}],withSec?'total':'direct','setVolumeMode')+
     `<div style="font-size:11px;color:var(--text3);margin:8px 2px 12px;line-height:1.45">${withSec
       ?'Indirekt beteiligte Muskeln zählen mit 0,5 Sätzen. Drücken belastet auch Trizeps und vordere Schulter.'
@@ -7359,7 +7390,8 @@ function renderMuscleVolumeCard(){
         `<div class="mv-bar"><div class="mv-fill ${state.key==='low'?'low':state.key==='high'?'high':'mid'}" data-grow="${fillPct.toFixed(1)}%"></div>`+
         `<span class="mv-mark" style="left:${mevPct}%"></span><span class="mv-mark" style="left:${mavPct}%"></span><span class="mv-mark" style="left:99.5%"></span></div>`+
         `</div>`;
-    }).join('')}</div></div>`;
+    }).join('')}</div></div></div>`;
+  applySectionState('volumen');
   runBarGrows(mount);
 }
 function setVolumeMode(mode){
