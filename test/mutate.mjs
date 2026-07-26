@@ -166,14 +166,21 @@ async function fahre(m) {
       const kind = spawn(process.execPath,
         [join(dir, 'test', 'check.mjs'), '--stages=' + m.stufen, '--seed=4242', '--iterations=800'],
         { cwd: dir, stdio: 'ignore' });
-      const uhr = setTimeout(() => { kind.kill('SIGKILL'); r(-1); }, 300000);
+      /* Grosszuegig: ein Volllauf braucht allein 325 s, unter Parallelbetrieb
+         entsprechend mehr. Lieber warten als raten. */
+      const uhr = setTimeout(() => { kind.kill('SIGKILL'); r(-1); }, 1800000);
       kind.on('exit', c => { clearTimeout(uhr); r(c); });
     });
-    /* Eine Zeitüberschreitung ist KEIN Überleben: eine Prüfmenge, die nicht
-       fertig wird, ist nicht grün. Sie bleibt trotzdem sichtbar, weil sie
-       meist heißt, dass ein Test ohne den Fix in seine eigene Grenze läuft —
-       richtig erkannt, nur teuer. */
-    if (code === -1) return { ...m, ergebnis: 'gefangen (Zeitüberschreitung)' };
+    /* Eine Zeitüberschreitung ist WEDER gefangen NOCH überlebt — sie ist
+       unbekannt. Hier stand einmal „gefangen", mit der Begründung, eine
+       Prüfmenge die nicht fertig wird sei ja nicht grün. Das klingt richtig
+       und war der teuerste Fehler dieses Werkzeugs: ein Volllauf dauert
+       325 s, die Grenze stand bei 300 s, und drei davon liefen parallel auf
+       vier Kernen. Ergebnis war ein Bericht „7 von 7 gefangen", in dem keine
+       einzige Mutation tatsächlich geprüft worden war.
+       Ein Messwert, der nicht zustande kam, muss als solcher auftauchen —
+       niemals als das Ergebnis, das man sich wünscht. */
+    if (code === -1) return { ...m, ergebnis: 'UNKLAR — Zeit abgelaufen' };
     return { ...m, ergebnis: code !== 0 ? 'gefangen' : 'ÜBERLEBT' };
   } finally { await rm(dir, { recursive: true, force: true }); }
 }
@@ -188,15 +195,21 @@ await Promise.all(Array.from({ length: PARALLEL }, async () => {
     const m = warteschlange.shift();
     const r = await fahre(m);
     ergebnisse.push(r);
-    const ok = r.ergebnis.startsWith('gefangen');
+    const ok = r.ergebnis === 'gefangen';
     console.log(`  ${ok ? C.g + '✓' : C.r + '✗'}${C.x} ${r.id.padEnd(26)} ${C.d}${r.art}${C.x}  ${ok ? '' : C.r + r.ergebnis + C.x}`);
   }
 }));
 
-const ueberlebt = ergebnisse.filter(r => !r.ergebnis.startsWith('gefangen'));
+const ueberlebt = ergebnisse.filter(r => r.ergebnis === 'ÜBERLEBT');
+const unklar = ergebnisse.filter(r => r.ergebnis.startsWith('UNKLAR') || r.ergebnis === 'ANKER FEHLT');
 const bekanntUeberlebt = ueberlebt.filter(r => r.art === 'bekannt');
 console.log('\n' + '─'.repeat(64));
-console.log(`${ergebnisse.length - ueberlebt.length} von ${ergebnisse.length} gefangen`);
+console.log(`${ergebnisse.filter(r => r.ergebnis === 'gefangen').length} von ${ergebnisse.length} gefangen`
+  + (unklar.length ? `, ${unklar.length} UNKLAR (nicht gemessen)` : ''));
+if (unklar.length) {
+  console.log(`\n${C.y}Nicht gemessen — zaehlt weder als gefangen noch als ueberlebt:${C.x}`);
+  unklar.forEach(r => console.log(`  ${r.id}: ${r.ergebnis}`));
+}
 if (ueberlebt.length) {
   console.log(`\n${C.r}Überlebt — hier fehlt eine Zusicherung:${C.x}`);
   ueberlebt.forEach(r => console.log(`  [${r.art}] ${r.id}: ${r.was}\n      ${r.ergebnis}${r.hinweis ? ' — ' + r.hinweis : ''}`));
@@ -208,4 +221,4 @@ console.log('─'.repeat(64));
 /* Nur überlebende Mutationen mit benanntem Test sind ein harter Fehlschlag:
    dort behauptet das Register eine Absicherung, die es nicht gibt. Offene
    Überlebende sind Arbeitsvorrat, kein Defekt. */
-process.exit(bekanntUeberlebt.length === 0 ? 0 : 1);
+process.exit(bekanntUeberlebt.length === 0 && unklar.length === 0 ? 0 : 1);
