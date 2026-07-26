@@ -118,6 +118,8 @@
 | [PB-073](#pb-073) | Der Offline-Cache registrierte sich beim neuen Nutzer nie | **hoch** | Zustand | ✅ |
 | [PB-074](#pb-074) | Neue Fassung kommt an — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-075](#pb-075) | App läuft ohne Netz — Test vor dem Fehler | — | Vorbeugung | ✅ |
+| [PB-076](#pb-076) | Die e1RM-Formel wurde nie auf ihren Wert geprüft | mittel | Testgüte | ✅ |
+| [PB-077](#pb-077) | Pausenlängen ließen sich vertauschen, ohne dass es auffiel | mittel | Testgüte | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2816,6 +2818,77 @@ HTTP-Server (`test/httpserve.mjs`).
 
 ---
 
+### PB-076 und PB-077
+
+**Was die Mutationsstichprobe gefunden hat — und was sie über sich selbst verriet**
+
+| | |
+|---|---|
+| **Schwere** | mittel (fehlende Zusicherungen, keine Fehlfunktion) |
+| **Klasse** | Testgüte |
+| **Gefunden** | `test/mutate.mjs`, der ersten Mutationsstichprobe |
+| **Status** | ✅ behoben |
+
+**Die Idee.** `coverage.mjs` beantwortet „wird diese Funktion aufgerufen?" —
+die schwächere Hälfte der Frage. Die stärkere lautet: **würde es auffallen,
+wenn sie etwas Falsches täte?** Also eine bewusste Verschlechterung einbauen
+und nachsehen, ob irgendein Test rot wird. Überlebt sie, hat man die Adresse
+einer fehlenden Zusicherung statt des Gefühls, dass irgendwo eine fehlt.
+
+**Zwei echte Funde aus 18 Mutationen:**
+
+* **PB-076 — die e1RM-Formel.** Der Nenner der Epley-Formel ließ sich von 30
+  auf 25 ändern, ohne dass eine der 79 Prüfungen rot wurde. Der Fuzzer ruft
+  `calc1RM` auf, prüft aber nur „ist eine endliche Zahl" — und das bleibt sie
+  auch falsch. Es ist die Rechnung hinter jedem e1RM-Verlauf, jeder
+  PR-Erkennung und jeder Stagnationsmeldung. Jetzt auf Werte geprüft
+  (100 kg × 10 Wdh → 133,3) samt Monotonie und Randfällen.
+* **PB-077 — die Pausenlängen.** Grundübung und Isolation ließen sich
+  vertauschen, ohne dass etwas ansprang. Eine der wenigen Einstellungen, die
+  der Nutzer selbst setzt; die falsche Zuordnung fällt erst im Studio auf.
+* **Nachgetragen an PB-028 — die Aufwärmrampe.** Der Test sicherte nur ab,
+  dass die Rampe nicht *zu schwer* wird. Eine Rampe von 5 % auf 8 % der
+  Arbeitslast erfüllte das mühelos und wäre als Aufwärmen wertlos. **Ein
+  Vertrag, der nur eine Richtung absichert, lässt die andere frei.** Jetzt
+  muss die letzte Stufe auch nah genug heranführen.
+
+**Drei Fehlalarme, die lehrreicher sind als die Funde.** Das Werkzeug hat sich
+in diesem einen Lauf **dreimal selbst widerlegt**:
+
+1. **Verschachtelte Prüfstufen.** Der neue Schalter `--stages=sync` sprang aus
+   der Regressionsstufe heraus — und weil Sync, Offline und Fuzz alle in
+   derselben öffnenden Klammer hingen, lief damit *auch Sync nicht*. Acht
+   Mutationen wurden als „überlebt" gemeldet, die niemand geprüft hatte.
+2. **Zeitüberschreitung als Erfolg gewertet.** Ich hatte entschieden: „Eine
+   Prüfmenge, die nicht fertig wird, ist ja nicht grün, also zähle ich sie als
+   gefangen." Der Satz stimmt sogar. Er macht nur aus jedem zu langsamen Lauf
+   einen Erfolg — und ein Volllauf dauert 325 s bei einer Grenze von 300 s.
+   Ergebnis: ein Bericht „7 von 7 gefangen", in dem **keine einzige Mutation
+   tatsächlich geprüft** worden war. Das war der teuerste Fehler, weil er als
+   einziger eine falsche **Ent**warnung war — Fehlalarme fallen auf, falsche
+   Entwarnungen nicht.
+3. **Eine äquivalente Mutation.** Die letzte Aufwärmstufe auf 110 % zu heben
+   „überlebte" — und war trotzdem kein Fund: `warmupPlan` filtert jede Stufe
+   ≥ Arbeitsgewicht selbst heraus, das Verhalten ändert sich also gar nicht.
+   Der klassische Fehlalarm dieses Verfahrens.
+
+Dazu ein vierter, im Testcode selbst: `navigator.serviceWorker.ready` löst nie
+auf, wenn sich keiner registriert hat. Der Offline-Test **hing** damit, statt
+zu scheitern — ein Test muss ein Ergebnis liefern, auch ein schlechtes.
+
+**Lektion.** Ein Werkzeug, das die Tests prüft, ist selbst ungeprüft. Bei
+jedem alarmierenden Ergebnis einer **neuen** Messmethode gilt: erst die
+Methode verdächtigen, dann das Gemessene. Und die schärfere Fassung davon,
+aus Fehlalarm 2: **ein Messwert, der nicht zustande kam, darf nie als das
+Ergebnis auftauchen, das man sich wünscht.** „Unklar" braucht eine eigene
+Kategorie, sonst wandert es stillschweigend in „in Ordnung".
+
+**Test.** `PB-076` Formelwerte und Monotonie · `PB-077` Pausenzuordnung über
+sechs Übungen, Vorwärmen und Voreinstellungen · `PB-028` erweitert. Alle drei
+gegengeprüft: die zugehörige Mutation wird jetzt gefangen.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -2948,7 +3021,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **27
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **29
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -2982,6 +3055,8 @@ gestellt werden sollten:
 | 25 | **Zeit als Ersatz für eine Bedingung** | PB-072 | Wartet dieser Test auf eine Uhr oder auf das, was tatsächlich passieren muss? Jedes `setTimeout` ist eine Wette auf die Maschine. |
 | 26 | **Ein Fehlschlag als Befund gelesen** | PB-072 | Ist das reproduzierbar? Bei einer neuen Prüfmethode ist die Methode unverdächtiger als das Geprüfte — erst mehrere Läufe, dann die Diagnose. |
 | 27 | **„Nicht testbar" als Selbstauskunft** | PB-073 | Was genau fehlt zum Prüfen — und wie viel Arbeit ist das wirklich? Hier waren es dreißig Zeilen HTTP-Server für einen Fehler der Schwere hoch. |
+| 28 | **Vertrag, der nur eine Richtung absichert** | PB-028, PB-076 | „Nicht zu groß" ist die halbe Aussage. Gilt auch das Gegenteil — und prüft es jemand? |
+| 29 | **Nicht zustande gekommener Messwert als Ergebnis** | PB-072, PB-076 | Kann diese Messung fehlschlagen, ohne dass es auffällt? Dann braucht „unklar" eine eigene Kategorie — sonst wandert es in „in Ordnung". |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

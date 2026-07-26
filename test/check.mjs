@@ -616,6 +616,20 @@ const REGRESSIONS = [
               if (plan[i].kg <= plan[i - 1].kg) bad.push(`${k}@${w}: nicht aufsteigend`);
           });
         });
+        /* Nachgetragen nach der Mutationsstichprobe: Bis hierher stand nur,
+           dass die Rampe nicht ZU SCHWER wird. Eine Rampe von 5 % auf 8 % der
+           Arbeitslast erfüllte das mühelos — und wäre als Aufwärmen wertlos.
+           Ein Vertrag, der nur eine Richtung absichert, lässt die andere frei:
+           die letzte Stufe muss auch nah genug an die Arbeitslast heranführen. */
+        [40, 60, 100, 140].forEach(w => {
+          ['squat', 'push', 'pulld'].forEach(k => {           // schwere Muster
+            const plan = warmupPlan(w, 'chest', k) || [];
+            if (!plan.length) { bad.push(`${k}@${w}: gar keine Rampe`); return; }
+            const letzte = plan[plan.length - 1].kg;
+            if (letzte < w * 0.6) bad.push(`${k}@${w}: letzte Stufe ${letzte} < 60 % von ${w}`);
+            if (plan.length < 3) bad.push(`${k}@${w}: nur ${plan.length} Stufen`);
+          });
+        });
         // Ungültige Eingaben liefern nichts statt zu werfen
         const nulls = [0, -5, NaN, null, undefined, 'abc'].map(v => warmupPlan(v, 'chest', 'push'));
         return { bad, nullsOk: nulls.every(x => x === null || x.length === 0) };
@@ -2016,6 +2030,74 @@ const REGRESSIONS = [
     }
   },
   {
+    id: 'PB-076', title: 'Die e1RM-Formel wird auf ihren Wert geprueft, nicht nur auf Endlichkeit',
+    run: async () => {
+      /* Von der Mutationsstichprobe gefunden: der Nenner der Epley-Formel
+         liess sich von 30 auf 25 aendern, ohne dass eine einzige der 79
+         Pruefungen rot wurde. Der Fuzzer ruft calc1RM zwar auf, prueft aber
+         nur „ist eine endliche Zahl" — und das bleibt sie auch mit falscher
+         Konstante.
+
+         Das ist die Rechnung hinter jedem e1RM-Verlauf, jeder PR-Erkennung
+         und jeder Stagnationsmeldung. Sie darf nicht stillschweigend driften. */
+      const r = await page.evaluate(() => ({
+        // Epley: w * (1 + r/30), auf eine Nachkommastelle
+        einWdh: calc1RM(100, 1),          // Sonderfall: genau das Gewicht
+        zehnWdh: calc1RM(100, 10),        // 100 * 4/3 = 133,3
+        fuenfWdh: calc1RM(80, 5),         // 80 * 7/6 = 93,3
+        nullGewicht: calc1RM(0, 5),
+        nullWdh: calc1RM(100, 0),
+        negativ: calc1RM(-10, 5),
+        // Monotonie: mehr Gewicht und mehr Wiederholungen heben den Wert
+        mehrGewicht: calc1RM(101, 5) > calc1RM(100, 5),
+        mehrWdh: calc1RM(100, 6) > calc1RM(100, 5)
+      }));
+      const nah = (a, b) => Math.abs(a - b) < 0.05;
+      const ok = r.einWdh === 100 && nah(r.zehnWdh, 133.3) && nah(r.fuenfWdh, 93.3)
+        && r.nullGewicht === 0 && r.nullWdh === 0 && r.negativ === 0
+        && r.mehrGewicht && r.mehrWdh;
+      return [ok, JSON.stringify(r) + ' — erwartet 100 / 133,3 / 93,3 / 0 / 0 / 0'];
+    }
+  },
+  {
+    id: 'PB-077', title: 'Grunduebung bekommt die laengere Pause, Isolation die kuerzere',
+    run: async () => {
+      /* Ebenfalls von der Mutationsstichprobe: die beiden Pausenwerte liessen
+         sich vertauschen, ohne dass etwas rot wurde. Es ist eine der wenigen
+         Einstellungen, die der Nutzer selbst setzt — und die falsche Zuordnung
+         faellt im Studio erst auf, wenn man sich wundert, warum nach
+         Kniebeugen 90 Sekunden Pause kommen. */
+      const r = await page.evaluate(() => {
+        D.settings.compound = 180;
+        D.settings.isolation = 60;
+        save();
+        return {
+          bank: restSecondsFor('Bankdrücken', 'chest', 'main'),
+          kniebeuge: restSecondsFor('Kniebeugen', 'legs', 'main'),
+          rudern: restSecondsFor('Langhantelrudern', 'back', 'main'),
+          seitheben: restSecondsFor('KH Seitheben', 'shoulders', 'main'),
+          curl: restSecondsFor('Bizepscurls', 'arms', 'main'),
+          wade: restSecondsFor('Wadenheben stehend', 'legs', 'main'),
+          // Aufwärmen und Mobility haben ihre eigene, kurze Pause
+          aufwaermen: restSecondsFor('Bankdrücken', 'chest', 'pre'),
+          // Ohne Einstellung greifen die Voreinstellungen 150 / 90
+          standard: (() => { D.settings.compound = 0; D.settings.isolation = 0; save();
+            return [restSecondsFor('Bankdrücken', 'chest', 'main'),
+                    restSecondsFor('Bizepscurls', 'arms', 'main')]; })()
+        };
+      });
+      await page.evaluate(() => { D.settings.compound = 150; D.settings.isolation = 90; save(); });
+      const compound = [r.bank, r.kniebeuge, r.rudern].every(v => v === 180);
+      const isolation = [r.seitheben, r.curl, r.wade].every(v => v === 60);
+      const vorwaermen = r.aufwaermen === 45;
+      /* 0 ist ein gueltiger Wert (Math.max(0,…)), keine Voreinstellung —
+         geprueft wird hier nur, dass beide Seiten getrennt bleiben. */
+      const getrennt = r.standard[0] !== r.standard[1] || r.standard[0] === 0;
+      return [compound && isolation && vorwaermen && getrennt,
+        JSON.stringify(r) + ` — erwartet 180 fuer Grunduebungen, 60 fuer Isolation, 45 vorm Satz`];
+    }
+  },
+  {
     id: 'PB-072', title: 'Sheet-Messungen warten auf die Animation, nicht auf eine Uhr',
     run: async () => {
       /* Gefunden, weil zwei Engines widersprachen: PB-061 war in WebKit rot
@@ -2574,6 +2656,15 @@ async function neuerNutzer() {
   await p.waitForTimeout(900);
   return { ctx: c, page: p };
 }
+/* `navigator.serviceWorker.ready` loest NIE auf, wenn sich keiner registriert
+   hat — ein Test, der darauf wartet, haengt statt zu scheitern. Genau das ist
+   passiert: die Mutation „Service Worker wieder nur ueber load-Zuhoerer" lief
+   in die 30-Minuten-Grenze des Mutationslaufs, statt sauber rot zu werden.
+   Ein Test muss ein Ergebnis liefern, auch ein schlechtes. */
+const bereit = (p, ms = 8000) => p.evaluate(async grenze => {
+  const wette = new Promise(r => setTimeout(() => r(false), grenze));
+  return Promise.race([navigator.serviceWorker.ready.then(() => true), wette]);
+}, ms);
 const marke = p => p.evaluate(() => {
   const m = document.querySelector('meta[name=pb-marke]');
   return m ? m.content : null;
@@ -2619,7 +2710,7 @@ const OFFLINE_TESTS = [
       const a = await neuerNutzer();
       try {
         const out = { vorher: await marke(a.page) };
-        await a.page.evaluate(() => navigator.serviceWorker.ready);
+        if (!await bereit(a.page)) return [false, 'Service Worker wurde nicht bereit'];
         srv.setzeMarke('B');
         await a.page.reload({ waitUntil: 'load' });
         await a.page.waitForTimeout(500);
@@ -2638,7 +2729,7 @@ const OFFLINE_TESTS = [
       srv.setzeOffline(false); srv.setzeMarke('A');
       const a = await neuerNutzer();
       try {
-        await a.page.evaluate(() => navigator.serviceWorker.ready);
+        if (!await bereit(a.page)) return [false, 'Service Worker wurde nicht bereit'];
         // Einmal laden, damit die Seite sicher im Cache liegt
         await a.page.reload({ waitUntil: 'load' });
         await a.page.waitForTimeout(400);

@@ -52,7 +52,7 @@ const PARALLEL = Math.max(1, parseInt(arg('parallel', '3'), 10));
    „überlebt" ist das die konservative Richtung — es könnte in Wahrheit
    gefangen sein, nie umgekehrt. */
 const MUTATIONEN = [
-  { id: 'calc1RM-konstante', art: 'bekannt', stufen: 'regression',
+  { id: 'calc1RM-konstante', art: 'bekannt', stufen: 'regression',   // PB-076
     was: 'Epley-Formel: Nenner 30 -> 25',
     suche: 'return Math.round(w*(1+r/30)*10)/10',
     ersetze: 'return Math.round(w*(1+r/25)*10)/10' },
@@ -77,22 +77,28 @@ const MUTATIONEN = [
     suche: '  list.forEach(e=>{if(e&&e.ss&&n[e.ss]<2)e.ss=null});',
     ersetze: '  /* mutiert */' },
 
-  { id: 'escaping-loch', art: 'bekannt', stufen: 'regression',
+  { id: 'escaping-loch', art: 'bekannt', stufen: 'regression,fuzz',
     was: 'esc() lässt den Apostroph durch (PB-019)',
     suche: ".replace(/[&<>\"']/g,c=>HTML_ENTITIES[c])",
     ersetze: '.replace(/[&<>"]/g,c=>HTML_ENTITIES[c])' },
 
-  { id: 'aufwaermen-zu-schwer', art: 'bekannt', stufen: 'regression',
-    was: 'Aufwärmstufe auf 110 % der Arbeitslast (PB-028)',
+  /* Hier stand eine Mutation, die die letzte Aufwärmstufe auf 110 % hob. Sie
+     „überlebte" — und war trotzdem kein Fund: warmupPlan filtert am Ende
+     jede Stufe >= Arbeitsgewicht selbst heraus, das Verhalten ändert sich
+     also überhaupt nicht. Das nennt man eine ÄQUIVALENTE Mutation, und sie
+     ist der klassische Fehlalarm dieses Verfahrens. Ersetzt durch eine, die
+     wirklich etwas ändert: die Rampe wird flacher, aber bleibt gültig. */
+  { id: 'aufwaermen-zu-flach', art: 'bekannt', stufen: 'regression',   // PB-028
+    was: 'Aufwärmrampe startet bei 5 % statt 40 %',
     suche: '?[{pct:.40,reps:8},{pct:.60,reps:5},{pct:.75,reps:3},{pct:.88,reps:1}]',
-    ersetze: '?[{pct:.40,reps:8},{pct:.60,reps:5},{pct:.75,reps:3},{pct:1.10,reps:1}]' },
+    ersetze: '?[{pct:.05,reps:8},{pct:.06,reps:5},{pct:.07,reps:3},{pct:.08,reps:1}]' },
 
   { id: 'cardio-als-tonnage', art: 'bekannt', stufen: 'regression',
     was: 'Cardio zählt als Kilogramm-Volumen (PB-004)',
     suche: 'function setVolume(set){return isCardioSet(set)?0:',
     ersetze: 'function setVolume(set){return false?0:' },
 
-  { id: 'trend-eigene-rechnung', art: 'bekannt', stufen: 'regression',
+  { id: 'trend-eigene-rechnung', art: 'bekannt', stufen: 'regression,fuzz',
     was: 'getExTrend rechnet wieder selbst (PB-051)',
     suche: "  if(!p||p.sessions<2||p.delta===null)return'—';\n  return p.dir||'flat';",
     ersetze: "  if(!p)return'—';\n  return (p.delta||0)>0?'up':'flat';" },
@@ -128,7 +134,7 @@ const MUTATIONEN = [
     suche: '  if(!ga||!gb||ga===gb)return false;',
     ersetze: '  if(!ga||!gb)return false;' },
 
-  { id: 'pausen-vertauscht', art: 'offen', stufen: 'regression',
+  { id: 'pausen-vertauscht', art: 'bekannt', stufen: 'regression',   // PB-077
     was: 'Grundübung bekommt die Isolationspause und umgekehrt',
     suche: '  return COMPOUND_PATTERNS.includes(detectMovePattern(name,muscle,type))?c:i;',
     ersetze: '  return COMPOUND_PATTERNS.includes(detectMovePattern(name,muscle,type))?i:c;' },
@@ -138,7 +144,7 @@ const MUTATIONEN = [
     suche: '      .filter(e=>!e.skipped&&openOf(e)>0&&(parseInt(e.sets)||0)>2)',
     ersetze: '      .filter(e=>!e.skipped&&openOf(e)>0&&(parseInt(e.sets)||0)>0)' },
 
-  { id: 'satzzahl-null-erlaubt', art: 'offen', stufen: 'regression',
+  { id: 'satzzahl-null-erlaubt', art: 'offen', stufen: 'regression,fuzz',
     was: 'normalizeExercise lässt 0 Sätze zu',
     suche: '  ex.sets=Math.max(1,parseInt(ex.sets)||3);',
     ersetze: '  ex.sets=Math.max(0,parseInt(ex.sets)||3);' },
