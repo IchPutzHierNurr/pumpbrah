@@ -9,6 +9,7 @@ sw.js               Service Worker: die App läuft auch ohne Empfang
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Sync, Fuzzing
 test/fakestore.mjs  Gefälschte Firestore — macht den Sync und zwei Geräte prüfbar
 test/httpserve.mjs  Winziger HTTP-Server — macht den Service Worker prüfbar
+test/mutate.mjs     Mutationsstichprobe — prüft die Tests statt der App
 test/coverage.mjs   Abdeckung: welche Funktion ruft überhaupt jemand auf?
 .github/workflows/  CI: derselbe Harness in Chromium UND WebKit, bei jedem Push
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
@@ -103,6 +104,7 @@ node test/check.mjs --seed=12345       # Lauf exakt wiederholen
 node test/check.mjs --smoke-only
 node test/check.mjs --browser=webkit   # andere Engine (siehe unten)
 node test/coverage.mjs                 # welche Funktion ruft überhaupt jemand auf?
+node test/mutate.mjs                   # würde es auffallen, wenn sie etwas Falsches täte?
 ```
 
 Voraussetzung: Chromium + Playwright. Pfad ggf. über `PW_CHROMIUM` setzen.
@@ -135,7 +137,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **79 Prüfungen grün** — 59 Regressionstests, 5 Sync-Tests über
+Aktueller Stand: **81 Prüfungen grün** — 61 Regressionstests, 5 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 91 Operationen, in Chromium und
 WebKit.
 
@@ -166,6 +168,20 @@ Runden für eine schnelle Antwort; die großen Kampagnen laufen weiter von Hand.
 
 Die Datei liegt **nicht** auf `main` — dort stehen nur App-Dateien, weil `main`
 über GitHub Pages ausgeliefert wird.
+
+### „Erreicht" ist nicht „geprüft" — die Mutationsstichprobe
+
+`node test/mutate.mjs` baut achtzehn bewusste Verschlechterungen in den Code
+und sieht nach, ob ein Test rot wird. Überlebt eine, ist das die **Adresse
+einer fehlenden Zusicherung** — nicht bloß das Gefühl, dass irgendwo eine
+fehlt. Gefunden wurden so drei: die e1RM-Formel wurde nie auf ihren Wert
+geprüft (PB-076), die Pausenlängen ließen sich vertauschen (PB-077), und die
+Aufwärmrampe war nur gegen „zu schwer" abgesichert, nicht gegen „nutzlos
+flach" (PB-028).
+
+Die Mutationen sind in zwei Sorten geteilt: solche, die einen Fehler mit
+benanntem Regressionstest nachbauen — überlebt so eine, ist das Register
+selbst schadhaft — und solche ohne Test, wo ein Überleben ein Fund ist.
 
 ### Was der Test *nicht* prüft
 
