@@ -8,6 +8,7 @@ index.html          Die komplette App (HTML + CSS + JS)
 sw.js               Service Worker: die App läuft auch ohne Empfang
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Sync, Fuzzing
 test/fakestore.mjs  Gefälschte Firestore — macht den Sync und zwei Geräte prüfbar
+test/httpserve.mjs  Winziger HTTP-Server — macht den Service Worker prüfbar
 test/coverage.mjs   Abdeckung: welche Funktion ruft überhaupt jemand auf?
 .github/workflows/  CI: derselbe Harness in Chromium UND WebKit, bei jedem Push
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
@@ -106,13 +107,14 @@ node test/coverage.mjs                 # welche Funktion ruft überhaupt jemand 
 
 Voraussetzung: Chromium + Playwright. Pfad ggf. über `PW_CHROMIUM` setzen.
 
-Vier Stufen:
+Fünf Stufen:
 
 | Stufe | Inhalt |
 |---|---|
 | **Smoke** | Start, Onboarding, jeder Screen rendert |
 | **Regression** | Ein Test pro Eintrag in `docs/BUGS.md` — wächst mit jedem Fund |
 | **Sync** | Anmelden, Cloud, **zwei Geräte auf einem Konto** — gegen eine gefälschte Firestore, mit Barrieren für echte Wettläufe |
+| **Offline** | Service Worker, Cache und ob eine **neue Fassung ankommt** — über einen echten HTTP-Server |
 | **Fuzz** | N zufällige Aktionen über 91 Operationen, 22 Invarianten nach **jeder** Aktion |
 
 ### Der Sync wird gegen ein Double geprüft
@@ -133,8 +135,9 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **76 Prüfungen grün** — 59 Regressionstests, 5 Sync-Tests über
-zwei Geräte und Fuzzing über 91 Operationen, in Chromium und WebKit.
+Aktueller Stand: **79 Prüfungen grün** — 59 Regressionstests, 5 Sync-Tests über
+zwei Geräte, 3 Offline-Tests und Fuzzing über 91 Operationen, in Chromium und
+WebKit.
 
 ### Zwei Engines, ein Vergleich
 
@@ -173,24 +176,23 @@ und sucht sie im Testskript.
 | | |
 |---|---|
 | Funktionen in `index.html` | 376 |
-| vom Test erreicht | 220 |
+| vom Test erreicht | 223 |
 | **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
-| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 155 |
-| außerhalb des Harnesses | **1** |
+| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 153 |
+| außerhalb des Harnesses | **0** |
 
-Die letzte Zeile war einmal acht. Firebase-Anmeldung, Cloud-Schreiben,
-Abmelden und „Alles zurücksetzen" laufen jetzt gegen die gefälschte Firestore.
-Übrig bleibt **`registerServiceWorker`** — Service Worker gibt es unter
-`file://` nicht, dafür bräuchte der Harness einen HTTP-Server. Der Eintrag
-steht mit Begründung in `test/coverage.mjs`, und das Skript meldet, wenn eine
-Begründung veraltet ist.
+Die letzte Zeile stand einmal bei acht. Sieben fielen weg, als die gefälschte
+Firestore kam, der achte mit einem dreißigzeiligen HTTP-Server. Beide Male war
+„nicht testbar" nur eine Abkürzung für „noch niemand hat nachgesehen, wie
+klein die Schnittstelle ist" — und hinter dem letzten Eintrag steckte ein
+Fehler der Schwere *hoch* (PB-073).
 
 Vier Grenzen, die keine Zahl sichtbar macht:
 
 * **„Erreicht" ist nicht „geprüft".** Die 220 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
-  59 Regressionstests, die 5 Sync-Tests und die 22 Invarianten — nicht die
-  Abdeckungszahl.
+  59 Regressionstests, die 5 Sync-Tests, die 3 Offline-Tests und die 22
+  Invarianten — nicht die Abdeckungszahl.
 * **WebKit ist nicht iOS Safari.** Seit Juli 2026 läuft derselbe Harness in CI
   zusätzlich in WebKit (siehe unten) — Engine-Unterschiede werden damit
   gefunden. Was weiter fehlt: echte Tastatur, echtes Safe-Area, echter
