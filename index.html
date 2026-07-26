@@ -793,9 +793,73 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .mdl.settling{transition:transform .3s var(--ease)!important}
 .mbg{background:rgba(4,5,8,.5)}
 .mbg.show{backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
-/* Tastatur-Ausweichraum: JS setzt --kb auf die Höhe der eingeblendeten
-   Tastatur (visualViewport), damit Eingabefelder nicht darunter verschwinden. */
-.mdl{padding-bottom:calc(max(env(safe-area-inset-bottom),18px) + var(--kb,0px))}
+/* Tastatur-Ausweichraum. Vorher bekam das Sheet unten zusätzliches PADDING —
+   damit wuchs es nach unten hinter die Tastatur, statt darüber zu rutschen,
+   und der Speichern-Knopf lag auf dem iPhone SE 290 px unter der Kante.
+   Jetzt weicht der CONTAINER aus (das Sheet sitzt an seinem unteren Rand),
+   und die maximale Höhe schrumpft um dieselbe Strecke. */
+.mbg{padding-bottom:var(--kb,0px)}
+.mdl{max-height:min(88vh,calc(100dvh - var(--kb,0px) - 16px))}
+/* Die Hauptaktion bleibt am unteren Rand des Sheets stehen, auch wenn der
+   Inhalt scrollt. Ein Dialog, dessen Bestätigen-Knopf man suchen muss, ist
+   auf einem Telefon kein Dialog. */
+.mdl .sheet-cta{
+  position:sticky;bottom:0;
+  margin:0 -16px 0;padding:10px 16px 2px;
+  background:linear-gradient(180deg,transparent,var(--bg2) 22%);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:2;
+}
+.mdl .sheet-cta .btn{margin:0}
+.mdl .sheet-cta .btn+.btn{margin-top:6px}
+/* Der Fokus-Ausschnitt: sichtbar bleiben Zielvorgabe, Felder, RIR, Speichern. */
+.kb-open .mdl-log .log-head,
+.kb-open .mdl-log .log-note,
+.kb-open .mdl-log .log-tgt .tw,
+.kb-open .mdl .cta-sub{display:none}
+.kb-open .mdl .mt{margin-bottom:10px}
+/* Die RIR-Kreise bleiben antippbar (40 px), rücken bei offener Tastatur aber
+   enger zusammen — sonst schiebt sie die Aktionszeile aus dem Bild. */
+.kb-open .mdl-log .rir-c{width:40px;height:40px;font-size:15px}
+.kb-open .mdl-log .log-rir{margin-bottom:4px}
+.kb-open .mdl-log .log-rir label{margin-bottom:3px}
+/* Beim Hineinscrollen eines fokussierten Feldes Platz für die Aktionszeile
+   lassen, sonst schiebt der Browser es exakt darunter. */
+.mdl{scroll-padding-bottom:104px}
+/* Die zweite Aktion ist eine Abkürzung, keine gleichwertige Wahl — sie
+   bekommt eine Zeile Text statt einer zweiten Schaltfläche. Das sind 40
+   Pixel, die auf einem iPhone SE den Unterschied machen. */
+.cta-sub{display:block;width:100%;margin-top:8px;padding:6px 0;background:none;border:none;cursor:pointer;
+  color:var(--text3);font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700}
+.cta-sub:active{color:var(--text)}
+.mdl-log .log-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.mdl-log .log-head>div{flex:1;min-width:0}
+.mdl-log #log-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mdl-log #log-hint{font-size:11px;color:var(--text3);margin-top:2px}
+.mdl-log .log-head .setbtn{flex:0 0 auto;min-width:0;padding:8px 12px;font-size:11.5px}
+.mdl-log .log-rir{margin-bottom:10px}
+.mdl-log .log-rir label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px}
+.mdl-log .log-note{margin-bottom:12px}
+.mdl-log .log-note summary{font-size:12px;color:var(--text3);cursor:pointer;padding:6px 0;list-style:none}
+.mdl-log .log-note summary::-webkit-details-marker{display:none}
+.mdl-log .log-note summary::before{content:'+ ';color:var(--accent);font-weight:800}
+.mdl-log .log-note[open] summary::before{content:'− '}
+/* 16 px, sonst zoomt iOS beim Fokussieren hinein (PB-026). Das Feld steht
+   ausserhalb von .ig und erbt die dortige Regel nicht. */
+.mdl-log .log-note input{width:100%;margin-top:6px;font-size:16px;padding:12px;border-radius:12px;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
+.mdl-log .log-thumb{width:40px;height:40px;flex:0 0 40px;border-radius:12px;overflow:hidden;cursor:pointer}
+.mdl-log #log-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Die Zielvorgabe: Zahl groß, Begründung klein daneben und auf zwei Zeilen
+   begrenzt. Antippen klappt sie ganz auf — man braucht sie selten ganz. */
+.log-tgt{display:flex;align-items:center;gap:9px;margin-bottom:11px;padding:9px 11px;border-radius:14px;
+  background:color-mix(in srgb,var(--accent) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);cursor:pointer}
+.log-tgt .ti{flex:0 0 auto;color:var(--accent);display:flex}
+.log-tgt .tn{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;color:var(--accent);flex:0 0 auto}
+.log-tgt .tu{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text2);flex:0 0 auto}
+.log-tgt .tw{font-size:11px;color:var(--text3);flex:1;min-width:0;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.log-tgt.open .tw{-webkit-line-clamp:6}
 
 /* --- Buttons: Tiefe statt Fläche --- */
 .btn{
@@ -2192,21 +2256,21 @@ html,body{
 <div class="ig" style="margin-bottom:6px"><label>Phasenwinkel (°)</label><input type="number" inputmode="decimal" step="0.1" id="eg-pw"></div>
 <div class="ig" style="margin-bottom:6px"><label>Skelettmuskelmasse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-smm"></div>
 <div class="ig" style="margin-bottom:6px"><label>Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
-<button class="btn" style="margin-top:12px" onclick="saveEgymEntry()">✓ MESSUNG SPEICHERN</button>
+<div class="sheet-cta"><button class="btn" onclick="saveEgymEntry()">✓ Messung speichern</button></div>
 </div></div>
 <div class="mbg" id="m-rotation"><div class="mdl">
 <div class="mt">NEUER BLOCK — ÜBUNGEN ROTIEREN <button class="mc" onclick="cm('m-rotation')">✕</button></div>
 <div style="font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px">Gleiche Bewegung, anderer Winkel oder anderes Gerät. Vorgeschlagen wird, was zuletzt nicht mehr gestiegen ist — deine Historie zur alten Übung bleibt vollständig erhalten.</div>
 <div id="rot-list"></div>
-<button class="btn" style="margin-top:12px" onclick="applyRotation()">Ausgewählte tauschen</button>
-<button class="btn btn-g" style="margin-top:6px" onclick="cm('m-rotation')">Diesmal nicht</button>
+<div class="sheet-cta"><button class="btn" onclick="applyRotation()">Ausgewählte tauschen</button>
+<button type="button" class="cta-sub" onclick="cm('m-rotation')">Diesmal nicht</button></div>
 </div></div>
 <div class="mbg" id="m-timebudget"><div class="mdl">
 <div class="mt">WENIG ZEIT <button class="mc" onclick="cm('m-timebudget')">✕</button></div>
 <div id="tb-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
 <div class="ir"><div class="ig"><label>Verfügbare Minuten</label><input type="number" inputmode="numeric" id="tb-min" step="5"></div></div>
 <div style="font-size:11.5px;color:var(--text3);line-height:1.5;margin:8px 0 12px">Gekürzt wird nach Priorität: zuerst Sätze bei Muskeln, die über dem Minimum liegen, dann Isolation bis auf zwei Sätze. Grundübungen zuletzt. Der Plan bleibt unverändert — nur die heutige Einheit wird kleiner.</div>
-<button class="btn" onclick="applyTimeBudget()">Einheit anpassen</button>
+<div class="sheet-cta"><button class="btn" onclick="applyTimeBudget()">Einheit anpassen</button></div>
 </div></div>
 <div class="mbg" id="m-plates"><div class="mdl">
 <div class="mt">SCHEIBENRECHNER <button class="mc" onclick="cm('m-plates')">✕</button></div>
@@ -2217,18 +2281,19 @@ html,body{
 <div id="plate-out"></div>
 <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">Scheiben pro Seite, gierig von schwer nach leicht. Verfügbar: 25 · 20 · 15 · 10 · 5 · 2,5 · 1,25 kg.</div>
 </div></div>
-<div class="mbg" id="m-log"><div class="mdl">
+<div class="mbg" id="m-log"><div class="mdl mdl-log">
 <div class="mt">SATZ LOGGEN <button class="mc" onclick="cm('m-log')">✕</button></div>
-<div id="log-name" style="font-size:14px;color:var(--text2);margin-bottom:4px"></div>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-<div id="log-hint" style="font-size:11px;color:var(--text3);flex:1"></div>
-<button class="setbtn" style="flex:0 0 auto;min-width:0;padding:7px 11px;font-size:11.5px" onclick="openPlates(document.getElementById('log-w').value)">Scheiben</button>
+<div class="log-head">
+<span class="exdemo-thumb log-thumb" id="log-demo"></span>
+<div><div id="log-name"></div><div id="log-hint"></div></div>
+<button type="button" class="setbtn" onclick="openPlates(document.getElementById('log-w').value)">Scheiben</button>
 </div>
+<div id="log-target"></div>
 <div class="ir">
 <div class="ig"><label>Gewicht (kg)</label><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-w',-2.5)">−</button><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-w',2.5)">+</button></div></div>
 <div class="ig"><label>Wiederholungen</label><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-r',-1)">−</button><input type="number" inputmode="numeric" id="log-r" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-r',1)">+</button></div></div>
 </div>
-<div style="margin-bottom:8px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px">RIR (Reps in Reserve)</label>
+<div class="log-rir"><label>RIR — Wiederholungen im Tank</label>
 <div class="rir-circles" id="log-rir-circles">
 <div class="rir-c rir-5" data-v="5" onclick="pickRir(this,5)">5</div>
 <div class="rir-c rir-4" data-v="4" onclick="pickRir(this,4)">4</div>
@@ -2238,9 +2303,16 @@ html,body{
 <div class="rir-c rir-0" data-v="0" onclick="pickRir(this,0)">0</div>
 </div></div>
 <input type="hidden" id="log-rir" value="2">
-<div class="ir"><div class="ig"><label>Notiz (optional)</label><input type="text" id="log-note" placeholder="z.B. Progression"></div></div>
-<button class="btn" onclick="confirmLog()">✓ SATZ SPEICHERN</button>
-<button class="btn btn-g" style="margin-top:6px" onclick="redoLast()">↩ LETZTEN SATZ WIEDERHOLEN</button>
+<!-- Die Notiz kostete eine ganze Zeile und wird bei den wenigsten Sätzen
+     gebraucht. Sie klappt jetzt auf, wenn man sie braucht — das sind die
+     rund 60 Pixel, die den Dialog auf dem iPhone SE über die Kante schoben. -->
+<details class="log-note"><summary>Notiz hinzufügen</summary>
+<input type="text" id="log-note" placeholder="z.B. Griff enger, Pause kurz">
+</details>
+<div class="sheet-cta">
+<button class="btn" onclick="confirmLog()">✓ Satz speichern</button>
+<button type="button" class="cta-sub" onclick="redoLast()">↩ Letzten Satz wiederholen</button>
+</div>
 </div></div>
 <div class="mbg" id="m-add"><div class="mdl">
 <div class="mt">ÜBUNG <button class="mc" onclick="cm('m-add')">✕</button></div>
@@ -2293,7 +2365,7 @@ html,body{
 <div class="mt">NOTIZ <button class="mc" onclick="cm('m-exnote')">✕</button></div>
 <div id="exn-name" style="font-size:14px;color:var(--text2);margin-bottom:8px"></div>
 <div class="ir"><div class="ig"><label>Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
-<button class="btn" onclick="saveExNote()">💾 SPEICHERN</button>
+<div class="sheet-cta"><button class="btn" onclick="saveExNote()">Notiz speichern</button></div>
 </div></div>
 <div class="mbg" id="m-evidence"><div class="mdl" style="max-height:92vh;overflow:auto">
 <div class="mt"><span id="ev-title">Begründung</span> <button class="mc" onclick="cm('m-evidence')">✕</button></div>
@@ -3112,6 +3184,10 @@ function attachKeyboardAvoidance(){
     /* Differenz zwischen Layout- und visuellem Viewport = Tastaturhöhe. */
     const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
     document.documentElement.style.setProperty('--kb',kb>80?kb+'px':'0px');
+    /* Marker für die Sheets: bei offener Tastatur bleibt nur, was man zum
+       Eintragen braucht. Alles Erklärende weicht — sonst deckt die klebende
+       Aktionszeile genau die Felder zu, um die es gerade geht. */
+    document.documentElement.classList.toggle('kb-open',kb>80);
     if(kb>80){
       const focused=document.activeElement;
       if(focused&&focused.closest&&focused.closest('.mdl')){
@@ -7576,26 +7652,23 @@ function openLog(ei){
   if(lastH)hint+=`Letztes Mal: ${formatLastSetHint(ex,lastH)}`;
   if(!cardio&&pr&&pr.w>0)hint+=` • PR: ${pr.w}kg`;
   if(!cardio&&rm)hint+=` • 1RM: ${rm.rm}kg`;
-  document.getElementById('log-hint').innerHTML=esc(hint||'');
-  /* Zielvorgabe direkt über die Eingabefelder — man muss nicht erst
-     zurückscrollen, um zu sehen, was man schlagen will. */
-  let tgtBox=document.getElementById('log-target');
-  if(!tgtBox){
-    tgtBox=document.createElement('div');
-    tgtBox.id='log-target';
-    document.getElementById('log-hint').after(tgtBox);
-  }
+  document.getElementById('log-hint').textContent=hint||'';
+  /* Zielvorgabe als EINE Zeile über den Eingabefeldern. Vorher standen Ziel,
+     Cue, Historie und die Übungsdemo jeweils in eigenen Blöcken — zusammen
+     168 von 580 Pixeln, und auf einem iPhone SE lag der Speichern-Knopf
+     dadurch unter der Kante. Der Inhalt bleibt, die Zeilen werden eins. */
+  const tgtBox=document.getElementById('log-target');
   const tgt=nextSetTarget(ex);
-  tgtBox.innerHTML=tgt?`<div class="target-hint" style="margin:0 0 10px"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`:'';
-  let demoBox=document.getElementById('log-demo');
-  if(!demoBox){
-    demoBox=document.createElement('div');
-    demoBox.id='log-demo';
-    demoBox.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer';
-    tgtBox.after(demoBox);
+  if(tgtBox){
+    tgtBox.innerHTML=tgt?`<div class="log-tgt" onclick="this.classList.toggle('open')">`+
+      `<span class="ti">${tgt.icon}</span>`+
+      (tgt.num?`<span class="tn">${esc(tgt.num)}</span><span class="tu">${esc(tgt.unit)}</span>`
+              :`<span class="tu">${esc(tgt.unit||'')}</span>`)+
+      `<span class="tw">${esc(tgt.why||'')}</span></div>`:'';
   }
-  demoBox.onclick=()=>showExDemo(ex.name,ex.muscle,ex.type);
-  demoBox.innerHTML=`<span class="exdemo-thumb">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</span><span style="font-size:11.5px;color:var(--text3)">Ausführung ansehen →</span>`;
+  const demoBox=document.getElementById('log-demo');
+  if(demoBox)demoBox.innerHTML=exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true});
+  if(demoBox)demoBox.onclick=()=>showExDemo(ex.name,ex.muscle,ex.type);
   const weightLabel=document.querySelector('#m-log label');
   const repeatLabel=document.querySelectorAll('#m-log label')[1];
   if(weightLabel)weightLabel.textContent=cardio?'Minuten':'Gewicht (kg)';
