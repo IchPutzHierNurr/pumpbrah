@@ -6,8 +6,10 @@ läuft per `file://` und offline. Optionaler Cloud-Sync über Firestore.
 ```
 index.html          Die komplette App (HTML + CSS + JS)
 sw.js               Service Worker: die App läuft auch ohne Empfang
-test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Fuzzing
+test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Sync, Fuzzing
+test/fakestore.mjs  Gefälschte Firestore — macht den Sync und zwei Geräte prüfbar
 test/coverage.mjs   Abdeckung: welche Funktion ruft überhaupt jemand auf?
+.github/workflows/  CI: derselbe Harness in Chromium UND WebKit, bei jedem Push
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
 docs/CBUM-REVIEW.md Dieselbe App aus Trainingssicht bewertet
 docs/DESIGN.md      Der visuelle Masterprompt: Regeln und Abnahmekriterien
@@ -98,26 +100,69 @@ node test/check.mjs                    # 2500 Fuzz-Iterationen
 node test/check.mjs --iterations=25000
 node test/check.mjs --seed=12345       # Lauf exakt wiederholen
 node test/check.mjs --smoke-only
+node test/check.mjs --browser=webkit   # andere Engine (siehe unten)
 node test/coverage.mjs                 # welche Funktion ruft überhaupt jemand auf?
 ```
 
 Voraussetzung: Chromium + Playwright. Pfad ggf. über `PW_CHROMIUM` setzen.
 
-Drei Stufen:
+Vier Stufen:
 
 | Stufe | Inhalt |
 |---|---|
 | **Smoke** | Start, Onboarding, jeder Screen rendert |
 | **Regression** | Ein Test pro Eintrag in `docs/BUGS.md` — wächst mit jedem Fund |
+| **Sync** | Anmelden, Cloud, **zwei Geräte auf einem Konto** — gegen eine gefälschte Firestore, mit Barrieren für echte Wettläufe |
 | **Fuzz** | N zufällige Aktionen über 91 Operationen, 22 Invarianten nach **jeder** Aktion |
+
+### Der Sync wird gegen ein Double geprüft
+
+`db` ist nur gesetzt, wenn das Firebase-SDK von einem CDN geladen wurde — unter
+`file://` ohne Netz also nie. Der gesamte Sync-Pfad lief deshalb in keinem Test.
+[`test/fakestore.mjs`](test/fakestore.mjs) bildet die **sieben** SDK-Methoden
+nach, die die App überhaupt benutzt, hält den Store in Node (damit zwei
+Browser-Contexts ihn wirklich teilen) und stellt `onSnapshot`-Benachrichtigungen
+erst auf Abruf zu. Dazu **Barrieren**: `holdNext({op:'set', who:'B'})` hält
+einen Schreibvorgang an, bis der Test ihn freigibt. Damit wird eine
+Verschränkung von Lesen und Schreiben **gebaut** statt erhofft — so wurden
+PB-022 und sein Zwilling PB-071 zum ersten Mal reproduziert und dann behoben.
+Ohne Barriere war der erste Anlauf grün, während im Protokoll alle
+Schreibvorgänge des einen Geräts vollständig vor dem Lesen des anderen lagen.
 
 Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **70 Prüfungen grün** — 58 Regressionstests plus Fuzzing über
-91 Operationen, verifiziert über vierzehn unabhängige Kampagnen mit insgesamt
-80.000 Aktionen.
+Aktueller Stand: **76 Prüfungen grün** — 59 Regressionstests, 5 Sync-Tests über
+zwei Geräte und Fuzzing über 91 Operationen, in Chromium und WebKit.
+
+### Zwei Engines, ein Vergleich
+
+Die Entwicklungsumgebung darf WebKit nicht herunterladen — die Netzwerk-
+Richtlinie sperrt `cdn.playwright.dev`. Der Lauf wandert deshalb dorthin, wo
+das Netz offen ist: [`.github/workflows/check.yml`](.github/workflows/check.yml)
+fährt bei jedem Push **Chromium und WebKit nebeneinander**.
+
+Der Sinn liegt im Vergleich, nicht in der zweiten Engine allein:
+
+| Ergebnis | Bedeutung |
+|---|---|
+| beide rot | echter Fehler in der App |
+| nur WebKit rot | Engine-Unterschied — also ein iOS-Problem |
+| nur Chromium rot | etwas an der Prüfung selbst stimmt nicht |
+
+Ohne diesen Vergleich müsste man bei jedem roten Lauf erst raten. Der Seed ist
+die Commit-Nummer, jeder CI-Lauf ist also exakt nachstellbar.
+
+Der erste WebKit-Lauf meldete prompt einen Fehler — und der **zweite war
+grün**, über praktisch demselben Code. Damit war der Befund kein
+Engine-Unterschied, sondern eine Uhr im Test (PB-072). Auch das ist ein
+Ergebnis: eine Prüfmethode ist am Anfang unverdächtiger als das, was sie
+prüft. CI fährt 1.500
+Runden für eine schnelle Antwort; die großen Kampagnen laufen weiter von Hand.
+
+Die Datei liegt **nicht** auf `main` — dort stehen nur App-Dateien, weil `main`
+über GitHub Pages ausgeliefert wird.
 
 ### Was der Test *nicht* prüft
 
@@ -128,28 +173,37 @@ und sucht sie im Testskript.
 | | |
 |---|---|
 | Funktionen in `index.html` | 376 |
-| von einem Test aufgerufen | 213 |
+| vom Test erreicht | 220 |
 | **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
 | nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 155 |
-| außerhalb des Harnesses | 8 |
+| außerhalb des Harnesses | **1** |
 
-Die letzte Zeile ist die ehrliche: **Firebase-Anmeldung, Cloud-Schreiben,
-Offline-Umschalten, „Alles zurücksetzen" und der Service Worker** laufen in
-keinem Test. Die ersten vier laden die Seite neu oder brauchen eine echte
-Verbindung, der fünfte existiert unter `file://` nicht. Jeder Eintrag steht
-mit Begründung in `test/coverage.mjs`.
+Die letzte Zeile war einmal acht. Firebase-Anmeldung, Cloud-Schreiben,
+Abmelden und „Alles zurücksetzen" laufen jetzt gegen die gefälschte Firestore.
+Übrig bleibt **`registerServiceWorker`** — Service Worker gibt es unter
+`file://` nicht, dafür bräuchte der Harness einen HTTP-Server. Der Eintrag
+steht mit Begründung in `test/coverage.mjs`, und das Skript meldet, wenn eine
+Begründung veraltet ist.
 
-Drei weitere Grenzen, die keine Zahl sichtbar macht:
+Vier Grenzen, die keine Zahl sichtbar macht:
 
-* **„Aufgerufen" ist nicht „geprüft".** Die 213 enthalten Funktionen, die der
+* **„Erreicht" ist nicht „geprüft".** Die 220 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
-  58 Regressionstests und die 22 Invarianten — nicht die Abdeckungszahl.
-* **Chromium ist nicht Safari.** Tastatur-Ausweichen, Sheet-Gesten und
-  Safe-Area werden gegen `visualViewport` und Media Queries geprüft, nicht
-  gegen echtes iOS.
-* **Der Sync hat keinen zweiten Client.** Die Merge-Funktionen werden mit
-  synthetischen Gegenständen getestet; zwei echte Geräte, die gleichzeitig
-  schreiben, prüft niemand (siehe PB-022).
+  59 Regressionstests, die 5 Sync-Tests und die 22 Invarianten — nicht die
+  Abdeckungszahl.
+* **WebKit ist nicht iOS Safari.** Seit Juli 2026 läuft derselbe Harness in CI
+  zusätzlich in WebKit (siehe unten) — Engine-Unterschiede werden damit
+  gefunden. Was weiter fehlt: echte Tastatur, echtes Safe-Area, echter
+  Gummiband-Scroll, echte Finger. Dafür gibt es kein Ersatzverfahren, nur ein
+  Gerät.
+* **Das Double ist nicht Firestore.** Es bildet die sieben benutzten Methoden
+  samt optimistischer Transaktion nach. Ob Googles SDK sich genauso verhält,
+  prüft niemand. Sobald PB-021 angegangen wird (Auth + Security Rules), reicht
+  das nicht mehr — Rules gehen nur gegen den echten Emulator.
+* **`location.reload()` ist unter `file://` nicht beobachtbar.** Gemessen: kein
+  `load`-Ereignis nach 8 s. `doLogout()` und `resetAll()` werden deshalb an
+  ihren Wirkungen geprüft, der Neustart kommt von außen. Über `https` — also im
+  Betrieb — tritt das nicht auf.
 
 ---
 
@@ -177,14 +231,19 @@ wenn der betroffene Code längst umgeschrieben wurde.
 
 ## Bekannte offene Punkte
 
-Drei Befunde sind **nicht im Frontend lösbar** und in
+Zwei Befunde sind **nicht im Frontend lösbar** und in
 [`docs/BUGS.md`](docs/BUGS.md) mit Lösungsweg dokumentiert:
 
 - **PB-021 (kritisch):** Firestore ohne Authentifizierung. Braucht Firebase
   Auth plus Security Rules. Vom Betreiber als bekanntes Risiko akzeptiert.
-- **PB-022:** Read-Modify-Write ohne Transaktion beim Cloud-Speichern.
 - **PB-023:** Die gesamte App liegt in einem Firestore-Dokument (1-MB-Limit,
   erreicht bei etwa 1.000 Sessions).
+
+Hier stand bis Juli 2026 ein dritter: **PB-022**, Read-Modify-Write ohne
+Transaktion. Er war nie ein Backend-Punkt — `runTransaction()` ist eine
+Client-API, der Fix sind sechs Zeilen. Er stand hier, weil er zwischen zwei
+echten Backend-Punkten stand und niemand nachgesehen hat. Reproduziert und
+behoben, sobald der Sync überhaupt einen Test hatte.
 
 Solange PB-021 offen ist, gilt: **keine Daten in dieser App, die nicht
 öffentlich sein dürfen.**

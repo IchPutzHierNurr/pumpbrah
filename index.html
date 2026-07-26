@@ -2706,15 +2706,37 @@ function save(){
   catch(e){console.error('PUMPBRAH: Lokales Speichern fehlgeschlagen',e);toast('⚠️ Lokaler Speicher voll')}
   queueCloudSave();
 }
+/* Der Weg in die Cloud ist Lesen, Zusammenführen, Schreiben — und genau
+   dazwischen lag PB-022: Schrieb ein zweites Gerät nach unserem Lesen, aber
+   vor unserem Schreiben, überschrieb unser Schreibvorgang dessen Daten mit
+   einem Zusammenführen, das sie nie gesehen hatte. Der Satz war weg, und kein
+   Listener holte ihn zurück (onSnapshot schreibt nicht zurück).
+
+   Eine Transaktion schließt das Fenster: Firestore merkt sich die Version des
+   gelesenen Dokuments und wiederholt den Rumpf, wenn sich seither etwas
+   geändert hat. Das ist client-seitig und braucht keine Backend-Änderung —
+   der frühere Vermerk „nicht im Frontend lösbar" war falsch.
+
+   localSnapshot wird bei JEDEM Versuch neu geklont, weil mergeSyncedSnapshot
+   sein erstes Argument verändert. Ohne den Klon liefe der zweite Versuch auf
+   halb zusammengeführten Daten. */
 function queueCloudSave(){
   if(!useFirebase||!db||!syncCode)return;
   const ref=db.collection('pumpbrah').doc(syncCode);
   const localSnapshot=cloneData(D);
-  cloudWriteQueue=cloudWriteQueue.catch(()=>{}).then(()=>ref.get()).then(doc=>{
-    const merged=doc.exists?mergeSyncedSnapshot(localSnapshot,doc.data()):localSnapshot;
+  const zusammenfuehren=remote=>{
+    const merged=remote?mergeSyncedSnapshot(cloneData(localSnapshot),remote):cloneData(localSnapshot);
     if(!merged.meta)merged.meta={};
     merged.meta.updatedAt=Math.max(dataStamp(localSnapshot),Date.now());
-    return ref.set(cloudSafeSnapshot(merged));
+    return cloudSafeSnapshot(merged);
+  };
+  cloudWriteQueue=cloudWriteQueue.catch(()=>{}).then(()=>{
+    /* Ältere SDK-Fassungen ohne runTransaction fallen auf den alten Weg
+       zurück — schlechter, aber besser als kein Sync. */
+    if(typeof db.runTransaction!=='function')
+      return ref.get().then(doc=>ref.set(zusammenfuehren(doc.exists?doc.data():null)));
+    return db.runTransaction(t=>
+      t.get(ref).then(doc=>{t.set(ref,zusammenfuehren(doc.exists?doc.data():null))}));
   }).then(()=>updateSyncPill(true)).catch(e=>{
     console.error('PUMPBRAH: Sync fehlgeschlagen',e);
     updateSyncPill(false);
@@ -2734,10 +2756,17 @@ function startSync(){
       D=mergeSyncedData(remote);
       normalizeData();
       localStorage.setItem('pb_data',JSON.stringify(D));
-      if(JSON.stringify(D)!==before)ref.set(cloudSafeData()).catch(()=>{});
+      /* Früher stand hier ein nacktes ref.set(). Das war derselbe Fehler wie
+         PB-022, nur an einer anderen Stelle — und ein blindes set() macht die
+         Transaktion des ANDEREN Geräts wertlos: es überschreibt sie einfach.
+         Nachgewiesen als PB-071 mit einer Barriere: liest B hier, schreibt A
+         dazwischen und schreibt B dann zurück, ist A's Satz weg.
+         Der Weg über queueCloudSave() führt vor dem Schreiben erneut
+         zusammen — in einer Transaktion. */
+      if(JSON.stringify(D)!==before)queueCloudSave();
     }else{
       normalizeData();
-      ref.set(cloudSafeData()).catch(()=>{});
+      queueCloudSave();
     }
     renderAll();
     updateSyncPill(true);
