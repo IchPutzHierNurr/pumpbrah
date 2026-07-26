@@ -34,6 +34,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const WURZEL = resolve(__dirname, '..');
 const arg = (n, d) => (process.argv.find(a => a.startsWith('--' + n + '=')) || '=' + d).split('=')[1];
 const NUR = arg('nur', '');
+/* --ids=a,b fährt nur bestimmte Mutationen, --voll über alle Stufen.
+   Gebraucht beim Nachfassen: eine Überlebende noch einmal vollständig, um zu
+   trennen, ob wirklich keine Zusicherung existiert — oder ob nur meine
+   Stufenangabe zu eng war. Das ist derselbe Fehler, der den ersten Lauf
+   wertlos gemacht hat, nur eine Ebene höher. */
+const IDS = arg('ids', '').split(',').map(x => x.trim()).filter(Boolean);
+const ALLE_STUFEN = 'regression,sync,offline,fuzz';
+const VOLL = process.argv.includes('--voll');
 const PARALLEL = Math.max(1, parseInt(arg('parallel', '3'), 10));
 
 /* Jede Mutation nennt die Stufen, die sie überhaupt treffen KANN. Alles zu
@@ -136,7 +144,10 @@ const MUTATIONEN = [
     ersetze: '  ex.sets=Math.max(0,parseInt(ex.sets)||3);' },
 ];
 
-const gewaehlt = MUTATIONEN.filter(m => !NUR || m.art === NUR);
+const gewaehlt = MUTATIONEN
+  .filter(m => !NUR || m.art === NUR)
+  .filter(m => !IDS.length || IDS.includes(m.id))
+  .map(m => VOLL ? { ...m, stufen: ALLE_STUFEN } : m);
 
 /** Eine Mutation in einer eigenen Kopie fahren. */
 async function fahre(m) {
@@ -153,12 +164,16 @@ async function fahre(m) {
 
     const code = await new Promise(r => {
       const kind = spawn(process.execPath,
-        [join(dir, 'test', 'check.mjs'), '--stages=' + m.stufen, '--seed=4242'],
+        [join(dir, 'test', 'check.mjs'), '--stages=' + m.stufen, '--seed=4242', '--iterations=800'],
         { cwd: dir, stdio: 'ignore' });
       const uhr = setTimeout(() => { kind.kill('SIGKILL'); r(-1); }, 300000);
       kind.on('exit', c => { clearTimeout(uhr); r(c); });
     });
-    if (code === -1) return { ...m, ergebnis: 'ZEIT ABGELAUFEN' };
+    /* Eine Zeitüberschreitung ist KEIN Überleben: eine Prüfmenge, die nicht
+       fertig wird, ist nicht grün. Sie bleibt trotzdem sichtbar, weil sie
+       meist heißt, dass ein Test ohne den Fix in seine eigene Grenze läuft —
+       richtig erkannt, nur teuer. */
+    if (code === -1) return { ...m, ergebnis: 'gefangen (Zeitüberschreitung)' };
     return { ...m, ergebnis: code !== 0 ? 'gefangen' : 'ÜBERLEBT' };
   } finally { await rm(dir, { recursive: true, force: true }); }
 }
@@ -173,12 +188,12 @@ await Promise.all(Array.from({ length: PARALLEL }, async () => {
     const m = warteschlange.shift();
     const r = await fahre(m);
     ergebnisse.push(r);
-    const ok = r.ergebnis === 'gefangen';
+    const ok = r.ergebnis.startsWith('gefangen');
     console.log(`  ${ok ? C.g + '✓' : C.r + '✗'}${C.x} ${r.id.padEnd(26)} ${C.d}${r.art}${C.x}  ${ok ? '' : C.r + r.ergebnis + C.x}`);
   }
 }));
 
-const ueberlebt = ergebnisse.filter(r => r.ergebnis !== 'gefangen');
+const ueberlebt = ergebnisse.filter(r => !r.ergebnis.startsWith('gefangen'));
 const bekanntUeberlebt = ueberlebt.filter(r => r.art === 'bekannt');
 console.log('\n' + '─'.repeat(64));
 console.log(`${ergebnisse.length - ueberlebt.length} von ${ergebnisse.length} gefangen`);
