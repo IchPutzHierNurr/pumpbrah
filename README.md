@@ -37,6 +37,12 @@ Voreinstellung · Cardio getrennt in Minuten · persönliche Notizen pro Übung 
 Aufwärmrampe je Hauptübung (zählt nicht ins Volumen) · Deload-Modus, der die
 Workouts sieben Tage lang automatisch reduziert und den Plan unberührt lässt
 
+Der mitgelieferte Plan ist ein 3-Tage-Ganzkörper (Di/Do/Sa), **33 Übungen,
+121 Sätze**, höchstens **4 Sätze je Übung** — lieber eine Übung mehr als ein
+Satz mehr, weil der fünfte und sechste Satz derselben Übung am wenigsten
+beiträgt. Alle zehn Volumengruppen liegen im Korridor zwischen MEV und MRV,
+die Pause steht einheitlich auf 120 s, jede Einheit dauert 101–112 min.
+
 **Im laufenden Workout**
 „Wenig Zeit": kürzt die Einheit auf ein Zeitbudget — Grundübungen zuletzt,
 nie unter zwei Sätze, der Plan bleibt unverändert ·
