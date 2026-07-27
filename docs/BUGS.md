@@ -121,6 +121,7 @@
 | [PB-076](#pb-076) | Die e1RM-Formel wurde nie auf ihren Wert geprüft | mittel | Testgüte | ✅ |
 | [PB-077](#pb-077) | Pausenlängen ließen sich vertauschen, ohne dass es auffiel | mittel | Testgüte | ✅ |
 | [PB-078](#pb-078) | Jeder geloggte Satz lud das ganze Dokument hoch | **hoch** | Effizienz | ✅ |
+| [PB-079](#pb-079) | „Wadenpresse" und „Beinbeuger stehend" zählten auf den Quadrizeps | mittel | Berechnung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2955,6 +2956,59 @@ kann.
 Schreibvorgang auslösen (sonst wäre die Bündelung wirkungslos), nach dem
 Sammelfenster muss der zwölfte Satz oben angekommen sein (sonst wäre sie
 gefährlich). Beide Hälften des Vertrags, nicht nur die bequeme.
+
+---
+
+### PB-079
+
+**„Wadenpresse an der Beinpresse" zählte auf den Quadrizeps**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Berechnung — Reihenfolge der Regeln |
+| **Gefunden** | beim Prüfen von Kandidaten für den überarbeiteten Plan |
+| **Status** | ✅ behoben |
+
+**Symptom.** Zwei plausible deutsche Übungsnamen landeten in der falschen
+Volumengruppe:
+
+| Name | erkannt als | richtig |
+|---|---|---|
+| Wadenpresse an der Beinpresse | `squat` → Quadrizeps | `calf` → Waden |
+| Beinbeuger stehend | `squat` → Quadrizeps | `legcurl` → Beinbeuger |
+
+Vier Sätze Waden zählten damit auf den Quadrizeps — der Coach meldete zu viel
+Bein und zu wenig Wade, beides falsch.
+
+**Ursache.** Zum dritten Mal dieselbe Falle: **die erste passende Regel
+gewinnt.** Die `squat`-Zeile enthält `beinpresse`, und „Wadenpresse an der
+Beinpresse" enthält dieses Wort — sie schlug zu, bevor `calf` an die Reihe kam.
+Und in derselben Zeile stand `beinbeuge.*stehend`, was den stehenden
+Beinbeuger — eine Ischio-Übung — zur Kniebeuge machte.
+
+**Fix.** `calf` wandert ganz nach vorn, aus demselben Grund, aus dem die
+hintere Schulter dort schon steht: **der Name sagt den Muskel, das Gerät ist
+nebensächlich.** Wer „Waden" in den Namen schreibt, meint Waden — ob an der
+Beinpresse, im Stehen oder auf dem Slantboard. `beinbeuge.*stehend` ist
+ersatzlos gestrichen; die `legcurl`-Regel fängt den Fall korrekt ab.
+
+**Warum es die Prüfungen nicht gefunden haben.** PB-053 stellt sicher, dass
+**jeder ausgelieferte Name** ein Muster trifft und nicht auf den Fallback
+fällt. Beide Namen trafen ein Muster — nur das falsche. Der Test prüft
+Vollständigkeit, nicht Richtigkeit. Aufgefallen ist es erst, weil beim Bauen
+des neuen Plans jeder Kandidat einzeln gegen `detectMovePattern` gehalten
+wurde, bevor er hineindurfte.
+
+**Lektion.** Die dritte Wiederholung von „Reihenfolge ist Bedeutung"
+(PB-033, PB-047, PB-049). Die Regel dagegen ist inzwischen klar formulierbar:
+**Enthält ein Name ein Körperteil, gewinnt das Körperteil — nicht das Gerät,
+an dem man steht.** Geräte tauchen in Namen als Beiwerk auf („an der
+Beinpresse", „Maschine", „Kabel"), Muskeln nicht.
+
+**Test.** Zusätzlich zu PB-053 prüft der Plan-Test jetzt die neuen Namen
+mit — alle 33 Übungen des Standardplans landen in der erwarteten
+Volumengruppe.
 
 ---
 

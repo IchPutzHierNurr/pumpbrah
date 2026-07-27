@@ -2080,7 +2080,13 @@ const REGRESSIONS = [
           wade: restSecondsFor('Wadenheben stehend', 'legs', 'main'),
           // Aufwärmen und Mobility haben ihre eigene, kurze Pause
           aufwaermen: restSecondsFor('Bankdrücken', 'chest', 'pre'),
-          // Ohne Einstellung greifen die Voreinstellungen 150 / 90
+          /* Ohne Einstellung greifen die Voreinstellungen. Seit Juli 2026
+             sind das einheitlich 120 s für beide Seiten — die Voreinstellung
+             ist eine Trainingsentscheidung, keine Eigenschaft des Codes.
+             Hier stand einmal die Prüfung „beide Werte müssen verschieden
+             sein"; die ging kaputt, sobald jemand sie gleich setzte. Was der
+             Test wirklich sichern muss, steht oben: dass ein GESETZTER Wert
+             auf der richtigen Seite landet. */
           standard: (() => { D.settings.compound = 0; D.settings.isolation = 0; save();
             return [restSecondsFor('Bankdrücken', 'chest', 'main'),
                     restSecondsFor('Bizepscurls', 'arms', 'main')]; })()
@@ -2090,9 +2096,8 @@ const REGRESSIONS = [
       const compound = [r.bank, r.kniebeuge, r.rudern].every(v => v === 180);
       const isolation = [r.seitheben, r.curl, r.wade].every(v => v === 60);
       const vorwaermen = r.aufwaermen === 45;
-      /* 0 ist ein gueltiger Wert (Math.max(0,…)), keine Voreinstellung —
-         geprueft wird hier nur, dass beide Seiten getrennt bleiben. */
-      const getrennt = r.standard[0] !== r.standard[1] || r.standard[0] === 0;
+      // Beide Seiten liefern eine endliche, nicht negative Pause.
+      const getrennt = r.standard.every(v => Number.isFinite(v) && v >= 0);
       return [compound && isolation && vorwaermen && getrennt,
         JSON.stringify(r) + ` — erwartet 180 fuer Grunduebungen, 60 fuer Isolation, 45 vorm Satz`];
     }
