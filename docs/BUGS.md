@@ -122,6 +122,7 @@
 | [PB-077](#pb-077) | Pausenlängen ließen sich vertauschen, ohne dass es auffiel | mittel | Testgüte | ✅ |
 | [PB-078](#pb-078) | Jeder geloggte Satz lud das ganze Dokument hoch | **hoch** | Effizienz | ✅ |
 | [PB-079](#pb-079) | „Wadenpresse" und „Beinbeuger stehend" zählten auf den Quadrizeps | mittel | Berechnung | ✅ |
+| [PB-080](#pb-080) | Der Harness testete mit Bildschirm- statt Viewport-Höhe | mittel | Testgüte | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -3012,6 +3013,57 @@ Volumengruppe.
 
 ---
 
+### PB-080
+
+**Der Harness rechnete mit 180 px mehr Platz, als ein iPhone je hat**
+
+| | |
+|---|---|
+| **Schwere** | mittel (Testgüte — die App hat bestanden) |
+| **Klasse** | Ein Messaufbau, der großzügiger ist als die Wirklichkeit |
+| **Gefunden** | bei der Frage nach iOS-Simulator-Unterstützung |
+| **Status** | ✅ behoben |
+
+**Der Anlass.** Die Frage war, ob sich ein iOS-Simulator nutzen lässt. Antwort:
+nein — der läuft nur auf macOS mit Xcode, diese Maschine ist Linux. Beim
+Nachsehen, was stattdessen geht, fiel etwas anderes auf.
+
+**Der Fehler.** Der Harness lief mit `390 × 844`. Das ist die **Bildschirm**höhe
+eines iPhone 13. Safari gibt davon als Viewport nur **664 px** her; der Rest
+gehört Adressleiste und Tableiste. Über alle geprüften Größen hinweg:
+
+| Gerät | getestet mit | tatsächlicher Viewport | Differenz |
+|---|---|---|---|
+| iPhone SE | 375 × 667 | **320 × 568** | −99 px |
+| iPhone 13 / 14 | 390 × 844 | **390 × 664** | −180 px |
+| iPhone 15 Pro Max | 430 × 932 | **430 × 739** | −193 px |
+
+Die kleinste reale Größe — 320 × 568 — hatte der Test nie gesehen. Jede Aussage
+über „passt auf den Bildschirm" war damit um eine Adressleiste zu großzügig.
+
+**Was die Prüfung ergab.** Alle acht Formular-Sheets halten auf allen fünf
+echten Profilen, auch auf 320 × 568 mit eingeblendeter Tastatur. **Die App war
+nie betroffen** — der Fix aus PB-061/PB-066 (`.sheet-cta` plus
+`max-height: min(88vh, calc(100dvh − var(--kb) − 16px))`) trägt mehr, als der
+Test von ihm verlangt hat. Das ist der angenehme Ausgang; er war nicht
+vorhersehbar.
+
+**Fix.** Die Größen kommen jetzt aus `pw.devices` statt aus der Erinnerung.
+Der Hauptkontext läuft auf dem echten iPhone-15-Viewport mit `isMobile` und
+`hasTouch`, der Sheet-Test über vier Profile vom SE bis zum Pro Max, jeweils
+mit der Tastaturhöhe, die zu diesem Gerät gehört.
+
+**Lektion.** Zahlen, die man selbst eintippt, altern schlecht und niemand
+prüft sie nach. `390 × 844` sah plausibel aus, stand in jedem Datenblatt und
+war für diesen Zweck trotzdem falsch — **weil „Bildschirm" und „Fläche für
+die Seite" zwei verschiedene Dinge sind.** Wo eine Bibliothek die Wahrheit
+kennt, gehört die Zahl von dort und nicht aus dem Gedächtnis.
+
+**Test.** `PB-061` (erweitert) — 20 Sheets × 4 echte Geräteprofile, jeweils
+mit passender Tastaturhöhe.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -3151,7 +3203,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **30
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **31
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -3188,6 +3240,7 @@ gestellt werden sollten:
 | 28 | **Vertrag, der nur eine Richtung absichert** | PB-028, PB-076 | „Nicht zu groß" ist die halbe Aussage. Gilt auch das Gegenteil — und prüft es jemand? |
 | 29 | **Nicht zustande gekommener Messwert als Ergebnis** | PB-072, PB-076 | Kann diese Messung fehlschlagen, ohne dass es auffällt? Dann braucht „unklar" eine eigene Kategorie — sonst wandert es in „in Ordnung". |
 | 30 | **Kosten, die niemand ausgerechnet hat** | PB-078 | Wie viele Bytes, Anfragen oder Millisekunden kostet eine einzelne Nutzeraktion — und wächst das mit der Datenmenge? Benutzen zeigt es nicht, rechnen schon. |
+| 31 | **Selbst eingetippte Zahl statt der bekannten** | PB-080 | Kennt eine Bibliothek diesen Wert? Dann von dort holen. „390×844" sah plausibel aus und war um eine Adressleiste daneben. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

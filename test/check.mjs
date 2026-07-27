@@ -122,7 +122,18 @@ function stage(title) { console.log(`\n${C.y}▸ ${title}${C.x}`); }
 
 // ---------------------------------------------------------------- boot
 const browser = await pw[BROWSER].launch(BROWSERS[BROWSER].launch || {});
-const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+/* 390×844 stand hier monatelang — das ist die BILDSCHIRM-Höhe eines iPhone 13.
+   Safari gibt davon nur 664 px als Viewport her, der Rest geht an Adress- und
+   Tableiste. Der Harness rechnete damit rund 180 px mehr Platz vor, als das
+   Gerät je hat. Playwright kennt die echten Werte; sie kommen jetzt von dort,
+   statt von Hand geraten zu werden. `isMobile` und `hasTouch` schalten
+   zusätzlich die Zeiger- und Touch-Pfade scharf. */
+const IPHONE = pw.devices['iPhone 15'];
+const ctx = await browser.newContext({
+  viewport: IPHONE.viewport, deviceScaleFactor: IPHONE.deviceScaleFactor,
+  isMobile: BROWSER === 'firefox' ? undefined : true,
+  hasTouch: true
+});
 const page = await ctx.newPage();
 
 page.on('pageerror', e =>
@@ -1214,11 +1225,21 @@ const REGRESSIONS = [
       // Tastatur zu weit unten: der Speichern-Knopf war nicht erreichbar. Die
       // Tastatur bekam zusaetzliches PADDING am Sheet statt Platz DAVOR - das
       // Sheet wuchs also nach unten hinter die Tastatur.
-      const sizes = [[375, 667], [390, 844], [430, 932]];
-      const KB = 336;                        // iOS-Tastatur inkl. Vorschlagsleiste
+      /* Echte Apple-Profile statt selbst ausgedachter Größen. Der Unterschied
+         ist keine Kosmetik: [375,667] war die Bildschirmhöhe eines iPhone SE,
+         dessen Viewport in Wahrheit 320×568 misst — 99 px weniger, und die
+         kleinste Größe überhaupt hatte der Test nie gesehen. Die Tastaturhöhe
+         steht je Gerät daneben, weil sie mit dem Gerät wächst. */
+      const sizes = [
+        [pw.devices['iPhone SE'].viewport, 260],
+        [pw.devices['iPhone 12 Mini'].viewport, 300],
+        [pw.devices['iPhone 15'].viewport, 336],
+        [pw.devices['iPhone 15 Pro Max'].viewport, 372]
+      ];
       const bad = [];
-      for (const [w, h] of sizes) {
-        await page.setViewportSize({ width: w, height: h });
+      for (const [vp, KB] of sizes) {
+        const w = vp.width, h = vp.height;
+        await page.setViewportSize(vp);
         const r = await page.evaluate(async kb => {
           /* Alle Sheets, nicht nur die fuenf aus dem urspruenglichen Fund:
              was sich oeffnen laesst, muss auch bedienbar sein. Die Liste wird
@@ -1409,7 +1430,7 @@ const REGRESSIONS = [
           if (!x.hatCta) bad.push(tag + ': Formular ohne klebende Aktionszeile');
         });
       }
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize(IPHONE.viewport);
       return [bad.length === 0, bad.slice(0, 6).join(' | ')];
     }
   },
@@ -2122,7 +2143,7 @@ const REGRESSIONS = [
          Warten kommt ein anderer Wert heraus) und dass es REICHT (mehrfach
          gemessen immer derselbe Wert). Faellt jemand auf setTimeout zurueck,
          schlaegt der Stabilitaetsteil hier zu. */
-      await page.setViewportSize({ width: 375, height: 667 });
+      await page.setViewportSize(pw.devices['iPhone SE'].viewport);
       const r = await page.evaluate(async () => {
         const KB = 336;
         const naechstesBild = () => new Promise(r => requestAnimationFrame(() => r()));
@@ -2162,7 +2183,7 @@ const REGRESSIONS = [
         D.active = null; save();
         return { limit: window.innerHeight - KB, ohneWarten, mitWarten };
       });
-      await page.setViewportSize({ width: 390, height: 844 });
+      await page.setViewportSize(IPHONE.viewport);
       const stabil = new Set(r.mitWarten).size === 1;
       const unterLimit = r.mitWarten.every(v => v <= r.limit);
       // Ohne Warten MUSS ein anderer Wert herauskommen — sonst prueft der
@@ -2320,7 +2341,7 @@ const fs = createFakeFirestore();
 
 /** Ein „Gerät": eigener Context, eigener localStorage, gemeinsamer Store. */
 async function openDevice(who) {
-  const c = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const c = await browser.newContext({ viewport: IPHONE.viewport, isMobile: BROWSER === 'firefox' ? undefined : true, hasTouch: true });
   await fs.install(c, who);
   const p = await c.newPage();
   p.on('dialog', d => d.accept());
@@ -2700,7 +2721,7 @@ const srv = await serve(resolve(__dirname, '..'));
 
 /** Ein frischer Nutzer: Server, Onboarding, App. */
 async function neuerNutzer() {
-  const c = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const c = await browser.newContext({ viewport: IPHONE.viewport, isMobile: BROWSER === 'firefox' ? undefined : true, hasTouch: true });
   const p = await c.newPage();
   p.on('dialog', d => d.accept());
   await p.goto(srv.url);

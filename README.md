@@ -216,6 +216,11 @@ Vier Grenzen, die keine Zahl sichtbar macht:
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
   59 Regressionstests, die 5 Sync-Tests, die 3 Offline-Tests und die 22
   Invarianten — nicht die Abdeckungszahl.
+* **Kein iOS-Simulator.** Der läuft nur auf macOS mit Xcode. Was geht: die
+  echten Geräteprofile aus Playwright — Viewport, Pixeldichte, Touch,
+  User-Agent. Der Harness läuft seit Juli 2026 auf dem **tatsächlichen**
+  iPhone-Viewport (393×659), nicht mehr auf der Bildschirmhöhe (393×852); der
+  Sheet-Test über vier Profile vom SE (320×568) bis zum Pro Max. Siehe PB-080.
 * **WebKit ist nicht iOS Safari.** Seit Juli 2026 läuft derselbe Harness in CI
   zusätzlich in WebKit (siehe unten) — Engine-Unterschiede werden damit
   gefunden. Was weiter fehlt: echte Tastatur, echtes Safe-Area, echter
