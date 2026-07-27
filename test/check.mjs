@@ -2345,6 +2345,15 @@ async function onboard(dev) {
   }
   await dev.page.waitForTimeout(600);
 }
+/* Seit die Cloud-Schreibvorgänge gebündelt werden (4 s Sammelfenster), reicht
+   ein `save()` nicht mehr, um gleich danach in den Store zu schauen. Die Tests
+   stoßen den Versand deshalb ausdrücklich an — das ist ehrlicher als ein
+   Wartebefehl, der die Bündelung nur zufällig überdauert. Dass die Bündelung
+   selbst funktioniert, prüft PB-078. */
+const spuelen = async dev => {
+  await dev.page.evaluate(() => queueCloudSave(true));
+  await dev.page.waitForTimeout(350);
+};
 /** Eine Session mit erkennbarem Namen in die Historie schreiben. */
 async function logSession(dev, marke) {
   return dev.page.evaluate(async m => {
@@ -2356,6 +2365,7 @@ async function logSession(dev, marke) {
     D.active.id = 'sess-' + m;
     endWorkout();
     save();
+    queueCloudSave(true);
     return D.history.length;
   }, marke);
 }
@@ -2384,7 +2394,7 @@ const SYNC_TESTS = [
         out.planInDerCloud = Object.keys(cloud.plan || {}).length >= 2;
         // Das Profilbild gehört NICHT in die Cloud (cloudSafeSnapshot)
         await a.page.evaluate(() => { D.ui.avatar = 'data:image/png;base64,AAAA'; save(); });
-        await a.page.waitForTimeout(400);
+        await spuelen(a);
         out.avatarNichtInDerCloud = !((fs.read('pumpbrah/athlet1') || {}).ui || {}).avatar;
 
         await logSession(a, 'erste');
@@ -2507,6 +2517,52 @@ const SYNC_TESTS = [
           && out.bLokal.includes('gleichA') && out.bLokal.includes('gleichB'),
           JSON.stringify(out)];
       } finally { fs.setLatency(0); await a.ctx.close(); await b.ctx.close(); }
+    }
+  },
+  {
+    id: 'PB-078', title: 'Cloud-Schreiben wird gebuendelt, geht aber nicht verloren',
+    run: async () => {
+      /* Vorher schrieb jeder save() das GANZE Dokument in die Cloud — bei 50
+         Einheiten Historie 137 KB, und save() laeuft nach jedem geloggten
+         Satz. Ein Workout mit 24 Saetzen lud so ueber drei Megabyte hoch, um
+         drei Kilobyte neue Daten zu uebertragen.
+
+         Der Test haelt beide Haelften des Vertrags fest: es wird WENIGER
+         geschrieben (sonst waere die Buendelung wirkungslos) und trotzdem
+         ALLES (sonst waere sie gefaehrlich). */
+      fs.reset();
+      const a = await openDevice('A');
+      try {
+        await login(a, 'athlet1'); await onboard(a);
+        await spuelen(a);
+        const vorher = fs.ops('tx-commit').length + fs.ops('set').length;
+
+        // Zwoelf Saetze in schneller Folge, wie beim echten Loggen
+        await a.page.evaluate(() => {
+          D.active = null;
+          startWorkout(Object.keys(D.plan)[0]);
+          for (let i = 0; i < 12; i++) {
+            D.active.exercises[0].logged.push(
+              { w: 60 + i, r: 8, rir: 2, note: 'satz' + i, ts: Date.now() });
+            save();                       // genau wie im Betrieb
+          }
+        });
+        await a.page.waitForTimeout(600);
+        const waehrend = fs.ops('tx-commit').length + fs.ops('set').length - vorher;
+
+        // Jetzt das Sammelfenster abwarten — der Versand muss von allein kommen
+        await a.page.waitForTimeout(4800);
+        const nachher = fs.ops('tx-commit').length + fs.ops('set').length - vorher;
+        const cloud = fs.read('pumpbrah/athlet1') || {};
+        const inDerCloud = JSON.stringify(cloud).includes('satz11');
+
+        const out = { schreibvorgaengeWaehrend: waehrend, schreibvorgaengeNachher: nachher,
+                      letzterSatzInDerCloud: inDerCloud };
+        /* Waehrend der zwoelf Saetze darf hoechstens einmal geschrieben
+           werden, danach genau einmal — und der zwoelfte Satz muss oben
+           angekommen sein. */
+        return [waehrend <= 1 && nachher >= 1 && nachher <= 3 && inDerCloud, JSON.stringify(out)];
+      } finally { await a.ctx.close(); }
     }
   },
   {

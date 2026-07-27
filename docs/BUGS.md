@@ -120,6 +120,7 @@
 | [PB-075](#pb-075) | App läuft ohne Netz — Test vor dem Fehler | — | Vorbeugung | ✅ |
 | [PB-076](#pb-076) | Die e1RM-Formel wurde nie auf ihren Wert geprüft | mittel | Testgüte | ✅ |
 | [PB-077](#pb-077) | Pausenlängen ließen sich vertauschen, ohne dass es auffiel | mittel | Testgüte | ✅ |
+| [PB-078](#pb-078) | Jeder geloggte Satz lud das ganze Dokument hoch | **hoch** | Effizienz | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -2889,6 +2890,74 @@ gegengeprüft: die zugehörige Mutation wird jetzt gefangen.
 
 ---
 
+### PB-078
+
+**Jeder geloggte Satz lud das gesamte Dokument in die Cloud**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Effizienz / Datenverbrauch |
+| **Gefunden** | beim Nachrechnen für PB-023 — nicht gesucht, sondern nebenbei aufgefallen |
+| **Status** | ✅ behoben |
+
+**Symptom.** Nichts Sichtbares. Genau das ist der Punkt.
+
+**Die Rechnung.** `save()` steht an 65 Stellen und läuft nach jedem geloggten
+Satz. Jeder Aufruf ging über `queueCloudSave()` und schrieb das **ganze**
+Dokument. Nachgemessen:
+
+| | |
+|---|---|
+| Leere Daten | 3,9 KB |
+| Pro Trainingseinheit (24 Sätze) | 2,7 KB |
+| Nach 50 Einheiten | 137 KB |
+
+Ein Workout mit 24 Sätzen lud damit **über drei Megabyte** hoch, um knapp drei
+Kilobyte neue Daten zu übertragen. Im Studio, über Mobilfunk, während man
+trainiert. Und es wächst linear mit der Historie: nach zwei Jahren ist jeder
+einzelne Satz ein halbes Megabyte.
+
+**Wie es aufgefallen ist.** Gar nicht durch einen Test. Beim Ausrechnen, wann
+das 1-MB-Limit aus PB-023 erreicht wird, stand plötzlich die Zahl „137 KB" da
+— und daneben die Erkenntnis, dass diese Zahl bei *jedem Satz* über die
+Leitung geht. Das Limit ist ein Problem in 2,5 Jahren. Das hier war eins seit
+dem ersten Tag.
+
+**Fix.** Schreibvorgänge werden in einem Vier-Sekunden-Fenster gebündelt.
+Lokal wird weiterhin sofort gespeichert — es geht also nichts verloren, wenn
+der Browser dazwischen abstürzt.
+
+**Was ausdrücklich NICHT gebündelt wird**, und das hat der Test erzwungen:
+
+* **Workout beenden** — der Moment, in dem man die Daten sicher wissen will.
+* **App schließen oder wegwischen** — über `visibilitychange` und `pagehide`.
+  `beforeunload` feuert auf iOS nicht zuverlässig, deshalb beide.
+* **Anmelden und Zusammenführen** — hier ist es kein Komfort, sondern
+  Korrektheit: Wartet der Rückschreib nach dem Merge vier Sekunden, sieht ein
+  zweites Gerät, das sich in diesem Fenster anmeldet, veraltete Daten und
+  schreibt sie zurück. Das ist PB-071, nur mit Verzögerung als Ursache.
+
+Diese Unterscheidung stand nicht im ersten Entwurf. Die Sync-Tests wurden rot,
+weil sie alle davon ausgingen, dass ein `save()` sofort oben ankommt — und
+genau dieser Widerspruch hat die Frage aufgeworfen, welche Schreibvorgänge
+warten dürfen und welche nicht.
+
+**Lektion.** Eine Kostenfrage sieht man nicht, indem man die App benutzt —
+man sieht sie, indem man **die Größenordnung ausrechnet**. Hier: „wie viele
+Bytes gehen pro Nutzeraktion über die Leitung?" Diese Frage hatte in
+zweieinhalb Monaten niemand gestellt, obwohl die Antwort in einer Zeile Code
+stand. Und die zweite Hälfte: **Bündeln ist immer eine Aussage darüber, was
+warten darf.** Wer sie nicht trifft, verzögert auch das, was nicht warten
+kann.
+
+**Test.** `PB-078` — zwölf Sätze in schneller Folge dürfen höchstens einen
+Schreibvorgang auslösen (sonst wäre die Bündelung wirkungslos), nach dem
+Sammelfenster muss der zwölfte Satz oben angekommen sein (sonst wäre sie
+gefährlich). Beide Hälften des Vertrags, nicht nur die bequeme.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -2958,6 +3027,13 @@ Angreifer sie nicht editieren kann.
 **Symptom.** Schreiben zwei Geräte gleichzeitig, kann ein Schreibvorgang
 verloren gehen.
 
+> **Nachtrag Juli 2026:** Zu PB-021 liegt jetzt `firestore.rules` im Repo. Die
+> Regeln ändern nichts am Entwurf „wer den Code kennt, sieht die Daten" — der
+> bleibt akzeptiert. Sie schließen aber eine andere Lücke: Erlauben die Regeln
+> `read`, erlauben sie auch `list`, und dann kann ein beliebiger Client die
+> ganze Sammlung abfragen. Dann muss niemand einen Namen raten. `get` erlaubt,
+> `list` verboten — das kostet keine Änderung an der App.
+
 **Ursache.** `queueCloudSave()` macht `get()` → merge → `set()`. Zwischen den
 beiden Netzwerkoperationen liegt ein Fenster. Die `cloudWriteQueue`
 serialisiert nur innerhalb eines Tabs.
@@ -3021,7 +3097,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **29
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **30
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -3057,6 +3133,7 @@ gestellt werden sollten:
 | 27 | **„Nicht testbar" als Selbstauskunft** | PB-073 | Was genau fehlt zum Prüfen — und wie viel Arbeit ist das wirklich? Hier waren es dreißig Zeilen HTTP-Server für einen Fehler der Schwere hoch. |
 | 28 | **Vertrag, der nur eine Richtung absichert** | PB-028, PB-076 | „Nicht zu groß" ist die halbe Aussage. Gilt auch das Gegenteil — und prüft es jemand? |
 | 29 | **Nicht zustande gekommener Messwert als Ergebnis** | PB-072, PB-076 | Kann diese Messung fehlschlagen, ohne dass es auffällt? Dann braucht „unklar" eine eigene Kategorie — sonst wandert es in „in Ordnung". |
+| 30 | **Kosten, die niemand ausgerechnet hat** | PB-078 | Wie viele Bytes, Anfragen oder Millisekunden kostet eine einzelne Nutzeraktion — und wächst das mit der Datenmenge? Benutzen zeigt es nicht, rechnen schon. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

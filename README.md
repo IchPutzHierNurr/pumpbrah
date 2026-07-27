@@ -10,6 +10,7 @@ test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Sync, Fuzzing
 test/fakestore.mjs  Gefälschte Firestore — macht den Sync und zwei Geräte prüfbar
 test/httpserve.mjs  Winziger HTTP-Server — macht den Service Worker prüfbar
 test/mutate.mjs     Mutationsstichprobe — prüft die Tests statt der App
+firestore.rules     Security Rules zum Einspielen in die Firebase-Konsole
 test/coverage.mjs   Abdeckung: welche Funktion ruft überhaupt jemand auf?
 .github/workflows/  CI: derselbe Harness in Chromium UND WebKit, bei jedem Push
 docs/CODE-REVIEW.md Engineering-Review als Lerndokument
@@ -137,7 +138,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **81 Prüfungen grün** — 61 Regressionstests, 5 Sync-Tests über
+Aktueller Stand: **82 Prüfungen grün** — 61 Regressionstests, 6 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 91 Operationen, in Chromium und
 WebKit.
 
@@ -249,13 +250,29 @@ wenn der betroffene Code längst umgeschrieben wurde.
 
 ## Bekannte offene Punkte
 
-Zwei Befunde sind **nicht im Frontend lösbar** und in
+Zwei Befunde brauchen Änderungen außerhalb des Frontends und in
 [`docs/BUGS.md`](docs/BUGS.md) mit Lösungsweg dokumentiert:
 
 - **PB-021 (kritisch):** Firestore ohne Authentifizierung. Braucht Firebase
   Auth plus Security Rules. Vom Betreiber als bekanntes Risiko akzeptiert.
-- **PB-023:** Die gesamte App liegt in einem Firestore-Dokument (1-MB-Limit,
-  erreicht bei etwa 1.000 Sessions).
+- **PB-023:** Die gesamte App liegt in einem Firestore-Dokument. Nachgemessen:
+  2,7 KB je Trainingseinheit (24 Sätze), also **389 Einheiten bis zum
+  1-MB-Limit** — bei 3×/Woche rund 2,5 Jahre. Die früher hier genannten
+  „etwa 1.000" waren zu optimistisch; sie unterstellten deutlich kleinere
+  Einheiten.
+
+Zu **PB-021** liegt jetzt [`firestore.rules`](firestore.rules) im Repo — sie
+ändern nichts an der App und müssen von Hand in der Firebase-Konsole
+veröffentlicht werden. Ihr Kern: `get` erlauben, **`list` verbieten**. Erlauben
+die Regeln `read`, kann ein beliebiger Client die ganze Sammlung abfragen und
+bekommt jedes Konto auf einmal — dann muss niemand einen Namen raten. Das ist
+eine andere Größenordnung als „wer den Code kennt".
+
+Nicht mehr offen, aber verwandt: Der Schreibpfad lud bei jedem geloggten Satz
+das ganze Dokument hoch — bei 50 Einheiten 137 KB pro Satz, im Studio über
+Mobilfunk. Seit Juli 2026 werden Schreibvorgänge in einem Vier-Sekunden-Fenster
+gebündelt; Sync-Momente (Anmelden, Zusammenführen, Workout-Ende, App
+schließen) gehen weiter sofort raus. Abgesichert durch PB-078.
 
 Hier stand bis Juli 2026 ein dritter: **PB-022**, Read-Modify-Write ohne
 Transaktion. Er war nie ein Backend-Punkt — `runTransaction()` ist eine

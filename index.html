@@ -2720,7 +2720,37 @@ function save(){
    localSnapshot wird bei JEDEM Versuch neu geklont, weil mergeSyncedSnapshot
    sein erstes Argument verändert. Ohne den Klon liefe der zweite Versuch auf
    halb zusammengeführten Daten. */
-function queueCloudSave(){
+/* --------------------------------------------------------------------------
+   SCHREIBEN BÜNDELN
+
+   `save()` steht an 65 Stellen und läuft nach jedem geloggten Satz. Jeder
+   Aufruf schrieb bisher das GANZE Dokument in die Cloud — bei 50 Einheiten
+   Historie sind das 137 KB. Pro Satz. Im Studio, über Mobilfunk, während man
+   trainiert. Ein Workout mit 24 Sätzen lud damit über drei Megabyte hoch, um
+   knapp drei Kilobyte neue Daten zu übertragen.
+
+   Gebündelt wird nur der Weg nach draußen: lokal wird weiterhin sofort
+   gespeichert, es geht also nichts verloren, wenn der Browser dazwischen
+   abstürzt. Beim Verlassen der Seite und am Ende eines Workouts wird sofort
+   geschrieben — die beiden Momente, in denen man nicht auf einen Timer
+   warten will.
+   -------------------------------------------------------------------------- */
+const CLOUD_WRITE_DELAY=4000;
+let cloudWriteTimer=null;
+function queueCloudSave(sofort){
+  if(!useFirebase||!db||!syncCode)return;
+  if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null}
+  if(sofort===true)return flushCloudSave();
+  cloudWriteTimer=setTimeout(()=>{cloudWriteTimer=null;flushCloudSave()},CLOUD_WRITE_DELAY);
+}
+/* Beim Wegwischen der App, beim Sperren des Bildschirms und beim Schließen
+   des Tabs. `visibilitychange` ist der einzige davon, der auf iOS zuverlässig
+   feuert — `beforeunload` tut es dort nicht. */
+if(typeof document!=='undefined'){
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')queueCloudSave(true)});
+  window.addEventListener('pagehide',()=>queueCloudSave(true));
+}
+function flushCloudSave(){
   if(!useFirebase||!db||!syncCode)return;
   const ref=db.collection('pumpbrah').doc(syncCode);
   const localSnapshot=cloneData(D);
@@ -2763,10 +2793,15 @@ function startSync(){
          dazwischen und schreibt B dann zurück, ist A's Satz weg.
          Der Weg über queueCloudSave() führt vor dem Schreiben erneut
          zusammen — in einer Transaktion. */
-      if(JSON.stringify(D)!==before)queueCloudSave();
+      /* Sofort, nicht gebündelt: Nach dem Zusammenführen beim Anmelden muss
+         die Cloud unverzüglich stimmen. Wartet man hier vier Sekunden, sieht
+         ein zweites Gerät, das sich in diesem Fenster anmeldet, veraltete
+         Daten — und schreibt sie zurück. */
+      if(JSON.stringify(D)!==before)queueCloudSave(true);
     }else{
       normalizeData();
-      queueCloudSave();
+      /* Ebenso beim allerersten Anlegen des Kontos. */
+      queueCloudSave(true);
     }
     renderAll();
     updateSyncPill(true);
@@ -7715,6 +7750,9 @@ function endWorkout(){
   D.history.push(s);
   D.active=null;
   save();
+  /* Ein beendetes Workout ist der Moment, in dem man die Daten sicher wissen
+     will — hier wird nicht auf den Sammel-Timer gewartet. */
+  queueCloudSave(true);
   resetTmr();
   const totalW=sessionVolume(s);
   const strength=strengthSets(s.sets);

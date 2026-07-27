@@ -1,0 +1,79 @@
+// PUMPBRAH — Firestore Security Rules
+//
+// Diese Datei wird NICHT automatisch angewendet. Sie muss in der
+// Firebase-Konsole unter Firestore → Regeln eingefügt und veröffentlicht
+// werden. Bis dahin gilt, was dort steht — vermutlich der Testmodus.
+//
+// ---------------------------------------------------------------------------
+// WAS DAS HIER LÖST, UND WAS NICHT
+//
+// Der Sync-Code ist der Name des Nutzers, kleingeschrieben. Wer ihn kennt,
+// sieht die Daten — das ist die bewusst akzeptierte Entwurfsentscheidung
+// (PB-021). Diese Regeln ändern daran nichts.
+//
+// Sie schließen aber eine Lücke, die eine ganz andere Größenordnung hat:
+// Erlauben die Regeln `read`, dann erlauben sie auch `list`. Ein beliebiger
+// Client kann dann
+//
+//     db.collection('pumpbrah').get()
+//
+// aufrufen und bekommt **jedes Konto auf einmal**. Dann muss niemand mehr
+// einen Vornamen raten. Der Unterschied zwischen „wer den Namen kennt" und
+// „alle, ohne etwas zu wissen" ist der eigentliche Punkt dieser Datei — und
+// er kostet keine Änderung an der App.
+//
+// In Firestore sind `get` (ein Dokument) und `list` (eine Abfrage) getrennte
+// Rechte. `read` ist die Abkürzung für beide. Genau deshalb steht hier
+// nirgends `read`.
+// ---------------------------------------------------------------------------
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /pumpbrah/{code} {
+
+      // Ein Dokument gezielt lesen: erlaubt. Die Sammlung durchsuchen: nicht.
+      allow get: if gueltigerCode(code);
+      allow list: if false;
+
+      // Schreiben nur mit plausibler Form und Größe. Das Größenlimit liegt
+      // unter der harten 1-MB-Grenze von Firestore, damit die App den
+      // Fehlschlag sieht, bevor Firestore ihn erzwingt.
+      allow create, update: if gueltigerCode(code)
+                            && request.resource.size() < 900000
+                            && plausibel();
+
+      // Löschen macht nur „Alle Daten löschen" in der App, und das geht über
+      // dasselbe Dokument. Fremdlöschung ist der billigste Angriff überhaupt,
+      // deshalb hier zu.
+      allow delete: if false;
+    }
+
+    // Alles außerhalb der Sammlung `pumpbrah` existiert nicht.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+// Ein Code aus wenigen Zeichen ist keiner. Das ist keine Sicherheitsmaßnahme,
+// sondern hält Tippfehler und Testmüll aus der Datenbank.
+function gueltigerCode(code) {
+  return code is string && code.size() >= 3 && code.size() <= 64;
+}
+
+// Grobe Formprüfung. Sie hält keinen entschlossenen Angreifer auf — der kennt
+// ja das Format —, aber sie verhindert, dass fremder Müll unter einem
+// bekannten Code landet und die App beim nächsten Start daran scheitert.
+function plausibel() {
+  return request.resource.data.keys().hasOnly([
+           'plan','history','active','settings','notes','health','bio','egym',
+           'library','ui','deleted','profile','meta','meso'
+         ])
+         && (!('history' in request.resource.data)
+             || request.resource.data.history is list)
+         && (!('plan' in request.resource.data)
+             || request.resource.data.plan is map);
+}
