@@ -3064,6 +3064,42 @@ mit passender Tastaturhöhe.
 
 ---
 
+### Nachtrag zu PB-051 — ein Verlauf ist kein Beweis
+
+Beim vollständigen Durchlauf überlebte die Mutation *„getExTrend rechnet
+wieder selbst"* — obwohl PB-051 genau dafür geschrieben wurde.
+
+**Warum.** Der Test prüfte **einen** Datenverlauf: acht Einheiten, jede
+schwerer als die vorige. Ersetzt man die Delegation durch eine eigene
+Vorzeichenrechnung (`delta > 0 ? 'up' : 'flat'`), kommt bei steigenden Daten
+zufällig dasselbe heraus. Der Test blieb grün, obwohl die zweite Rechnung
+zurück war — also genau der Zustand, den er verhindern sollte.
+
+**Fix.** „Nur eine Rechnung" heißt: sie müssen in **jedem** Fall
+übereinstimmen. Geprüft werden jetzt vier Verläufe, und jeder trennt die
+beiden Rechnungen an einer anderen Stelle:
+
+| Verlauf | echte Rechnung | Vorzeichenrechnung |
+|---|---|---|
+| fallend (−2 kg je Einheit) | `down` | `flat` |
+| winzig (+0,05 kg je Einheit) | `flat` | `up` |
+| steigend (+2 kg je Einheit) | `up` | `up` — hier allein stimmen beide |
+| eine einzige Einheit | `—` | `flat` |
+
+Nur der dritte Fall stand im alten Test.
+
+**Lektion.** Ein Test, der eine Übereinstimmung prüft, muss die Fälle
+enthalten, in denen die beiden Seiten **auseinandergehen können**. Sonst
+prüft er, dass zwei Uhren dieselbe Zeit zeigen — um zwölf Uhr mittags.
+
+**Und ein zweiter Fund aus demselben Lauf:** Die Mutation `erstsync-blind`
+meldete *ANKER FEHLT*. Ihr Suchtext hieß `queueCloudSave()`; seit der
+Bündelung (PB-078) steht dort `queueCloudSave(true)`. Die Mutation lief ins
+Leere — und das Werkzeug hat es gesagt, statt sie stillschweigend als
+„gefangen" zu zählen. Genau dafür gibt es die Kategorie *unklar*.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der

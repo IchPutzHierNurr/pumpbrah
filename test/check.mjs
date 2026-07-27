@@ -1871,10 +1871,42 @@ const REGRESSIONS = [
           detailGleich: trend === (prog ? prog.dir : 'x'),
           keinWiderspruch: !(prog && prog.dir === 'up' && trend === 'flat')
         };
+
+        /* Nachgetragen nach der Mutationsstichprobe: Bis hierher prüfte der
+           Test EINEN Verlauf — einen steigenden. Baut man getExTrend so um,
+           dass es wieder selbst rechnet (`delta > 0 ? 'up' : 'flat'`), kommt
+           bei steigenden Daten zufällig dasselbe heraus, und der Test blieb
+           grün. „Nur eine Rechnung" heißt aber: sie müssen in JEDEM Fall
+           übereinstimmen, nicht in einem. Also alle Richtungen. */
+        const formen = {
+          fallend:  i => 100 - i * 2,      // dir 'down' — eine Vorzeichenrechnung sagt 'flat'
+          winzig:   i => 80 + i * 0.05,    // unter jeder Schwelle — 'flat', Vorzeichen sagt 'up'
+          steigend: i => 80 + i * 2
+        };
+        res.jedeRichtung = [];
+        Object.entries(formen).forEach(([wie, f]) => {
+          D.history = [];
+          for (let i = 0; i < 8; i++) {
+            const d = new Date(); d.setDate(d.getDate() - (8 - i) * 3);
+            D.history.push({ id: 'X' + i, updatedAt: Date.now(), date: d.toLocaleDateString('de-DE'),
+              planKey: 'Tag_A', duration: 40, sets: [
+                { ex: 'Bankdrücken', nr: 1, w: f(i), r: 8, rir: 2, note: '', muscle: 'chest', type: 'main', mode: '' }] });
+          }
+          const pr = exerciseProgress('Bankdrücken'), tr = getExTrend('Bankdrücken');
+          res.jedeRichtung.push({ wie, dir: pr ? pr.dir : null, trend: tr,
+            einig: tr === (pr && pr.sessions >= 2 && pr.delta !== null ? pr.dir : '—') });
+        });
+        // Zu wenig Daten: beide müssen sich enthalten, nicht raten
+        D.history = [{ id: 'E1', updatedAt: Date.now(), date: new Date().toLocaleDateString('de-DE'),
+          planKey: 'Tag_A', duration: 20, sets: [
+            { ex: 'Bankdrücken', nr: 1, w: 80, r: 8, rir: 2, note: '', muscle: 'chest', type: 'main', mode: '' }] }];
+        res.zuWenigDaten = getExTrend('Bankdrücken') === '—';
+
         D.history = before; save();
         return res;
       });
-      const ok = Object.values(r).every(v => v === true);
+      const ok = r.listeSteigend && r.detailGleich && r.keinWiderspruch
+        && r.zuWenigDaten && r.jedeRichtung.every(x => x.einig);
       return [ok, JSON.stringify(r)];
     }
   },

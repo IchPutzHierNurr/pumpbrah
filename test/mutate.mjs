@@ -110,7 +110,12 @@ const MUTATIONEN = [
 
   { id: 'erstsync-blind', art: 'bekannt', stufen: 'sync',
     was: 'startSync schreibt blind zurück (PB-071)',
-    suche: '      if(JSON.stringify(D)!==before)queueCloudSave();',
+    /* Der Anker hier hiess einmal `queueCloudSave()`. Seit die Schreibvorgaenge
+       gebuendelt werden (PB-078), steht dort `queueCloudSave(true)` — und die
+       Mutation lief ins Leere. Gemeldet als ANKER FEHLT, nicht stillschweigend
+       als „gefangen": eine Mutation, die nicht angewendet werden konnte, hat
+       nichts geprueft. */
+    suche: '      if(JSON.stringify(D)!==before)queueCloudSave(true);',
     ersetze: '      if(JSON.stringify(D)!==before)ref.set(cloudSafeData()).catch(()=>{});' },
 
   { id: 'avatar-in-die-cloud', art: 'bekannt', stufen: 'sync',
