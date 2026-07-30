@@ -131,7 +131,7 @@
 | [PB-086](#pb-086) | Plan-Editor schrieb an eine Position statt an eine Übung | **hoch** | Datenverlust | ✅ |
 | [PB-087](#pb-087) | Pause vorbei, Leiste sagte weiter „Pause läuft" | mittel | Toter DOM-Anker | ✅ |
 | [PB-088](#pb-088) | Vier Anker ohne Element — keine Prüfung sah so etwas | mittel | Testlücke | ✅ |
-| [PB-089](#pb-089) | Satz-Editor war kein Sheet und lag unter der Tastatur | **hoch** | iOS / Layout | ✅ |
+| [PB-089](#pb-089) | Satz-Editor war kein Sheet und lag unter der Tastatur | mittel | iOS / Layout | ✅ |
 | [PB-090](#pb-090) | Klebende Aktionszeile fing Tipps in ihrem durchsichtigen Teil | mittel | Unsichtbare Trefferfläche | ✅ |
 | [PB-091](#pb-091) | EGYM-Schalter nahm die Gewichtseingabe weg, bevor es Messungen gab | mittel | Verfrühte Annahme | ✅ |
 | [PB-092](#pb-092) | Nach dem letzten Satz verschwand der Chip zum Korrigieren | niedrig | Fehlender Weg | ✅ |
@@ -3588,7 +3588,7 @@ Gefunden wurde das, indem ein Prüfer die bekannte Frage umdrehte: nicht
 
 | | |
 |---|---|
-| **Schwere** | **hoch** |
+| **Schwere** | mittel (vom Gegenprüfer von „hoch" herabgestuft — siehe unten) |
 | **Klasse** | iOS / Layout — bekannter Fehler, neu gebaut |
 | **Gefunden** | Abnahme der Auslieferung, echte Taps auf iPhone SE und iPhone 15 |
 | **Status** | ✅ behoben |
@@ -3634,6 +3634,43 @@ so kann kein Übungsname aus einem Handler ausbrechen (PB-018).
 auch die gemeinsame Prüfung. Beides fällt zusammen und beides fällt nicht auf.
 Wer ein Fenster baut, obwohl die App ein Fenstersystem hat, baut sich die
 gelösten Fehler neu ein — hier zwei auf einmal.
+
+**Nachtrag: was der Gegenprüfer korrigiert hat.** Der Fund wurde bestätigt und
+gleichzeitig an vier Stellen zurechtgerückt. Das gehört hierher, weil die
+ursprünglichen Zahlen bereits berichtet waren:
+
+| Behauptung | tatsächlich |
+|---|---|
+| „auf dem iPhone 15 alle drei Knöpfe verdeckt" | Speichern und Löschen behalten einen **19,5-px-Streifen**; nur Abbrechen ist ganz weg |
+| „das halbe RIR-Feld" | auf dem SE **1 px von 45**, auf dem iPhone 15 gar nicht |
+| „nach draußen tippen verwirft die Eingabe" | stimmt — aber **byte-identisch schon vorher**, also kein Fund dieser Auslieferung |
+| „der einzige Weg, einen Satz zu korrigieren" | war er vorher auch; und **PB-082 liefert in derselben Auslieferung einen zweiten**, tastaturfesten Weg |
+
+Was der Gegenprüfer **bestätigt** hat, ist der Kern und die Zuordnung: Es ist
+eine echte Verschlechterung *dieser* Auslieferung. Der Kasten ist durch die
+neue Untertitelzeile und das neue RIR-Feld um 85–99 px gewachsen, und das
+`feld.focus()` beim Öffnen gab es vorher **nicht** — der Editor holt die
+Tastatur seit heute selbst herbei:
+
+| | vorher | nachher |
+|---|---|---|
+| iPhone SE, „Speichern" | 26,5 von 45 px tippbar | **0 von 45** |
+| iPhone 15, „Speichern" | 45 von 45 px | 19,5 von 45 |
+
+**Methodischer Vorbehalt, den der Gegenprüfer selbst notiert:** Das ist eine
+Simulation. Chromium hat keine Bildschirmtastatur; die 216 bzw. 226 px sind
+gesetzte Konstanten. Tragend ist allein die nackte Geometrie — Knopfunterkante
+gegen Viewporthöhe minus Tastatur — plus die iOS-Eigenschaft, dass
+`window.innerHeight` bei offener Tastatur nicht schrumpft. Auf genau dieser
+Eigenschaft baut die App an anderer Stelle selbst auf, was die Annahme stützt.
+Auf einem echten iPhone nachgeprüft ist es nicht.
+
+**Und eine Schwere-Korrektur:** von „hoch" auf **mittel**. Kein Datenverlust,
+keine falsch gespeicherten Werte, ein verlustfreier Ausweg innerhalb des
+Dialogs (auf die Überschrift im Kasten tippen), die Plattform-Taste „Fertig"
+über jeder iOS-Tastatur, und ein zweiter tastaturfester Korrekturweg. Der Fix
+bleibt trotzdem richtig — er nimmt dem Nutzer die Notwendigkeit, das alles zu
+wissen.
 
 ---
 
@@ -4483,3 +4520,60 @@ Daraus folgen die drei Regeln, die `/check` durchsetzt:
 > Das ist die eigentliche Begründung für dieses Register: Nicht die Fehler
 > sind das Wertvolle, sondern die Muster dahinter — und der Beweis, dass ein
 > Test sie findet, wenn der Kopf sie übersieht.
+
+---
+
+## Nachtrag: was die Abnahme dieser Auslieferung gekostet und gebracht hat
+
+Am 30. Juli 2026 ging eine Auslieferung mit vier Änderungen (PB-081…084) live,
+gemeldet als „86 Prüfungen grün". Anschließend lief eine Abnahme mit fünf
+unabhängigen Prüfern auf genau die ausgelieferten Bytes, jeder Fund von einem
+zweiten Prüfer gegnerisch überprüft.
+
+| | |
+|---|---|
+| Prüfer | 5 Linsen, 26 Funde |
+| Gegenprüfungen | 20 Urteile — **14 bestätigt**, 6 verworfen |
+| nicht mehr geprüft | 6 (Sitzungsgrenze erreicht) |
+| daraus entstanden | **PB-085 bis PB-103** — 19 Einträge, davon 3 kritisch |
+| Aufwand | 31 Agenten, 2,8 Mio. Token, 3 Stunden 6 Minuten |
+
+**Die drei kritischen waren:** Löschen wirkte für jeden mit Sync-Code nicht
+(PB-093, seit PB-002 in der App), eine EGYM-Messung ließ sich durch eine
+Datumskorrektur dauerhaft vernichten (PB-095), und der Historien-Editor schrieb
+an eine Position statt an eine Session (PB-085).
+
+**Was die sechs verworfenen Urteile bedeuten** — und das ist wichtiger, als es
+klingt: Vier davon lauten *„stimmt, ist aber nicht neu in dieser
+Auslieferung"*, nicht *„kein Fehler"*. Das war eine ausdrückliche Regel an die
+Prüfer, damit sie meine Änderungen nicht für Altbestand haftbar machen. Behoben
+wurden sie trotzdem — ein Fehler wird nicht dadurch harmloser, dass er alt ist.
+
+**Was die sechs ausgefallenen Gegenprüfungen bedeuten.** Sie betreffen
+PB-095 (Datum), PB-099, PB-100, PB-101, PB-102 und den einen Fund, den ich als
+nicht erreichbar eingestuft habe. Für die ersten fünf liegt ein stärkerer Beleg
+vor als ein Gegenurteil: Jeder ihrer Tests wurde von Hand gegen die
+ausgelieferte Datei gefahren und war dort rot, mit genau dem gemeldeten
+Symptom. Der sechste (`addWeight()` bleibt aufrufbar, während seine Zeile
+verborgen ist) ist unbehoben und bewusst so: `display:none` nimmt das Feld aus
+dem Zugänglichkeitsbaum, es führt kein Weg dorthin. Ein Riegel davor würde eine
+legitime spätere Verwendung blockieren.
+
+### Die drei Lehren, die über die einzelnen Einträge hinausgehen
+
+**1. Grün ist eine Aussage über die geprüften Fälle, nicht über den Zustand.**
+Die Auslieferung war grün für den Seed, den ich gefahren hatte, in den Fällen,
+die ich mir ausgedacht hatte. Die CI fand mit einem anderen Seed sofort etwas,
+und die Abnahme fand neunzehn weitere.
+
+**2. Testdaten entstehen im Neuzustand.** Jedes Historien-Fixture im Harness
+stempelt eine `id`. Die Datenform, *für die* der Historien-Editor gebaut wurde
+— eine ältere Einheit —, kam in keinem einzigen Test vor. Ich habe die Zusage
+in genau der Umgebung geprüft, in der sie gilt.
+
+**3. Eine Regel ist nur so gut wie die Suche, mit der man sie anwendet.**
+Derselbe Fehlertyp — ein Dialog merkt sich eine *Position* statt einer
+*Identität* — kam an einem Tag dreimal (PB-085, PB-086, PB-098). Nach dem
+ersten Mal wurde die Regel aufgeschrieben und danach gesucht; gefunden wurden
+zwei von drei. Der dritte versteckte sich in einem Funktionsargument statt in
+einer Variablen — dort, wo `grep` nach `let …Idx` nicht hinsieht.
