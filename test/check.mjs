@@ -33,7 +33,7 @@
 
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { createFakeFirestore } from './fakestore.mjs';
 import { serve } from './httpserve.mjs';
 
@@ -2733,6 +2733,128 @@ const REGRESSIONS = [
         && r.anzahl === 3 && r.ersteHeisstNeu === true && r.dritteUnberuehrt === true
         && r.warf === false && r.nachVerlust === 0 && r.sheetZu === true;
       return [ok, JSON.stringify(r) + ' — erwartet: Korrektur landet auf id 1, "Dritte" bleibt, keine Ausnahme, keine Geisteruebung'];
+    }
+  }
+  ,
+  {
+    id: 'PB-087', title: 'Nach Ablauf der Satzpause sagt die Leiste, dass die Pause vorbei ist',
+    run: async () => {
+      /* Von der Abnahme der Auslieferung gefunden, und zwar ueber eine Klasse,
+         nach der vorher niemand gesucht hatte: nicht tote FUNKTIONSnamen,
+         sondern tote DOM-ANKER. Am Ende der Pause macht der Timer das hier:
+
+           const c=document.getElementById('tc');
+           …
+           if(c){c.classList.remove('run');c.classList.add('done')}
+
+         Ein Element mit id="tc" erzeugt die App nirgends. Die Zeile ist mit
+         `if(c)` abgesichert und scheitert deshalb LAUTLOS — kein Fehler, keine
+         Konsolenmeldung, nichts, was 2500 Fuzz-Runden je melden koennten.
+
+         Die Folge steht nicht im Code, sondern auf dem Bildschirm: Ton,
+         Vibration und Toast kommen, aber die Leiste behauptet unbegrenzt
+         weiter „Pause laeuft", der Ring bleibt in der Laufffarbe, und der
+         Knopf zeigt ⏸. Wer daraufhin tippt — die naheliegende Geste, um die
+         fertige Pause wegzuraeumen — startet in Wirklichkeit die volle
+         Pause noch einmal. Im Studio also nochmal zwei Minuten.
+
+         Der Zustand 'done' ist im Code vollstaendig vorhanden (gruener Ring,
+         „Pause vorbei — los", ▶). Er wurde nur nie gezeichnet. */
+      const r = await page.evaluate(async () => {
+        D.active = null;
+        startWorkout(Object.keys(D.plan)[0]);
+        go('wo');
+        /* Sauber aufsetzen: laesst ein frueherer Test einen Timer laufen,
+           PAUSIERT startTmr() ihn, statt einen neuen zu starten — und der
+           Test misst dann etwas anderes, als er glaubt. */
+        resetTmr();
+        renderWo();
+        // Eine Pause, die sofort abgelaufen ist — ohne zwei Minuten zu warten.
+        timerPausedRemaining = 0; timerTgt = 2;
+        startTmr();
+        const lief = !!timerInt;
+        timerStartedAt = Date.now() - 9000;
+        // Der Timer prueft im 250-ms-Takt; ein paar Takte abwarten.
+        await new Promise(res => setTimeout(res, 900));
+
+        const lies = () => {
+          const td = document.getElementById('td');
+          const mid = document.querySelector('#wo-timer-bar .fb-mid .t');
+          const knopf = document.querySelector('#wo-timer-bar .fb-btn');
+          const ring = document.querySelectorAll('#wo-timer-bar .fb-ring circle')[1];
+          return {
+            klasse: td ? td.className : null,
+            text: mid ? mid.textContent : null,
+            knopf: knopf ? knopf.textContent : null,
+            ring: ring ? ring.getAttribute('stroke') : null,
+            zeit: td ? td.textContent : null
+          };
+        };
+        const nachher = lies();
+        const out = { lief, laeuftNoch: !!timerInt, nachher };
+
+        // Der ⏸/▶-Knopf darf nicht behaupten, es laufe noch etwas.
+        out.restVorKlick = getTimerRemaining();
+        return out;
+      });
+      const n = r.nachher || {};
+      const ok = r.lief === true && r.laeuftNoch === false
+        && typeof n.klasse === 'string' && n.klasse.includes('done') && !n.klasse.includes('run')
+        && n.text === 'Pause vorbei — los'
+        && n.knopf === '▶'
+        && n.ring === 'var(--green)'
+        && n.zeit === '0:00';
+      return [ok, JSON.stringify(r) + ' — erwartet Klasse done, Text "Pause vorbei — los", Knopf ▶, gruener Ring'];
+    }
+  }
+  ,
+  {
+    id: 'PB-088', title: 'Jede angesprochene Element-Kennung wird von der Seite auch erzeugt',
+    run: async () => {
+      /* Die Verallgemeinerung von PB-087 — und der Grund, warum dieser Test
+         eine Datei liest statt einen Browser zu befragen.
+
+         `document.getElementById('tc')` lieferte seit jeher null. Der Aufruf
+         war mit `if(c)` abgesichert und scheiterte deshalb LAUTLOS: keine
+         Ausnahme, keine Konsolenmeldung, kein roter Fuzz-Lauf. Genau das ist
+         die Signatur, die ein Verhaltenstest per Bauart nicht sehen kann —
+         es passiert ja nichts. Sichtbar wird sie nur, wenn man die beiden
+         Seiten gegeneinander haelt: welche Kennungen spricht die Datei an,
+         und welche kann sie ueberhaupt erzeugen?
+
+         Vier tote Anker waren es beim ersten Lauf dieser Pruefung: 'tc' und
+         die drei Statistik-Kacheln 'a-maxw', 'a-avgrir', 'a-excount', fuer die
+         die App bei jedem Zeichnen Zahlen ausrechnete und wegwarf.
+
+         Bewusst nur woertliche Kennungen. Zusammengesetzte ('he-w-'+k) werden
+         ueber ihr Praefix anerkannt — lieber ein blinder Fleck als ein
+         Fehlalarm, der die Pruefung unglaubwuerdig macht. */
+      const app = readFileSync(resolve(__dirname, '..', 'index.html'), 'utf8');
+
+      const angesprochen = new Map();
+      const merke = (id, quelle) => { if (!angesprochen.has(id)) angesprochen.set(id, quelle); };
+      for (const m of app.matchAll(/getElementById\(\s*(['"])([A-Za-z][\w-]*)\1\s*\)/g)) merke(m[2], 'getElementById');
+      for (const m of app.matchAll(/querySelector(?:All)?\(\s*(['"`])#([A-Za-z][\w-]*)/g)) merke(m[2], 'querySelector');
+
+      const statisch = new Set();
+      const praefixe = [];
+      for (const m of app.matchAll(/\bid="([A-Za-z][\w-]*)"/g)) statisch.add(m[1]);
+      for (const m of app.matchAll(/\.id\s*=\s*(['"`])([A-Za-z][\w-]*)\1/g)) statisch.add(m[2]);
+      // Dynamisch zusammengesetzt: id="wo-ex-${i}" bzw. id='he-w-'+k
+      for (const m of app.matchAll(/\bid="([A-Za-z][\w-]*)\$\{/g)) praefixe.push(m[1]);
+      for (const m of app.matchAll(/\bid='([A-Za-z][\w-]*)'\s*\+/g)) praefixe.push(m[1]);
+
+      const tot = [...angesprochen.keys()]
+        .filter(id => !statisch.has(id) && !praefixe.some(p => id.startsWith(p)))
+        .map(id => `#${id} (${angesprochen.get(id)})`);
+
+      /* Die Gegenrichtung als Selbstpruefung: findet der Test ueberhaupt
+         etwas? Eine Pruefung, die nichts sieht, ist immer gruen. */
+      const plausibel = angesprochen.size > 100 && statisch.size > 100 && praefixe.length > 0;
+
+      return [tot.length === 0 && plausibel,
+        `${angesprochen.size} Kennungen angesprochen, ${statisch.size} statisch erzeugt, `
+        + `${praefixe.length} Praefixe — ohne Erzeuger: ${tot.length ? tot.join(', ') : 'keine'}`];
     }
   }
 ];

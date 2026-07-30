@@ -144,7 +144,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **88 Prüfungen grün** — 67 Regressionstests, 6 Sync-Tests über
+Aktueller Stand: **90 Prüfungen grün** — 69 Regressionstests, 6 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 93 Operationen, in Chromium und
 WebKit.
 

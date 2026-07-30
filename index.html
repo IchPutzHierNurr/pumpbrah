@@ -4748,13 +4748,15 @@ function startTmrInterval(){
   timerInt=setInterval(()=>{
     const rem=getTimerRemaining();
     const d=document.getElementById('td');
-    const c=document.getElementById('tc');
     if(d)d.textContent=fmtT(rem);
     if(rem<=0){
       clearInterval(timerInt);timerInt=null;timerPausedRemaining=0;
-      if(c){c.classList.remove('run');c.classList.add('done')}
       haptic([200,100,200]);beep();
       persistTimer();
+      /* PB-087: Hier stand ein Zugriff auf ein Element, das es nicht gibt.
+         Die Leiste zeichnet sich jetzt selbst neu — sonst behauptet sie
+         weiter, die Pause laufe. */
+      renderFocusBar();
       toast('⏰ Pause vorbei!');
     }
   },250);
@@ -7514,15 +7516,12 @@ function renderAna(){
   const allSets=[];
   (D.history||[]).forEach(session=>(session.sets||[]).forEach(set=>allSets.push({...set,date:session.date})));
   const totalSets=allSets.length;
-  const weightedSets=strengthSets(allSets).filter(s=>(parseFloat(s.w)||0)>0);
-  const maxW=weightedSets.length?Math.max(...weightedSets.map(s=>parseFloat(s.w)||0)):0;
-  const rirBase=strengthSets(allSets);
-  const avgRir=rirBase.length?(rirBase.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/rirBase.length).toFixed(1):'—';
-  const exNames=[...new Set(allSets.map(s=>s.ex))].filter(Boolean);
+  /* Hier standen drei weitere Kennzahlen — Höchstgewicht, Ø RIR, Anzahl
+     Übungen —, geschrieben nach #a-maxw, #a-avgrir und #a-excount. Diese drei
+     Elemente erzeugt die Seite nirgends; die Zeilen waren mit `if(el)`
+     abgesichert und liefen deshalb seit jeher lautlos ins Leere. Entfernt
+     samt ihrer Berechnung. PB-088 sorgt dafür, dass so etwas auffällt. */
   const totalEl=document.getElementById('ana-total');if(totalEl)totalEl.textContent=totalSets+(totalSets===1?' Satz total':' Sätze total');
-  const maxEl=document.getElementById('a-maxw');if(maxEl)maxEl.textContent=maxW;
-  const rirEl=document.getElementById('a-avgrir');if(rirEl)rirEl.textContent=avgRir;
-  const exEl=document.getElementById('a-excount');if(exEl)exEl.textContent=exNames.length;
   const muscles={chest:{name:'Brust',sets:[],ex:new Set()},back:{name:'Rücken',sets:[],ex:new Set()},legs:{name:'Beine',sets:[],ex:new Set()},shoulders:{name:'Schultern',sets:[],ex:new Set()},arms:{name:'Arme',sets:[],ex:new Set()},core:{name:'Core',sets:[],ex:new Set()}};
   const exMuscleMap={};
   Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{exMuscleMap[ex.name]=ex.muscle}));
@@ -8300,36 +8299,30 @@ function applyTimeBudget(){
   toast(`${r.before} → ${r.after} min · ${r.changes.length} Anpassungen`);
   haptic([12,40,12]);
 }
-function renderWo(){
-  applyVisualTheme();
-  const c=document.getElementById('wo-c');
-  const eb=document.getElementById('wo-end');
+/* PB-087: Die Leiste war Teil von renderWo() und wurde deshalb nur gezeichnet,
+   wenn jemand den ganzen Workout-Screen neu baute. Am Ende der Pause tat das
+   niemand — der Timer wollte den Zustand über eine Element-Kennung
+   umschalten, die die App nirgends erzeugt.
+   Mit `if(c)` abgesichert scheiterte das lautlos: Ton und Toast kamen, die
+   Leiste behauptete weiter „Pause läuft", und der Knopf zeigte ⏸ — wer ihn
+   drückte, startete die volle Pause erneut.
+
+   Als eigene Funktion kann der Timer sie am Ende der Pause selbst zeichnen.
+   Absichtlich NUR die Leiste: sie hat mit `#wo-timer-bar` einen eigenen
+   Behälter, ein `renderWo()` aus einem Intervall heraus würde dagegen die
+   ganze Übungsliste unter den Fingern des Nutzers neu aufbauen. */
+function renderFocusBar(){
   const tf=document.getElementById('wo-timer-bar');
-  if(!D.active){
-    eb.style.display='none';tf.style.display='none';
-    c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;
-    return;
-  }
-  eb.style.display='';
+  if(!tf)return;
+  if(!D.active){tf.style.display='none';return}
+  tf.style.display='';
   const el=Math.floor((Date.now()-D.active.startTime)/60000);
   const tRem=getTimerRemaining();
   const tState=timerInt?'run':(timerStartedAt>0&&tRem<=0?'done':'');
-  tf.style.display='';
-  if(!Array.isArray(D.active.exercises))D.active.exercises=[];
-  D.active.exercises.forEach(ex=>{
-    if(!Array.isArray(ex.logged))ex.logged=[];
-    if(!ex.sets)ex.sets=3;
-    if(!ex.rmin)ex.rmin=8;
-    if(!ex.rmax)ex.rmax=ex.rmin;
-    if(!ex.type)ex.type='main';
-    if(!ex.muscle)ex.muscle='chest';
-  });
-  const total=D.active.exercises.length;
-  const doneCount=D.active.exercises.filter(e=>e.skipped||e.logged.length>=e.sets).length;
-  const setsPlanned=D.active.exercises.reduce((a,e)=>a+(e.skipped?0:e.sets),0);
+  const liste=activeExercisesSafe();
+  const setsPlanned=liste.reduce((a,e)=>a+(e.skipped?0:(parseInt(e.sets)||0)),0);
   const setsDone=loggedSetCount();
-  /* Fokus-Leiste: Restzeit als Ring, Session-Status daneben, zwei Tasten.
-     Der Ring füllt sich rückwärts — er zeigt, wie viel Pause NOCH übrig ist,
+  /* Der Ring füllt sich rückwärts — er zeigt, wie viel Pause NOCH übrig ist,
      nicht wie viel schon herum ist. Das ist die Frage, die man sich zwischen
      zwei Sätzen tatsächlich stellt. */
   const restTotal=Math.max(1,getTimerTotal());
@@ -8348,6 +8341,30 @@ function renderWo(){
     `<button type="button" class="fb-btn" title="Pause überspringen" onclick="resetTmr()">⏭</button>`+
     `<button type="button" class="fb-btn mono" title="30 Sekunden mehr" onclick="adjTmr(30)">+30</button>`+
   `</div>`;
+}
+function renderWo(){
+  applyVisualTheme();
+  const c=document.getElementById('wo-c');
+  const eb=document.getElementById('wo-end');
+  const tf=document.getElementById('wo-timer-bar');
+  if(!D.active){
+    eb.style.display='none';tf.style.display='none';
+    c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;
+    return;
+  }
+  eb.style.display='';
+  if(!Array.isArray(D.active.exercises))D.active.exercises=[];
+  D.active.exercises.forEach(ex=>{
+    if(!Array.isArray(ex.logged))ex.logged=[];
+    if(!ex.sets)ex.sets=3;
+    if(!ex.rmin)ex.rmin=8;
+    if(!ex.rmax)ex.rmax=ex.rmin;
+    if(!ex.type)ex.type='main';
+    if(!ex.muscle)ex.muscle='chest';
+  });
+  const total=D.active.exercises.length;
+  const doneCount=D.active.exercises.filter(e=>e.skipped||e.logged.length>=e.sets).length;
+  renderFocusBar();
   let h=`<div class="wo-cmdbar">`+
     `<button class="wo-cmd accent ib" onclick="openWorkoutSwitch()">${icon('swap',14)}Tag wechseln</button>`+
     `<button class="wo-cmd ib" onclick="addExerciseToWorkout()">${icon('plus',14)}Übung</button>`+

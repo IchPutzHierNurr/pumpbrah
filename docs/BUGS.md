@@ -129,11 +129,13 @@
 | [PB-084](#pb-084) | Dasselbe Gewicht an zwei Stellen erfassen | mittel | Zwei Quellen | ✅ |
 | [PB-085](#pb-085) | Historien-Editor schrieb an eine Position statt an eine Session | **kritisch** | Datenverlust | ✅ |
 | [PB-086](#pb-086) | Plan-Editor schrieb an eine Position statt an eine Übung | **hoch** | Datenverlust | ✅ |
+| [PB-087](#pb-087) | Pause vorbei, Leiste sagte weiter „Pause läuft" | mittel | Toter DOM-Anker | ✅ |
+| [PB-088](#pb-088) | Vier Anker ohne Element — keine Prüfung sah so etwas | mittel | Testlücke | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**45 von 45 im Frontend behebbaren Fehlern sind behoben.**
+**47 von 47 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -3455,6 +3457,116 @@ Ausnahme, kein Geistereintrag, Sheet zu.
 
 ---
 
+### PB-087
+
+**Die Pause war vorbei, die Leiste sagte weiter „Pause läuft"**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Toter DOM-Anker — scheitert lautlos |
+| **Gefunden** | bei der Abnahme der Auslieferung, über eine Klasse, nach der vorher niemand gesucht hatte |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Am Ende der Satzpause tat der Timer das hier:
+
+```js
+const c=document.getElementById('tc');
+…
+if(rem<=0){
+  clearInterval(timerInt);timerInt=null;
+  if(c){c.classList.remove('run');c.classList.add('done')}
+  …
+}
+```
+
+Ein Element mit `id="tc"` erzeugt die App **nirgends**. `c` war immer `null`,
+der Block lief nie. Und weil `if(c)` davorsteht, gab es keine Ausnahme, keine
+Konsolenmeldung, nichts — die Zeile scheiterte seit jeher lautlos.
+
+**Was der Nutzer davon merkte.** Ton, Vibration und Toast kamen wie erwartet.
+Die Leiste darüber blieb aber im Zustand „läuft" stehen, unbegrenzt:
+
+| | angezeigt | richtig gewesen wäre |
+|---|---|---|
+| Ring | Akzentfarbe | grün |
+| Text | „Pause läuft" | „Pause vorbei — los" |
+| Knopf | ⏸ | ▶ |
+
+Der Zustand `done` war vollständig im Code vorhanden — er wurde nur nie
+gezeichnet, weil ihn nichts neu rendern ließ. Und die naheliegende Geste, die
+fertige Pause wegzuräumen, war ein Tipp auf das ⏸. Das führt zu `startTmr()`
+mit gestopptem Timer — und **startet die volle Pause noch einmal**. Im Studio
+also nochmal zwei Minuten, mitten im Training.
+
+**Fix.** Die Fokusleiste ist jetzt eine eigene Funktion `renderFocusBar()`, die
+der Timer am Ende der Pause selbst aufruft. Bewusst nur die Leiste: sie hat mit
+`#wo-timer-bar` einen eigenen Behälter, während ein `renderWo()` aus einem
+Intervall heraus die ganze Übungsliste unter den Fingern des Nutzers neu
+aufbauen würde.
+
+**Lektion.** Eine Absicherung wie `if(el)` schützt vor dem Absturz und
+**verbirgt zugleich den Fehler**. Sie verwandelt „kaputt und laut" in „kaputt
+und still" — und still ist die Sorte, die jahrelang überlebt. Wo eine solche
+Absicherung steht, gehört die Frage dazu: *Kann dieses Element überhaupt
+fehlen — und wenn nein, warum steht die Prüfung dann da?*
+
+**Test.** `PB-087` — startet eine Pause, lässt sie ablaufen und prüft alle vier
+sichtbaren Merkmale der Leiste. Dazu `PB-088`, das die ganze Klasse abdeckt.
+
+---
+
+### PB-088
+
+**Vier Anker ohne Element — und keine Prüfung, die so etwas sieht**
+
+| | |
+|---|---|
+| **Schwere** | mittel (Testlücke) |
+| **Klasse** | Fehlerart, die kein Verhaltenstest sehen kann |
+| **Gefunden** | als Verallgemeinerung von PB-087 |
+| **Status** | ✅ behoben |
+
+**Das Problem hinter dem Problem.** PB-087 war nicht durch Nachdenken zu
+finden und durch keinen der 87 Tests. Der Grund ist grundsätzlich: Bei einem
+lautlos scheiternden Zugriff **passiert nichts**. Ein Verhaltenstest kann nur
+prüfen, was passiert. Der Fuzzer lief 2500 Runden über diesen Code, ohne dass
+er etwas zu melden gehabt hätte.
+
+Sichtbar wird die Klasse nur, wenn man zwei Seiten der Datei gegeneinander
+hält: **welche Kennungen spricht sie an, und welche kann sie erzeugen?**
+
+**Erster Lauf, vier Treffer:**
+
+| Kennung | was daran hing |
+|---|---|
+| `#tc` | der Endzustand der Satzpause (PB-087) |
+| `#a-maxw` | höchstes je bewegtes Gewicht |
+| `#a-avgrir` | durchschnittlicher RIR über alle Sätze |
+| `#a-excount` | Anzahl verschiedener Übungen |
+
+Die letzten drei sind die unangenehmere Hälfte: Die App **berechnete** sie bei
+jedem Zeichnen der Statistik und warf sie weg. Kein falscher Wert auf dem
+Schirm, aber drei Auswertungen, die es im Code gibt und nirgends zu sehen.
+Berechnung und Anzeige wurden entfernt — die Zahlen lassen sich jederzeit
+zurückholen, aber dann sichtbar.
+
+**Fix.** `PB-088` liest die Datei und stellt die beiden Mengen gegeneinander.
+Bewusst nur wörtliche Kennungen; zusammengesetzte (`'he-w-'+k`) werden über
+ihr Präfix anerkannt. Lieber ein blinder Fleck als ein Fehlalarm, der die
+Prüfung unglaubwürdig macht. Dazu eine Selbstprüfung — findet der Test
+überhaupt genug, um etwas aussagen zu können? Eine Prüfung, die nichts sieht,
+ist immer grün.
+
+**Lektion.** Der Harness prüfte bis hierher ausschließlich **Verhalten**. Eine
+ganze Fehlerklasse — der Zugriff, der ins Leere geht und mit `if(el)`
+zugedeckt ist — liegt außerhalb dessen, was Verhalten je zeigen kann. Dagegen
+hilft kein weiterer Verhaltenstest, sondern eine andere **Art** von Prüfung.
+Gefunden wurde das, indem ein Prüfer die bekannte Frage umdrehte: nicht
+„welcher Funktionsname ist tot", sondern „welcher **DOM-Anker** ist tot".
+
+---
+
 ### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
 
 Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
@@ -3686,6 +3798,8 @@ gestellt werden sollten:
 | 37 | **Abdeckungszahl mit falschem Etikett** | Fuzzer-Nachtrag | Zählt sie, was sie behauptet? „Jede Operation kam dran" zählte Auswahl und meinte Durchlauf. |
 | 38 | **Ein Name verschwindet, ein Aufrufer bleibt** | PB-081, Fuzzer-Nachtrag | Wer ruft das noch? Auch im Testcode, den kein Linter anfasst, weil er erst im Browser aufgelöst wird. |
 | 39 | **Muster erkannt, aber nicht weitergesucht** | PB-086 | Nach jedem neuen Muster gehört die Frage dazu: *wo noch?* Zwischen PB-085 und PB-086 lagen fünf Minuten Suche. |
+| 40 | **`if(el)` verbirgt, was es absichert** | PB-087 | Kann dieses Element überhaupt fehlen? Wenn nein, verwandelt die Prüfung „kaputt und laut" in „kaputt und still". |
+| 41 | **Fehlerklasse außerhalb dessen, was Verhalten zeigt** | PB-088 | Wenn nichts passiert, sieht ein Verhaltenstest nichts. Dagegen hilft eine andere *Art* Prüfung, kein weiterer Test derselben Art. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
