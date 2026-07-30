@@ -123,11 +123,15 @@
 | [PB-078](#pb-078) | Jeder geloggte Satz lud das ganze Dokument hoch | **hoch** | Effizienz | ✅ |
 | [PB-079](#pb-079) | „Wadenpresse" und „Beinbeuger stehend" zählten auf den Quadrizeps | mittel | Berechnung | ✅ |
 | [PB-080](#pb-080) | Der Harness testete mit Bildschirm- statt Viewport-Höhe | mittel | Testgüte | ✅ |
+| [PB-081](#pb-081) | Der Satz-Editor war da — nur konnte ihn niemand öffnen | **hoch** | Funktion ohne Zugang | ✅ |
+| [PB-082](#pb-082) | Eine beendete Session ließ sich nur wegwerfen, nicht berichtigen | **hoch** | Datenverlust | ✅ |
+| [PB-083](#pb-083) | Eine gespeicherte Messung ließ sich überschreiben, aber nicht leeren | mittel | Halbe Korrektur | ✅ |
+| [PB-084](#pb-084) | Dasselbe Gewicht an zwei Stellen erfassen | mittel | Zwei Quellen | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**39 von 39 im Frontend behebbaren Fehlern sind behoben.**
+**43 von 43 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -3100,6 +3104,204 @@ Leere — und das Werkzeug hat es gesagt, statt sie stillschweigend als
 
 ---
 
+### PB-081
+
+**Der Satz-Editor war da — nur konnte ihn niemand öffnen**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Funktion ohne Zugang |
+| **Gefunden** | Meldung aus dem Studio |
+| **Status** | ✅ behoben |
+
+**Symptom.** Wörtlich: *„Einmal gelockt ist der Satz drin, und ich kann ihn
+nicht korrigieren."* Wer sich beim Loggen vertippte — 100 statt 10 kg — sah
+den falschen Wert für den Rest der Einheit im Bildschirm stehen.
+
+**Ursache.** Der Editor existierte seit PB-026 vollständig: Gewicht ändern,
+Wiederholungen ändern, Satz löschen. Er hing an einer **Haltegeste von 500
+Millisekunden** auf dem Satz-Chip. Nichts im Bild deutete darauf hin — kein
+Symbol, kein Hinweis, keine Erwähnung. Der Chip war ein `<div>` und sah aus
+wie ein Etikett, weil er eines war.
+
+Zwei Folgen, die beide unsichtbar sind:
+
+1. Der Fehler wird nie **gemeldet** als „Funktion fehlt", sondern als „geht
+   nicht" — und in jeder Abnahme wirkt die Funktion vorhanden, weil sie es ist.
+2. Kein Test war rot. Der Harness rief `saveEditSet()` direkt auf und
+   bestätigte damit genau das, was funktionierte.
+
+Dazu ein zweiter, kleinerer Fehler im selben Dialog: Die Kopfzeile zeigte
+`RIR 2`, aber es gab kein Feld dafür. Der Dialog zeigte einen Wert, den er
+nicht ändern konnte.
+
+**Fix.** Der Chip ist ein `<button>` mit einem Stift-Zeichen, ein Tipp öffnet
+den Editor, RIR ist ein Feld. Die Haltegeste ist ersatzlos entfernt — eine
+unsichtbare Bedienung ist keine, und zwei Wege zu derselben Sache sind ein
+Weg zu viel.
+
+**Lektion.** *„Ist die Funktion da?"* und *„findet sie jemand?"* sind zwei
+Fragen, und die Testsuite beantwortete nur die erste. Ein Test, der eine
+Funktion **beim Namen** aufruft, kann per Bauart nicht merken, dass zu ihr
+kein Weg führt. Der neue Test klickt deshalb ausschließlich: was ein
+einfacher Tipp nicht öffnet, gilt als nicht vorhanden.
+
+**Test.** `PB-081` — loggt einen Satz, **klickt** den Chip (kein
+`pointerdown`, kein Warten), korrigiert Gewicht, Wiederholungen und RIR,
+prüft den Abbrechen-Weg und das Löschen. `PB-027` prüft weiterhin, dass auf
+demselben Element kein iOS-Systemmenü erscheint — wer unsicher ist, hält den
+Chip, statt zu tippen.
+
+---
+
+### PB-082
+
+**Eine beendete Session konnte man nur wegwerfen, nicht berichtigen**
+
+| | |
+|---|---|
+| **Schwere** | hoch |
+| **Klasse** | Datenverlust durch fehlende Alternative |
+| **Gefunden** | dieselbe Meldung |
+| **Status** | ✅ behoben |
+
+**Symptom.** *„Ein bereits gelocktes Training kann nicht bearbeitet werden."*
+Nach dem Beenden wanderte die Einheit in die Historie und war unantastbar.
+Die Sessionkarte hatte genau einen Knopf: `×`.
+
+**Ursache.** Es gab nie einen Weg dorthin. Die Datenschicht konnte es
+längst — `histSessionKey()` hängt seit **PB-002** an einer stabilen `id`, und
+`mergeHistorySession()` entscheidet bei gleicher ID nach `updatedAt`. Beides
+ist wörtlich für den Fall gebaut, dass jemand einen Satz korrigiert; im Code
+steht seit damals der Kommentar *„das Korrigieren eines einzigen Satzes
+erzeugte einen neuen Schlüssel"*. Gebaut wurde die Oberfläche dazu nie.
+
+**Warum das teuer ist.** Ein falscher Satz ist nicht nur eine falsche Zeile.
+Er geht in Volumen, PR-Erkennung, e1RM, Trendrichtung und die
+Volumen-Ampel ein. Die einzige Korrekturmöglichkeit — die ganze Einheit
+löschen — kostete alle **anderen** Sätze desselben Tages. Damit war die
+Korrektur teurer als der Fehler, und in der Folge blieb der Fehler stehen.
+
+**Fix.** Ein Korrigieren-Knopf neben dem Löschen-Knopf öffnet ein Sheet mit
+jedem Satz der Session: Gewicht, Wiederholungen, RIR, dazu Datum und Dauer.
+Einzelne Sätze lassen sich entfernen; die Satznummern werden je Übung neu
+vergeben, damit nicht „Satz 3" bei zwei Sätzen steht. Gearbeitet wird auf
+einer Kopie — wer abbricht, hat nichts verloren. Beim Speichern bleibt die
+`id` gleich und `updatedAt` steigt, damit die Korrektur beim nächsten Sync
+gegen die alte Fassung **gewinnt**, statt als zweite Session danebenzustehen.
+
+**Lektion.** Wenn Löschen der einzige Weg ist, etwas zu ändern, ist Löschen
+die Funktion, die benutzt wird — mitsamt allem, was daran hängt. Und: Eine
+Datenschicht, die eine Operation vorbereitet, ist kein Beleg dafür, dass es
+sie gibt. Der Kommentar über `updatedAt` stand vier Monate im Code, ohne dass
+irgendein Knopf ihn je ausgelöst hätte.
+
+**Test.** `PB-082` — korrigiert einen Satz über die Oberfläche, löscht einen
+zweiten, prüft danach: gleiche `id`, höherer `updatedAt`, Session weiterhin
+genau einmal vorhanden, Nummern lückenlos, Volumen neu gerechnet.
+
+---
+
+### PB-083
+
+**Eine gespeicherte Messung ließ sich überschreiben, aber nicht leeren**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Halbe Korrektur, die als ganze aussieht |
+| **Gefunden** | dieselbe Meldung |
+| **Status** | ✅ behoben |
+
+**Symptom.** *„Wenn ich den einmal abgespeichert habe, kann ich den nicht
+mehr bearbeiten."* Eine EGYM-Messung hatte, wie die Session, nur einen
+Löschen-Knopf — und daran hängen zwei Dutzend richtige Zahlen.
+
+**Ursache — und der interessante Teil.** Ein Umweg existierte: „Neue Messung"
+mit **demselben Datum**. `saveEgymEntry()` findet den vorhandenen Eintrag und
+führt zusammen. Nur führt es mit `pickValue()` zusammen, und das heißt:
+
+```js
+Object.keys(e).forEach(k => { merged[k] = pickValue(e[k], prev[k]) });
+// leeres Feld  ->  alter Wert bleibt stehen
+```
+
+Ein **falscher** Wert ließ sich damit überschreiben. Ein **zu viel
+eingetragener** nie wieder entfernen — das Formular hatte keine Möglichkeit,
+„dieser Wert existiert nicht" auszudrücken. Leer hieß „unverändert".
+
+Das ist die unangenehme Sorte Halbfunktion: Sie funktioniert in dem Fall, den
+man beim Testen zuerst probiert (Wert ändern), und versagt still in dem, den
+man selten braucht und dann dringend (Wert löschen).
+
+**Fix.** Ein Korrigieren-Knopf je Messung füllt das Formular mit den
+gespeicherten Werten. Im Bearbeiten-Modus wird **ersetzt statt gemischt**:
+was leer steht, ist danach leer. Ändert sich beim Bearbeiten das Datum, wird
+der alte Eintrag entfernt **und ein Grabstein gesetzt** — sonst holt ihn der
+nächste Sync von einem anderen Gerät zurück.
+
+**Lektion.** „Leer" und „unverändert" sind zwei Aussagen. Wer sie auf
+denselben Wert abbildet, baut eine Eingabe, die nur in eine Richtung
+funktioniert. Und: Beim Löschen eines Eintrags im Bearbeiten-Weg gilt
+dieselbe Grabstein-Pflicht wie beim Löschen über den Löschen-Knopf — sonst
+ist die Korrektur nur lokal.
+
+**Test.** `PB-083` — prüft beide Richtungen: einen Wert ändern **und** einen
+Wert leeren, danach den Datumswechsel samt Grabstein und dass am Ende genau
+zwei Messungen dastehen, nicht drei.
+
+---
+
+### PB-084
+
+**Dasselbe Gewicht an zwei Stellen erfassen**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Zwei Quellen für eine Wahrheit |
+| **Gefunden** | Meldung aus dem Studio |
+| **Status** | ✅ behoben |
+
+**Symptom.** *„Ich will es nicht doppelt loggen müssen."* Gewicht ließ sich
+unter Körperdaten eintragen **und** war Pflichtfeld jeder EGYM-Messung.
+
+**Ursache.** Zwei Speicher, die nichts voneinander wussten: `D.bio.weights`
+und `m.gewicht` in jeder Messung. Der Verlauf unter Körperdaten las nur den
+ersten. Wer also nur EGYM benutzte — der normale Fall, wenn EGYM
+eingeschaltet ist — hatte dort ein leeres Diagramm, obwohl jede Messung sein
+Gewicht enthielt. Wer beides pflegte, hatte zwei Verläufe, die sich
+widersprachen. Dass beide Werte an verschiedenen Stellen unterschiedlich
+gerundet oder an verschiedenen Tagen erhoben wurden, machte es nicht besser:
+BMI, Fitnessalter und die Einordnung der Muskelmasse rechnen mit dem
+„aktuellen Gewicht", und welches das war, hing davon ab, welche Funktion
+fragte. `egymRate()` nahm den Handeintrag und fiel auf die Messung zurück,
+`renderEgym()` machte es genau andersherum.
+
+**Fix.** Eine Quelle: `weightSeries()`. Ist EGYM aus, ist sie exakt die alte
+Handeingabe. Ist EGYM an, kommen die Messungen dazu, die Handabfrage
+verschwindet aus den Körperdaten und wird durch die Auskunft ersetzt, woher
+der Wert kommt. Bei gleichem Tag gewinnt die Messung — die Waage im Studio
+weiß es genauer als die Erinnerung am Abend. Alte Handeinträge bleiben
+sichtbar und tragen die Herkunft im Untertitel; löschen lässt sich ein
+Messwert nur dort, wo er herkommt, sonst wäre er beim nächsten Zeichnen
+wieder da. Alle Rechnungen — Fitnessalter, BMI, EGYM-Einordnung — lesen
+jetzt aus derselben Reihe.
+
+**Lektion.** Zwei Eingabefelder für dieselbe Größe sind kein
+Bedienkomfort, sondern eine offene Frage: Welches gilt? Solange die niemand
+beantwortet, beantwortet sie jede Funktion für sich — und zwei davon taten
+es hier gegensätzlich.
+
+**Test.** `PB-084` — schaltet EGYM ein und aus und prüft beides: dass die
+Handabfrage verschwindet **und** dass die Reihe die Messungen wirklich
+enthält. Ein reines Ausblenden wäre nur ein Versteck. Zusätzlich: bei
+gleichem Tag bleibt genau ein Eintrag, und Zurückschalten hat die
+Handeinträge nicht verloren.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -3277,6 +3479,10 @@ gestellt werden sollten:
 | 29 | **Nicht zustande gekommener Messwert als Ergebnis** | PB-072, PB-076 | Kann diese Messung fehlschlagen, ohne dass es auffällt? Dann braucht „unklar" eine eigene Kategorie — sonst wandert es in „in Ordnung". |
 | 30 | **Kosten, die niemand ausgerechnet hat** | PB-078 | Wie viele Bytes, Anfragen oder Millisekunden kostet eine einzelne Nutzeraktion — und wächst das mit der Datenmenge? Benutzen zeigt es nicht, rechnen schon. |
 | 31 | **Selbst eingetippte Zahl statt der bekannten** | PB-080 | Kennt eine Bibliothek diesen Wert? Dann von dort holen. „390×844" sah plausibel aus und war um eine Adressleiste daneben. |
+| 32 | **Funktion vorhanden, Weg dorthin nicht** | PB-081, PB-082, PB-083 | Wie kommt jemand hier hin, der den Code nicht kennt? Ein Test, der eine Funktion beim Namen aufruft, kann diese Frage per Bauart nicht stellen. |
+| 33 | **Löschen als einzige Form von Ändern** | PB-082, PB-083 | Was kostet eine Korrektur? Wenn sie teurer ist als der Fehler, bleibt der Fehler stehen. |
+| 34 | **„Leer" und „unverändert" auf denselben Wert abgebildet** | PB-083 | Kann der Nutzer ausdrücken, dass etwas *nicht* existiert? Oder heißt leer stillschweigend „lass wie es war"? |
+| 35 | **Zwei Speicher für eine Größe** | PB-084 | Wer fragt hier nach dem aktuellen Wert — und lesen alle Frager dieselbe Quelle? Zwei Funktionen entschieden hier gegensätzlich. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

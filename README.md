@@ -144,7 +144,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **82 Prüfungen grün** — 61 Regressionstests, 6 Sync-Tests über
+Aktueller Stand: **86 Prüfungen grün** — 65 Regressionstests, 6 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 91 Operationen, in Chromium und
 WebKit.
 
@@ -198,10 +198,10 @@ und sucht sie im Testskript.
 
 | | |
 |---|---|
-| Funktionen in `index.html` | 376 |
-| vom Test erreicht | 223 |
+| Funktionen in `index.html` | 387 |
+| vom Test erreicht | 232 |
 | **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
-| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 153 |
+| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 155 |
 | außerhalb des Harnesses | **0** |
 
 Die letzte Zeile stand einmal bei acht. Sieben fielen weg, als die gefälschte
@@ -212,7 +212,7 @@ Fehler der Schwere *hoch* (PB-073).
 
 Vier Grenzen, die keine Zahl sichtbar macht:
 
-* **„Erreicht" ist nicht „geprüft".** Die 220 enthalten Funktionen, die der
+* **„Erreicht" ist nicht „geprüft".** Die 232 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
   59 Regressionstests, die 5 Sync-Tests, die 3 Offline-Tests und die 22
   Invarianten — nicht die Abdeckungszahl.

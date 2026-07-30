@@ -46,7 +46,9 @@ const UEBER_DIE_OBERFLAECHE = {
   offlineMode: 'SMOKE — click(text=Offline-Modus (ohne Sync))',
   doLogin: 'SYNC PB-067/068/069/070 — click(text=LOS GEHT\'S)',
   obNext: 'SMOKE + SYNC — click(#ob-content .btn) durch alle acht Schritte',
-  finishOnboarding: 'SMOKE + SYNC — letzter Onboarding-Schritt'
+  finishOnboarding: 'SMOKE + SYNC — letzter Onboarding-Schritt',
+  openSetEditor: 'REGRESSION PB-081 — click(#wo-ex-0 .wo-chips .wsr)',
+  editEgymEntry: 'REGRESSION PB-083 — click(#egym-history .hs-edit)'
 };
 
 const fns = [...app.matchAll(/^function ([A-Za-z_$][\w$]*)\s*\(/gm)].map(m => m[1]);

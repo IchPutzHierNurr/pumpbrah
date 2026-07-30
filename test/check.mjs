@@ -574,10 +574,19 @@ const REGRESSIONS = [
     }
   },
   {
-    id: 'PB-027', title: 'Long-Press-Ziele haben kein iOS-Systemmenü',
+    id: 'PB-027', title: 'Der Satz-Chip hat kein iOS-Systemmenü und traegt die Bearbeitung',
     run: async () => {
       // Ohne -webkit-touch-callout:none blendet iOS beim Langdrücken sein
-      // eigenes Menü ein - genau auf der Geste, die den Satz-Editor öffnet.
+      // eigenes Menü ein - genau auf dem Element, das den Satz-Editor öffnet.
+      //
+      // Der Test hiess einmal "Long-Press-Ziele" und prüfte, dass am Chip eine
+      // Haltegeste hängt. Die gibt es seit PB-081 nicht mehr: sie war der
+      // Grund, warum niemand einen Satz korrigieren konnte, und wurde durch
+      // einen sichtbaren Tipp ersetzt. Der Schutz vor dem Systemmenü bleibt
+      // trotzdem nötig - wer unsicher ist, HÄLT den Chip, statt zu tippen,
+      // und bekäme sonst Safaris Auswahlmenü statt des Editors. Geprüft wird
+      // deshalb weiter dasselbe Element, nur mit der Aktion, die es heute
+      // wirklich trägt.
       //
       // getComputedStyle taugt hier nicht: -webkit-touch-callout ist eine
       // Safari-Eigenschaft, Chromium liefert dafür einen leeren String. Der
@@ -602,11 +611,16 @@ const REGRESSIONS = [
         const row = document.querySelector('#wo-c .wsr:not(.empty)');
         const cs = row ? getComputedStyle(row) : null;
         const select = cs ? (cs.userSelect || cs.webkitUserSelect) : '';
-        const hasGesture = !!(row && row.getAttribute('onpointerdown') || '').includes('setLongPress');
+        const hatAktion = !!((row && row.getAttribute('onclick')) || '').includes('openSetEditor');
+        // Ein <div> mit onclick ist per Tastatur nicht erreichbar und meldet
+        // sich der Vorlesefunktion nicht als bedienbar an.
+        const istKnopf = !!row && row.tagName === 'BUTTON';
+        const keineAlteGeste = !/setLongPress/.test(document.documentElement.innerHTML);
         D.active = null; save();
-        return { declared, inputsExempt, select, hasGesture, found: !!row };
+        return { declared, inputsExempt, select, hatAktion, istKnopf, keineAlteGeste, found: !!row };
       });
-      return [r.found && r.declared && r.inputsExempt && r.select === 'none' && r.hasGesture,
+      return [r.found && r.declared && r.inputsExempt && r.select === 'none'
+              && r.hatAktion && r.istKnopf && r.keineAlteGeste,
               JSON.stringify(r)];
     }
   },
@@ -1264,6 +1278,12 @@ const REGRESSIONS = [
             ['m-timebudget', () => { wo(); openTimeBudget(); }, 'formular'],
             ['m-exnote', () => openExNote('Bankdrücken'), 'formular'],
             ['m-egym', () => openEgymEntry(), 'formular'],
+            ['m-histedit', () => {
+              D.history = [{ id: 'S-sheet', updatedAt: 1, date: '15.03.2026',
+                planKey: Object.keys(D.plan)[0], duration: 70,
+                sets: [{ ex: 'Bankdrücken', nr: 1, w: 60, r: 8, rir: 2, muscle: 'chest', type: 'main' }] }];
+              openHistEdit(0);
+            }, 'formular'],
             ['m-plates', () => openPlates(87.5), 'formular'],
             ['m-add', () => { curTab = Object.keys(D.plan)[0]; openAddEx(); }, 'formular'],
             ['m-planday', () => openPlanDayModal('add'), 'formular'],
@@ -2343,6 +2363,235 @@ const REGRESSIONS = [
         && !r.nachLoeschen.length && !r.nachTausch.length && !r.nachImportartigemZustand.length
         && (!r.hatAlternativen || r.kopplungUeberlebt);
       return [ok, JSON.stringify(r)];
+    }
+  },
+  {
+    id: 'PB-081', title: 'Ein geloggter Satz laesst sich mit einem Tipp korrigieren',
+    run: async () => {
+      /* Gemeldet aus dem Studio: „Einmal gelockt ist der Satz drin, und ich
+         kann ihn nicht korrigieren." Der Editor existierte — aber nur hinter
+         einer 500-ms-Haltegeste, die nirgends stand. Eine Bedienung, die
+         niemand findet, ist keine.
+
+         Der Test klickt deshalb bewusst NUR: kein pointerdown, kein Warten.
+         Was ein einfacher Tipp nicht oeffnet, gilt hier als nicht vorhanden.
+         Zusaetzlich geprueft wird der RIR — er stand im Kopf des Dialogs,
+         war aber nicht aenderbar. */
+      const r = await page.evaluate(() => {
+        D.active = null;
+        startWorkout(Object.keys(D.plan)[0]);
+        openLog(0);
+        document.getElementById('log-w').value = '60';
+        document.getElementById('log-r').value = '10';
+        document.getElementById('log-rir').value = '2';
+        confirmLog(); cm('m-log');
+        renderWo();
+        const chip = document.querySelector('#wo-ex-0 .wo-chips .wsr:not(.empty)');
+        const out = { chipDa: !!chip, geloggt: JSON.parse(JSON.stringify(D.active.exercises[0].logged[0])) };
+        if (!chip) return out;
+        chip.click();                       // ein Tipp, keine Haltegeste
+        const popup = document.getElementById('set-popup');
+        out.dialogNachTipp = !!popup;
+        if (!popup) return out;
+        out.hatRir = !!document.getElementById('edit-set-rir');
+        document.getElementById('edit-set-w').value = '62.5';
+        document.getElementById('edit-set-r').value = '8';
+        if (out.hatRir) document.getElementById('edit-set-rir').value = '0';
+        saveEditSet(0, 0);
+        out.dialogZu = !document.getElementById('set-popup');
+        out.danach = JSON.parse(JSON.stringify(D.active.exercises[0].logged[0]));
+        // Abbrechen muss schliessen OHNE zu aendern - sonst ist der Ausweg
+        // aus dem Dialog selbst eine Falle.
+        renderWo();
+        document.querySelector('#wo-ex-0 .wo-chips .wsr:not(.empty)').click();
+        document.getElementById('edit-set-w').value = '999';
+        closeSetEditor();
+        out.abbruchSchliesst = !document.getElementById('set-popup');
+        out.nachAbbruch = D.active.exercises[0].logged[0].w;
+        // Loeschen muss ebenfalls ueber denselben Weg erreichbar bleiben.
+        renderWo();
+        document.querySelector('#wo-ex-0 .wo-chips .wsr:not(.empty)').click();
+        deleteSet(0, 0);
+        out.nachLoeschen = D.active.exercises[0].logged.length;
+        D.active = null; save();
+        return out;
+      });
+      const ok = r.chipDa && r.dialogNachTipp && r.hatRir && r.dialogZu
+        && r.danach && r.danach.w === 62.5 && r.danach.r === 8 && r.danach.rir === 0
+        && r.abbruchSchliesst && r.nachAbbruch === 62.5
+        && r.nachLoeschen === 0;
+      return [ok, JSON.stringify(r) + ' — erwartet Dialog per Klick, danach 62,5 kg x 8 @ RIR 0, dann 0 Saetze'];
+    }
+  },
+  {
+    id: 'PB-082', title: 'Eine beendete Session laesst sich korrigieren, statt sie zu loeschen',
+    run: async () => {
+      /* Aus derselben Meldung: ein beendetes Training war unantastbar. Wer
+         sich bei einem Satz vertippte, konnte nur die ganze Einheit loeschen —
+         die Korrektur kostete mehr als der Fehler, also blieben falsche Zahlen
+         stehen und verdarben Volumen, PR-Erkennung und jeden Trend.
+
+         Wichtig ist nicht nur, DASS sich etwas aendern laesst, sondern dass
+         die Session danach dieselbe bleibt: gleiche `id`, hoeherer
+         `updatedAt`. Nur so gewinnt die Korrektur beim naechsten Sync gegen
+         die alte Fassung, statt als zweite Session danebenzustehen. */
+      const r = await page.evaluate(() => {
+        D.history = [{
+          id: 'S-test-082', updatedAt: 1000, date: '15.03.2026', planKey: Object.keys(D.plan)[0],
+          duration: 70,
+          sets: [
+            { ex: 'Bankdrücken', nr: 1, w: 100, r: 8, rir: 2, muscle: 'chest', type: 'main' },
+            { ex: 'Bankdrücken', nr: 2, w: 60, r: 8, rir: 2, muscle: 'chest', type: 'main' },
+            { ex: 'Bankdrücken', nr: 3, w: 60, r: 7, rir: 1, muscle: 'chest', type: 'main' }
+          ]
+        }];
+        save();
+        calSelDay = null; calMonth = 2; calYear = 2026;
+        renderHist();
+        const knopf = document.querySelector('#hl .hs-edit');
+        const out = { knopfDa: !!knopf, vorher: D.history.length };
+        if (!knopf) return out;
+        knopf.click();
+        out.sheetOffen = document.getElementById('m-histedit').classList.contains('show');
+        const w0 = document.getElementById('he-w-0');
+        out.feldDa = !!w0;
+        if (!w0) return out;
+        w0.value = '10';                       // 100 war der Tippfehler
+        document.getElementById('he-r-0').value = '12';
+        document.getElementById('he-rir-0').value = '3';
+        // Ein Satz war doppelt geloggt — er faellt raus, ohne die Session zu kosten.
+        delHistSet(2);
+        out.entwurfNachLoeschen = document.querySelectorAll('#he-body .he-set').length;
+        // Die uebrigen Eingaben duerfen das Neuzeichnen ueberleben.
+        out.wNachLoeschen = document.getElementById('he-w-0').value;
+        document.getElementById('he-dur').value = '65';
+        saveHistEdit();
+        const s = D.history[0] || {};
+        out.nachher = D.history.length;
+        out.id = s.id;
+        out.updatedAt = s.updatedAt;
+        out.saetze = (s.sets || []).length;
+        out.satz0 = (s.sets || [])[0];
+        out.nummern = (s.sets || []).map(x => x.nr);
+        out.dauer = s.duration;
+        out.volumen = sessionVolume(s);
+        D.history = []; save();
+        return out;
+      });
+      const ok = r.knopfDa && r.sheetOffen && r.feldDa
+        && r.entwurfNachLoeschen === 2 && r.wNachLoeschen === '10'
+        && r.vorher === 1 && r.nachher === 1
+        && r.id === 'S-test-082' && r.updatedAt > 1000
+        && r.saetze === 2 && r.satz0 && r.satz0.w === 10 && r.satz0.r === 12 && r.satz0.rir === 3
+        && JSON.stringify(r.nummern) === '[1,2]'
+        && r.dauer === 65 && r.volumen === 10 * 12 + 60 * 8;
+      return [ok, JSON.stringify(r) + ' — erwartet dieselbe id, hoeherer updatedAt, 2 Saetze mit Nummern 1,2'];
+    }
+  },
+  {
+    id: 'PB-083', title: 'Eine gespeicherte EGYM-Messung laesst sich korrigieren und leeren',
+    run: async () => {
+      /* Dritter Teil derselben Meldung. Eine Messung hatte genau einen Knopf:
+         Loeschen. „Neue Messung" mit gleichem Datum half nur halb — die
+         Speicherfunktion mischt, ein leeres Feld uebernahm also den alten
+         Wert. Einen falschen Wert konnte man ueberschreiben, einen zu viel
+         eingetragenen nie wieder entfernen.
+
+         Der Test prueft beide Richtungen: aendern UND leeren. Das Leeren ist
+         der Teil, den ein Mischen stillschweigend verschluckt. */
+      const r = await page.evaluate(() => {
+        D.egym = { enabled: true, measurements: [
+          { date: '2026-01-05', bioage: 40, kfp: 25, smm: 35, gewicht: 82 },
+          { date: '2026-02-05', bioage: 39, kfp: 24, smm: 36, gewicht: 81 }
+        ] };
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        save(); renderEgym();
+        const knopf = document.querySelectorAll('#egym-history .hs-edit')[0];
+        const out = { knopfDa: !!knopf, anzahlVorher: D.egym.measurements.length };
+        if (!knopf) return out;
+        knopf.click();                       // oberste Zeile = juengste Messung
+        out.sheetOffen = document.getElementById('m-egym').classList.contains('show');
+        out.vorbefuellt = {
+          datum: document.getElementById('egym-date').value,
+          kfp: document.getElementById('eg-kfp').value,
+          bioage: document.getElementById('eg-bioage').value
+        };
+        document.getElementById('eg-kfp').value = '22.5';   // korrigieren
+        document.getElementById('eg-bioage').value = '';    // war nie gemessen
+        saveEgymEntry();
+        const m = D.egym.measurements.find(x => x.date === '2026-02-05') || {};
+        out.anzahlNachher = D.egym.measurements.length;
+        out.kfp = m.kfp;
+        out.bioageGeleert = m.bioage === null;
+        out.smmUnberuehrt = m.smm;
+        // Zweiter Durchgang: Datum aendern darf keine Geisterkopie hinterlassen.
+        renderEgym();
+        document.querySelectorAll('#egym-history .hs-edit')[0].click();
+        document.getElementById('egym-date').value = '2026-02-08';
+        saveEgymEntry();
+        out.nachDatumswechsel = D.egym.measurements.map(x => x.date);
+        out.grabstein = (D.deleted.egym || []).includes('2026-02-05');
+        D.egym = { enabled: false, measurements: [] };
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        save();
+        return out;
+      });
+      const ok = r.knopfDa && r.sheetOffen
+        && r.vorbefuellt && r.vorbefuellt.datum === '2026-02-05'
+        && r.vorbefuellt.kfp === '24' && r.vorbefuellt.bioage === '39'
+        && r.anzahlVorher === 2 && r.anzahlNachher === 2
+        && r.kfp === 22.5 && r.bioageGeleert === true && r.smmUnberuehrt === 36
+        && JSON.stringify(r.nachDatumswechsel) === '["2026-01-05","2026-02-08"]'
+        && r.grabstein === true;
+      return [ok, JSON.stringify(r) + ' — erwartet vorbefuelltes Formular, kfp 22,5, bioage null, danach genau zwei Messungen'];
+    }
+  },
+  {
+    id: 'PB-084', title: 'Bei aktivem EGYM wird das Gewicht nur einmal erfasst',
+    run: async () => {
+      /* Gemeldet: „Ich will es nicht doppelt loggen muessen." Gewicht liess
+         sich unter Koerperdaten eintragen UND war Feld jeder EGYM-Messung.
+         Wer beides benutzte, hatte zwei Verlaeufe, die sich widersprachen;
+         wer nur die Messung benutzte, sah unter Koerperdaten gar nichts.
+
+         Geprueft wird beides: dass die Handabfrage bei aktivem EGYM
+         verschwindet, und dass die Reihe die Messungen wirklich enthaelt —
+         das Ausblenden allein waere nur ein Versteck. */
+      const r = await page.evaluate(() => {
+        D.bio.weights = [{ date: '01.01.2026', kg: 84 }];
+        D.egym = { enabled: false, measurements: [
+          { date: '2026-01-05', gewicht: 82, kfp: 25 },
+          { date: '2026-02-05', gewicht: 81, kfp: 24 }
+        ] };
+        save(); renderBio();
+        const sicht = id => { const el = document.getElementById(id); return el ? el.style.display !== 'none' : null; };
+        const out = { ausAbfrage: sicht('bio-weight-row'), ausReihe: weightSeries().map(w => w.kg) };
+        toggleEgym(true);
+        renderBio();
+        out.anAbfrage = sicht('bio-weight-row');
+        out.anHinweis = sicht('bio-weight-egym');
+        out.anReihe = weightSeries().map(w => w.kg);
+        out.anLetztes = latestWeight();
+        out.quellen = weightSeries().map(w => w.quelle);
+        // Gleicher Tag, zwei Quellen: die Messung gewinnt, es bleibt EIN Eintrag.
+        D.bio.weights.push({ date: '05.02.2026', kg: 99 });
+        save();
+        out.beiGleichemTag = weightSeries().filter(w => w.date === '05.02.2026').map(w => w.kg + ':' + w.quelle);
+        // Zurueckschalten darf die Handeintraege nicht verloren haben.
+        toggleEgym(false);
+        renderBio();
+        out.zurueckAbfrage = sicht('bio-weight-row');
+        out.zurueckReihe = weightSeries().map(w => w.kg);
+        D.bio.weights = []; D.egym = { enabled: false, measurements: [] }; save();
+        return out;
+      });
+      const ok = r.ausAbfrage === true && JSON.stringify(r.ausReihe) === '[84]'
+        && r.anAbfrage === false && r.anHinweis === true
+        && JSON.stringify(r.anReihe) === '[84,82,81]' && r.anLetztes === 81
+        && JSON.stringify(r.quellen) === '["hand","egym","egym"]'
+        && JSON.stringify(r.beiGleichemTag) === '["81:egym"]'
+        && r.zurueckAbfrage === true && JSON.stringify(r.zurueckReihe) === '[84,99]';
+      return [ok, JSON.stringify(r) + ' — erwartet Abfrage weg bei EGYM an, Reihe 84/82/81, Messung gewinnt bei gleichem Tag'];
     }
   }
 ];
