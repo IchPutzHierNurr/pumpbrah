@@ -820,7 +820,18 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
   margin:0 -16px 0;padding:10px 16px 2px;
   background:linear-gradient(180deg,transparent,var(--bg2) 22%);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:2;
+  /* PB-090: Der obere Rand dieser Leiste ist durchsichtig — dort sieht man
+     den Inhalt darunter und tippt danach. Ohne diese Zeile fing die Leiste
+     den Tipp trotzdem ab: im Historien-Editor landete ein Griff nach dem
+     zweiten Satzfeld auf „Änderungen speichern", und das Sheet schloss sich
+     ungefragt. Durchgereicht wird deshalb alles, was nicht der Knopf selbst
+     ist. */
+  pointer-events:none;
 }
+.mdl .sheet-cta>*{pointer-events:auto}
+/* Und beim Hinscrollen zu einem Feld hört der sichtbare Bereich an der
+   Leiste auf, nicht am Sheetrand — sonst hält der Browser genau hinter ihr an. */
+.mdl{scroll-padding-bottom:96px}
 .mdl .sheet-cta .btn{margin:0}
 .mdl .sheet-cta .btn+.btn{margin-top:6px}
 /* Der Fokus-Ausschnitt: sichtbar bleiben Zielvorgabe, Felder, RIR, Speichern. */
@@ -2294,6 +2305,15 @@ html,body{
 <div class="ig" style="margin-bottom:6px"><label>Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
 <div class="sheet-cta"><button class="btn" id="egym-save-btn" onclick="saveEgymEntry()">✓ Messung speichern</button></div>
 </div></div>
+<div class="mbg" id="m-setedit"><div class="mdl">
+<div class="mt">SATZ KORRIGIEREN <button class="mc" onclick="closeSetEditor()">✕</button></div>
+<div id="se-sub" style="font-size:11.5px;color:var(--text3);margin-bottom:12px"></div>
+<div class="ig" style="margin-bottom:8px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w"></div>
+<div class="ig" style="margin-bottom:8px"><label>Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r"></div>
+<div class="ig" style="margin-bottom:8px"><label>RIR</label><input type="number" inputmode="numeric" id="edit-set-rir"></div>
+<div class="sheet-cta"><button type="button" class="btn" id="se-save">✓ Speichern</button>
+<button type="button" class="btn btn-r" id="se-del">🗑️ Satz löschen</button></div>
+</div></div>
 <div class="mbg" id="m-histedit"><div class="mdl">
 <div class="mt">SESSION KORRIGIEREN <button class="mc" onclick="cm('m-histedit')">✕</button></div>
 <div style="font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px">Ein vertippter Satz kostete bisher die ganze Einheit — löschen war der einzige Weg. Hier änderst du einzelne Zahlen; alles andere bleibt stehen.</div>
@@ -2537,8 +2557,32 @@ function mergeWeights(localWeights,remoteWeights,preferRemote){
     return{...second,...first,kg:pickValue(first.kg,second.kg),date:pickValue(first.date,second.date)};
   },preferRemote).sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
 }
+/* PB-095: Eine Messung wurde über ihr DATUM identifiziert. Damit war jede
+   Datumskorrektur ein Löschen plus ein Anlegen — mit allem, was daran hängt:
+   Grabstein auf das alte Datum, und weil Grabsteine beim Zusammenführen
+   VEREINIGT werden, kam der lokal wieder entfernte aus der Cloud zurück und
+   löschte die Messung dauerhaft. Datum ändern und zurückändern kostete die
+   ganze Messung, ohne Meldung.
+   Jede Messung trägt jetzt eine eigene Kennung — dieselbe Lösung, die
+   Sessions seit PB-002 haben. Altdaten bekommen sie aus ihrem Datum
+   abgeleitet, damit zwei Geräte unabhängig auf dieselbe kommen. */
+function egymKey(m){
+  if(m&&m.id)return String(m.id);
+  return 'm'+dateKey(m&&m.date);
+}
 function mergeEgymMeasurements(localMeasurements,remoteMeasurements,preferRemote){
-  return mergeArrayByKey(localMeasurements,remoteMeasurements,m=>dateKey(m&&m.date),(local,remote,useRemote)=>{
+  return mergeArrayByKey(localMeasurements,remoteMeasurements,egymKey,(local,remote,useRemote)=>{
+    const lt=Number(local&&local.updatedAt)||0;
+    const rt=Number(remote&&remote.updatedAt)||0;
+    /* Bei gleicher Kennung gewinnt die zuletzt bearbeitete Fassung GANZ.
+       Vorher wurde Feld für Feld mit `pickValue` gemischt — ein geleertes
+       Feld galt dabei als „nichts gesagt" und bekam den alten Wert zurück.
+       Damit war die Zusage aus PB-083 („was leer steht, ist danach leer")
+       nur bis zum nächsten Abgleich haltbar. */
+    if(rt!==lt)return rt>lt?remote:local;
+    if(lt||rt)return useRemote?remote:local;
+    /* Beide ohne Zeitstempel: Altdaten. Hier bleibt das feldweise Auffüllen
+       richtig — keine der beiden Seiten hat je „leer" GEMEINT. */
     const first=useRemote?remote:local;
     const second=useRemote?local:remote;
     const merged={...second,...first};
@@ -2578,7 +2622,17 @@ function mergeHistorySession(local,remote){
 function ensureTombstoneState(){
   if(!D.deleted||typeof D.deleted!=='object')D.deleted={};
   ['history','weights','egym','libraryCustom'].forEach(k=>{if(!Array.isArray(D.deleted[k]))D.deleted[k]=[]});
-  D.deleted.history=D.deleted.history.filter(k=>String(k).indexOf('v2|')===0);
+  /* PB-093: Hier stand `filter(k=>k.indexOf('v2|')===0)`. Gemeint waren die
+     Schlüssel aus der Zeit vor PB-002 — getroffen wurde jeder MODERNE:
+     seit PB-002 hat jede Session eine id, und `histSessionKey` liefert dafür
+     `id|…`. Der Grabstein wurde also in demselben `save()` weggeworfen, das
+     ihn anlegte, und `mergeHistory` holte die gelöschte Einheit beim nächsten
+     Abgleich zurück. Löschen war für jeden mit Sync-Code wirkungslos —
+     unsichtbar, weil es lokal ja aussah, als hätte es geklappt. */
+  D.deleted.history=D.deleted.history.filter(k=>{
+    const t=String(k);
+    return t.indexOf('id|')===0||t.indexOf('v2|')===0;
+  });
 }
 function addTombstone(kind,key){
   ensureTombstoneState();
@@ -2619,7 +2673,11 @@ function mergeSyncedData(remote){
   const fallbackEgym=preferRemote?localEgym:remoteEgym;
   merged.egym={...fallbackEgym,...primaryEgym};
   merged.egym.enabled=!!(localEgym.enabled||remoteEgym.enabled);
-  merged.egym.measurements=mergeEgymMeasurements(localEgym.measurements,remoteEgym.measurements,preferRemote).filter(m=>!merged.deleted.egym.includes(dateKey(m&&m.date)));
+  /* Grabsteine gibt es in zwei Formen: die alten tragen ein Datum, die neuen
+     eine Kennung (PB-095). Beide müssen greifen, sonst kommt eine vor dem
+     Update gelöschte Messung zurück. */
+  merged.egym.measurements=mergeEgymMeasurements(localEgym.measurements,remoteEgym.measurements,preferRemote)
+    .filter(m=>!merged.deleted.egym.includes(egymKey(m))&&!merged.deleted.egym.includes(dateKey(m&&m.date)));
 
   const localLibrary=local.library||{},remoteLibrary=incoming.library||{};
   merged.library={...(preferRemote?localLibrary:remoteLibrary),...(preferRemote?remoteLibrary:localLibrary)};
@@ -2712,6 +2770,10 @@ function normalizeData(){
   if(!Array.isArray(D.bio.weights))D.bio.weights=[];
   if(!D.egym)D.egym={enabled:false,measurements:[]};
   if(!Array.isArray(D.egym.measurements))D.egym.measurements=[];
+  /* PB-095: Altdaten bekommen ihre Kennung aus dem Datum abgeleitet — so
+     kommen zwei Geräte unabhängig auf dieselbe, und aus einer Messung wird
+     beim Zusammenführen nicht plötzlich zwei. */
+  D.egym.measurements.forEach(m=>{if(m&&!m.id)m.id='m'+dateKey(m.date)});
   if(D.active&&(!D.active.startTime||Date.now()-D.active.startTime>24*3600e3))D.active=null;
   if(D.active){
     if(!Array.isArray(D.active.exercises)){D.active=null}
@@ -3133,7 +3195,7 @@ function hydrateIcons(root){
     el.dataset.icDone='1';
     el.innerHTML=icon(el.dataset.ic,parseInt(el.dataset.icSize)||15);
   });
-}let curTab=null,timerInt=null,timerStartedAt=0,timerTgt=0,logTgt=null,editIdx=null;
+}let curTab=null,timerInt=null,timerStartedAt=0,timerTgt=0,logTgt=null,editRef=null,editTab=null;
 function getTimerElapsed(){return timerStartedAt?Math.floor((Date.now()-timerStartedAt)/1000):0}
 function getTimerRemaining(){return Math.max(0,timerTgt-getTimerElapsed())}
 /* Nenner für den Pausenring. Beim Pausieren wandert die Restzeit nach
@@ -4276,9 +4338,28 @@ function openPlanExMenu(i){
 }
 function delEx(i){if(!confirm('Löschen?'))return;D.plan[curTab].exercises.splice(i,1);save();markPlanDirty();renderPL();toast('Gelöscht')}
 function mvEx(i,d){const a=D.plan[curTab].exercises;const n=i+d;if(n<0||n>=a.length)return;[a[i],a[n]]=[a[n],a[i]];save();markPlanDirty();renderPL()}
-function openAddEx(){editIdx=null;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';om('m-add')}
-function openEditEx(i){editIdx=i;const ex=D.plan[curTab].exercises[i];document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';om('m-add')}
-function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};if(editIdx!==null){Object.assign(D.plan[curTab].exercises[editIdx],obj)}else{D.plan[curTab].exercises.push(obj)}save();markPlanDirty();cm('m-add');renderPL();toast(editIdx!==null?'Änderung gespeichert ✓':'Übung hinzugefügt ✓');editIdx=null}
+function openAddEx(){editRef=null;editTab=curTab;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';om('m-add')}
+function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';om('m-add')}
+function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
+  if(editRef){
+    /* PB-086: Hier stand ein gemerkter INDEX. Der Cloud-Listener ersetzt in
+       `D=mergeSyncedData(remote)` das ganze Datenobjekt — auch bei offenem
+       Sheet. Danach zeigte der Index auf eine fremde Übung, und wenn der Plan
+       kürzer geworden war, warf `Object.assign(undefined,…)` und ließ das
+       Sheet offen stehen. Gesucht wird deshalb die Übung selbst: erst die
+       Referenz, dann ihre id. */
+    let ziel=liste.indexOf(editRef);
+    if(ziel<0&&editRef.id!==undefined)ziel=liste.findIndex(e=>e&&e.id===editRef.id);
+    if(ziel<0){toast('Diese Übung gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
+    /* Die id gehört der Übung, nicht der Bearbeitung — sie darf der frisch
+       gestempelte Zeitwert aus `obj` nicht überschreiben, sonst verliert die
+       Übung ihre Identität und der nächste Abgleich sieht eine neue. */
+    Object.assign(liste[ziel],obj,{id:liste[ziel].id});
+  }else{
+    liste.push(obj);
+  }
+  const geaendert=!!editRef;
+  save();markPlanDirty();cm('m-add');renderPL();toast(geaendert?'Änderung gespeichert ✓':'Übung hinzugefügt ✓');editRef=null;editTab=null}
 const EXLIB=[
   {cat:"🔥 Aufwärmen / Pre-Workout",items:[
     {name:"ATG: Schienbeinheben (Tibialis Raise)",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
@@ -4565,7 +4646,14 @@ function weightSeries(){
       const kg=parseFloat(m&&m.gewicht);
       const k=dateKey(m&&m.date);
       if(!k||!isFinite(kg)||kg<=0)return;
-      map.set(k,{date:germanFromKey(k),kg,quelle:'egym',bioIdx:null});
+      /* PB-097: Die Messung gewinnt bei gleichem Tag — aber der verdrängte
+         Handeintrag darf dabei nicht unerreichbar werden. Vorher war er
+         weder sichtbar noch löschbar: wer an einem Messtag zusätzlich eine
+         falsche Zahl eingetippt hatte, wurde sie nie wieder los. Sein Index
+         reist deshalb mit, und die Liste zeigt weiter einen Löschknopf. */
+      const verdraengt=map.get(k);
+      map.set(k,{date:germanFromKey(k),kg,quelle:'egym',
+        bioIdx:verdraengt&&verdraengt.quelle==='hand'?verdraengt.bioIdx:null});
     });
   }
   return [...map.values()].sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
@@ -4573,6 +4661,19 @@ function weightSeries(){
 function latestWeight(){
   const ws=weightSeries();
   return ws.length?ws[ws.length-1].kg:null;
+}
+/* PB-091: „EGYM ist eingeschaltet" hieß bisher „das Gewicht kommt von dort".
+   Das stimmt aber erst, wenn eine Messung MIT Gewicht existiert. Wer den
+   Schalter umlegte, bevor er die erste Messung hatte — oder wessen Messung
+   das Gewichtsfeld leer ließ, und alle EGYM-Felder sind freiwillig —, verlor
+   sofort und ohne Warnung die Möglichkeit, sein Gewicht einzutragen, und
+   bekam dazu einen Hinweis, der etwas Falsches behauptete. */
+function egymLiefertGewicht(){
+  if(!(D.egym&&D.egym.enabled))return false;
+  return (D.egym.measurements||[]).some(m=>{
+    const kg=parseFloat(m&&m.gewicht);
+    return isFinite(kg)&&kg>0;
+  });
 }
 function addWeight(){const v=parseFloat(document.getElementById('bio-weight-input').value);if(!v||v<20||v>300){toast('Gewicht eingeben (20-300kg)');return}const today=new Date().toLocaleDateString('de-DE');removeTombstone('weights',dateKey(today));const idx=D.bio.weights.findIndex(w=>w.date===today);if(idx>=0)D.bio.weights[idx].kg=v;else D.bio.weights.push({date:today,kg:v});D.bio.weights.sort((a,b)=>{const pa=a.date.split('.');const pb=b.date.split('.');return new Date(pa[2],pa[1]-1,pa[0])-new Date(pb[2],pb[1]-1,pb[0])});document.getElementById('bio-weight-input').value='';save();renderBio();toast('✓ '+v+'kg gespeichert')}
 function delWeight(i){addTombstone('weights',dateKey((D.bio.weights[i]||{}).date));D.bio.weights.splice(i,1);save();renderBio()}function openExNote(name){document.getElementById('exn-name').textContent=name;document.getElementById('exn-text').value=D.notes[name]||'';document.getElementById('exn-text').dataset.ex=name;om('m-exnote')}
@@ -4611,30 +4712,35 @@ function startWorkout(pk){
    seiner Session stehen. Der Chip ist deshalb jetzt ein Knopf: ein Tipp
    öffnet den Editor, und das Stift-Zeichen sagt vorher, dass es einen gibt.
    Die Haltegeste ist ersatzlos weg; eine unsichtbare Bedienung ist keine. */
+/* PB-089: Der Editor war ein selbstgebautes Popup mit `position:fixed` —
+   also KEIN `.mbg`/`.mdl`-Sheet. Damit fehlte ihm alles, was diese App über
+   iOS-Tastaturen gelernt hat (PB-061, PB-066): das Ausweichen des Containers
+   um `--kb`, die schrumpfende Maximalhöhe, die klebende Aktionszeile. Und er
+   setzt beim Öffnen den Fokus, holt die Tastatur also selbst herbei.
+   Auf dem iPhone SE lagen daraufhin ALLE drei Knöpfe darunter: ein Formular
+   ohne Knopf, bei dem der Weg nach draußen die Eingabe verwirft.
+
+   Nebenwirkung derselben Bauart: PB-061 prüft die Sheets, indem es über die
+   `.mbg`-Elemente läuft. Ein Popup, das keines ist, wurde nie geprüft. */
 function openSetEditor(ei,si){
   const ex=activeExercisesSafe()[ei];
   const s=ex&&Array.isArray(ex.logged)?ex.logged[si]:null;
   if(!s)return;
-  const alt=document.getElementById('set-popup');
-  if(alt)alt.remove();
-  const popup=document.createElement('div');
-  popup.id='set-popup';
-  popup.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
-  popup.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:20px;width:100%;max-width:320px">`+
-    `<div style="font-weight:700;font-size:15px;margin-bottom:2px">Satz ${si+1} korrigieren</div>`+
-    `<div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">${esc(ex.name)} · geloggt mit ${esc(s.w)} kg × ${esc(s.r)} @ RIR ${esc(s.rir)}</div>`+
-    `<div class="ig" style="margin-bottom:8px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w" value="${attr(s.w)}"></div>`+
-    `<div class="ig" style="margin-bottom:8px"><label>Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r" value="${attr(s.r)}"></div>`+
-    `<div class="ig" style="margin-bottom:8px"><label>RIR</label><input type="number" inputmode="numeric" id="edit-set-rir" value="${attr(s.rir)}"></div>`+
-    `<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn" style="flex:1" onclick="saveEditSet(${ei},${si})">✓ Speichern</button>`+
-    `<button type="button" class="btn btn-r" style="flex:1" onclick="deleteSet(${ei},${si})">🗑️ Löschen</button></div>`+
-    `<button type="button" class="btn btn-g" style="margin-top:8px;width:100%" onclick="closeSetEditor()">Abbrechen</button></div>`;
-  popup.onclick=e=>{if(e.target===popup)closeSetEditor()};
-  document.body.appendChild(popup);
+  const sub=document.getElementById('se-sub');
+  if(sub)sub.textContent=`Satz ${si+1} · ${ex.name} · geloggt mit ${s.w} kg × ${s.r} @ RIR ${s.rir}`;
+  const setze=(id,wert)=>{const el=document.getElementById(id);if(el)el.value=wert};
+  setze('edit-set-w',s.w);setze('edit-set-r',s.r);setze('edit-set-rir',s.rir);
+  /* Die beiden Aktionen tragen ihr Ziel als Funktion, nicht als Zeichenkette
+     im Markup — so kann kein Übungsname aus einem Handler ausbrechen. */
+  const save=document.getElementById('se-save');
+  const del=document.getElementById('se-del');
+  if(save)save.onclick=()=>saveEditSet(ei,si);
+  if(del)del.onclick=()=>deleteSet(ei,si);
+  om('m-setedit');
   const feld=document.getElementById('edit-set-w');
   if(feld)feld.focus();
 }
-function closeSetEditor(){const p=document.getElementById('set-popup');if(p)p.remove()}
+function closeSetEditor(){cm('m-setedit')}
 function saveEditSet(ei,si){
   const ex=activeExercisesSafe()[ei];
   const eintrag=ex&&Array.isArray(ex.logged)?ex.logged[si]:null;
@@ -4729,13 +4835,15 @@ function startTmrInterval(){
   timerInt=setInterval(()=>{
     const rem=getTimerRemaining();
     const d=document.getElementById('td');
-    const c=document.getElementById('tc');
     if(d)d.textContent=fmtT(rem);
     if(rem<=0){
       clearInterval(timerInt);timerInt=null;timerPausedRemaining=0;
-      if(c){c.classList.remove('run');c.classList.add('done')}
       haptic([200,100,200]);beep();
       persistTimer();
+      /* PB-087: Hier stand ein Zugriff auf ein Element, das es nicht gibt.
+         Die Leiste zeichnet sich jetzt selbst neu — sonst behauptet sie
+         weiter, die Pause laufe. */
+      renderFocusBar();
       toast('⏰ Pause vorbei!');
     }
   },250);
@@ -4851,11 +4959,28 @@ function delSess(i){if(!confirm('Session löschen?'))return;addTombstone('histor
 
    Gearbeitet wird auf einer Kopie: Wer im Editor einen Satz löscht und dann
    abbricht, hat nichts verloren. */
-let histEditIdx=null,histEditDraft=null;
+/* PB-085: Der Editor merkte sich einen INDEX in D.history — dieselbe Bauart,
+   die schon PB-020 war. Zwischen Öffnen und Speichern kann sich das Array
+   aber verschieben: `normalizeData()` sortiert die Historie bei jedem
+   `save()` nach Datum, und ein eintreffender Cloud-Abgleich (`onSnapshot`)
+   ersetzt `D` sogar vollständig. Der Entwurf wäre dann über eine FREMDE
+   Session geschrieben worden — stiller Datenverlust an der Stelle, die
+   Datenverlust verhindern soll.
+   Gemerkt wird deshalb die Identität, nicht die Position: erst die Objekt-
+   referenz, und wenn `D` ausgetauscht wurde, der Sessionschlüssel. Wird
+   beides nicht gefunden, wird nichts geschrieben. */
+let histEditRef=null,histEditKey=null,histEditDraft=null;
+function findeHistEintrag(){
+  const liste=D.history||[];
+  let i=histEditRef?liste.indexOf(histEditRef):-1;
+  if(i<0&&histEditKey)i=liste.findIndex(x=>histSessionKey(x)===histEditKey);
+  return i;
+}
 function openHistEdit(i){
   const s=(D.history||[])[i];
   if(!s)return;
-  histEditIdx=i;
+  histEditRef=s;
+  histEditKey=histSessionKey(s);
   histEditDraft=cloneData(s);
   if(!Array.isArray(histEditDraft.sets))histEditDraft.sets=[];
   renderHistEdit();
@@ -4897,10 +5022,15 @@ function renderHistEdit(){
   let letzte=null;
   histEditDraft.sets.forEach((x,k)=>{
     if(x.ex!==letzte){h+=`<div class="he-ex">${esc(x.ex||'Übung')}</div>`;letzte=x.ex}
+    /* PB-096: Cardio misst Minuten und eine Stufe, keine Kilogramm und keine
+       Wiederholungen. Der Rest der App beschriftet dasselbe Feld längst so —
+       nur dieser Editor zeigte „20 Wiederholungen" für zwanzig Minuten
+       Laufband. Wer das für falsch hält und „korrigiert", trägt Unsinn ein. */
+    const cardio=isCardioSet(x);
     h+=`<div class="he-set">`+
       `<span class="he-nr">${esc(parseInt(x.nr,10)||1)}.</span>`+
-      `<div class="ig"><label>kg</label><input type="number" inputmode="decimal" step="0.5" id="he-w-${k}" value="${attr(x.w)}"></div>`+
-      `<div class="ig"><label>Wdh</label><input type="number" inputmode="numeric" id="he-r-${k}" value="${attr(x.r)}"></div>`+
+      `<div class="ig"><label>${cardio?'Stufe':'kg'}</label><input type="number" inputmode="decimal" step="0.5" id="he-w-${k}" value="${attr(x.w)}"></div>`+
+      `<div class="ig"><label>${cardio?'Min':'Wdh'}</label><input type="number" inputmode="numeric" id="he-r-${k}" value="${attr(x.r)}"></div>`+
       `<div class="ig"><label>RIR</label><input type="number" inputmode="numeric" id="he-rir-${k}" value="${attr(x.rir)}"></div>`+
       `<button type="button" class="be-del" aria-label="Satz löschen" onclick="delHistSet(${k})">${icon('trash',16)}</button>`+
     `</div>`;
@@ -4914,9 +5044,17 @@ function delHistSet(k){
   renderHistEdit();
 }
 function saveHistEdit(){
-  if(histEditIdx===null||!histEditDraft)return;
+  if(!histEditDraft)return;
   harvestHistEdit();
   if(!histEditDraft.sets.length){toast('Ohne Sätze keine Session — lösch sie stattdessen');return}
+  const idx=findeHistEintrag();
+  if(idx<0){
+    toast('Diese Session gibt es nicht mehr');
+    cm('m-histedit');
+    histEditRef=null;histEditKey=null;histEditDraft=null;
+    renderHist();
+    return;
+  }
   /* Nach dem Löschen einzelner Sätze klaffen Lücken in der Nummerierung.
      Sie wird je Übung neu vergeben, sonst zeigt die Historie „Satz 3" bei
      zwei vorhandenen Sätzen. */
@@ -4926,10 +5064,20 @@ function saveHistEdit(){
     zaehler[k]=(zaehler[k]||0)+1;
     x.nr=zaehler[k];
   });
-  if(!histEditDraft.id)histEditDraft.id=newSessionId();
+  if(!histEditDraft.id){
+    /* PB-094: Eine Session aus der Zeit vor PB-002 hat keine id. Sie bekommt
+       hier eine — und wechselt damit ihren Identitätsschlüssel von `v2|<Hash
+       über den Inhalt>` auf `id|…`. In der Cloud liegt sie aber noch unter
+       dem alten Schlüssel; ohne Grabstein steht sie nach dem nächsten
+       Abgleich ZWEIMAL da, einmal falsch und einmal korrigiert, und alle
+       Auswertungen zählen die Einheit doppelt.
+       Der alte Schlüssel wurde beim Öffnen gemerkt — er wird jetzt begraben. */
+    if(histEditKey)addTombstone('history',histEditKey);
+    histEditDraft.id=newSessionId();
+  }
   histEditDraft.updatedAt=Date.now();
-  D.history[histEditIdx]=histEditDraft;
-  histEditIdx=null;histEditDraft=null;
+  D.history[idx]=histEditDraft;
+  histEditRef=null;histEditKey=null;histEditDraft=null;
   save();
   cm('m-histedit');
   renderHist();renderDash();renderAna();
@@ -5173,8 +5321,9 @@ function renderBio(){
   if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
   if(D.bio.birthday)document.getElementById('bio-birthday').value=D.bio.birthday;
   renderFitnessAge();
-  /* Die Handabfrage weicht der Messung, sobald EGYM läuft (PB-084). */
-  const perEgym=!!(D.egym&&D.egym.enabled);
+  /* Die Handabfrage weicht der Messung, sobald EGYM sie wirklich liefert
+     (PB-084, eingeschränkt durch PB-091). */
+  const perEgym=egymLiefertGewicht();
   const zeile=document.getElementById('bio-weight-row');
   if(zeile)zeile.style.display=perEgym?'none':'';
   const hinweis=document.getElementById('bio-weight-egym');
@@ -5227,11 +5376,11 @@ function renderBio(){
       const ds=diff===null?'erster Eintrag':(diff>0?'+':diff<0?'−':'±')+Math.abs(diff).toFixed(1)+' kg';
       const dc=diff===null?'var(--text3)':diff<0?'#2ee06a':diff>0?'#ffb020':'var(--text3)';
       return`<div class="sr${i===ws.length-1?' sr-last':''}">`+
-        `<div class="sr-bd"><b>${esc(w.kg)} kg</b><span>${esc(w.date)}${w.quelle==='egym'?' · EGYM':''}</span></div>`+
+        `<div class="sr-bd"><b>${esc(w.kg)} kg</b><span>${esc(w.date)}${w.quelle==='egym'?(w.bioIdx===null?' · EGYM':' · EGYM · Handeintrag desselben Tages liegt darunter'):''}</span></div>`+
         `<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${dc};flex:0 0 auto">${esc(ds)}</span>`+
         /* Ein Messwert gehört seiner Messung. Löschbar ist er dort, nicht hier —
            sonst wäre er beim nächsten Zeichnen wieder da. */
-        (w.quelle==='egym'?'':`<button class="be-del" aria-label="Eintrag löschen" onclick="delWeight(${w.bioIdx})">${icon('trash',16)}</button>`)+`</div>`;
+        (w.bioIdx===null?'':`<button class="be-del" aria-label="${w.quelle==='egym'?'Handeintrag dieses Tages löschen':'Eintrag löschen'}" onclick="delWeight(${w.bioIdx})">${icon('trash',16)}</button>`)+`</div>`;
     }).join('')+`</div></div>`;
   applySectionState('gewicht');
 }
@@ -6910,7 +7059,7 @@ function openEgymEntry(){
 function editEgymEntry(i){
   const m=D.egym&&Array.isArray(D.egym.measurements)?D.egym.measurements[i]:null;
   if(!m)return;
-  egymEditKey=dateKey(m.date);
+  egymEditKey=egymKey(m);
   fillEgymForm(m);
   om('m-egym');
 }
@@ -6921,28 +7070,31 @@ function saveEgymEntry(){
   removeTombstone('egym',dateKey(e.date));
   D.egym.enabled=true;
   const bearbeitet=egymEditKey!==null;
-  /* Beim Bearbeiten kann sich das Datum ändern. Der alte Eintrag muss dann
-     weg — und mit einem Grabstein, sonst holt ihn der nächste Sync von einem
-     anderen Gerät zurück. */
-  if(bearbeitet&&egymEditKey!==dateKey(e.date)){
-    const alt=D.egym.measurements.findIndex(m=>dateKey(m.date)===egymEditKey);
-    if(alt>=0)D.egym.measurements.splice(alt,1);
-    addTombstone('egym',egymEditKey);
-  }
-  const idx=D.egym.measurements.findIndex(m=>dateKey(m.date)===dateKey(e.date));
-  if(idx>=0){
-    const prev=D.egym.measurements[idx];
+  e.updatedAt=Date.now();
+  /* PB-095: Beim Bearbeiten BLEIBT die Messung dieselbe, auch wenn ihr Datum
+     sich ändert. Vorher wurde der alte Eintrag gelöscht und ein Grabstein auf
+     sein Datum gesetzt — was ein Zurückändern dauerhaft unmöglich machte,
+     weil Grabsteine beim Zusammenführen vereinigt werden. */
+  const wo=bearbeitet
+    ?D.egym.measurements.findIndex(m=>egymKey(m)===egymEditKey)
+    :D.egym.measurements.findIndex(m=>dateKey(m.date)===dateKey(e.date));
+  if(wo>=0){
+    const prev=D.egym.measurements[wo];
+    e.id=prev.id||egymKey(prev);
     if(bearbeitet){
       /* Ersetzen: ein leeres Feld heißt „gibt es nicht", nicht „unverändert". */
-      D.egym.measurements[idx]={...prev,...e};
+      D.egym.measurements[wo]={...prev,...e};
     }else{
       const merged={...prev,...e};
       Object.keys(e).forEach(k=>{merged[k]=pickValue(e[k],prev[k])});
-      D.egym.measurements[idx]=merged;
+      merged.id=e.id;merged.updatedAt=e.updatedAt;
+      D.egym.measurements[wo]=merged;
     }
   }else{
+    if(!e.id)e.id='m'+dateKey(e.date);
     D.egym.measurements.push(e);
   }
+  removeTombstone('egym',e.id);
   D.egym.measurements.sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
   egymEditKey=null;
   save();
@@ -6953,7 +7105,7 @@ function saveEgymEntry(){
 function delEgymEntry(i){
   if(!D.egym||!Array.isArray(D.egym.measurements))return;
   if(!confirm('Messung löschen?'))return;
-  addTombstone('egym',dateKey((D.egym.measurements[i]||{}).date));
+  addTombstone('egym',egymKey(D.egym.measurements[i]||{}));
   D.egym.measurements.splice(i,1);
   save();
   renderEgym();renderBio();
@@ -7470,15 +7622,12 @@ function renderAna(){
   const allSets=[];
   (D.history||[]).forEach(session=>(session.sets||[]).forEach(set=>allSets.push({...set,date:session.date})));
   const totalSets=allSets.length;
-  const weightedSets=strengthSets(allSets).filter(s=>(parseFloat(s.w)||0)>0);
-  const maxW=weightedSets.length?Math.max(...weightedSets.map(s=>parseFloat(s.w)||0)):0;
-  const rirBase=strengthSets(allSets);
-  const avgRir=rirBase.length?(rirBase.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/rirBase.length).toFixed(1):'—';
-  const exNames=[...new Set(allSets.map(s=>s.ex))].filter(Boolean);
+  /* Hier standen drei weitere Kennzahlen — Höchstgewicht, Ø RIR, Anzahl
+     Übungen —, geschrieben nach #a-maxw, #a-avgrir und #a-excount. Diese drei
+     Elemente erzeugt die Seite nirgends; die Zeilen waren mit `if(el)`
+     abgesichert und liefen deshalb seit jeher lautlos ins Leere. Entfernt
+     samt ihrer Berechnung. PB-088 sorgt dafür, dass so etwas auffällt. */
   const totalEl=document.getElementById('ana-total');if(totalEl)totalEl.textContent=totalSets+(totalSets===1?' Satz total':' Sätze total');
-  const maxEl=document.getElementById('a-maxw');if(maxEl)maxEl.textContent=maxW;
-  const rirEl=document.getElementById('a-avgrir');if(rirEl)rirEl.textContent=avgRir;
-  const exEl=document.getElementById('a-excount');if(exEl)exEl.textContent=exNames.length;
   const muscles={chest:{name:'Brust',sets:[],ex:new Set()},back:{name:'Rücken',sets:[],ex:new Set()},legs:{name:'Beine',sets:[],ex:new Set()},shoulders:{name:'Schultern',sets:[],ex:new Set()},arms:{name:'Arme',sets:[],ex:new Set()},core:{name:'Core',sets:[],ex:new Set()}};
   const exMuscleMap={};
   Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{exMuscleMap[ex.name]=ex.muscle}));
@@ -8168,7 +8317,18 @@ function confirmLog(){
   }else{
     toast(`✓ ${a}kg × ${b} @ RIR ${rir}`);haptic(12);
   }
-  if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx);
+  if(ex.logged.length>=ex.sets){
+    /* PB-092: Mit dem letzten Satz gilt die Übung als erledigt, im
+       Fokus-Layout klappt sie damit zu einer Zeile zusammen — und die
+       Satz-Chips verschwinden. Genau in dem Moment will man aber am
+       ehesten korrigieren: es ist der Satz, den man gerade getippt hat.
+       PB-081 verspricht „ein Tipp öffnet den Editor"; ohne diese Zeile
+       wären es zwei, und der erste stünde nirgends. Die gerade
+       abgeschlossene Übung bleibt deshalb aufgeklappt. */
+    D.active.openEx=logTgt.exIdx;
+    renderWo();
+    autoScrollNext(logTgt.exIdx);
+  }
 }
 /* --------------------------------------------------------------------------
    ZEITBUDGET — „ich habe heute nur X Minuten"
@@ -8256,36 +8416,30 @@ function applyTimeBudget(){
   toast(`${r.before} → ${r.after} min · ${r.changes.length} Anpassungen`);
   haptic([12,40,12]);
 }
-function renderWo(){
-  applyVisualTheme();
-  const c=document.getElementById('wo-c');
-  const eb=document.getElementById('wo-end');
+/* PB-087: Die Leiste war Teil von renderWo() und wurde deshalb nur gezeichnet,
+   wenn jemand den ganzen Workout-Screen neu baute. Am Ende der Pause tat das
+   niemand — der Timer wollte den Zustand über eine Element-Kennung
+   umschalten, die die App nirgends erzeugt.
+   Mit `if(c)` abgesichert scheiterte das lautlos: Ton und Toast kamen, die
+   Leiste behauptete weiter „Pause läuft", und der Knopf zeigte ⏸ — wer ihn
+   drückte, startete die volle Pause erneut.
+
+   Als eigene Funktion kann der Timer sie am Ende der Pause selbst zeichnen.
+   Absichtlich NUR die Leiste: sie hat mit `#wo-timer-bar` einen eigenen
+   Behälter, ein `renderWo()` aus einem Intervall heraus würde dagegen die
+   ganze Übungsliste unter den Fingern des Nutzers neu aufbauen. */
+function renderFocusBar(){
   const tf=document.getElementById('wo-timer-bar');
-  if(!D.active){
-    eb.style.display='none';tf.style.display='none';
-    c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;
-    return;
-  }
-  eb.style.display='';
+  if(!tf)return;
+  if(!D.active){tf.style.display='none';return}
+  tf.style.display='';
   const el=Math.floor((Date.now()-D.active.startTime)/60000);
   const tRem=getTimerRemaining();
   const tState=timerInt?'run':(timerStartedAt>0&&tRem<=0?'done':'');
-  tf.style.display='';
-  if(!Array.isArray(D.active.exercises))D.active.exercises=[];
-  D.active.exercises.forEach(ex=>{
-    if(!Array.isArray(ex.logged))ex.logged=[];
-    if(!ex.sets)ex.sets=3;
-    if(!ex.rmin)ex.rmin=8;
-    if(!ex.rmax)ex.rmax=ex.rmin;
-    if(!ex.type)ex.type='main';
-    if(!ex.muscle)ex.muscle='chest';
-  });
-  const total=D.active.exercises.length;
-  const doneCount=D.active.exercises.filter(e=>e.skipped||e.logged.length>=e.sets).length;
-  const setsPlanned=D.active.exercises.reduce((a,e)=>a+(e.skipped?0:e.sets),0);
+  const liste=activeExercisesSafe();
+  const setsPlanned=liste.reduce((a,e)=>a+(e.skipped?0:(parseInt(e.sets)||0)),0);
   const setsDone=loggedSetCount();
-  /* Fokus-Leiste: Restzeit als Ring, Session-Status daneben, zwei Tasten.
-     Der Ring füllt sich rückwärts — er zeigt, wie viel Pause NOCH übrig ist,
+  /* Der Ring füllt sich rückwärts — er zeigt, wie viel Pause NOCH übrig ist,
      nicht wie viel schon herum ist. Das ist die Frage, die man sich zwischen
      zwei Sätzen tatsächlich stellt. */
   const restTotal=Math.max(1,getTimerTotal());
@@ -8304,6 +8458,30 @@ function renderWo(){
     `<button type="button" class="fb-btn" title="Pause überspringen" onclick="resetTmr()">⏭</button>`+
     `<button type="button" class="fb-btn mono" title="30 Sekunden mehr" onclick="adjTmr(30)">+30</button>`+
   `</div>`;
+}
+function renderWo(){
+  applyVisualTheme();
+  const c=document.getElementById('wo-c');
+  const eb=document.getElementById('wo-end');
+  const tf=document.getElementById('wo-timer-bar');
+  if(!D.active){
+    eb.style.display='none';tf.style.display='none';
+    c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;
+    return;
+  }
+  eb.style.display='';
+  if(!Array.isArray(D.active.exercises))D.active.exercises=[];
+  D.active.exercises.forEach(ex=>{
+    if(!Array.isArray(ex.logged))ex.logged=[];
+    if(!ex.sets)ex.sets=3;
+    if(!ex.rmin)ex.rmin=8;
+    if(!ex.rmax)ex.rmax=ex.rmin;
+    if(!ex.type)ex.type='main';
+    if(!ex.muscle)ex.muscle='chest';
+  });
+  const total=D.active.exercises.length;
+  const doneCount=D.active.exercises.filter(e=>e.skipped||e.logged.length>=e.sets).length;
+  renderFocusBar();
   let h=`<div class="wo-cmdbar">`+
     `<button class="wo-cmd accent ib" onclick="openWorkoutSwitch()">${icon('swap',14)}Tag wechseln</button>`+
     `<button class="wo-cmd ib" onclick="addExerciseToWorkout()">${icon('plus',14)}Übung</button>`+
@@ -8968,7 +9146,7 @@ function pickLibraryItem(encodedName){
     addToWorkoutMode=false;
     if(pushExerciseToActiveWorkout(item))return;
   }
-  editIdx=null;
+  editRef=null;editTab=curTab;
   document.getElementById('a-name').value=item.name;
   document.getElementById('a-sets').value=item.s;
   document.getElementById('a-rmin').value=item.rn;

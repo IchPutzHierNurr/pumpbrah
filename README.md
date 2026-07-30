@@ -144,9 +144,20 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **86 Prüfungen grün** — 65 Regressionstests, 6 Sync-Tests über
-zwei Geräte, 3 Offline-Tests und Fuzzing über 91 Operationen, in Chromium und
+Aktueller Stand: **98 Prüfungen grün** — 77 Regressionstests, 6 Sync-Tests über
+zwei Geräte, 3 Offline-Tests und Fuzzing über 93 Operationen, in Chromium und
 WebKit.
+
+Der teuerste Beleg für den Sinn dieser Aufstellung ist frisch: Eine Auslieferung
+ging mit 86 grünen Prüfungen raus und trug einen Datenverlust-Fehler in sich
+(PB-085). Gefunden hat ihn kein Test, sondern das Nachlesen des eigenen Codes —
+gefolgt von einem Gegencheck, der zeigte, dass der Schaden **größer** war als
+vermutet: nicht eine falsch beschriebene Session, sondern eine verschwundene.
+Grün heißt „die geprüften Fälle halten", nicht „es ist heil".
+Aus der Lektion von PB-085 — *merkt sich ein Dialog eine Position, ist das ein
+Fund* — fiel fünf Minuten später ein zweiter Fall derselben Bauart heraus
+(PB-086). Ein Muster im Register ist erst dann etwas wert, wenn nach dem
+Aufschreiben die Frage folgt: wo noch?
 
 ### Die App ansehen, ohne sie zu installieren
 
