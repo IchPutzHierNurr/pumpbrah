@@ -144,9 +144,29 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **82 Prüfungen grün** — 61 Regressionstests, 6 Sync-Tests über
+Aktueller Stand: **86 Prüfungen grün** — 65 Regressionstests, 6 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 91 Operationen, in Chromium und
 WebKit.
+
+### Die App ansehen, ohne sie zu installieren
+
+`node tools/vorschau.mjs` baut aus `index.html` eine einzelne Seite, in der die
+App im echten iPhone-Viewport läuft — antippbar, mit Startdaten, ohne
+Installation. Drei Eingriffe, alle im Skript nachlesbar und alle notwendig:
+
+| Eingriff | Grund |
+|---|---|
+| Schriften eingebettet statt verlinkt | die Seite darf keinen fremden Host kontaktieren |
+| Firebase-SDK nicht geladen, Schlüssel auf Platzhalter | die Vorschau darf die echten Daten **nicht** anfassen können |
+| Startdatensatz (vier Sessions, zwei Messungen) | ohne Historie gäbe es nichts zu korrigieren, also nichts zu sehen |
+
+Der Rest ist Zeile für Zeile dieselbe Datei, die auf GitHub Pages ausgeliefert
+wird. Bricht ein Eingriff, weil sich `index.html` geändert hat, wirft das
+Skript — eine halb funktionierende Vorschau sieht man ihr nicht an.
+
+Was es **nicht** ist: ein iOS-Simulator. Der läuft nur auf macOS mit Xcode.
+Die Vorschau zeigt die App in der Engine des jeweiligen Browsers, aber auf den
+echten Viewport-Maßen aus PB-080 — 320 × 568 bis 430 × 739.
 
 ### Zwei Engines, ein Vergleich
 
@@ -198,10 +218,10 @@ und sucht sie im Testskript.
 
 | | |
 |---|---|
-| Funktionen in `index.html` | 376 |
-| vom Test erreicht | 223 |
+| Funktionen in `index.html` | 387 |
+| vom Test erreicht | 232 |
 | **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
-| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 153 |
+| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 155 |
 | außerhalb des Harnesses | **0** |
 
 Die letzte Zeile stand einmal bei acht. Sieben fielen weg, als die gefälschte
@@ -212,10 +232,15 @@ Fehler der Schwere *hoch* (PB-073).
 
 Vier Grenzen, die keine Zahl sichtbar macht:
 
-* **„Erreicht" ist nicht „geprüft".** Die 220 enthalten Funktionen, die der
+* **„Erreicht" ist nicht „geprüft".** Die 232 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
   59 Regressionstests, die 5 Sync-Tests, die 3 Offline-Tests und die 22
   Invarianten — nicht die Abdeckungszahl.
+* **Kein iOS-Simulator.** Der läuft nur auf macOS mit Xcode. Was geht: die
+  echten Geräteprofile aus Playwright — Viewport, Pixeldichte, Touch,
+  User-Agent. Der Harness läuft seit Juli 2026 auf dem **tatsächlichen**
+  iPhone-Viewport (393×659), nicht mehr auf der Bildschirmhöhe (393×852); der
+  Sheet-Test über vier Profile vom SE (320×568) bis zum Pro Max. Siehe PB-080.
 * **WebKit ist nicht iOS Safari.** Seit Juli 2026 läuft derselbe Harness in CI
   zusätzlich in WebKit (siehe unten) — Engine-Unterschiede werden damit
   gefunden. Was weiter fehlt: echte Tastatur, echtes Safe-Area, echter

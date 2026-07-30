@@ -502,6 +502,18 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 .be-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:6px;flex:0 0 auto;
   display:flex;align-items:center;border-radius:10px}
 .be-del:active{background:color-mix(in srgb,var(--red) 14%,transparent)}
+/* Der Korrigieren-Knopf sitzt neben dem Löschen-Knopf der Session. Er ist
+   bewusst neutral eingefärbt: Korrigieren ist der harmlose der beiden Wege,
+   und die auffällige Farbe gehört dem, der Daten vernichtet. */
+.hs-edit{background:none;border:none;color:var(--text3);cursor:pointer;padding:6px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;border-radius:9px;line-height:0}
+.hs-edit:active{background:rgba(255,255,255,.08);color:var(--text)}
+.he-set{display:flex;gap:7px;align-items:flex-end;padding:9px 0;border-bottom:1px solid var(--line2)}
+.he-set:last-child{border-bottom:none}
+.he-set .ig{flex:1;min-width:0;margin:0}
+.he-set .ig input{width:100%}
+.he-ex{font-size:12px;font-weight:700;color:var(--text2);margin:12px 0 2px;letter-spacing:.02em}
+.he-nr{flex:0 0 26px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding-bottom:12px}
 
 /* plan mgmt + drawer */
 .plan-mgmt{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
@@ -1363,7 +1375,11 @@ html,body{
   display:flex;align-items:baseline;gap:5px;padding:8px 11px;border-radius:13px;
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
   cursor:pointer;transition:transform var(--dur-micro) var(--sp);
+  /* Der Chip ist seit PB-081 ein <button>. Ohne diesen Block erbt er die
+     Schrift des Browsers statt der App — der Reset ist keine Kosmetik. */
+  font:inherit;color:inherit;text-align:left;margin:0;
 }
+.wo-chips .wsr .wsr-pen{font-size:11px;opacity:.5;margin-left:1px}
 .wo-open .wo-chips .wsr{background:rgba(255,255,255,.04);border-color:var(--line)}
 .wo-chips .wsr:active{transform:scale(.94)}
 .wo-chips .wsr b{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
@@ -2162,9 +2178,12 @@ html,body{
 <div id="fitness-age-card"></div>
 <div id="bio-stats"></div>
 <div class="set-card">
-<div class="sr">
+<div class="sr" id="bio-weight-row">
 <div class="sr-bd"><b>Gewicht heute</b><span>Immer zur gleichen Tageszeit wiegen — nüchtern nach dem Aufstehen schwankt am wenigsten.</span></div>
 <div class="sr-num"><input type="number" inputmode="decimal" step="0.1" id="bio-weight-input" placeholder="kg" style="width:86px"><button class="setbtn" style="flex:0 0 auto;min-width:0;padding:11px 15px" onclick="addWeight()">+</button></div>
+</div>
+<div class="sr" id="bio-weight-egym" style="display:none">
+<div class="sr-bd"><b>Gewicht</b><span>Kommt aus deiner EGYM-Messung — hier musst du nichts eintragen.</span></div>
 </div>
 <div class="sr">
 <div class="sr-bd"><b>Geburtsdatum</b><span>Basis für Fitnessalter und BioAge-Differenz</span></div>
@@ -2247,7 +2266,7 @@ html,body{
 </div>
 </div>
 <div class="mbg" id="m-egym"><div class="mdl">
-<div class="mt">EGYM MESSUNG <button class="mc" onclick="cm('m-egym')">✕</button></div>
+<div class="mt"><span id="egym-modal-title">EGYM MESSUNG</span> <button class="mc" onclick="cm('m-egym')">✕</button></div>
 <div class="ig" style="margin-bottom:8px"><label>Datum</label><input type="date" id="egym-date"></div>
 <div class="st" style="margin:10px 0 6px;font-size:12px">BIOAGE</div>
 <div class="ir"><div class="ig"><label>BioAge Gesamt</label><input type="number" inputmode="numeric" id="eg-bioage"></div></div>
@@ -2273,7 +2292,14 @@ html,body{
 <div class="ig" style="margin-bottom:6px"><label>Phasenwinkel (°)</label><input type="number" inputmode="decimal" step="0.1" id="eg-pw"></div>
 <div class="ig" style="margin-bottom:6px"><label>Skelettmuskelmasse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-smm"></div>
 <div class="ig" style="margin-bottom:6px"><label>Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
-<div class="sheet-cta"><button class="btn" onclick="saveEgymEntry()">✓ Messung speichern</button></div>
+<div class="sheet-cta"><button class="btn" id="egym-save-btn" onclick="saveEgymEntry()">✓ Messung speichern</button></div>
+</div></div>
+<div class="mbg" id="m-histedit"><div class="mdl">
+<div class="mt">SESSION KORRIGIEREN <button class="mc" onclick="cm('m-histedit')">✕</button></div>
+<div style="font-size:12.5px;color:var(--text2);line-height:1.5;margin-bottom:12px">Ein vertippter Satz kostete bisher die ganze Einheit — löschen war der einzige Weg. Hier änderst du einzelne Zahlen; alles andere bleibt stehen.</div>
+<div id="he-body"></div>
+<div class="sheet-cta"><button class="btn" onclick="saveHistEdit()">✓ Änderungen speichern</button>
+<button type="button" class="cta-sub" onclick="cm('m-histedit')">Abbrechen</button></div>
 </div></div>
 <div class="mbg" id="m-rotation"><div class="mdl">
 <div class="mt">NEUER BLOCK — ÜBUNGEN ROTIEREN <button class="mc" onclick="cm('m-rotation')">✕</button></div>
@@ -4464,7 +4490,7 @@ function movePlanDay(dir){
 function saveBioHeight(v){D.bio.height=parseFloat(v)||null;save();renderBio()}
 function saveBioBirthday(v){D.bio.birthday=v||null;save();renderBio()}
 function getRealAge(){if(!D.bio.birthday)return null;const bd=new Date(D.bio.birthday);const now=new Date();let age=now.getFullYear()-bd.getFullYear();if(now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))age--;return age}
-function calcFitnessAge(){const realAge=getRealAge();if(!realAge)return null;let fa=realAge;const factors=[];const ws=D.bio.weights;const lastW=ws.length?ws[ws.length-1].kg:null;if(lastW&&D.bio.height){const hm=D.bio.height/100;const bmi=lastW/(hm*hm);if(bmi>=20&&bmi<=24.9){fa-=2;factors.push({label:'BMI optimal',val:-2,color:'var(--green)'})}else if(bmi>=18.5&&bmi<20||bmi>=25&&bmi<27){factors.push({label:'BMI okay',val:0,color:'var(--text2)'})}else if(bmi>=27&&bmi<30){fa+=2;factors.push({label:'BMI erhöht',val:+2,color:'var(--orange)'})}else if(bmi>=30){fa+=4;factors.push({label:'BMI hoch',val:+4,color:'var(--red)'})}else{fa+=2;factors.push({label:'BMI niedrig',val:+2,color:'var(--orange)'})}}const historyTimes=[];D.history.forEach(s=>{const p=String(s.date||'').split('.');if(p.length===3){const t=new Date(p[2],p[1]-1,p[0]).getTime();if(!isNaN(t))historyTimes.push(t)}});(D.bio.weights||[]).forEach(w=>{const k=dateKey(w&&w.date);const m=String(k).match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)historyTimes.push(new Date(+m[1],+m[2]-1,+m[3]).getTime())});const trackingDays=historyTimes.length?Math.max(0,Math.floor((Date.now()-Math.min(...historyTimes))/864e5)):0;const windowDays=Math.min(28,Math.max(trackingDays,7));const windowStart=Date.now()-windowDays*864e5;const recentSessions=D.history.filter(s=>{const p=s.date.split('.');if(p.length!==3)return false;return new Date(p[2],p[1]-1,p[0]).getTime()>windowStart});const sessPerWeek=recentSessions.length/(windowDays/7);if(sessPerWeek>=4){fa-=4;factors.push({label:'Frequenz top ('+sessPerWeek.toFixed(1)+'/Wo)',val:-4,color:'var(--green)'})}else if(sessPerWeek>=3){fa-=3;factors.push({label:'Frequenz gut ('+sessPerWeek.toFixed(1)+'/Wo)',val:-3,color:'var(--green)'})}else if(sessPerWeek>=2){fa-=1;factors.push({label:'Frequenz okay ('+sessPerWeek.toFixed(1)+'/Wo)',val:-1,color:'var(--neon)'})}else if(sessPerWeek>=1){factors.push({label:'Frequenz mäßig ('+sessPerWeek.toFixed(1)+'/Wo)',val:0,color:'var(--text2)'})}else if(trackingDays>=14){fa+=3;factors.push({label:'Kaum Training',val:+3,color:'var(--red)'})}else{factors.push({label:'Frequenz: zu wenig Daten',val:0,color:'var(--text2)'})}const twelveWeeksAgo=Date.now()-84*864e5;const weekBuckets=new Array(12).fill(0);D.history.forEach(s=>{const p=s.date.split('.');if(p.length!==3)return;const d=new Date(p[2],p[1]-1,p[0]).getTime();if(d>twelveWeeksAgo){const weekIdx=Math.floor((Date.now()-d)/(7*864e5));if(weekIdx<12)weekBuckets[weekIdx]++}});const observedWeeks=Math.min(12,Math.max(1,Math.ceil(Math.max(trackingDays,1)/7)));const activeWeeks=weekBuckets.filter(w=>w>0).length;const consistency=activeWeeks/observedWeeks;if(trackingDays<28){factors.push({label:'Konsistenz: zu wenig Daten',val:0,color:'var(--text2)'})}else if(consistency>=0.8){fa-=2;factors.push({label:'Sehr konsistent',val:-2,color:'var(--green)'})}else if(consistency>=0.55){fa-=1;factors.push({label:'Konsistent',val:-1,color:'var(--neon)'})}else if(consistency>=0.3){factors.push({label:'Teils konsistent',val:0,color:'var(--text2)'})}else{fa+=2;factors.push({label:'Inkonsistent',val:+2,color:'var(--orange)'})}const allSets=[];D.history.forEach(s=>s.sets.forEach(set=>{if(set.w>0)allSets.push(set)}));if(allSets.length>0&&lastW){const maxes={};allSets.forEach(s=>{if(!maxes[s.ex]||s.w>maxes[s.ex])maxes[s.ex]=s.w});const bestCompound=Math.max(...Object.values(maxes));const ratio=bestCompound/lastW;if(ratio>=1.5){fa-=3;factors.push({label:'Kraftniveau stark ('+ratio.toFixed(1)+'x BW)',val:-3,color:'var(--green)'})}else if(ratio>=1.0){fa-=1;factors.push({label:'Kraftniveau gut ('+ratio.toFixed(1)+'x BW)',val:-1,color:'var(--neon)'})}else if(ratio>=0.6){factors.push({label:'Kraftniveau aufbauend ('+ratio.toFixed(1)+'x BW)',val:0,color:'var(--text2)'})}else{fa+=1;factors.push({label:'Kraftniveau Anfänger',val:+1,color:'var(--orange)'})}}return{fitnessAge:Math.max(14,Math.round(fa)),realAge,factors}}
+function calcFitnessAge(){const realAge=getRealAge();if(!realAge)return null;let fa=realAge;const factors=[];const ws=weightSeries();const lastW=ws.length?ws[ws.length-1].kg:null;if(lastW&&D.bio.height){const hm=D.bio.height/100;const bmi=lastW/(hm*hm);if(bmi>=20&&bmi<=24.9){fa-=2;factors.push({label:'BMI optimal',val:-2,color:'var(--green)'})}else if(bmi>=18.5&&bmi<20||bmi>=25&&bmi<27){factors.push({label:'BMI okay',val:0,color:'var(--text2)'})}else if(bmi>=27&&bmi<30){fa+=2;factors.push({label:'BMI erhöht',val:+2,color:'var(--orange)'})}else if(bmi>=30){fa+=4;factors.push({label:'BMI hoch',val:+4,color:'var(--red)'})}else{fa+=2;factors.push({label:'BMI niedrig',val:+2,color:'var(--orange)'})}}const historyTimes=[];D.history.forEach(s=>{const p=String(s.date||'').split('.');if(p.length===3){const t=new Date(p[2],p[1]-1,p[0]).getTime();if(!isNaN(t))historyTimes.push(t)}});weightSeries().forEach(w=>{const k=dateKey(w&&w.date);const m=String(k).match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)historyTimes.push(new Date(+m[1],+m[2]-1,+m[3]).getTime())});const trackingDays=historyTimes.length?Math.max(0,Math.floor((Date.now()-Math.min(...historyTimes))/864e5)):0;const windowDays=Math.min(28,Math.max(trackingDays,7));const windowStart=Date.now()-windowDays*864e5;const recentSessions=D.history.filter(s=>{const p=s.date.split('.');if(p.length!==3)return false;return new Date(p[2],p[1]-1,p[0]).getTime()>windowStart});const sessPerWeek=recentSessions.length/(windowDays/7);if(sessPerWeek>=4){fa-=4;factors.push({label:'Frequenz top ('+sessPerWeek.toFixed(1)+'/Wo)',val:-4,color:'var(--green)'})}else if(sessPerWeek>=3){fa-=3;factors.push({label:'Frequenz gut ('+sessPerWeek.toFixed(1)+'/Wo)',val:-3,color:'var(--green)'})}else if(sessPerWeek>=2){fa-=1;factors.push({label:'Frequenz okay ('+sessPerWeek.toFixed(1)+'/Wo)',val:-1,color:'var(--neon)'})}else if(sessPerWeek>=1){factors.push({label:'Frequenz mäßig ('+sessPerWeek.toFixed(1)+'/Wo)',val:0,color:'var(--text2)'})}else if(trackingDays>=14){fa+=3;factors.push({label:'Kaum Training',val:+3,color:'var(--red)'})}else{factors.push({label:'Frequenz: zu wenig Daten',val:0,color:'var(--text2)'})}const twelveWeeksAgo=Date.now()-84*864e5;const weekBuckets=new Array(12).fill(0);D.history.forEach(s=>{const p=s.date.split('.');if(p.length!==3)return;const d=new Date(p[2],p[1]-1,p[0]).getTime();if(d>twelveWeeksAgo){const weekIdx=Math.floor((Date.now()-d)/(7*864e5));if(weekIdx<12)weekBuckets[weekIdx]++}});const observedWeeks=Math.min(12,Math.max(1,Math.ceil(Math.max(trackingDays,1)/7)));const activeWeeks=weekBuckets.filter(w=>w>0).length;const consistency=activeWeeks/observedWeeks;if(trackingDays<28){factors.push({label:'Konsistenz: zu wenig Daten',val:0,color:'var(--text2)'})}else if(consistency>=0.8){fa-=2;factors.push({label:'Sehr konsistent',val:-2,color:'var(--green)'})}else if(consistency>=0.55){fa-=1;factors.push({label:'Konsistent',val:-1,color:'var(--neon)'})}else if(consistency>=0.3){factors.push({label:'Teils konsistent',val:0,color:'var(--text2)'})}else{fa+=2;factors.push({label:'Inkonsistent',val:+2,color:'var(--orange)'})}const allSets=[];D.history.forEach(s=>s.sets.forEach(set=>{if(set.w>0)allSets.push(set)}));if(allSets.length>0&&lastW){const maxes={};allSets.forEach(s=>{if(!maxes[s.ex]||s.w>maxes[s.ex])maxes[s.ex]=s.w});const bestCompound=Math.max(...Object.values(maxes));const ratio=bestCompound/lastW;if(ratio>=1.5){fa-=3;factors.push({label:'Kraftniveau stark ('+ratio.toFixed(1)+'x BW)',val:-3,color:'var(--green)'})}else if(ratio>=1.0){fa-=1;factors.push({label:'Kraftniveau gut ('+ratio.toFixed(1)+'x BW)',val:-1,color:'var(--neon)'})}else if(ratio>=0.6){factors.push({label:'Kraftniveau aufbauend ('+ratio.toFixed(1)+'x BW)',val:0,color:'var(--text2)'})}else{fa+=1;factors.push({label:'Kraftniveau Anfänger',val:+1,color:'var(--orange)'})}}return{fitnessAge:Math.max(14,Math.round(fa)),realAge,factors}}
 /* Das Fitnessalter ist dieselbe Art Aussage wie BioAge: eine Zahl, die erst
    im Abstand zum echten Alter etwas bedeutet. Also dieselbe Darstellung —
    Differenz groß, Achse mit dem eigenen Alter als Nullpunkt, und darunter
@@ -4513,6 +4539,41 @@ function renderFitnessAge(){
     else requestAnimationFrame(()=>requestAnimationFrame(()=>{mk.style.left=mk.dataset.left}));
   }
 }
+/* PB-084: Gewicht ließ sich an zwei Stellen erfassen — unter Körperdaten und
+   als Feld jeder EGYM-Messung. Bei aktivem EGYM bedeutete das: dieselbe Zahl
+   zweimal eintippen, sonst standen zwei Verläufe nebeneinander, die sich
+   widersprachen. Ab jetzt gibt es eine Reihe. Ist EGYM aus, ist sie exakt die
+   alte Handeingabe; ist EGYM an, kommen die Messungen dazu und die Handabfrage
+   verschwindet. Bei gleichem Tag gewinnt die Messung — die Waage im Studio
+   weiß es genauer als die Erinnerung am Abend.
+   Alte Handeinträge bleiben stehen: Umschalten darf keine Daten verstecken. */
+function germanFromKey(k){
+  const m=String(k||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m?`${m[3]}.${m[2]}.${m[1]}`:String(k||'');
+}
+function weightSeries(){
+  const hand=(D.bio&&Array.isArray(D.bio.weights))?D.bio.weights:[];
+  const map=new Map();
+  hand.forEach((w,i)=>{
+    const k=dateKey(w&&w.date);
+    const kg=parseFloat(w&&w.kg);
+    if(!k||!isFinite(kg))return;
+    map.set(k,{date:germanFromKey(k),kg,quelle:'hand',bioIdx:i});
+  });
+  if(D.egym&&D.egym.enabled){
+    (D.egym.measurements||[]).forEach(m=>{
+      const kg=parseFloat(m&&m.gewicht);
+      const k=dateKey(m&&m.date);
+      if(!k||!isFinite(kg)||kg<=0)return;
+      map.set(k,{date:germanFromKey(k),kg,quelle:'egym',bioIdx:null});
+    });
+  }
+  return [...map.values()].sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
+}
+function latestWeight(){
+  const ws=weightSeries();
+  return ws.length?ws[ws.length-1].kg:null;
+}
 function addWeight(){const v=parseFloat(document.getElementById('bio-weight-input').value);if(!v||v<20||v>300){toast('Gewicht eingeben (20-300kg)');return}const today=new Date().toLocaleDateString('de-DE');removeTombstone('weights',dateKey(today));const idx=D.bio.weights.findIndex(w=>w.date===today);if(idx>=0)D.bio.weights[idx].kg=v;else D.bio.weights.push({date:today,kg:v});D.bio.weights.sort((a,b)=>{const pa=a.date.split('.');const pb=b.date.split('.');return new Date(pa[2],pa[1]-1,pa[0])-new Date(pb[2],pb[1]-1,pb[0])});document.getElementById('bio-weight-input').value='';save();renderBio();toast('✓ '+v+'kg gespeichert')}
 function delWeight(i){addTombstone('weights',dateKey((D.bio.weights[i]||{}).date));D.bio.weights.splice(i,1);save();renderBio()}function openExNote(name){document.getElementById('exn-name').textContent=name;document.getElementById('exn-text').value=D.notes[name]||'';document.getElementById('exn-text').dataset.ex=name;om('m-exnote')}
 function saveExNote(){const name=document.getElementById('exn-text').dataset.ex;const txt=document.getElementById('exn-text').value.trim();if(txt)D.notes[name]=txt;else delete D.notes[name];save();cm('m-exnote');renderPL();toast('Notiz gespeichert!')}
@@ -4544,15 +4605,57 @@ function startWorkout(pk){
   save();go('wo');renderWo();requestWakeLock();
   toast('Let\'s go! 🔥');haptic([15,50,15]);
 }
-let lpTimer=null;
-function setLongPress(ei,si,ev){ev.preventDefault();lpTimer=setTimeout(()=>{lpTimer=null;if(!D.active)return;const ex=D.active.exercises[ei];const s=ex.logged[si];if(!s)return;const popup=document.createElement('div');popup.id='set-popup';popup.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center';popup.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:20px;width:90%;max-width:320px"><div style="font-weight:700;font-size:15px;margin-bottom:12px">Satz ${si+1}: ${s.w}kg × ${s.r} @ RIR ${s.rir}</div><div class="ig" style="margin-bottom:8px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" id="edit-set-w" value="${s.w}"></div><div class="ig" style="margin-bottom:8px"><label>Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r" value="${s.r}"></div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn" style="flex:1" onclick="saveEditSet(${ei},${si})">✓ Speichern</button><button class="btn btn-r" style="flex:1" onclick="deleteSet(${ei},${si})">🗑️ Löschen</button></div><button class="btn btn-g" style="margin-top:8px;width:100%" onclick="document.getElementById('set-popup').remove()">Abbrechen</button></div>`;popup.onclick=(e)=>{if(e.target===popup)popup.remove()};document.body.appendChild(popup)},500)}
-function clearLongPress(){if(lpTimer){clearTimeout(lpTimer);lpTimer=null}}
-function saveEditSet(ei,si){const w=Math.min(2000,Math.max(0,parseFloat(document.getElementById('edit-set-w').value)||0));const r=Math.min(999,Math.max(0,parseInt(document.getElementById('edit-set-r').value)||0));D.active.exercises[ei].logged[si].w=w;D.active.exercises[ei].logged[si].r=r;save();document.getElementById('set-popup').remove();renderWo();toast('Satz aktualisiert')}
+/* PB-081: Einen geloggten Satz zu korrigieren war zwar möglich, aber nur über
+   eine 500-Millisekunden-Haltegeste, die nirgends stand. Wer sie nicht kannte
+   — und niemand kannte sie — sah einen falsch getippten Satz für immer in
+   seiner Session stehen. Der Chip ist deshalb jetzt ein Knopf: ein Tipp
+   öffnet den Editor, und das Stift-Zeichen sagt vorher, dass es einen gibt.
+   Die Haltegeste ist ersatzlos weg; eine unsichtbare Bedienung ist keine. */
+function openSetEditor(ei,si){
+  const ex=activeExercisesSafe()[ei];
+  const s=ex&&Array.isArray(ex.logged)?ex.logged[si]:null;
+  if(!s)return;
+  const alt=document.getElementById('set-popup');
+  if(alt)alt.remove();
+  const popup=document.createElement('div');
+  popup.id='set-popup';
+  popup.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
+  popup.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--bg3);border-radius:16px;padding:20px;width:100%;max-width:320px">`+
+    `<div style="font-weight:700;font-size:15px;margin-bottom:2px">Satz ${si+1} korrigieren</div>`+
+    `<div style="font-size:11.5px;color:var(--text3);margin-bottom:12px">${esc(ex.name)} · geloggt mit ${esc(s.w)} kg × ${esc(s.r)} @ RIR ${esc(s.rir)}</div>`+
+    `<div class="ig" style="margin-bottom:8px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w" value="${attr(s.w)}"></div>`+
+    `<div class="ig" style="margin-bottom:8px"><label>Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r" value="${attr(s.r)}"></div>`+
+    `<div class="ig" style="margin-bottom:8px"><label>RIR</label><input type="number" inputmode="numeric" id="edit-set-rir" value="${attr(s.rir)}"></div>`+
+    `<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn" style="flex:1" onclick="saveEditSet(${ei},${si})">✓ Speichern</button>`+
+    `<button type="button" class="btn btn-r" style="flex:1" onclick="deleteSet(${ei},${si})">🗑️ Löschen</button></div>`+
+    `<button type="button" class="btn btn-g" style="margin-top:8px;width:100%" onclick="closeSetEditor()">Abbrechen</button></div>`;
+  popup.onclick=e=>{if(e.target===popup)closeSetEditor()};
+  document.body.appendChild(popup);
+  const feld=document.getElementById('edit-set-w');
+  if(feld)feld.focus();
+}
+function closeSetEditor(){const p=document.getElementById('set-popup');if(p)p.remove()}
+function saveEditSet(ei,si){
+  const ex=activeExercisesSafe()[ei];
+  const eintrag=ex&&Array.isArray(ex.logged)?ex.logged[si]:null;
+  if(!eintrag){closeSetEditor();return}
+  const zahl=(id,max,ganz)=>{
+    const el=document.getElementById(id);
+    const v=el?(ganz?parseInt(el.value,10):parseFloat(el.value)):NaN;
+    return Math.min(max,Math.max(0,isNaN(v)?0:v));
+  };
+  eintrag.w=zahl('edit-set-w',2000,false);
+  eintrag.r=zahl('edit-set-r',999,true);
+  /* Der RIR war bisher nicht korrigierbar, stand aber im Kopf des Editors —
+     der Dialog zeigte also einen Wert, den er nicht änderte. */
+  eintrag.rir=zahl('edit-set-rir',10,true);
+  save();closeSetEditor();renderWo();toast('Satz aktualisiert');
+}
 function deleteSet(ei,si){
   const ex=activeExercisesSafe()[ei];
   if(!ex||!Array.isArray(ex.logged))return;
   ex.logged.splice(si,1);save();
-  const p=document.getElementById('set-popup');if(p)p.remove();
+  closeSetEditor();
   renderWo();toast('Satz gelöscht');
 }
 /* logTgt merkt sich einen INDEX in D.active.exercises. Dieser Index kann
@@ -4735,6 +4838,103 @@ function histDateKey(day,month,year){
 }
 function selectCalDay(d){calSelDay=calSelDay===d?null:d;renderHist()}
 function delSess(i){if(!confirm('Session löschen?'))return;addTombstone('history',histSessionKey(D.history[i]));D.history.splice(i,1);save();renderHist();renderDash();renderAna();toast('Session gelöscht')}
+/* PB-082: Eine beendete Session war unantastbar. Wer sich bei einem einzigen
+   Satz vertippte — 100 statt 10 kg — hatte genau eine Möglichkeit, das
+   loszuwerden: die ganze Einheit löschen. Damit war die Korrektur teurer als
+   der Fehler, und in der Folge blieben falsche Zahlen stehen und verdarben
+   jede Auswertung, die auf ihnen rechnet: Volumen, PRs, e1RM, Trend.
+
+   Die Datenschicht konnte das längst. `histSessionKey` hängt seit PB-002 an
+   einer stabilen `id`, und `mergeHistorySession` entscheidet bei gleicher ID
+   nach `updatedAt` — beides ist genau für den Fall gebaut, dass jemand einen
+   Satz korrigiert. Es fehlte nur der Weg dorthin.
+
+   Gearbeitet wird auf einer Kopie: Wer im Editor einen Satz löscht und dann
+   abbricht, hat nichts verloren. */
+let histEditIdx=null,histEditDraft=null;
+function openHistEdit(i){
+  const s=(D.history||[])[i];
+  if(!s)return;
+  histEditIdx=i;
+  histEditDraft=cloneData(s);
+  if(!Array.isArray(histEditDraft.sets))histEditDraft.sets=[];
+  renderHistEdit();
+  om('m-histedit');
+}
+/* Zahlenwerte aus den Feldern zurück in den Entwurf. Muss vor jedem
+   Neuzeichnen laufen, sonst verliert ein Satzlöschen die übrigen Eingaben. */
+function harvestHistEdit(){
+  if(!histEditDraft)return;
+  const zahl=(id,max,ganz)=>{
+    const el=document.getElementById(id);
+    if(!el)return null;
+    const v=ganz?parseInt(el.value,10):parseFloat(el.value);
+    return Math.min(max,Math.max(0,isNaN(v)?0:v));
+  };
+  histEditDraft.sets.forEach((x,k)=>{
+    const w=zahl('he-w-'+k,2000,false);if(w!==null)x.w=w;
+    const r=zahl('he-r-'+k,999,true);if(r!==null)x.r=r;
+    const rir=zahl('he-rir-'+k,10,true);if(rir!==null)x.rir=rir;
+  });
+  const dur=document.getElementById('he-dur');
+  if(dur)histEditDraft.duration=Math.min(1440,Math.max(0,parseInt(dur.value,10)||0));
+  const dat=document.getElementById('he-date');
+  if(dat&&dat.value){
+    const m=String(dat.value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m)histEditDraft.date=`${m[3]}.${m[2]}.${m[1]}`;
+  }
+}
+function renderHistEdit(){
+  const body=document.getElementById('he-body');
+  if(!body||!histEditDraft)return;
+  const iso=dateKey(histEditDraft.date);
+  let h=`<div class="ir" style="margin-bottom:6px">`+
+    `<div class="ig"><label>Datum</label><input type="date" id="he-date" value="${attr(/^\d{4}-\d{2}-\d{2}$/.test(iso)?iso:'')}"></div>`+
+    `<div class="ig"><label>Dauer (min)</label><input type="number" inputmode="numeric" id="he-dur" value="${attr(parseInt(histEditDraft.duration,10)||0)}"></div></div>`;
+  if(!histEditDraft.sets.length){
+    h+=`<div class="empty">Kein Satz mehr übrig. Speichern ist hier nicht möglich — eine Session ohne Sätze wäre keine. Nutze den Löschen-Knopf in der Historie.</div>`;
+  }
+  let letzte=null;
+  histEditDraft.sets.forEach((x,k)=>{
+    if(x.ex!==letzte){h+=`<div class="he-ex">${esc(x.ex||'Übung')}</div>`;letzte=x.ex}
+    h+=`<div class="he-set">`+
+      `<span class="he-nr">${esc(parseInt(x.nr,10)||1)}.</span>`+
+      `<div class="ig"><label>kg</label><input type="number" inputmode="decimal" step="0.5" id="he-w-${k}" value="${attr(x.w)}"></div>`+
+      `<div class="ig"><label>Wdh</label><input type="number" inputmode="numeric" id="he-r-${k}" value="${attr(x.r)}"></div>`+
+      `<div class="ig"><label>RIR</label><input type="number" inputmode="numeric" id="he-rir-${k}" value="${attr(x.rir)}"></div>`+
+      `<button type="button" class="be-del" aria-label="Satz löschen" onclick="delHistSet(${k})">${icon('trash',16)}</button>`+
+    `</div>`;
+  });
+  body.innerHTML=h;
+}
+function delHistSet(k){
+  if(!histEditDraft)return;
+  harvestHistEdit();
+  histEditDraft.sets.splice(k,1);
+  renderHistEdit();
+}
+function saveHistEdit(){
+  if(histEditIdx===null||!histEditDraft)return;
+  harvestHistEdit();
+  if(!histEditDraft.sets.length){toast('Ohne Sätze keine Session — lösch sie stattdessen');return}
+  /* Nach dem Löschen einzelner Sätze klaffen Lücken in der Nummerierung.
+     Sie wird je Übung neu vergeben, sonst zeigt die Historie „Satz 3" bei
+     zwei vorhandenen Sätzen. */
+  const zaehler={};
+  histEditDraft.sets.forEach(x=>{
+    const k=String(x.ex||'');
+    zaehler[k]=(zaehler[k]||0)+1;
+    x.nr=zaehler[k];
+  });
+  if(!histEditDraft.id)histEditDraft.id=newSessionId();
+  histEditDraft.updatedAt=Date.now();
+  D.history[histEditIdx]=histEditDraft;
+  histEditIdx=null;histEditDraft=null;
+  save();
+  cm('m-histedit');
+  renderHist();renderDash();renderAna();
+  toast('Session korrigiert');
+}
 /* Serie in Wochen: wie viele zusammenhängende Kalenderwochen bis heute
    mindestens eine Einheit hatten. Bewusst in WOCHEN, nicht in Tagen — eine
    Tages-Serie bestraft jeden Ruhetag und misst damit das Gegenteil von dem,
@@ -4920,6 +5120,7 @@ function histSessionHTML(s){
       `${s.duration?` · ${esc(s.duration)} min`:''}${avgRir?` · Ø RIR ${esc(avgRir)}`:''}${cMin?` · ${esc(cMin)} min Cardio`:''}</div>`+
       `${prev?`<div class="vs">vs. ${esc(prev.date)}</div>`:''}</div>`+
       `${pct===null?'':`<div class="hs-delta ${cls}">${pct>0?'+':''}${pct}%<small>VOLUMEN</small></div>`}`+
+      `<button type="button" class="hs-edit" title="Session korrigieren" aria-label="Session korrigieren" onclick="event.stopPropagation();openHistEdit(${s.__i})">${icon('edit',15)}</button>`+
       `<button type="button" class="hs-del" title="Session löschen" onclick="event.stopPropagation();delSess(${s.__i})">×</button>`+
     `</div>`+
     (prs.length?`<div class="hs-prs">${prs.map(p=>`<span class="pr">PR ${esc(p.ex)} ${esc(p.w)} kg</span>`).join('')}</div>`:'')+
@@ -4972,7 +5173,13 @@ function renderBio(){
   if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
   if(D.bio.birthday)document.getElementById('bio-birthday').value=D.bio.birthday;
   renderFitnessAge();
-  const ws=D.bio.weights||[];
+  /* Die Handabfrage weicht der Messung, sobald EGYM läuft (PB-084). */
+  const perEgym=!!(D.egym&&D.egym.enabled);
+  const zeile=document.getElementById('bio-weight-row');
+  if(zeile)zeile.style.display=perEgym?'none':'';
+  const hinweis=document.getElementById('bio-weight-egym');
+  if(hinweis)hinweis.style.display=perEgym?'':'none';
+  const ws=weightSeries();
   const lastW=ws.length?parseFloat(ws[ws.length-1].kg)||0:0;
   const bmi=(lastW&&D.bio.height)?lastW/Math.pow(D.bio.height/100,2):0;
   /* Drei Kacheln statt einer Fußnote: aktuelles Gewicht, Veränderung seit
@@ -5020,16 +5227,18 @@ function renderBio(){
       const ds=diff===null?'erster Eintrag':(diff>0?'+':diff<0?'−':'±')+Math.abs(diff).toFixed(1)+' kg';
       const dc=diff===null?'var(--text3)':diff<0?'#2ee06a':diff>0?'#ffb020':'var(--text3)';
       return`<div class="sr${i===ws.length-1?' sr-last':''}">`+
-        `<div class="sr-bd"><b>${esc(w.kg)} kg</b><span>${esc(w.date)}</span></div>`+
+        `<div class="sr-bd"><b>${esc(w.kg)} kg</b><span>${esc(w.date)}${w.quelle==='egym'?' · EGYM':''}</span></div>`+
         `<span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:${dc};flex:0 0 auto">${esc(ds)}</span>`+
-        `<button class="be-del" aria-label="Eintrag löschen" onclick="delWeight(${ri})">${icon('trash',16)}</button></div>`;
+        /* Ein Messwert gehört seiner Messung. Löschbar ist er dort, nicht hier —
+           sonst wäre er beim nächsten Zeichnen wieder da. */
+        (w.quelle==='egym'?'':`<button class="be-del" aria-label="Eintrag löschen" onclick="delWeight(${w.bioIdx})">${icon('trash',16)}</button>`)+`</div>`;
     }).join('')+`</div></div>`;
   applySectionState('gewicht');
 }
 function egymRate(key,val){
   const gender=(D.bio&&D.bio.gender)||'male';
   const isMale=gender==='male';
-  const weight=(D.bio&&D.bio.weights&&D.bio.weights.length)?D.bio.weights[D.bio.weights.length-1].kg:(D.egym&&D.egym.measurements&&D.egym.measurements.length?D.egym.measurements[D.egym.measurements.length-1].gewicht:null);
+  const weight=latestWeight();
   if(val===null||val===undefined)return null;
   if(key==='bmi'){
     if(val<18.5)return{label:'Niedrig',color:'var(--blue)'};
@@ -6665,11 +6874,44 @@ function toggleEgym(on){
      hier wird deshalb nur noch die Checkbox gesetzt. */
   const toggle=document.getElementById('egym-toggle');
   if(toggle)toggle.checked=D.egym.enabled;
+  /* Die Gewichtsabfrage hängt am selben Schalter (PB-084) — sie muss sofort
+     verschwinden, nicht erst beim nächsten Screenwechsel. */
+  if(document.getElementById('bio-weight-row'))renderBio();
   if(changed)save();
 }
+/* PB-083: Eine gespeicherte Messung hatte genau einen Knopf — Löschen. Ein
+   vertippter Körperfettwert ließ sich also nur beseitigen, indem man die
+   ganze Messung samt der zwei Dutzend richtigen Zahlen wegwarf.
+   Das Nachtragen über „Neue Messung" mit demselben Datum half nur halb: die
+   Speicherfunktion MISCHT (`pickValue`), ein leer gelassenes Feld übernimmt
+   also den alten Wert. Einen falschen Wert konnte man so überschreiben,
+   einen zu viel eingetragenen nicht mehr entfernen.
+   Im Bearbeiten-Modus wird deshalb ersetzt statt gemischt: was im Formular
+   leer steht, ist danach leer. */
+let egymEditKey=null;
+function fillEgymForm(m){
+  document.getElementById('egym-date').value=m&&m.date?dateKey(m.date):new Date().toISOString().split('T')[0];
+  EG_FIELDS.forEach(k=>{
+    const el=document.getElementById('eg-'+k);
+    if(!el)return;
+    const v=m?m[k]:null;
+    el.value=(v===null||v===undefined||v==='')?'':v;
+  });
+  const titel=document.getElementById('egym-modal-title');
+  if(titel)titel.textContent=m?'EGYM MESSUNG BEARBEITEN':'EGYM MESSUNG';
+  const cta=document.getElementById('egym-save-btn');
+  if(cta)cta.textContent=m?'✓ Änderungen speichern':'✓ Messung speichern';
+}
 function openEgymEntry(){
-  document.getElementById('egym-date').value=new Date().toISOString().split('T')[0];
-  EG_FIELDS.forEach(k=>{const el=document.getElementById('eg-'+k);if(el)el.value=''});
+  egymEditKey=null;
+  fillEgymForm(null);
+  om('m-egym');
+}
+function editEgymEntry(i){
+  const m=D.egym&&Array.isArray(D.egym.measurements)?D.egym.measurements[i]:null;
+  if(!m)return;
+  egymEditKey=dateKey(m.date);
+  fillEgymForm(m);
   om('m-egym');
 }
 function saveEgymEntry(){
@@ -6678,20 +6920,35 @@ function saveEgymEntry(){
   EG_FIELDS.forEach(k=>{const el=document.getElementById('eg-'+k);const v=el?parseFloat(el.value):NaN;e[k]=isNaN(v)?null:v});
   removeTombstone('egym',dateKey(e.date));
   D.egym.enabled=true;
+  const bearbeitet=egymEditKey!==null;
+  /* Beim Bearbeiten kann sich das Datum ändern. Der alte Eintrag muss dann
+     weg — und mit einem Grabstein, sonst holt ihn der nächste Sync von einem
+     anderen Gerät zurück. */
+  if(bearbeitet&&egymEditKey!==dateKey(e.date)){
+    const alt=D.egym.measurements.findIndex(m=>dateKey(m.date)===egymEditKey);
+    if(alt>=0)D.egym.measurements.splice(alt,1);
+    addTombstone('egym',egymEditKey);
+  }
   const idx=D.egym.measurements.findIndex(m=>dateKey(m.date)===dateKey(e.date));
   if(idx>=0){
     const prev=D.egym.measurements[idx];
-    const merged={...prev,...e};
-    Object.keys(e).forEach(k=>{merged[k]=pickValue(e[k],prev[k])});
-    D.egym.measurements[idx]=merged;
+    if(bearbeitet){
+      /* Ersetzen: ein leeres Feld heißt „gibt es nicht", nicht „unverändert". */
+      D.egym.measurements[idx]={...prev,...e};
+    }else{
+      const merged={...prev,...e};
+      Object.keys(e).forEach(k=>{merged[k]=pickValue(e[k],prev[k])});
+      D.egym.measurements[idx]=merged;
+    }
   }else{
     D.egym.measurements.push(e);
   }
   D.egym.measurements.sort((a,b)=>dateKey(a.date).localeCompare(dateKey(b.date)));
+  egymEditKey=null;
   save();
   cm('m-egym');
-  renderEgym();
-  toast('EGYM Messung gespeichert');
+  renderEgym();renderBio();
+  toast(bearbeitet?'Messung korrigiert':'EGYM Messung gespeichert');
 }
 function delEgymEntry(i){
   if(!D.egym||!Array.isArray(D.egym.measurements))return;
@@ -6699,7 +6956,7 @@ function delEgymEntry(i){
   addTombstone('egym',dateKey((D.egym.measurements[i]||{}).date));
   D.egym.measurements.splice(i,1);
   save();
-  renderEgym();
+  renderEgym();renderBio();
   toast('Messung gelöscht');
 }
 function bodyMapSVG(m){
@@ -6855,7 +7112,7 @@ function renderEgym(){
   const G='#2ee06a',O='#ffb020',B='#4ea1ff',R='#ff3b5c';
   const dc=document.getElementById('egym-detail');
   if(m){
-    const weight=parseFloat(m.gewicht)||((D.bio&&D.bio.weights&&D.bio.weights.length)?D.bio.weights[D.bio.weights.length-1].kg:0);
+    const weight=parseFloat(m.gewicht)||latestWeight()||0;
     let dh=`<div style="font-size:12px;font-weight:700;margin-bottom:3px">Körperzusammensetzung</div>`+
       `<div style="font-size:10.5px;color:var(--text3);margin-bottom:8px">Farbfeld = Normbereich für ${isMale?'Männer':'Frauen'}, Punkt = dein Wert.</div>`;
     dh+=bioScaleRow('BMI',m.bmi,'kg/m²','bmi',[15,35,[[15,18.5,B],[18.5,25,G],[25,35,O]]]);
@@ -6898,6 +7155,7 @@ function renderEgym(){
         `<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13.5px">${esc(x.date)}</div>`+
         `<div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace">`+
         `BioAge ${esc(x.bioage||'—')}${diff===null?'':` (${diff>0?'+':''}${diff})`} · KFA ${esc(x.kfp||'—')} % · SMM ${esc(x.smm||'—')} kg</div></div>`+
+        `<button class="hs-edit" aria-label="Messung korrigieren" onclick="editEgymEntry(${ri})">${icon('edit',16)}</button>`+
         `<button class="be-del" aria-label="Messung löschen" onclick="delEgymEntry(${ri})">${icon('trash',16)}</button>`+
       `</div>`;
     }).join('');
@@ -8120,8 +8378,8 @@ function renderWo(){
       const chips=[];
       for(let si=0;si<ex.sets;si++){
         const s=ex.logged[si];
-        if(s)chips.push(`<div class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}" onpointerdown="setLongPress(${ei},${si},event)" onpointerup="clearLongPress()" onpointercancel="clearLongPress()">`+
-          `<b>${esc(s.w)}</b><span>${esc(formatLoggedSetLine(ex,s).replace(/^\s*[\d.,]+\s*kg\s*/,''))} · RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}</div>`);
+        if(s)chips.push(`<button type="button" class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}" onclick="openSetEditor(${ei},${si})" aria-label="Satz ${si+1} korrigieren">`+
+          `<b>${esc(s.w)}</b><span>${esc(formatLoggedSetLine(ex,s).replace(/^\s*[\d.,]+\s*kg\s*/,''))} · RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}<em class="wsr-pen" aria-hidden="true">✎</em></button>`);
         else chips.push(`<div class="wsr empty"><b>S${si+1}</b><span>—</span></div>`);
       }
       h+=`<div class="wo-chips">${chips.join('')}</div>`;
