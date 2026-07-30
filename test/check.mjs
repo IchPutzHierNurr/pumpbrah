@@ -3339,6 +3339,263 @@ const REGRESSIONS = [
       return [ok, JSON.stringify(r) + ' — erwartet: Messung gewinnt, der Handeintrag darunter bleibt loeschbar'];
     }
   }
+  ,
+  {
+    id: 'PB-098', title: 'Der Satz-Editor korrigiert die Uebung, an der er geoeffnet wurde',
+    run: async () => {
+      /* Dieselbe Falle wie PB-085 und PB-086, ein DRITTES Mal — und beim
+         eigenen Durchsuchen uebersehen. Der Grund fuer das Uebersehen ist
+         lehrreich: Die Position steht hier nicht in einer Variablen, sondern
+         reist als Argument durch den Aufruf (`saveEditSet(3,1)`). Wer nach
+         gemerkten Indizes sucht, findet sie mit keiner Suche nach `let`.
+
+         Faellt die Uebung weg, waehrend der Editor offen steht — Tausch,
+         Entfernen, oder ein Cloud-Abgleich, der D ersetzt —, landete die
+         Korrektur auf einem fremden Satz. */
+      const r = await page.evaluate(() => {
+        const out = {};
+        D.active = null;
+        startWorkout(Object.keys(D.plan)[0]);
+        D.active.exercises[0].logged = [{ w: 60, r: 10, rir: 2, note: '' }];
+        D.active.exercises[1].logged = [{ w: 99, r: 5, rir: 1, note: '' }];
+        D.active.openEx = 0;
+        renderWo();
+        out.namen = D.active.exercises.slice(0, 2).map(e => e.name);
+
+        // (1) Editor auf Uebung 0 oeffnen, dann faellt Uebung 0 weg.
+        openSetEditor(0, 0);
+        D.active.exercises.splice(0, 1);
+        document.getElementById('edit-set-w').value = '11';
+        saveEditSet(0, 0);
+        out.nachWegfall = D.active.exercises.slice(0, 2).map(e => (e.logged || []).map(l => l.w));
+        out.sheetZu = !document.getElementById('m-setedit').classList.contains('show');
+
+        // (2) Editor offen, die Uebung wandert nur an eine andere Position.
+        D.active = null;
+        startWorkout(Object.keys(D.plan)[0]);
+        D.active.exercises[0].logged = [{ w: 60, r: 10, rir: 2, note: '' }];
+        D.active.exercises[1].logged = [{ w: 99, r: 5, rir: 1, note: '' }];
+        D.active.openEx = 0;
+        renderWo();
+        const zielName = D.active.exercises[0].name;
+        openSetEditor(0, 0);
+        // Genau das, was der Cloud-Listener tut: neue Objekte, andere Reihenfolge.
+        const kopie = JSON.parse(JSON.stringify(D.active.exercises));
+        D.active.exercises = [kopie[1], kopie[0], ...kopie.slice(2)];
+        document.getElementById('edit-set-w').value = '77.5';
+        saveEditSet(0, 0);
+        const ziel = D.active.exercises.find(e => e.name === zielName) || {};
+        const andere = D.active.exercises.find(e => e.name !== zielName && (e.logged || []).length) || {};
+        out.korrigiert = (ziel.logged || [])[0] && ziel.logged[0].w;
+        out.fremdeUnberuehrt = (andere.logged || [])[0] && andere.logged[0].w;
+
+        D.active = null; save();
+        return out;
+      });
+      const ok = JSON.stringify(r.nachWegfall) === '[[99],[]]' && r.sheetZu === true
+        && r.korrigiert === 77.5 && r.fremdeUnberuehrt === 99;
+      return [ok, JSON.stringify(r) + ' — erwartet: kein fremder Satz veraendert, Korrektur folgt der Uebung'];
+    }
+  },
+  {
+    id: 'PB-099', title: 'Auch der Satz-Editor beschriftet Cardio als Minuten',
+    run: async () => {
+      /* PB-096 hat das fuer den Historien-Editor geloest — der Satz-Editor
+         blieb dabei stehen. Zwei neue Editoren, derselbe Fehler, und beim
+         ersten Fix nur einer davon gesehen. */
+      const r = await page.evaluate(() => {
+        const lies = () => [document.getElementById('se-lab-w'), document.getElementById('se-lab-r')]
+          .map(l => l ? l.textContent : null);
+        D.active = null;
+        startWorkout(Object.keys(D.plan)[0]);
+        D.active.exercises[0].logged = [{ w: 60, r: 10, rir: 2, note: '' }];
+        D.active.openEx = 0; renderWo();
+        openSetEditor(0, 0);
+        const kraft = lies();
+        closeSetEditor();
+        D.active.exercises[0].name = 'Laufband';
+        D.active.exercises[0].logged = [{ w: 9, r: 20, rir: 0, note: '', mode: 'cardio' }];
+        renderWo();
+        openSetEditor(0, 0);
+        const cardio = lies();
+        const kopf = (document.getElementById('se-sub') || {}).textContent;
+        closeSetEditor();
+        D.active = null; save();
+        return { kraft, cardio, kopf };
+      });
+      const ok = JSON.stringify(r.kraft) === '["Gewicht (kg)","Wiederholungen"]'
+        && JSON.stringify(r.cardio) === '["Stufe","Minuten"]'
+        && String(r.kopf).includes('min');
+      return [ok, JSON.stringify(r) + ' — erwartet Kraft: Gewicht/Wiederholungen, Cardio: Stufe/Minuten'];
+    }
+  },
+  {
+    id: 'PB-100', title: 'Ein unlesbares Datum wird nicht zum aktuellen Gewicht',
+    run: async () => {
+      /* `dateKey` gibt fuer alles, was es nicht lesen kann, die Zeichenkette
+         selbst zurueck. Ein kaputtes Datum sortiert damit HINTER jedes echte
+         — und wurde so zum „aktuellen Gewicht", mit dem BMI, Fitnessalter und
+         die EGYM-Einordnung rechnen. Solche Eintraege entstehen beim Import
+         fremder Sicherungen. */
+      const r = await page.evaluate(() => {
+        D.egym = { enabled: false, measurements: [] };
+        D.bio.weights = [
+          { date: '01.06.2026', kg: 84 },
+          { date: 'kaputt', kg: 999 },
+          { date: '', kg: 70 },
+          { date: '15.06.2026', kg: 83.5 }
+        ];
+        save();
+        const out = { reihe: weightSeries().map(w => `${w.date}:${w.kg}`), letzte: latestWeight() };
+        // Auch aus einer Messung darf ein unlesbares Datum nicht durchrutschen.
+        D.egym = { enabled: true, measurements: [{ date: 'irgendwann', gewicht: 555 }] };
+        save();
+        out.mitEgym = weightSeries().map(w => w.kg);
+        out.letzteMitEgym = latestWeight();
+        D.bio.weights = []; D.egym = { enabled: false, measurements: [] }; save();
+        return out;
+      });
+      const ok = JSON.stringify(r.reihe) === '["01.06.2026:84","15.06.2026:83.5"]'
+        && r.letzte === 83.5
+        && JSON.stringify(r.mitEgym) === '[84,83.5]' && r.letzteMitEgym === 83.5;
+      return [ok, JSON.stringify(r) + ' — erwartet: nur lesbare Daten, letztes Gewicht 83,5'];
+    }
+  },
+  {
+    id: 'PB-101', title: 'Der Historien-Editor nimmt kein Datum an, das die Session unerreichbar macht',
+    run: async () => {
+      /* Das Datumsfeld nahm jede Eingabe an. Ein Jahr 9999 schiebt die Session
+         in einen Kalendermonat, den man mit dem Monatsblaettern nicht mehr
+         erreicht — sie ist dann weder sichtbar noch loeschbar, zaehlt aber
+         weiter in jede Statistik. */
+      const r = await page.evaluate(() => {
+        const mach = () => ({
+          id: 'S-datum', updatedAt: 1000, date: '15.03.2026', planKey: Object.keys(D.plan)[0], duration: 60,
+          sets: [{ ex: 'Bankdrücken', nr: 1, w: 60, r: 8, rir: 2, muscle: 'chest', type: 'main' }]
+        });
+        const versuch = wert => {
+          D.history = [mach()]; save();
+          openHistEdit(0);
+          document.getElementById('he-date').value = wert;
+          document.getElementById('he-w-0').value = '65';
+          saveHistEdit();
+          const s = D.history[0] || {};
+          const offen = document.getElementById('m-histedit').classList.contains('show');
+          cm('m-histedit');
+          return { datum: s.date, gewicht: (s.sets || [])[0] && s.sets[0].w, offen };
+        };
+        const out = {
+          jahr9999: versuch('9999-12-31'),
+          jahr0001: versuch('0001-01-01'),
+          gueltig: versuch('2026-03-20')
+        };
+        D.history = []; save();
+        return out;
+      });
+      const ok = r.jahr9999.datum === '15.03.2026' && r.jahr9999.offen === true && r.jahr9999.gewicht === 60
+        && r.jahr0001.datum === '15.03.2026' && r.jahr0001.offen === true
+        && r.gueltig.datum === '20.03.2026' && r.gueltig.gewicht === 65 && r.gueltig.offen === false;
+      return [ok, JSON.stringify(r) + ' — erwartet: unmoegliche Daten abgelehnt und das Sheet bleibt offen, gueltige uebernommen'];
+    }
+  },
+  {
+    id: 'PB-102', title: 'Der Bearbeiten-Modus endet mit dem Sheet (vorbeugend)',
+    run: async () => {
+      /* VORBEUGEND, nicht als Fix eines gefundenen Schadens — und das steht
+         hier, weil dieser Test auch gegen die ALTE Fassung gruen ist.
+
+         Gemeldet wurde, dass `egymEditKey` jedes Schliessen des Sheets
+         ueberlebt. Das stimmt. Nur fuehrt kein Weg in der Oberflaeche zu
+         einem Schaden: `openEgymEntry()` setzt die Variable beim Oeffnen auf
+         null, und ein anderer Einstieg in das Sheet existiert nicht. Der
+         Zustand war also falsch, aber unerreichbar.
+
+         Aufgeraeumt wurde er trotzdem — ein Modus, der laenger lebt als sein
+         Fenster, ist eine Falle, die auf den naechsten Einstieg wartet. Der
+         Test haelt den Weg zu, falls jemand einen baut. Als BELEG fuer einen
+         behobenen Fehler taugt er ausdruecklich nicht. */
+      const r = await page.evaluate(() => {
+        D.egym = { enabled: true, measurements: [
+          { date: '2026-01-05', kfp: 20, smm: 34, gewicht: 84 },
+          { date: '2026-02-05', kfp: 22, smm: 36, gewicht: 82 }] };
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        save(); renderEgym();
+        document.querySelectorAll('#egym-history .hs-edit')[0].click();
+        cm('m-egym');                       // abbrechen, ohne zu speichern
+        const out = { nachAbbruch: D.egym.measurements.length };
+        // Jetzt eine NEUE Messung an einem dritten Tag.
+        openEgymEntry();
+        document.getElementById('egym-date').value = '2026-03-05';
+        document.getElementById('eg-kfp').value = '21';
+        saveEgymEntry();
+        out.daten = D.egym.measurements.map(m => `${m.date}:${m.kfp}:${m.smm === undefined ? '-' : m.smm}`);
+        D.egym = { enabled: false, measurements: [] };
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        save();
+        return out;
+      });
+      const ok = r.nachAbbruch === 2
+        && JSON.stringify(r.daten) === '["2026-01-05:20:34","2026-02-05:22:36","2026-03-05:21:null"]';
+      return [ok, JSON.stringify(r) + ' — erwartet: drei Messungen, die beiden alten unveraendert'];
+    }
+  }
+  ,
+  {
+    id: 'PB-103', title: 'EGYM laesst sich auch in einem Sync-Konto wieder ausschalten',
+    run: async () => {
+      /* Aus der Abnahme, und der letzte offene Punkt dieser Runde.
+         `mergeSyncedData` fuehrte den Schalter mit einem ODER zusammen:
+
+           merged.egym.enabled = !!(localEgym.enabled || remoteEgym.enabled);
+
+         Einmal irgendwo eingeschaltet, blieb EGYM fuer immer eingeschaltet —
+         das andere Geraet hat es beim naechsten Abgleich wieder an. Das ODER
+         war gutmuetig gemeint, ist aber keine Zusammenfuehrung, sondern eine
+         Sperrklinke.
+
+         Fuer sich genommen war das laestig. Seit PB-084 haengt die
+         GEWICHTSEINGABE an diesem Schalter — und mit PB-091 auch die Frage,
+         ob sie ueberhaupt erscheint. Ein Schalter, der die Handeingabe
+         wegnimmt und sich nicht mehr umlegen laesst, sperrt den Nutzer aus. */
+      const r = await page.evaluate(() => {
+        const wolke = an => ({ history: [],
+          deleted: { history: [], weights: [], egym: [], libraryCustom: [] },
+          egym: { enabled: an, measurements: [{ date: '2026-02-05', gewicht: 82, kfp: 21 }] },
+          meta: { updatedAt: 1 } });
+        const out = {};
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        D.egym = { enabled: true, measurements: [{ date: '2026-02-05', gewicht: 82, kfp: 21 }] };
+        D.bio.weights = [{ date: '01.01.2026', kg: 84 }];
+        save();
+
+        // Ausschalten - und die Cloud hat es noch an.
+        toggleEgym(false);
+        out.lokalAus = D.egym.enabled;
+        D = mergeSyncedData(wolke(true));
+        normalizeData();
+        out.nachAbgleich = D.egym.enabled;
+        renderBio();
+        const zeile = document.getElementById('bio-weight-row');
+        out.abfrageWiederDa = zeile ? zeile.style.display !== 'none' : null;
+        out.messungenBleiben = (D.egym.measurements || []).length;
+
+        // Und die Gegenrichtung: einschalten muss ebenso ankommen.
+        toggleEgym(true);
+        D = mergeSyncedData(wolke(false));
+        normalizeData();
+        out.nachEinschalten = D.egym.enabled;
+
+        D.egym = { enabled: false, measurements: [] }; D.bio.weights = [];
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        save();
+        return out;
+      });
+      const ok = r.lokalAus === false && r.nachAbgleich === false
+        && r.abfrageWiederDa === true && r.messungenBleiben === 1
+        && r.nachEinschalten === true;
+      return [ok, JSON.stringify(r) + ' — erwartet: Ausschalten haelt, Messungen bleiben, Einschalten haelt ebenso'];
+    }
+  }
 ];
 
 for (const t of REGRESSIONS) {

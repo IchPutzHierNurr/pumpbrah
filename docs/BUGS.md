@@ -140,11 +140,17 @@
 | [PB-095](#pb-095) | EGYM-Messung über ihr Datum identifiziert — Korrektur löschte sie | **kritisch** | Datenverlust | ✅ |
 | [PB-096](#pb-096) | Cardio im Historien-Editor als kg und Wiederholungen beschriftet | niedrig | Darstellung | ✅ |
 | [PB-097](#pb-097) | Verdrängte Handwiegung weder sichtbar noch löschbar | niedrig | Fehlender Weg | ✅ |
+| [PB-098](#pb-098) | Satz-Editor korrigierte den falschen Satz, wenn die Übung wegfiel | **hoch** | Datenverlust | ✅ |
+| [PB-099](#pb-099) | Auch der Satz-Editor beschriftete Cardio als Kilogramm | mittel | Darstellung | ✅ |
+| [PB-100](#pb-100) | Unlesbares Datum wurde zum aktuellen Gewicht | mittel | Berechnung | ✅ |
+| [PB-101](#pb-101) | Datumsfeld nahm ein Jahr 9999 an — Session unerreichbar | mittel | Eingabeprüfung | ✅ |
+| [PB-102](#pb-102) | Bearbeiten-Modus überlebte sein Fenster | — | Vorbeugung | ✅ |
+| [PB-103](#pb-103) | EGYM ließ sich in einem Sync-Konto nicht ausschalten | mittel | Zustand | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**56 von 56 im Frontend behebbaren Fehlern sind behoben.**
+**61 von 61 im Frontend behebbaren Fehlern sind behoben** (PB-102 ist Vorbeugung, kein Fehler).
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -3972,6 +3978,232 @@ Vorrangregel braucht deshalb einen Weg zu dem, was sie verdrängt hat.
 
 ---
 
+### PB-098
+
+**Dieselbe Falle ein drittes Mal — und beim eigenen Durchsuchen übersehen**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Datenverlust durch veralteten Index |
+| **Gefunden** | Abnahme, Linse „gegnerisch bedienen" |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** `saveEditSet(ei,si)` und `deleteSet(ei,si)` arbeiten mit
+Positionen, die beim Öffnen des Sheets festgelegt wurden. Fällt die Übung
+weg, wird sie getauscht, oder ersetzt ein Cloud-Abgleich das ganze
+Datenobjekt, landet die Korrektur auf einem **fremden Satz**.
+
+Gemessen gegen die ausgelieferte Fassung:
+
+| | erwartet | tatsächlich |
+|---|---|---|
+| Übung fällt weg | nichts wird geschrieben | fremder Satz **99 → 11** |
+| Übungen tauschen die Reihenfolge | 77,5 auf der eigenen Übung | 77,5 auf der **fremden** |
+
+**Warum ich ihn übersehen habe** — das ist der eigentliche Wert dieses
+Eintrags. Nach PB-085 habe ich die Regel formuliert: *Merkt sich ein Dialog
+eine Position, ist das ein Fund.* Ich habe dann die Zustandsvariablen der App
+durchsucht und PB-086 gefunden. Hier steht die Position aber **in keiner
+Variablen** — sie reist als Argument durch den Aufruf:
+
+```html
+<button onclick="saveEditSet(3,1)">
+```
+
+Meine Suche war `grep` nach `let …Idx`. Sie konnte diesen Fall per Bauart
+nicht finden.
+
+**Fix.** Gemerkt wird die Übung selbst — über ihre `id`, hilfsweise über den
+Namen. Die Positionen werden beim Speichern neu aufgelöst; findet sich die
+Übung nicht mehr, wird nichts geschrieben und der Nutzer erfährt es.
+
+**Lektion.** Eine Regel ist nur so gut wie die Suche, mit der man sie anwendet.
+„Wo merkt sich etwas eine Position?" hat mindestens drei Erscheinungsformen:
+eine Modulvariable (PB-085, PB-086), ein Funktionsargument (PB-098) und ein
+Wert im DOM (`data-index`). Wer nur nach der ersten sucht, hört nach zwei
+Dritteln auf und hält sich für fertig.
+
+**Test.** `PB-098` — beide Fälle: die Übung fällt weg, und die Übungen
+tauschen die Reihenfolge, während der Editor offen steht.
+
+---
+
+### PB-099
+
+**Auch der Satz-Editor beschriftete Cardio als Kilogramm**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Fix, der nur die halbe Stelle traf |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ behoben |
+
+PB-096 hat die Cardio-Beschriftung im **Historien**-Editor repariert. Der
+**Satz**-Editor blieb dabei stehen — dieselbe Beschriftung, dieselbe Einladung
+zur Falschkorrektur, und beide sind an demselben Tag entstanden.
+
+**Fix.** `isCardioExercise()` entscheidet über Beschriftung und Kopfzeile:
+*Stufe* und *Minuten*.
+
+**Lektion.** Wer zwei Dinge gleichzeitig baut, baut denselben Fehler
+zweimal — und repariert ihn beim ersten Fund nur einmal. Nach jedem Fix an
+neuem Code gehört die Frage dazu: *Was ist im selben Zug entstanden?*
+
+---
+
+### PB-100
+
+**Ein unlesbares Datum wurde zum aktuellen Gewicht**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Rückfallwert, der sich unauffällig einreiht |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** `dateKey()` gibt für alles, was es nicht als Datum lesen kann,
+die Zeichenkette selbst zurück (kleingeschrieben). In einer nach `dateKey`
+sortierten Reihe landet ein solcher Eintrag damit **hinter jedem echten
+Datum** — Buchstaben sortieren nach Ziffern. Er wird also zum „aktuellen
+Gewicht", mit dem BMI, Fitnessalter und die EGYM-Einordnung rechnen.
+
+```
+weightSeries : ["01.06.2026:84", "15.06.2026:83.5", "kaputt:999"]
+latestWeight : 999
+```
+
+Solche Einträge entstehen beim Import einer fremden oder alten Sicherung.
+
+**Fix.** Was sich nicht als `yyyy-mm-dd` lesen lässt, kommt nicht in eine
+Reihe, die nach Datum sortiert ist — weder aus der Handeingabe noch aus einer
+Messung.
+
+**Lektion.** Ein Rückfallwert, der *aussieht wie* ein gültiger Wert, ist
+gefährlicher als ein Fehler. `dateKey` gibt bei Unlesbarkeit etwas zurück,
+das sich sortieren lässt — und damit einreiht, statt aufzufallen. Ein
+Rückfall auf `null` hätte den Eintrag herausfallen lassen, laut und sofort.
+
+---
+
+### PB-101
+
+**Das Datumsfeld nahm ein Jahr 9999 an — die Session war danach unerreichbar**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Eingabe ohne Bereichsprüfung |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ behoben |
+
+Der Historien-Editor übernahm jedes Datum, das das Feld hergab. Ein Jahr 9999
+schiebt die Session in einen Kalendermonat, den man mit dem Monatsblättern
+nicht mehr erreicht: **weder sichtbar noch löschbar** — aber weiterhin in
+jeder Statistik.
+
+**Fix.** Angenommen wird nur, was ein Mensch trainiert haben kann: ab dem Jahr
+2000 und nicht in der Zukunft. Wird es abgelehnt, bleibt das Sheet **offen**
+und sagt warum — sonst wüsste der Nutzer nicht, dass seine Eingabe verworfen
+wurde.
+
+**Lektion.** `<input type="date">` prüft das *Format*, nie den *Bereich*. Und
+die Grenze gehört an der Stelle geprüft, wo die Bedeutung sitzt: Ein Datum,
+das keine Trainingseinheit tragen kann, ist keine Formatfrage.
+
+---
+
+### PB-102
+
+**Ein Modus, der sein Fenster überlebt — vorbeugend aufgeräumt**
+
+| | |
+|---|---|
+| **Schwere** | — (kein erreichbarer Schaden) |
+| **Klasse** | Vorbeugung |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ aufgeräumt |
+
+Gemeldet wurde, dass `egymEditKey` jedes Schließen des Sheets überlebt. Das
+stimmt — nur führt **kein Weg in der Oberfläche zu einem Schaden**:
+`openEgymEntry()` setzt die Variable beim Öffnen auf null, und einen anderen
+Einstieg in das Sheet gibt es nicht.
+
+Aufgeräumt wurde trotzdem: In `cm()` endet der Bearbeiten-Modus, egal auf
+welchem Weg das Sheet geschlossen wird.
+
+**Ehrlichkeitsvermerk.** Der Test `PB-102` ist auch gegen die **alte** Fassung
+grün. Als Beleg für einen behobenen Fehler taugt er ausdrücklich nicht — er
+hält einen Weg zu, den heute niemand geht. Das ist dieselbe Kategorie wie
+PB-029 und PB-030 („Test vor dem Fehler") und wird hier genauso ausgewiesen,
+statt sie unter die Funde zu mischen.
+
+**Lektion.** Ein Fund aus einer Prüfung ist nicht automatisch ein Fehler. Wer
+den Unterschied nicht ausweist, bläht die eigene Bilanz auf — und verliert
+irgendwann das Gefühl dafür, welche Einträge wirklich wehgetan haben.
+
+---
+
+### PB-103
+
+**EGYM ließ sich in einem Sync-Konto nicht mehr ausschalten**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Sperrklinke statt Zusammenführung |
+| **Gefunden** | Abnahme — und von mir beim Abhaken zunächst übersehen |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Eine Zeile im Zusammenführen:
+
+```js
+merged.egym.enabled = !!(localEgym.enabled || remoteEgym.enabled);
+```
+
+Ein ODER ist keine Zusammenführung, sondern eine **Sperrklinke**: Einmal
+irgendwo eingeschaltet, blieb EGYM für immer eingeschaltet. Wer den Schalter
+umlegte, hatte ihn nach dem nächsten Abgleich wieder an — das zweite Gerät
+setzt ihn zurück.
+
+Die Absicht war gutmütig (niemand soll seinen BioAge-Bereich verlieren). Das
+Ergebnis ist eine Einstellung, die der Nutzer nicht mehr besitzt.
+
+**Warum es jetzt mehr wiegt als früher.** Für sich genommen war das lästig.
+Seit **PB-084** hängt die **Gewichtseingabe** an diesem Schalter, und seit
+PB-091 auch die Frage, ob sie überhaupt erscheint. Ein Schalter, der die
+Handeingabe wegnimmt und sich nicht mehr umlegen lässt, sperrt den Nutzer aus.
+
+Gemessen gegen die ausgelieferte Fassung:
+
+```
+lokal ausgeschaltet : false
+nach dem Abgleich   : true      <- wieder an
+Gewichtsabfrage     : weiterhin weg
+```
+
+**Fix.** Es gilt die zuletzt geschriebene Fassung, wie bei jeder anderen
+Einstellung auch. Die Messungen bleiben davon unberührt — Ausschalten
+verbirgt den Bereich, es löscht nichts.
+
+**Lektion — die eigentliche.** Dieser Eintrag stand in der Fundliste der
+Abnahme und ich habe ihn beim Abarbeiten **übersehen**, weil er im selben
+Absatz wie ein anderer Fund stand, den ich schon behoben hatte. Erst das
+zeilenweise Nachzählen aller 21 Funde gegen meine Fixes hat ihn wieder
+hervorgeholt.
+
+Das ist dieselbe Sorte Fehler wie alles andere in diesem Register, nur eine
+Ebene höher: **Auch das Abarbeiten einer Liste braucht eine Prüfung.** Ein
+Haken, den man aus dem Gedächtnis setzt, ist so verlässlich wie eine Zahl,
+die man aus dem Gedächtnis aufschreibt (PB-080).
+
+**Test.** `PB-103` — schaltet ab, führt mit einer Cloud zusammen, die es noch
+an hat, und prüft beide Richtungen sowie dass die Messungen bleiben.
+
+---
+
 ### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
 
 Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
@@ -4199,7 +4431,7 @@ gestellt werden sollten:
 | 33 | **Löschen als einzige Form von Ändern** | PB-082, PB-083 | Was kostet eine Korrektur? Wenn sie teurer ist als der Fehler, bleibt der Fehler stehen. |
 | 34 | **„Leer" und „unverändert" auf denselben Wert abgebildet** | PB-083 | Kann der Nutzer ausdrücken, dass etwas *nicht* existiert? Oder heißt leer stillschweigend „lass wie es war"? |
 | 35 | **Zwei Speicher für eine Größe** | PB-084 | Wer fragt hier nach dem aktuellen Wert — und lesen alle Frager dieselbe Quelle? Zwei Funktionen entschieden hier gegensätzlich. |
-| 36 | **Ein Dialog merkt sich eine Position** | PB-020, PB-085, PB-086 | Ohne weitere Prüfung ein Fund. Ein Dialog ist eine Zeitspanne, in der die Welt weiterläuft — was er sich merkt, muss eine Identität sein. |
+| 36 | **Ein Dialog merkt sich eine Position** | PB-020, PB-085, PB-086, PB-098 | Ohne weitere Prüfung ein Fund. Ein Dialog ist eine Zeitspanne, in der die Welt weiterläuft — was er sich merkt, muss eine Identität sein. |
 | 37 | **Abdeckungszahl mit falschem Etikett** | Fuzzer-Nachtrag | Zählt sie, was sie behauptet? „Jede Operation kam dran" zählte Auswahl und meinte Durchlauf. |
 | 38 | **Ein Name verschwindet, ein Aufrufer bleibt** | PB-081, Fuzzer-Nachtrag | Wer ruft das noch? Auch im Testcode, den kein Linter anfasst, weil er erst im Browser aufgelöst wird. |
 | 39 | **Muster erkannt, aber nicht weitergesucht** | PB-086 | Nach jedem neuen Muster gehört die Frage dazu: *wo noch?* Zwischen PB-085 und PB-086 lagen fünf Minuten Suche. |
@@ -4214,6 +4446,13 @@ gestellt werden sollten:
 | 48 | **Identität an einem veränderlichen Merkmal** | PB-095 | Das Datum einer Messung ist der häufigste Tippfehler überhaupt. Wer daran die Identität hängt, macht jede Korrektur zu einem Löschen. |
 | 49 | **Grabstein für eine Korrektur benutzt** | PB-095 | Ein Grabstein überlebt jede Zusammenführung und lässt sich nie zurücknehmen — die härteste Aussage im Datenmodell für den harmlosesten Vorgang. |
 | 50 | **Vorrangregel ohne Weg zum Verdrängten** | PB-097 | Was aus dem Bild verschwindet, ist nicht aus den Daten verschwunden — und braucht trotzdem eine Tür. |
+| 51 | **Regel angewandt, aber mit zu enger Suche** | PB-098 | Eine Position versteckt sich in drei Formen: Variable, Funktionsargument, DOM-Attribut. `grep` nach `let …Idx` findet eine davon. |
+| 52 | **Was ist im selben Zug entstanden?** | PB-099 | Zwei gleichzeitig gebaute Dinge tragen denselben Fehler — der erste Fix trifft nur eines davon. |
+| 53 | **Rückfallwert, der sich einreiht statt aufzufallen** | PB-100 | Gibt die Funktion bei Unlesbarkeit etwas zurück, das sich sortieren lässt? Dann sortiert es sich irgendwohin. |
+| 54 | **Format geprüft, Bereich nicht** | PB-101 | `<input type="date">` prüft nie, ob das Jahr Sinn ergibt. Die Grenze gehört dorthin, wo die Bedeutung sitzt. |
+| 55 | **Fund ist nicht gleich Fehler** | PB-102 | Wer den Unterschied nicht ausweist, bläht die eigene Bilanz auf und verliert das Gefühl dafür, welche Einträge wehgetan haben. |
+| 56 | **ODER statt Zusammenführung** | PB-103 | „Einmal an, immer an" ist keine Merge-Regel, sondern eine Sperrklinke — der Nutzer besitzt die Einstellung dann nicht mehr. |
+| 57 | **Auch das Abarbeiten einer Liste braucht eine Prüfung** | PB-103 | Ein Haken aus dem Gedächtnis ist so verlässlich wie eine Zahl aus dem Gedächtnis. Zeilenweise gegenzählen. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
