@@ -2594,6 +2594,147 @@ const REGRESSIONS = [
       return [ok, JSON.stringify(r) + ' — erwartet Abfrage weg bei EGYM an, Reihe 84/82/81, Messung gewinnt bei gleichem Tag'];
     }
   }
+  ,
+  {
+    id: 'PB-085', title: 'Der Historien-Editor schreibt an die Session, nicht an eine Position',
+    run: async () => {
+      /* Beim Nachlesen des frisch ausgelieferten PB-082 gefunden, nicht durch
+         einen roten Test: `saveHistEdit` merkte sich einen INDEX in D.history.
+         Das ist dieselbe Bauart wie PB-020 — und die Historie verschiebt sich
+         genau zwischen Oeffnen und Speichern: `normalizeData()` sortiert bei
+         jedem `save()` nach Datum, und ein eintreffender Cloud-Abgleich
+         (`onSnapshot` -> `mergeSyncedData`) ersetzt `D` sogar vollstaendig.
+
+         Der Schaden waere der schlimmstmoegliche an dieser Stelle: Die
+         Korrektur einer Session wird ueber eine ANDERE geschrieben. Zwei
+         Sessions kaputt statt einer korrigiert, ohne Meldung.
+
+         Der Test stellt beides nach: Umsortieren zwischen Oeffnen und
+         Speichern, und die Session verschwindet ganz. */
+      const r = await page.evaluate(() => {
+        const mach = (id, datum, gewicht) => ({
+          id, updatedAt: 1000, date: datum, planKey: Object.keys(D.plan)[0], duration: 60,
+          sets: [{ ex: 'Bankdrücken', nr: 1, w: gewicht, r: 8, rir: 2, muscle: 'chest', type: 'main' }]
+        });
+        const out = {};
+
+        // --- Fall 1: zwischen Oeffnen und Speichern kommt ein Abgleich an ---
+        D.history = [mach('S-alt', '01.03.2026', 60), mach('S-neu', '20.03.2026', 90)];
+        save();
+        calSelDay = null; calMonth = 2; calYear = 2026;
+        renderHist();
+        // Den Stift der AELTEREN Session treffen (Liste ist absteigend sortiert).
+        const knoepfe = [...document.querySelectorAll('#hl .hs-edit')];
+        out.knoepfe = knoepfe.length;
+        if (knoepfe.length !== 2) return out;
+        knoepfe[1].click();
+        out.bearbeitet = document.getElementById('he-w-0').value;
+
+        /* Jetzt trifft ein Cloud-Abgleich ein: D.history wird durch NEUE
+           Objekte ersetzt und liegt in anderer Reihenfolge. Genau das macht
+           mergeSyncedData. */
+        D.history = [JSON.parse(JSON.stringify(D.history[1])), JSON.parse(JSON.stringify(D.history[0]))];
+
+        document.getElementById('he-w-0').value = '10';
+        saveHistEdit();
+        const alt = D.history.find(x => x.id === 'S-alt') || {};
+        const neu = D.history.find(x => x.id === 'S-neu') || {};
+        out.anzahl = D.history.length;
+        out.altGewicht = (alt.sets || [])[0] && alt.sets[0].w;
+        out.neuGewicht = (neu.sets || [])[0] && neu.sets[0].w;
+        out.altGestempelt = (alt.updatedAt || 0) > 1000;
+        out.neuUnberuehrt = (neu.updatedAt || 0) === 1000;
+
+        // --- Fall 2: die Session ist weg, waehrend der Editor offen ist ---
+        D.history = [mach('S-x', '05.03.2026', 50)];
+        save(); renderHist();
+        const k2 = document.querySelector('#hl .hs-edit');
+        out.zweiterKnopf = !!k2;
+        if (k2) {
+          k2.click();
+          D.history = [];                     // von einem anderen Geraet geloescht
+          document.getElementById('he-w-0').value = '77';
+          saveHistEdit();
+          out.nachVerlust = D.history.length;
+          out.sheetZu = !document.getElementById('m-histedit').classList.contains('show');
+        }
+        D.history = []; save();
+        return out;
+      });
+      const ok = r.knoepfe === 2 && r.bearbeitet === '60'
+        && r.anzahl === 2
+        && r.altGewicht === 10 && r.neuGewicht === 90
+        && r.altGestempelt === true && r.neuUnberuehrt === true
+        && r.zweiterKnopf === true && r.nachVerlust === 0 && r.sheetZu === true;
+      return [ok, JSON.stringify(r) + ' — erwartet: Korrektur landet auf S-alt (10 kg), S-neu bleibt bei 90 kg und unberuehrt'];
+    }
+  }
+  ,
+  {
+    id: 'PB-086', title: 'Der Plan-Editor schreibt an die Uebung, nicht an eine Position',
+    run: async () => {
+      /* Dieselbe Bauart wie PB-085, eine Etage weiter: `openEditEx(i)` merkte
+         sich einen Index in D.plan[curTab].exercises, `confirmAddEx` schrieb
+         beim Speichern an genau diese Position.
+
+         Erreichbar ist das ueber denselben Weg: der Cloud-Listener ersetzt in
+         `D=mergeSyncedData(remote)` das GANZE Datenobjekt - auch waehrend ein
+         Sheet offen steht. Danach zeigt der gemerkte Index auf eine andere
+         Uebung, und mit etwas Pech auf gar keine: `Object.assign(undefined, obj)`
+         wirft, und die App bleibt mit offenem Sheet stehen.
+
+         Gefunden nicht durch einen roten Test, sondern durch die Regel, die
+         aus PB-085 folgte: Merkt sich ein Dialog eine Position, ist das ein
+         Fund - ohne weitere Pruefung. */
+      const r = await page.evaluate(() => {
+        const out = {};
+        const key = Object.keys(D.plan)[0];
+        curTab = key;
+        D.plan[key].exercises = [
+          { id: 1, name: 'Erste', sets: 3, rmin: 8, rmax: 12, rir: 2, note: '', type: 'main', muscle: 'chest' },
+          { id: 2, name: 'Zweite', sets: 4, rmin: 6, rmax: 10, rir: 1, note: '', type: 'main', muscle: 'back' },
+          { id: 3, name: 'Dritte', sets: 3, rmin: 10, rmax: 15, rir: 2, note: '', type: 'main', muscle: 'legs' }
+        ];
+        save(); renderPL();
+
+        // --- Fall 1: waehrend das Sheet offen ist, kommt ein Abgleich an ---
+        openEditEx(0);                       // 'Erste' bearbeiten
+        out.geoeffnetMit = document.getElementById('a-name').value;
+        /* Genau das, was der Listener tut: D wird ersetzt, der Plan liegt in
+           anderer Reihenfolge und besteht aus neuen Objekten. */
+        const kopie = JSON.parse(JSON.stringify(D));
+        kopie.plan[key].exercises = [kopie.plan[key].exercises[2], kopie.plan[key].exercises[1], kopie.plan[key].exercises[0]];
+        D = kopie;
+        document.getElementById('a-name').value = 'Erste korrigiert';
+        confirmAddEx();
+        const liste = D.plan[key].exercises;
+        out.anzahl = liste.length;
+        out.namen = liste.map(e => e.name);
+        out.ersteHeisstNeu = !!liste.find(e => e.id === 1 && e.name === 'Erste korrigiert');
+        out.dritteUnberuehrt = !!liste.find(e => e.id === 3 && e.name === 'Dritte');
+
+        // --- Fall 2: die Uebung ist weg, waehrend das Sheet offen ist ---
+        D.plan[key].exercises = [
+          { id: 7, name: 'Allein', sets: 3, rmin: 8, rmax: 12, rir: 2, note: '', type: 'main', muscle: 'chest' }
+        ];
+        save(); renderPL();
+        openEditEx(0);
+        D.plan[key].exercises = [];          // vom anderen Geraet geloescht
+        document.getElementById('a-name').value = 'Geist';
+        let warf = false;
+        try { confirmAddEx(); } catch (e) { warf = true; out.ausnahme = String(e && e.message); }
+        out.warf = warf;
+        out.nachVerlust = D.plan[key].exercises.length;
+        out.sheetZu = !document.getElementById('m-add').classList.contains('show');
+        return out;
+      });
+      await page.evaluate(() => { D.plan = cloneData(DEFAULT_PLAN); save(); });
+      const ok = r.geoeffnetMit === 'Erste'
+        && r.anzahl === 3 && r.ersteHeisstNeu === true && r.dritteUnberuehrt === true
+        && r.warf === false && r.nachVerlust === 0 && r.sheetZu === true;
+      return [ok, JSON.stringify(r) + ' — erwartet: Korrektur landet auf id 1, "Dritte" bleibt, keine Ausnahme, keine Geisteruebung'];
+    }
+  }
 ];
 
 for (const t of REGRESSIONS) {
@@ -3446,20 +3587,113 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       // Ohne pointerup bliebe der Wiederhol-Timer für immer registriert.
       document.dispatchEvent(new Event('pointerup'));
     }],
-    ['longPress', () => {
+    ['satzEditor', () => {
+      /* Hieß einmal 'longPress' und rief setLongPress direkt auf. Die Geste
+         ist seit PB-081 weg — der Aufruf blieb stehen und fiel erst in der CI
+         auf, weil die Operation lokal jedes Mal vorher ausstieg.
+
+         Die Lehre steckt jetzt in der Bauart: Der Fuzzer geht den Weg des
+         Nutzers. Er sucht den Chip im gezeichneten Workout und TIPPT ihn an.
+         Ein direkter Aufruf von openSetEditor könnte nicht sehen, dass der
+         Weg dorthin abgeschnitten ist — genau das war PB-081. */
       if (!D.active) return;
       const ei = D.active.exercises.findIndex(e => (e.logged || []).length);
       if (ei < 0) return;
-      /* Der Halten-Timer feuert nach 500 ms — der Fuzzer läuft aber
-         synchron, der Rückruf käme erst nach dem Lauf. Für diesen einen
-         Aufruf wird setTimeout sofort ausgeführt. */
-      const realTO = window.setTimeout;
-      window.setTimeout = fn => { fn(); return 0; };
-      try { setLongPress(ei, 0, { preventDefault() {} }); }
-      finally { window.setTimeout = realTO; }
-      const pop = document.getElementById('set-popup');
-      if (!pop) throw new Error('Langes Drücken erzeugte kein Bearbeiten-Popup');
-      pop.remove();
+      // Eine eingeklappte Übung zeigt keine Chips — sonst prüfte der Test das Zuklappen.
+      D.active.openEx = ei;
+      renderWo();
+      const chip = document.querySelector(`#wo-ex-${ei} .wo-chips .wsr:not(.empty)`);
+      if (!chip) throw new Error(`Übung ${ei} hat geloggte Sätze, aber keinen antippbaren Chip`);
+      if (chip.tagName !== 'BUTTON') throw new Error('Satz-Chip ist kein Knopf mehr');
+      chip.click();
+      if (!document.getElementById('set-popup')) throw new Error('Antippen des Satzes öffnete keinen Editor');
+      const w = rnd();
+      if (w < .45) {
+        /* Unsinn in die Felder: die Klemmung in saveEditSet ist die einzige
+           Stelle zwischen Tastatur und Datenmodell (PB-046). */
+        setEl('edit-set-w', pick(['', '-40', '1e9', 'abc', '62,5', '999999', '82.5']));
+        setEl('edit-set-r', String(int(-5, 400)));
+        setEl('edit-set-rir', String(int(-3, 40)));
+        saveEditSet(ei, 0);
+      } else if (w < .7) {
+        deleteSet(ei, 0);
+      } else {
+        closeSetEditor();
+      }
+      if (document.getElementById('set-popup')) throw new Error('Satz-Editor blieb offen');
+    }],
+    ['histEdit', () => {
+      /* Der Korrekturweg für beendete Sessions (PB-082). Geprüft wird nicht
+         nur, dass er läuft, sondern die drei Zusagen, an denen er hängt:
+         die Zahl der Sessions ändert sich nicht, die Identität bleibt, und
+         Abbrechen ändert nichts. */
+      const liste = D.history || [];
+      if (!liste.length) return;
+      const i = int(0, liste.length - 1);
+      const vorherSessions = liste.length;
+      const vorherSaetze = (liste[i].sets || []).length;
+      if (!vorherSaetze) return;
+      const id = liste[i].id;
+      openHistEdit(i);
+      if (!document.getElementById('m-histedit').classList.contains('show'))
+        throw new Error('Historien-Editor ließ sich nicht öffnen');
+      const zeilen = document.querySelectorAll('#he-body .he-set').length;
+      if (zeilen !== vorherSaetze)
+        throw new Error(`Editor zeigt ${zeilen} Sätze, die Session hat ${vorherSaetze}`);
+      const w = rnd();
+      if (w < .5) {
+        setEl('he-w-0', pick(['', '-12', '1e9', '5', '82,5', '120']));
+        setEl('he-r-0', String(int(-3, 300)));
+        setEl('he-rir-0', String(int(-2, 30)));
+        setEl('he-dur', String(int(-10, 5000)));
+        if (vorherSaetze > 1 && rnd() < .5) delHistSet(int(1, vorherSaetze - 1));
+        saveHistEdit();
+      } else if (w < .72) {
+        // Alle Sätze weg: Speichern muss verweigern, nicht die Session verschlucken.
+        for (let k = document.querySelectorAll('#he-body .he-set').length - 1; k >= 0; k--) delHistSet(k);
+        saveHistEdit();
+        if ((D.history || []).length !== vorherSessions)
+          throw new Error('Leerer Entwurf hat die Session verschluckt');
+      } else {
+        cm('m-histedit');
+        if (((D.history || [])[i].sets || []).length !== vorherSaetze)
+          throw new Error('Abbrechen hat die Session trotzdem verändert');
+      }
+      cm('m-histedit');
+      if ((D.history || []).length !== vorherSessions)
+        throw new Error(`Korrektur änderte die Zahl der Sessions: ${vorherSessions} → ${(D.history || []).length}`);
+      if (id && !(D.history || []).some(x => x.id === id))
+        throw new Error('Session hat beim Korrigieren ihre Identität verloren');
+    }],
+    ['egymEdit', () => {
+      /* PB-083. Der eine Fall, der hier zählt: nach einem ABGEBROCHENEN
+         Bearbeiten darf die nächste NEUE Messung nicht im Ersetzen-Modus
+         landen. */
+      if (!D.egym || !D.egym.enabled || !(D.egym.measurements || []).length) return;
+      const vorher = D.egym.measurements.length;
+      const i = int(0, vorher - 1);
+      const datum = D.egym.measurements[i].date;
+      editEgymEntry(i);
+      if (!document.getElementById('m-egym').classList.contains('show'))
+        throw new Error('EGYM-Editor ließ sich nicht öffnen');
+      if (document.getElementById('egym-date').value !== dateKey(datum))
+        throw new Error('EGYM-Editor öffnete mit dem falschen Datum');
+      const w = rnd();
+      if (w < .5) {
+        setEl('eg-kfp', pick(['', '22.5', '-3', 'abc', '1e9']));
+        setEl('eg-smm', pick(['', '36.1', '0']));
+        saveEgymEntry();
+        if (D.egym.measurements.length !== vorher)
+          throw new Error(`Korrektur änderte die Zahl der Messungen: ${vorher} → ${D.egym.measurements.length}`);
+      } else {
+        cm('m-egym');
+        // Abbrechen, dann NEU: darf die vorhandene Messung nicht ersetzen.
+        openEgymEntry();
+        cm('m-egym');
+        if (D.egym.measurements.length !== vorher)
+          throw new Error('Abgebrochenes Bearbeiten hat die Messungen verändert');
+      }
+      cm('m-egym');
     }],
     ['libEdit', () => {
       const all = allLibraryCategories().flatMap(c => c.items);

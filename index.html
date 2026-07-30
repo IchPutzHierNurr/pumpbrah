@@ -3133,7 +3133,7 @@ function hydrateIcons(root){
     el.dataset.icDone='1';
     el.innerHTML=icon(el.dataset.ic,parseInt(el.dataset.icSize)||15);
   });
-}let curTab=null,timerInt=null,timerStartedAt=0,timerTgt=0,logTgt=null,editIdx=null;
+}let curTab=null,timerInt=null,timerStartedAt=0,timerTgt=0,logTgt=null,editRef=null,editTab=null;
 function getTimerElapsed(){return timerStartedAt?Math.floor((Date.now()-timerStartedAt)/1000):0}
 function getTimerRemaining(){return Math.max(0,timerTgt-getTimerElapsed())}
 /* Nenner für den Pausenring. Beim Pausieren wandert die Restzeit nach
@@ -4276,9 +4276,28 @@ function openPlanExMenu(i){
 }
 function delEx(i){if(!confirm('Löschen?'))return;D.plan[curTab].exercises.splice(i,1);save();markPlanDirty();renderPL();toast('Gelöscht')}
 function mvEx(i,d){const a=D.plan[curTab].exercises;const n=i+d;if(n<0||n>=a.length)return;[a[i],a[n]]=[a[n],a[i]];save();markPlanDirty();renderPL()}
-function openAddEx(){editIdx=null;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';om('m-add')}
-function openEditEx(i){editIdx=i;const ex=D.plan[curTab].exercises[i];document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';om('m-add')}
-function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};if(editIdx!==null){Object.assign(D.plan[curTab].exercises[editIdx],obj)}else{D.plan[curTab].exercises.push(obj)}save();markPlanDirty();cm('m-add');renderPL();toast(editIdx!==null?'Änderung gespeichert ✓':'Übung hinzugefügt ✓');editIdx=null}
+function openAddEx(){editRef=null;editTab=curTab;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';om('m-add')}
+function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';om('m-add')}
+function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
+  if(editRef){
+    /* PB-086: Hier stand ein gemerkter INDEX. Der Cloud-Listener ersetzt in
+       `D=mergeSyncedData(remote)` das ganze Datenobjekt — auch bei offenem
+       Sheet. Danach zeigte der Index auf eine fremde Übung, und wenn der Plan
+       kürzer geworden war, warf `Object.assign(undefined,…)` und ließ das
+       Sheet offen stehen. Gesucht wird deshalb die Übung selbst: erst die
+       Referenz, dann ihre id. */
+    let ziel=liste.indexOf(editRef);
+    if(ziel<0&&editRef.id!==undefined)ziel=liste.findIndex(e=>e&&e.id===editRef.id);
+    if(ziel<0){toast('Diese Übung gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
+    /* Die id gehört der Übung, nicht der Bearbeitung — sie darf der frisch
+       gestempelte Zeitwert aus `obj` nicht überschreiben, sonst verliert die
+       Übung ihre Identität und der nächste Abgleich sieht eine neue. */
+    Object.assign(liste[ziel],obj,{id:liste[ziel].id});
+  }else{
+    liste.push(obj);
+  }
+  const geaendert=!!editRef;
+  save();markPlanDirty();cm('m-add');renderPL();toast(geaendert?'Änderung gespeichert ✓':'Übung hinzugefügt ✓');editRef=null;editTab=null}
 const EXLIB=[
   {cat:"🔥 Aufwärmen / Pre-Workout",items:[
     {name:"ATG: Schienbeinheben (Tibialis Raise)",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
@@ -4851,11 +4870,28 @@ function delSess(i){if(!confirm('Session löschen?'))return;addTombstone('histor
 
    Gearbeitet wird auf einer Kopie: Wer im Editor einen Satz löscht und dann
    abbricht, hat nichts verloren. */
-let histEditIdx=null,histEditDraft=null;
+/* PB-085: Der Editor merkte sich einen INDEX in D.history — dieselbe Bauart,
+   die schon PB-020 war. Zwischen Öffnen und Speichern kann sich das Array
+   aber verschieben: `normalizeData()` sortiert die Historie bei jedem
+   `save()` nach Datum, und ein eintreffender Cloud-Abgleich (`onSnapshot`)
+   ersetzt `D` sogar vollständig. Der Entwurf wäre dann über eine FREMDE
+   Session geschrieben worden — stiller Datenverlust an der Stelle, die
+   Datenverlust verhindern soll.
+   Gemerkt wird deshalb die Identität, nicht die Position: erst die Objekt-
+   referenz, und wenn `D` ausgetauscht wurde, der Sessionschlüssel. Wird
+   beides nicht gefunden, wird nichts geschrieben. */
+let histEditRef=null,histEditKey=null,histEditDraft=null;
+function findeHistEintrag(){
+  const liste=D.history||[];
+  let i=histEditRef?liste.indexOf(histEditRef):-1;
+  if(i<0&&histEditKey)i=liste.findIndex(x=>histSessionKey(x)===histEditKey);
+  return i;
+}
 function openHistEdit(i){
   const s=(D.history||[])[i];
   if(!s)return;
-  histEditIdx=i;
+  histEditRef=s;
+  histEditKey=histSessionKey(s);
   histEditDraft=cloneData(s);
   if(!Array.isArray(histEditDraft.sets))histEditDraft.sets=[];
   renderHistEdit();
@@ -4914,9 +4950,17 @@ function delHistSet(k){
   renderHistEdit();
 }
 function saveHistEdit(){
-  if(histEditIdx===null||!histEditDraft)return;
+  if(!histEditDraft)return;
   harvestHistEdit();
   if(!histEditDraft.sets.length){toast('Ohne Sätze keine Session — lösch sie stattdessen');return}
+  const idx=findeHistEintrag();
+  if(idx<0){
+    toast('Diese Session gibt es nicht mehr');
+    cm('m-histedit');
+    histEditRef=null;histEditKey=null;histEditDraft=null;
+    renderHist();
+    return;
+  }
   /* Nach dem Löschen einzelner Sätze klaffen Lücken in der Nummerierung.
      Sie wird je Übung neu vergeben, sonst zeigt die Historie „Satz 3" bei
      zwei vorhandenen Sätzen. */
@@ -4928,8 +4972,8 @@ function saveHistEdit(){
   });
   if(!histEditDraft.id)histEditDraft.id=newSessionId();
   histEditDraft.updatedAt=Date.now();
-  D.history[histEditIdx]=histEditDraft;
-  histEditIdx=null;histEditDraft=null;
+  D.history[idx]=histEditDraft;
+  histEditRef=null;histEditKey=null;histEditDraft=null;
   save();
   cm('m-histedit');
   renderHist();renderDash();renderAna();
@@ -8968,7 +9012,7 @@ function pickLibraryItem(encodedName){
     addToWorkoutMode=false;
     if(pushExerciseToActiveWorkout(item))return;
   }
-  editIdx=null;
+  editRef=null;editTab=curTab;
   document.getElementById('a-name').value=item.name;
   document.getElementById('a-sets').value=item.s;
   document.getElementById('a-rmin').value=item.rn;

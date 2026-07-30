@@ -127,11 +127,13 @@
 | [PB-082](#pb-082) | Eine beendete Session ließ sich nur wegwerfen, nicht berichtigen | **hoch** | Datenverlust | ✅ |
 | [PB-083](#pb-083) | Eine gespeicherte Messung ließ sich überschreiben, aber nicht leeren | mittel | Halbe Korrektur | ✅ |
 | [PB-084](#pb-084) | Dasselbe Gewicht an zwei Stellen erfassen | mittel | Zwei Quellen | ✅ |
+| [PB-085](#pb-085) | Historien-Editor schrieb an eine Position statt an eine Session | **kritisch** | Datenverlust | ✅ |
+| [PB-086](#pb-086) | Plan-Editor schrieb an eine Position statt an eine Übung | **hoch** | Datenverlust | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**43 von 43 im Frontend behebbaren Fehlern sind behoben.**
+**45 von 45 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -3302,6 +3304,203 @@ Handeinträge nicht verloren.
 
 ---
 
+### PB-085
+
+**Der Historien-Editor schrieb an eine Position statt an eine Session**
+
+| | |
+|---|---|
+| **Schwere** | **kritisch** |
+| **Klasse** | Datenverlust durch veralteten Index |
+| **Gefunden** | beim Nachlesen der eigenen, eine Stunde zuvor ausgelieferten Änderung |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** `saveHistEdit()` merkte sich beim Öffnen einen **Index** in
+`D.history` und schrieb den Entwurf beim Speichern an genau diese Position:
+
+```js
+let histEditIdx=null;
+function openHistEdit(i){ histEditIdx=i; histEditDraft=cloneData(D.history[i]); … }
+function saveHistEdit(){ … D.history[histEditIdx]=histEditDraft; … }
+```
+
+Zwischen diesen beiden Momenten verschiebt sich das Array aber regelmäßig.
+Zwei Wege, beide alltäglich:
+
+* `normalizeData()` **sortiert die Historie nach Datum** — und läuft bei
+  jedem `save()`.
+* Ein eintreffender Cloud-Abgleich (`onSnapshot` → `mergeSyncedData`)
+  **ersetzt `D` vollständig** durch neue Objekte in neuer Reihenfolge.
+
+Der Nutzer korrigiert also eine Session, das zweite Gerät meldet sich, und der
+Entwurf landet auf einer **fremden** Session.
+
+**Was der Gegencheck zeigte — schlimmer als die Vorhersage.** Der Test wurde
+gegen die ausgelieferte Fassung gefahren, bevor der Fix drin war:
+
+| | erwartet | tatsächlich |
+|---|---|---|
+| Sessions danach | 2 | **1** |
+| korrigierte Session | 10 kg | 10 kg ✓ |
+| fremde Session | 90 kg, unberührt | **überschrieben** |
+
+Die zweite Session war nicht nur falsch, sie war **weg**. Der Entwurf trug die
+`id` der einen Session, wurde aber an die Position der anderen geschrieben —
+damit standen zwei Einträge mit identischem Schlüssel im Array, und
+`normalizeData()` räumte den doppelten pflichtgemäß weg. Zwei Sessions kaputt
+bei dem Versuch, eine zu korrigieren, ohne jede Meldung.
+
+Zweiter Fall im selben Test: War die Session inzwischen von einem anderen Gerät
+**gelöscht**, schrieb `D.history[0]=…` sie einfach wieder herbei — ein
+Zombie-Eintrag aus einer leeren Historie.
+
+**Fix.** Gemerkt wird die Identität, nicht die Position: zuerst die
+Objektreferenz, und falls `D` ausgetauscht wurde, der Sessionschlüssel.
+Wird beides nicht gefunden, wird **nichts** geschrieben:
+
+```js
+function findeHistEintrag(){
+  const liste=D.history||[];
+  let i=histEditRef?liste.indexOf(histEditRef):-1;
+  if(i<0&&histEditKey)i=liste.findIndex(x=>histSessionKey(x)===histEditKey);
+  return i;
+}
+```
+
+**Lektion.** Das ist **PB-020 in neuer Kleidung** — dort war es `logTgt`, ein
+Index in `D.active.exercises`, der veraltete, während ein Dialog offen stand.
+Damals wurde ein Zugriffshelfer gebaut, der die Gültigkeit prüft. Beim Bau des
+Historien-Editors wurde dieselbe Falle neu gegraben, und zwar von jemandem,
+der das Register mit dem Eintrag PB-020 selbst geschrieben hat.
+
+Daraus folgt eine schärfere Regel als „Register lesen": **Jedes Mal, wenn ein
+Dialog eine Position speichert, ist das ein Fund — ohne weitere Prüfung.**
+Ein Dialog ist per Definition eine Zeitspanne, in der die Welt weiterläuft.
+Was er sich merkt, muss eine Identität sein.
+
+Und ein zweites, unangenehmeres: Der Fehler ging **live**, weil 86 grüne
+Prüfungen wie ein Beweis aussahen. Sie waren keiner — sie prüften den Fall,
+in dem nichts dazwischenkommt.
+
+**Test.** `PB-085` — öffnet den Editor, tauscht `D.history` gegen neue Objekte
+in anderer Reihenfolge (genau das, was `mergeSyncedData` tut), speichert, und
+prüft, dass die Korrektur auf der richtigen Session landet und die andere
+unberührt bleibt. Dazu der Fall, dass die Session verschwindet.
+
+---
+
+### PB-086
+
+**Derselbe Fehler eine Etage weiter: der Plan-Editor**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Datenverlust durch veralteten Index |
+| **Gefunden** | durch die Regel, die aus PB-085 folgte — nicht durch einen roten Test |
+| **Status** | ✅ behoben |
+
+**Wie er gefunden wurde.** PB-085 endete mit dem Satz: *„Jedes Mal, wenn ein
+Dialog eine Position speichert, ist das ein Fund — ohne weitere Prüfung."*
+Diese Regel wurde unmittelbar angewandt statt nur aufgeschrieben. Ein Blick
+auf die Zustandsvariablen der App fand einen zweiten Fall in derselben Minute:
+
+```js
+function openEditEx(i){ editIdx=i; … }
+function confirmAddEx(){ … Object.assign(D.plan[curTab].exercises[editIdx],obj) … }
+```
+
+**Der Weg dorthin** ist identisch mit PB-085 — der Cloud-Listener:
+
+```js
+unsubscribe=ref.onSnapshot(doc=>{ … D=mergeSyncedData(remote); … });
+```
+
+`D` wird **vollständig ersetzt**, zu jedem Zeitpunkt, auch bei offenem Sheet.
+Danach ist `D.plan[curTab].exercises` ein neues Array mit neuen Objekten in
+möglicherweise anderer Reihenfolge und anderer Länge.
+
+**Was der Gegencheck zeigte.** Der Test wurde vor dem Fix gefahren:
+
+| | erwartet | tatsächlich |
+|---|---|---|
+| Namen nach dem Speichern | `Erste korrigiert`, `Zweite`, `Dritte` | **`Erste korrigiert`, `Zweite`, `Erste`** |
+| Ausnahme, wenn die Übung weg ist | keine | `Cannot convert undefined or null to object` |
+| Sheet danach | zu | **offen geblieben** |
+
+Also zweierlei: Die Änderung landete auf der **falschen** Übung — „Dritte"
+wurde überschrieben, während die eigentlich bearbeitete „Erste" unverändert
+weiter hinten stand. Und war der Plan kürzer geworden, warf
+`Object.assign(undefined, …)`, das Sheet blieb offen und die App stand.
+
+**Fix.** Gesucht wird die Übung, nicht die Position — erst über die
+Objektreferenz, dann über ihre `id`. Zusätzlich wird der Trainingstag beim
+Öffnen mitgemerkt, damit ein Tabwechsel nicht in einen fremden Tag schreibt.
+Wird die Übung nicht gefunden, sagt die App das und schreibt nichts.
+
+Ein Nebenbefund kam dabei mit heraus: `confirmAddEx()` baut sein Objekt mit
+`id:Date.now()` und schrieb das bisher auch beim **Bearbeiten** mit. Jede
+Korrektur gab der Übung damit eine neue Identität. Jetzt bleibt die alte `id`
+stehen.
+
+**Lektion.** Eine Regel im Register ist nichts wert, solange sie nicht
+angewandt wird. Der Unterschied zwischen PB-085 und PB-086 sind fünf Minuten
+Suche — und PB-086 wäre sonst genauso live gegangen. Nach jedem neuen Muster
+gehört die Frage dazu: *Wo noch?*
+
+**Test.** `PB-086` — öffnet den Plan-Editor, ersetzt `D` wie der Listener es
+tut, speichert, und prüft, dass die richtige Übung die Änderung bekommt und
+keine andere sie verliert. Dazu der Fall, dass die Übung verschwindet: keine
+Ausnahme, kein Geistereintrag, Sheet zu.
+
+---
+
+### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
+
+Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
+grün waren:
+
+```
+✗ Ausnahme in "longPress" (Iteration 492)
+  setLongPress is not defined
+```
+
+**Warum lokal grün.** Die Fuzz-Operation `longPress` rief die mit PB-081
+gelöschte Funktion auf. Sie steigt aber vorher aus, wenn kein Satz geloggt ist:
+
+```js
+['longPress', () => {
+  if (!D.active) return;
+  const ei = D.active.exercises.findIndex(e => (e.logged || []).length);
+  if (ei < 0) return;                 // <- hier ging sie lokal 2500 Runden lang raus
+  … setLongPress(ei, 0, …)
+```
+
+Der Harness prüft ausdrücklich, dass **jede** Operation mindestens *n*-mal
+gewählt wurde — und das war sie. Gewählt heißt aber nicht durchlaufen. Die
+Zusicherung „jede Operation kommt dran" maß etwas anderes, als sie zu messen
+schien.
+
+**Was den Fund ermöglicht hat**, war nicht die zweite Engine, sondern der
+**zweite Seed**: CI würfelt aus dem Commit-Hash, lokal lief 4242. Beide Engines
+waren rot, weil es kein Engine-Unterschied war, sondern ein echter Zustand, den
+der eine Seed erreichte und der andere nicht.
+
+**Fix.** Die Operation heißt jetzt `satzEditor` und geht **den Weg des
+Nutzers**: sie sucht den Chip im gezeichneten Workout und *klickt* ihn an.
+Ein direkter Aufruf von `openSetEditor` hätte nicht sehen können, dass der Weg
+dorthin abgeschnitten ist — und genau das war PB-081. Dazu kamen zwei
+Operationen, die es vorher nicht gab: `histEdit` und `egymEdit`, die die neuen
+Korrekturwege mit Unsinn füttern.
+
+**Lektion.** Eine Abdeckungszahl, die *Auswahl* zählt und *Durchlauf* meint,
+ist eine Zahl mit falschem Etikett. Und: Wer eine Funktion löscht, muss nach
+ihren Aufrufern in **beiden** Richtungen suchen — auch in Testcode, den kein
+Syntaxprüfer und kein Linter anfasst, weil er erst zur Laufzeit im Browser
+aufgelöst wird.
+
+---
+
 ## Offene Punkte (Backend-Änderung nötig)
 
 Diese **zwei** sind nicht im Frontend lösbar. Sie brauchen Änderungen an der
@@ -3483,6 +3682,10 @@ gestellt werden sollten:
 | 33 | **Löschen als einzige Form von Ändern** | PB-082, PB-083 | Was kostet eine Korrektur? Wenn sie teurer ist als der Fehler, bleibt der Fehler stehen. |
 | 34 | **„Leer" und „unverändert" auf denselben Wert abgebildet** | PB-083 | Kann der Nutzer ausdrücken, dass etwas *nicht* existiert? Oder heißt leer stillschweigend „lass wie es war"? |
 | 35 | **Zwei Speicher für eine Größe** | PB-084 | Wer fragt hier nach dem aktuellen Wert — und lesen alle Frager dieselbe Quelle? Zwei Funktionen entschieden hier gegensätzlich. |
+| 36 | **Ein Dialog merkt sich eine Position** | PB-020, PB-085, PB-086 | Ohne weitere Prüfung ein Fund. Ein Dialog ist eine Zeitspanne, in der die Welt weiterläuft — was er sich merkt, muss eine Identität sein. |
+| 37 | **Abdeckungszahl mit falschem Etikett** | Fuzzer-Nachtrag | Zählt sie, was sie behauptet? „Jede Operation kam dran" zählte Auswahl und meinte Durchlauf. |
+| 38 | **Ein Name verschwindet, ein Aufrufer bleibt** | PB-081, Fuzzer-Nachtrag | Wer ruft das noch? Auch im Testcode, den kein Linter anfasst, weil er erst im Browser aufgelöst wird. |
+| 39 | **Muster erkannt, aber nicht weitergesucht** | PB-086 | Nach jedem neuen Muster gehört die Frage dazu: *wo noch?* Zwischen PB-085 und PB-086 lagen fünf Minuten Suche. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
