@@ -148,6 +148,26 @@ Aktueller Stand: **86 Prüfungen grün** — 65 Regressionstests, 6 Sync-Tests �
 zwei Geräte, 3 Offline-Tests und Fuzzing über 91 Operationen, in Chromium und
 WebKit.
 
+### Die App ansehen, ohne sie zu installieren
+
+`node tools/vorschau.mjs` baut aus `index.html` eine einzelne Seite, in der die
+App im echten iPhone-Viewport läuft — antippbar, mit Startdaten, ohne
+Installation. Drei Eingriffe, alle im Skript nachlesbar und alle notwendig:
+
+| Eingriff | Grund |
+|---|---|
+| Schriften eingebettet statt verlinkt | die Seite darf keinen fremden Host kontaktieren |
+| Firebase-SDK nicht geladen, Schlüssel auf Platzhalter | die Vorschau darf die echten Daten **nicht** anfassen können |
+| Startdatensatz (vier Sessions, zwei Messungen) | ohne Historie gäbe es nichts zu korrigieren, also nichts zu sehen |
+
+Der Rest ist Zeile für Zeile dieselbe Datei, die auf GitHub Pages ausgeliefert
+wird. Bricht ein Eingriff, weil sich `index.html` geändert hat, wirft das
+Skript — eine halb funktionierende Vorschau sieht man ihr nicht an.
+
+Was es **nicht** ist: ein iOS-Simulator. Der läuft nur auf macOS mit Xcode.
+Die Vorschau zeigt die App in der Engine des jeweiligen Browsers, aber auf den
+echten Viewport-Maßen aus PB-080 — 320 × 568 bis 430 × 739.
+
 ### Zwei Engines, ein Vergleich
 
 Die Entwicklungsumgebung darf WebKit nicht herunterladen — die Netzwerk-

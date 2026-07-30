@@ -1,0 +1,362 @@
+<title>PUMPBRAH — Live-Ansicht</title>
+
+<style>
+/* ---------------------------------------------------------------------------
+   SCHRIFTEN
+   Dieselben drei Schnitte, die die App benutzt — eingebettet, weil die Seite
+   keine fremden Hosts kontaktieren darf. Der Rahmen spricht damit dieselbe
+   typografische Sprache wie das Gerät, das er hält.
+   --------------------------------------------------------------------------- */
+<!--PB_SCHRIFTEN-->
+
+/* ---------------------------------------------------------------------------
+   WERKBANK
+   Farben stammen aus der App selbst: Volt ist ihr Akzent, das Graphit ihr
+   Grund. Der Rost daneben ist die einzige zweite Bedeutung, die die Seite
+   braucht — „hier ist etwas neu" — und liegt weit genug vom Volt entfernt,
+   um nicht mit ihm zu streiten.
+   --------------------------------------------------------------------------- */
+:root{
+  --volt:#c6f24e;
+  --markiert:#c2551f;
+  --grund:#eae7df;
+  --flaeche:#f6f4ef;
+  --flaeche2:#fffefb;
+  --kante:#d6d2c6;
+  --tinte:#14161a;
+  --tinte2:#5b5f68;
+  --tinte3:#8b8f98;
+  --schatten:24px 34px 70px -28px rgba(20,22,26,.42);
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --grund:#0b0c0f;
+    --flaeche:#15171c;
+    --flaeche2:#1c1f26;
+    --kante:#262a33;
+    --tinte:#eef0f4;
+    --tinte2:#9aa1b0;
+    --tinte3:#6a707c;
+    --markiert:#ef8b4e;
+    --schatten:24px 34px 80px -26px rgba(0,0,0,.75);
+  }
+}
+:root[data-theme="dark"]{
+  --grund:#0b0c0f; --flaeche:#15171c; --flaeche2:#1c1f26; --kante:#262a33;
+  --tinte:#eef0f4; --tinte2:#9aa1b0; --tinte3:#6a707c; --markiert:#ef8b4e;
+  --schatten:24px 34px 80px -26px rgba(0,0,0,.75);
+}
+:root[data-theme="light"]{
+  --grund:#eae7df; --flaeche:#f6f4ef; --flaeche2:#fffefb; --kante:#d6d2c6;
+  --tinte:#14161a; --tinte2:#5b5f68; --tinte3:#8b8f98; --markiert:#c2551f;
+  --schatten:24px 34px 70px -28px rgba(20,22,26,.42);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--grund);color:var(--tinte);
+  font-family:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  font-size:15px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+.werkbank{max-width:1180px;margin:0 auto;padding:34px 22px 72px;display:flex;flex-direction:column;gap:30px}
+
+/* --- Kopf ------------------------------------------------------------- */
+.kopf{display:flex;flex-direction:column;gap:9px;border-bottom:1px solid var(--kante);padding-bottom:22px}
+.marke{
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--tinte3);display:flex;align-items:center;gap:9px;
+}
+.marke::before{content:"";width:26px;height:3px;background:var(--volt);border-radius:2px;flex:0 0 auto}
+h1{
+  font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;
+  font-size:clamp(38px,7vw,62px);line-height:.92;letter-spacing:.01em;
+  margin:0;text-wrap:balance;
+}
+.lead{margin:0;max-width:63ch;color:var(--tinte2);font-size:14.5px}
+.lead b{color:var(--tinte);font-weight:600}
+
+/* --- Bühne ------------------------------------------------------------ */
+.buehne{display:grid;grid-template-columns:minmax(0,1fr) 348px;gap:34px;align-items:start}
+@media (max-width:960px){.buehne{grid-template-columns:minmax(0,1fr)}}
+
+.geraet{
+  display:flex;flex-direction:column;gap:16px;align-items:center;
+  /* Eine Ablage unter dem Gerät. Ohne sie verschwindet der schwarze Rahmen
+     im dunklen Grund — das Gerät hörte auf, ein Gegenstand zu sein. */
+  background:var(--flaeche);border:1px solid var(--kante);border-radius:22px;
+  padding:20px 18px 22px;
+}
+
+.leiste{
+  display:flex;gap:5px;padding:5px;background:var(--flaeche);
+  border:1px solid var(--kante);border-radius:11px;flex-wrap:wrap;justify-content:center;
+}
+.leiste button{
+  font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:7px;
+  border:1px solid transparent;background:transparent;color:var(--tinte2);cursor:pointer;
+  transition:background .16s ease,color .16s ease;
+}
+.leiste button:hover{color:var(--tinte)}
+.leiste button[aria-pressed="true"]{background:var(--volt);color:#14161a;border-color:var(--volt)}
+.leiste button small{
+  display:block;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:9.5px;
+  font-weight:400;opacity:.72;font-variant-numeric:tabular-nums;letter-spacing:.02em;
+}
+
+/* Der Rahmen ist bewusst gegenständlich: eine Aluminiumkante, eine Kerbe,
+   ein Schatten. Er soll aussehen wie ein Gerät auf einem Tisch, damit klar
+   bleibt, wo die Seite aufhört und die App anfängt. */
+.buehne-skalierung{width:100%;display:flex;justify-content:center;overflow:hidden}
+.phone{
+  position:relative;flex:0 0 auto;padding:26px 11px 15px;border-radius:44px;
+  background:linear-gradient(160deg,#3d424c,#191b21 42%,#2c313a);
+  box-shadow:var(--schatten),inset 0 0 0 1px rgba(255,255,255,.09);
+  transform-origin:top center;
+}
+.phone::after{
+  content:"";position:absolute;left:50%;transform:translateX(-50%);
+  bottom:4px;width:34%;height:4px;border-radius:3px;background:rgba(255,255,255,.24);
+}
+/* Hörmuschel und Kamera im oberen Rand. Bewusst NICHT über dem Bild: auf
+   dem Gerät liegt der Viewport unter der Kerbe, nicht hinter ihr — eine
+   Kerbe, die die oberste Zeile der App verdeckt, wäre eine Falschaussage. */
+.kerbe{
+  position:absolute;top:11px;left:50%;transform:translateX(-50%);
+  width:74px;height:6px;border-radius:4px;background:rgba(255,255,255,.16);
+  pointer-events:none;
+}
+.kerbe::after{
+  content:"";position:absolute;right:-16px;width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,.13);
+}
+.phone iframe{display:block;border:0;border-radius:34px;background:#0a0b0e;width:100%;height:100%}
+.messwert{
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;color:var(--tinte3);
+  font-variant-numeric:tabular-nums;text-align:center;
+}
+.messwert b{color:var(--tinte2);font-weight:400}
+
+.werkzeuge{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.werkzeuge button{
+  font:inherit;font-size:12.5px;font-weight:600;padding:8px 15px;border-radius:9px;
+  background:var(--flaeche);border:1px solid var(--kante);color:var(--tinte2);cursor:pointer;
+  transition:color .16s ease,border-color .16s ease;
+}
+.werkzeuge button:hover{color:var(--tinte);border-color:var(--tinte3)}
+
+:where(button):focus-visible{outline:2px solid var(--volt);outline-offset:2px}
+
+/* --- Änderungsspalte -------------------------------------------------- */
+.rail{display:flex;flex-direction:column;gap:18px;min-width:0}
+h2{
+  font-family:'Bebas Neue',Impact,sans-serif;font-weight:400;font-size:27px;
+  letter-spacing:.02em;margin:0;line-height:1;
+}
+.aenderungen{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.aenderung{
+  background:var(--flaeche);border:1px solid var(--kante);border-radius:var(--r);
+  padding:13px 15px;display:flex;flex-direction:column;gap:7px;
+}
+.aenderung .kopfzeile{display:flex;align-items:baseline;gap:9px}
+.id{
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;font-weight:600;
+  letter-spacing:.06em;color:var(--markiert);flex:0 0 auto;
+}
+.aenderung h3{margin:0;font-size:14px;font-weight:600;line-height:1.35;text-wrap:balance}
+.aenderung p{margin:0;font-size:12.8px;color:var(--tinte2);line-height:1.55}
+.weg{
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:11px;color:var(--tinte);
+  background:var(--flaeche2);border:1px solid var(--kante);border-radius:8px;
+  padding:7px 9px;line-height:1.75;
+}
+.weg span{color:var(--tinte3);padding:0 3px}
+
+.grenzen{
+  border:1px dashed var(--kante);border-radius:var(--r);padding:14px 15px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.grenzen h2{font-size:21px}
+.grenzen p{margin:0;font-size:12.5px;color:var(--tinte2);line-height:1.55}
+.grenzen p b{color:var(--tinte);font-weight:600}
+
+.hinweis{
+  display:none;background:var(--flaeche);border:1px solid var(--markiert);border-radius:var(--r);
+  padding:14px 16px;font-size:13px;line-height:1.55;color:var(--tinte2);
+}
+.hinweis.an{display:block}
+.hinweis b{color:var(--tinte)}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="werkbank">
+
+  <header class="kopf">
+    <div class="marke">Vorschau · Stand dieses Branches</div>
+    <h1>Die App, wie sie gerade aussieht</h1>
+    <p class="lead">Das ist <b>keine Nachbildung</b> — es ist Zeile für Zeile dieselbe
+      <code>index.html</code>, die auf GitHub Pages liegt, im echten iPhone-Viewport.
+      Antippen, durchklicken, kaputt machen: die Vorschau hat ihren eigenen Speicher und
+      ist von deinen echten Daten getrennt.</p>
+  </header>
+
+  <div class="hinweis" id="hinweis">
+    <b>Die Vorschau lädt nicht.</b> Wenn hier nichts erscheint, blockiert die
+    Seitenrichtlinie eingebettete Dokumente. Dann bleibt der direkte Weg: die App
+    auf GitHub Pages im Handy-Browser öffnen — dort läuft dieselbe Datei.
+  </div>
+
+  <div class="buehne">
+
+    <section class="geraet">
+      <div class="leiste" role="group" aria-label="Gerätegröße wählen">
+        <button type="button" data-w="320" data-h="568" aria-pressed="false">iPhone SE<small>320 × 568</small></button>
+        <button type="button" data-w="393" data-h="659" aria-pressed="true">iPhone 15<small>393 × 659</small></button>
+        <button type="button" data-w="430" data-h="739" aria-pressed="false">15 Pro Max<small>430 × 739</small></button>
+      </div>
+
+      <div class="buehne-skalierung" id="skalierung">
+        <div class="phone" id="phone">
+          <div class="kerbe"></div>
+          <iframe id="pb" title="PUMPBRAH — bedienbare Vorschau"></iframe>
+        </div>
+      </div>
+
+      <div class="messwert"><b id="vp">393 × 659</b> — Viewport, nicht Bildschirmhöhe<span id="skala"></span></div>
+
+      <div class="werkzeuge">
+        <button type="button" id="neu">Neu laden</button>
+        <button type="button" id="reset">Auf Startdaten zurücksetzen</button>
+      </div>
+    </section>
+
+    <aside class="rail">
+      <h2>Was neu ist — und wo</h2>
+      <ol class="aenderungen">
+
+        <li class="aenderung">
+          <div class="kopfzeile"><span class="id">PB-081</span>
+            <h3>Geloggten Satz korrigieren</h3></div>
+          <p>Der Editor gab es schon — er hing an einer 500-Millisekunden-Haltegeste,
+             auf die nichts hinwies. Jetzt ist der Satz ein Knopf mit Stift-Zeichen,
+             und RIR lässt sich mitändern.</p>
+          <div class="weg">Aktiv<span>›</span>Workout starten<span>›</span>Satz loggen<span>›</span>auf den Satz tippen</div>
+        </li>
+
+        <li class="aenderung">
+          <div class="kopfzeile"><span class="id">PB-082</span>
+            <h3>Beendete Session korrigieren</h3></div>
+          <p>Bisher gab es nur Löschen — ein vertippter Satz kostete die ganze Einheit.
+             Jetzt: Gewicht, Wiederholungen und RIR je Satz, dazu Datum und Dauer,
+             einzelne Sätze entfernbar.</p>
+          <div class="weg">Historie<span>›</span>Stift-Symbol an der Session</div>
+        </li>
+
+        <li class="aenderung">
+          <div class="kopfzeile"><span class="id">PB-083</span>
+            <h3>EGYM-Messung korrigieren</h3></div>
+          <p>Auch hier gab es nur Löschen. Neu ist vor allem: ein Feld <em>leeren</em>
+             geht jetzt wirklich — vorher hat das Speichern den alten Wert
+             stillschweigend zurückgeholt.</p>
+          <div class="weg">Stats<span>›</span>EGYM BioAge<span>›</span>Messhistorie<span>›</span>Stift</div>
+        </li>
+
+        <li class="aenderung">
+          <div class="kopfzeile"><span class="id">PB-084</span>
+            <h3>Gewicht nur noch einmal eintragen</h3></div>
+          <p>Bei aktivem EGYM ist die Gewichtsabfrage unter Körperdaten verschwunden;
+             der Verlauf kommt aus den Messungen. Schalte EGYM in den Einstellungen ab,
+             dann ist die Abfrage wieder da.</p>
+          <div class="weg">Stats<span>›</span>Körperdaten</div>
+        </li>
+
+      </ol>
+
+      <div class="grenzen">
+        <h2>Was das hier nicht ist</h2>
+        <p><b>Kein iOS-Simulator.</b> Der läuft nur auf macOS mit Xcode; diese Maschine
+           ist Linux. Was du siehst, ist die App in der Engine deines Browsers, aber
+           auf den echten iPhone-Maßen.</p>
+        <p><b>Keine Cloud.</b> Firebase ist in dieser Vorschau gar nicht erst geladen —
+           was du hier eintippst, kann deine echten Daten nicht anfassen.</p>
+        <p><b>Eigener Speicher.</b> Die Startdaten sind erfunden: vier Sessions und
+           zwei Messungen, damit es überhaupt etwas zu korrigieren gibt.</p>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<script type="text/plain" id="pb-quelle"><!--PB_QUELLE--></script>
+
+<script>
+(function(){
+  const rahmen  = document.getElementById('pb');
+  const phone   = document.getElementById('phone');
+  const buehne  = document.getElementById('skalierung');
+  const anzeige = document.getElementById('vp');
+  const skalaTx = document.getElementById('skala');
+  const hinweis = document.getElementById('hinweis');
+  const knoepfe = [...document.querySelectorAll('.leiste button')];
+
+  /* Beim Einbetten musste jedes "</script" maskiert werden, sonst hätte der
+     Parser den Quellblock vorzeitig beendet. Hier wird es rückgängig gemacht. */
+  const quelle = document.getElementById('pb-quelle').textContent.replace(/<\\\/script/g, '<\/script');
+
+  let breite = 393, hoehe = 659;
+
+  function groesse(){
+    rahmen.style.width  = breite + 'px';
+    rahmen.style.height = hoehe  + 'px';
+    anzeige.textContent = breite + ' × ' + hoehe;
+    passeAn();
+  }
+
+  /* Der Viewport bleibt bei den echten Gerätemaßen — sonst greifen die
+     Media Queries der App an falschen Stellen und 100dvh misst etwas
+     anderes als auf dem Telefon. Verkleinert wird nur die Darstellung. */
+  function passeAn(){
+    const platz = buehne.clientWidth;
+    const voll  = breite + 22;                       // Gerätemaß plus Rahmenkante
+    const k     = Math.min(1, platz / voll);
+    phone.style.transform = k < 1 ? 'scale(' + k + ')' : '';
+    buehne.style.height   = (hoehe + 22) * k + 'px';
+    skalaTx.textContent   = k < 1 ? '  ·  auf ' + Math.round(k * 100) + ' % verkleinert' : '';
+  }
+
+  knoepfe.forEach(b => b.addEventListener('click', () => {
+    knoepfe.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    breite = +b.dataset.w; hoehe = +b.dataset.h;
+    groesse();
+  }));
+
+  function starte(){ rahmen.srcdoc = quelle; }
+
+  document.getElementById('neu').addEventListener('click', starte);
+  document.getElementById('reset').addEventListener('click', () => {
+    try {
+      const s = rahmen.contentWindow.localStorage;
+      s.removeItem('pb_data'); s.removeItem('pb_sync'); s.removeItem('pb_timer');
+    } catch (e) { /* Zugriff verwehrt — das Neuladen unten sagt es dann selbst */ }
+    starte();
+  });
+
+  addEventListener('resize', passeAn);
+  groesse();
+  starte();
+
+  /* Wenn die Seitenrichtlinie eingebettete Dokumente sperrt, bleibt der
+     Rahmen still leer. Eine leere Fläche ist die schlechteste Meldung —
+     also wird nachgesehen und gesagt, was los ist. */
+  setTimeout(() => {
+    let lebt = false;
+    try { lebt = !!(rahmen.contentDocument && rahmen.contentDocument.getElementById('s-dash')); }
+    catch (e) { lebt = true; }        // Zugriff verwehrt heißt: es läuft, nur fremd
+    if (!lebt) hinweis.classList.add('an');
+  }, 2500);
+})();
+</script>
