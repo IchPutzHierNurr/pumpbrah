@@ -2308,8 +2308,8 @@ html,body{
 <div class="mbg" id="m-setedit"><div class="mdl">
 <div class="mt">SATZ KORRIGIEREN <button class="mc" onclick="closeSetEditor()">✕</button></div>
 <div id="se-sub" style="font-size:11.5px;color:var(--text3);margin-bottom:12px"></div>
-<div class="ig" style="margin-bottom:8px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w"></div>
-<div class="ig" style="margin-bottom:8px"><label>Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r"></div>
+<div class="ig" style="margin-bottom:8px"><label id="se-lab-w">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w"></div>
+<div class="ig" style="margin-bottom:8px"><label id="se-lab-r">Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r"></div>
 <div class="ig" style="margin-bottom:8px"><label>RIR</label><input type="number" inputmode="numeric" id="edit-set-rir"></div>
 <div class="sheet-cta"><button type="button" class="btn" id="se-save">✓ Speichern</button>
 <button type="button" class="btn btn-r" id="se-del">🗑️ Satz löschen</button></div>
@@ -2672,7 +2672,17 @@ function mergeSyncedData(remote){
   const primaryEgym=preferRemote?remoteEgym:localEgym;
   const fallbackEgym=preferRemote?localEgym:remoteEgym;
   merged.egym={...fallbackEgym,...primaryEgym};
-  merged.egym.enabled=!!(localEgym.enabled||remoteEgym.enabled);
+  /* PB-103: Hier stand ein ODER — einmal irgendwo eingeschaltet, blieb EGYM
+     für immer eingeschaltet. Ausschalten war damit in einem Sync-Konto
+     unmöglich: das andere Gerät hat es beim nächsten Abgleich wieder an.
+     Das ODER war gutmütig gemeint (niemand soll seinen BioAge-Bereich
+     verlieren), ist aber keine Zusammenführung, sondern eine Sperrklinke.
+     Seit PB-084 hängt die Gewichtseingabe an diesem Schalter — er muss sich
+     umlegen lassen. Es gilt jetzt die zuletzt geschriebene Fassung, wie bei
+     jeder anderen Einstellung auch. */
+  merged.egym.enabled=(primaryEgym.enabled!==undefined)
+    ?!!primaryEgym.enabled
+    :!!fallbackEgym.enabled;
   /* Grabsteine gibt es in zwei Formen: die alten tragen ein Datum, die neuen
      eine Kennung (PB-095). Beide müssen greifen, sonst kommt eine vor dem
      Update gelöschte Messung zurück. */
@@ -3212,6 +3222,11 @@ function getTimerTotal(){
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 function cm(id){
+  /* PB-102: Der Bearbeiten-Modus der EGYM-Messung hing an einer Variablen,
+     die das Schließen des Sheets überlebte — egal auf welchem Weg man es
+     schloss. Hier endet er, weil hier jeder dieser Wege vorbeikommt. */
+  if(id==='m-egym')egymEditKey=null;
+  if(id==='m-setedit')setEditRef=null;
   const el=document.getElementById(id);
   if(el){
     el.classList.remove('show');
@@ -4632,20 +4647,26 @@ function germanFromKey(k){
   const m=String(k||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m?`${m[3]}.${m[2]}.${m[1]}`:String(k||'');
 }
+/* PB-100: `dateKey` gibt für alles, was es nicht lesen kann, die Zeichenkette
+   selbst zurück. Ein kaputtes Datum sortiert damit hinter jedes echte — und
+   wurde so zum „aktuellen Gewicht", mit dem BMI, Fitnessalter und die
+   EGYM-Einordnung rechnen. Was sich nicht als Datum lesen lässt, gehört nicht
+   in eine Reihe, die nach Datum sortiert ist. */
+function istDatum(k){return /^\d{4}-\d{2}-\d{2}$/.test(String(k||''))}
 function weightSeries(){
   const hand=(D.bio&&Array.isArray(D.bio.weights))?D.bio.weights:[];
   const map=new Map();
   hand.forEach((w,i)=>{
     const k=dateKey(w&&w.date);
     const kg=parseFloat(w&&w.kg);
-    if(!k||!isFinite(kg))return;
+    if(!istDatum(k)||!isFinite(kg))return;
     map.set(k,{date:germanFromKey(k),kg,quelle:'hand',bioIdx:i});
   });
   if(D.egym&&D.egym.enabled){
     (D.egym.measurements||[]).forEach(m=>{
       const kg=parseFloat(m&&m.gewicht);
       const k=dateKey(m&&m.date);
-      if(!k||!isFinite(kg)||kg<=0)return;
+      if(!istDatum(k)||!isFinite(kg)||kg<=0)return;
       /* PB-097: Die Messung gewinnt bei gleichem Tag — aber der verdrängte
          Handeintrag darf dabei nicht unerreichbar werden. Vorher war er
          weder sichtbar noch löschbar: wer an einem Messtag zusätzlich eine
@@ -4722,12 +4743,46 @@ function startWorkout(pk){
 
    Nebenwirkung derselben Bauart: PB-061 prüft die Sheets, indem es über die
    `.mbg`-Elemente läuft. Ein Popup, das keines ist, wurde nie geprüft. */
+/* PB-098: Dieselbe Falle wie PB-085 und PB-086, ein drittes Mal — und beim
+   eigenen Durchsuchen übersehen, weil die Position hier nicht in einer
+   Variablen steht, sondern als Argument durch den Aufruf reist:
+   `onclick="saveEditSet(3,1)"`. Zwischen Öffnen und Speichern kann die
+   Übung aber wegfallen, getauscht werden oder ein Cloud-Abgleich das ganze
+   Datenobjekt ersetzen — dann landet die Korrektur auf einem fremden Satz.
+   Gemerkt wird deshalb die Übung selbst (über ihre id, hilfsweise über den
+   Namen); die Positionen werden beim Speichern neu aufgelöst. */
+let setEditRef=null;
+function findeSatzZiel(ei,si){
+  const liste=activeExercisesSafe();
+  if(setEditRef){
+    let i=liste.findIndex(e=>e&&e.id===setEditRef.exId);
+    if(i<0)i=liste.findIndex(e=>e&&e.name===setEditRef.name);
+    if(i>=0&&Array.isArray(liste[i].logged)&&liste[i].logged[setEditRef.si])
+      return{ex:liste[i],ei:i,si:setEditRef.si};
+    return null;
+  }
+  /* Ohne offenen Editor (Tests, Fuzzer) gelten die übergebenen Positionen. */
+  const ex=liste[ei];
+  if(!ex||!Array.isArray(ex.logged)||!ex.logged[si])return null;
+  return{ex,ei,si};
+}
 function openSetEditor(ei,si){
   const ex=activeExercisesSafe()[ei];
   const s=ex&&Array.isArray(ex.logged)?ex.logged[si]:null;
   if(!s)return;
+  setEditRef={exId:ex.id,name:ex.name,si};
+  /* PB-099: Cardio misst Minuten und eine Stufe. Der Historien-Editor hat das
+     mit PB-096 gelernt, dieser hier noch nicht — dieselbe Beschriftung,
+     dieselbe Einladung zur Falschkorrektur. */
+  const cardio=isCardioExercise(ex);
+  const lw=document.getElementById('se-lab-w');
+  const lr=document.getElementById('se-lab-r');
+  if(lw)lw.textContent=cardio?'Stufe':'Gewicht (kg)';
+  if(lr)lr.textContent=cardio?'Minuten':'Wiederholungen';
   const sub=document.getElementById('se-sub');
-  if(sub)sub.textContent=`Satz ${si+1} · ${ex.name} · geloggt mit ${s.w} kg × ${s.r} @ RIR ${s.rir}`;
+  if(sub)sub.textContent=cardio
+    ?`Satz ${si+1} · ${ex.name} · geloggt mit ${s.r} min${s.w?` · Stufe ${s.w}`:''}`
+    :`Satz ${si+1} · ${ex.name} · geloggt mit ${s.w} kg × ${s.r} @ RIR ${s.rir}`;
   const setze=(id,wert)=>{const el=document.getElementById(id);if(el)el.value=wert};
   setze('edit-set-w',s.w);setze('edit-set-r',s.r);setze('edit-set-rir',s.rir);
   /* Die beiden Aktionen tragen ihr Ziel als Funktion, nicht als Zeichenkette
@@ -4740,11 +4795,11 @@ function openSetEditor(ei,si){
   const feld=document.getElementById('edit-set-w');
   if(feld)feld.focus();
 }
-function closeSetEditor(){cm('m-setedit')}
+function closeSetEditor(){setEditRef=null;cm('m-setedit')}
 function saveEditSet(ei,si){
-  const ex=activeExercisesSafe()[ei];
-  const eintrag=ex&&Array.isArray(ex.logged)?ex.logged[si]:null;
-  if(!eintrag){closeSetEditor();return}
+  const ziel=findeSatzZiel(ei,si);
+  const eintrag=ziel?ziel.ex.logged[ziel.si]:null;
+  if(!eintrag){toast('Dieser Satz gehört nicht mehr zur Session');closeSetEditor();renderWo();return}
   const zahl=(id,max,ganz)=>{
     const el=document.getElementById(id);
     const v=el?(ganz?parseInt(el.value,10):parseFloat(el.value)):NaN;
@@ -4758,9 +4813,9 @@ function saveEditSet(ei,si){
   save();closeSetEditor();renderWo();toast('Satz aktualisiert');
 }
 function deleteSet(ei,si){
-  const ex=activeExercisesSafe()[ei];
-  if(!ex||!Array.isArray(ex.logged))return;
-  ex.logged.splice(si,1);save();
+  const ziel=findeSatzZiel(ei,si);
+  if(!ziel){toast('Dieser Satz gehört nicht mehr zur Session');closeSetEditor();renderWo();return}
+  ziel.ex.logged.splice(ziel.si,1);save();
   closeSetEditor();
   renderWo();toast('Satz gelöscht');
 }
@@ -5005,8 +5060,19 @@ function harvestHistEdit(){
   if(dur)histEditDraft.duration=Math.min(1440,Math.max(0,parseInt(dur.value,10)||0));
   const dat=document.getElementById('he-date');
   if(dat&&dat.value){
+    /* PB-101: Das Datumsfeld nahm jede Eingabe an. Ein Jahr 9999 schiebt die
+       Session in einen Kalendermonat, den man nicht mehr erreicht — sie ist
+       dann weder sichtbar noch löschbar, zählt aber weiter in jede Statistik.
+       Angenommen wird nur, was ein Mensch trainiert haben kann. */
     const m=String(dat.value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if(m)histEditDraft.date=`${m[3]}.${m[2]}.${m[1]}`;
+    if(m){
+      const jahr=parseInt(m[1],10);
+      const wann=new Date(jahr,parseInt(m[2],10)-1,parseInt(m[3],10));
+      const morgen=Date.now()+864e5;
+      if(!isNaN(wann.getTime())&&jahr>=2000&&wann.getTime()<=morgen)
+        histEditDraft.date=`${m[3]}.${m[2]}.${m[1]}`;
+      else histEditDraft.datumAbgelehnt=`${m[3]}.${m[2]}.${m[1]}`;
+    }
   }
 }
 function renderHistEdit(){
@@ -5046,6 +5112,12 @@ function delHistSet(k){
 function saveHistEdit(){
   if(!histEditDraft)return;
   harvestHistEdit();
+  if(histEditDraft.datumAbgelehnt){
+    const w=histEditDraft.datumAbgelehnt;
+    delete histEditDraft.datumAbgelehnt;
+    toast(`${w} nehme ich nicht — ab 2000 und nicht in der Zukunft`);
+    return;
+  }
   if(!histEditDraft.sets.length){toast('Ohne Sätze keine Session — lösch sie stattdessen');return}
   const idx=findeHistEintrag();
   if(idx<0){
