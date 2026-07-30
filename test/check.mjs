@@ -1278,6 +1278,15 @@ const REGRESSIONS = [
             ['m-timebudget', () => { wo(); openTimeBudget(); }, 'formular'],
             ['m-exnote', () => openExNote('Bankdrücken'), 'formular'],
             ['m-egym', () => openEgymEntry(), 'formular'],
+            ['m-setedit', () => {
+              /* Seit PB-089 ein echtes Sheet - vorher ein selbstgebautes
+                 Popup, das genau deshalb nie in dieser Pruefung landete. */
+              wo();
+              const ex = D.active.exercises[0];
+              ex.logged = [{ w: 60, r: 10, rir: 2, note: '' }];
+              renderWo();
+              openSetEditor(0, 0);
+            }, 'formular'],
             ['m-histedit', () => {
               D.history = [{ id: 'S-sheet', updatedAt: 1, date: '15.03.2026',
                 planKey: Object.keys(D.plan)[0], duration: 70,
@@ -2390,15 +2399,18 @@ const REGRESSIONS = [
         const out = { chipDa: !!chip, geloggt: JSON.parse(JSON.stringify(D.active.exercises[0].logged[0])) };
         if (!chip) return out;
         chip.click();                       // ein Tipp, keine Haltegeste
-        const popup = document.getElementById('set-popup');
-        out.dialogNachTipp = !!popup;
-        if (!popup) return out;
+        const sheet = document.getElementById('m-setedit');
+        out.dialogNachTipp = !!sheet && sheet.classList.contains('show');
+        // Seit PB-089 ist der Editor ein echtes Sheet - nur so erbt er die
+        // Tastatur-Ausweichlogik, die PB-061/PB-066 erkaempft haben.
+        out.istEchtesSheet = !!sheet && sheet.classList.contains('mbg');
+        if (!out.dialogNachTipp) return out;
         out.hatRir = !!document.getElementById('edit-set-rir');
         document.getElementById('edit-set-w').value = '62.5';
         document.getElementById('edit-set-r').value = '8';
         if (out.hatRir) document.getElementById('edit-set-rir').value = '0';
         saveEditSet(0, 0);
-        out.dialogZu = !document.getElementById('set-popup');
+        out.dialogZu = !document.getElementById('m-setedit').classList.contains('show');
         out.danach = JSON.parse(JSON.stringify(D.active.exercises[0].logged[0]));
         // Abbrechen muss schliessen OHNE zu aendern - sonst ist der Ausweg
         // aus dem Dialog selbst eine Falle.
@@ -2406,7 +2418,7 @@ const REGRESSIONS = [
         document.querySelector('#wo-ex-0 .wo-chips .wsr:not(.empty)').click();
         document.getElementById('edit-set-w').value = '999';
         closeSetEditor();
-        out.abbruchSchliesst = !document.getElementById('set-popup');
+        out.abbruchSchliesst = !document.getElementById('m-setedit').classList.contains('show');
         out.nachAbbruch = D.active.exercises[0].logged[0].w;
         // Loeschen muss ebenfalls ueber denselben Weg erreichbar bleiben.
         renderWo();
@@ -2416,7 +2428,7 @@ const REGRESSIONS = [
         D.active = null; save();
         return out;
       });
-      const ok = r.chipDa && r.dialogNachTipp && r.hatRir && r.dialogZu
+      const ok = r.chipDa && r.dialogNachTipp && r.istEchtesSheet && r.hatRir && r.dialogZu
         && r.danach && r.danach.w === 62.5 && r.danach.r === 8 && r.danach.rir === 0
         && r.abbruchSchliesst && r.nachAbbruch === 62.5
         && r.nachLoeschen === 0;
@@ -2530,7 +2542,17 @@ const REGRESSIONS = [
         document.getElementById('egym-date').value = '2026-02-08';
         saveEgymEntry();
         out.nachDatumswechsel = D.egym.measurements.map(x => x.date);
-        out.grabstein = (D.deleted.egym || []).includes('2026-02-05');
+        /* Hier stand einmal: „nach einem Datumswechsel muss ein Grabstein auf
+           dem alten Datum liegen". Das war die Zusage des ersten Entwurfs —
+           und genau der Fehler, den PB-095 aufgedeckt hat: Grabsteine werden
+           beim Zusammenfuehren VEREINIGT, ein zurueckgeaendertes Datum war
+           damit dauerhaft vergiftet und die Messung fuer immer weg.
+           Die Messung behaelt jetzt ihre Kennung und WANDERT; ein Grabstein
+           waere nicht nur unnoetig, sondern schaedlich. Geprueft wird
+           deshalb, dass keiner angelegt wird — und dass die Messung ihre
+           Werte ueber den Wechsel mitnimmt. */
+        out.keinGrabstein = !(D.deleted.egym || []).length;
+        out.werteUeberlebten = (D.egym.measurements.find(x => x.date === '2026-02-08') || {}).smm;
         D.egym = { enabled: false, measurements: [] };
         D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
         save();
@@ -2542,7 +2564,7 @@ const REGRESSIONS = [
         && r.anzahlVorher === 2 && r.anzahlNachher === 2
         && r.kfp === 22.5 && r.bioageGeleert === true && r.smmUnberuehrt === 36
         && JSON.stringify(r.nachDatumswechsel) === '["2026-01-05","2026-02-08"]'
-        && r.grabstein === true;
+        && r.keinGrabstein === true && r.werteUeberlebten === 36;
       return [ok, JSON.stringify(r) + ' — erwartet vorbefuelltes Formular, kfp 22,5, bioage null, danach genau zwei Messungen'];
     }
   },
@@ -2855,6 +2877,466 @@ const REGRESSIONS = [
       return [tot.length === 0 && plausibel,
         `${angesprochen.size} Kennungen angesprochen, ${statisch.size} statisch erzeugt, `
         + `${praefixe.length} Praefixe — ohne Erzeuger: ${tot.length ? tot.join(', ') : 'keine'}`];
+    }
+  }
+  ,
+  {
+    id: 'PB-091', title: 'Ohne Messung mit Gewicht bleibt die Gewichtsabfrage stehen',
+    run: async () => {
+      /* Von der Abnahme gefunden, und es ist der Fehler in meinem eigenen
+         PB-084: „EGYM ist eingeschaltet" wurde mit „das Gewicht kommt von
+         dort" gleichgesetzt. Das stimmt aber erst, wenn eine Messung MIT
+         Gewicht existiert. Alle EGYM-Felder sind freiwillig, und den Schalter
+         legt man um, BEVOR man die erste Messung hat.
+
+         Die Folge war doppelt aergerlich: die einzige Moeglichkeit, das
+         Gewicht einzutragen, verschwand — und an ihrer Stelle stand ein Satz,
+         der etwas Falsches behauptete („kommt aus deiner EGYM-Messung"). */
+      const r = await page.evaluate(() => {
+        const sicht = id => { const el = document.getElementById(id); return el ? el.style.display !== 'none' : null; };
+        D.bio.weights = [{ date: '01.01.2026', kg: 84 }];
+        const out = {};
+
+        // (1) Schalter an, aber gar keine Messung
+        D.egym = { enabled: true, measurements: [] };
+        save(); renderBio();
+        out.ohneMessung = { abfrage: sicht('bio-weight-row'), hinweis: sicht('bio-weight-egym') };
+
+        // (2) Messungen vorhanden, aber keine mit Gewicht
+        D.egym.measurements = [{ date: '2026-01-05', kfp: 22 }, { date: '2026-02-05', kfp: 21, gewicht: null }];
+        save(); renderBio();
+        out.ohneGewicht = { abfrage: sicht('bio-weight-row'), reihe: weightSeries().map(w => w.kg) };
+
+        // (3) Gewicht 0 zaehlt nicht als Messung
+        D.egym.measurements = [{ date: '2026-01-05', gewicht: 0 }];
+        save(); renderBio();
+        out.gewichtNull = { abfrage: sicht('bio-weight-row') };
+
+        // (4) Sobald eine echte Messung da ist, greift PB-084 wie gebaut
+        D.egym.measurements = [{ date: '2026-02-05', gewicht: 81.5, kfp: 21 }];
+        save(); renderBio();
+        out.mitGewicht = { abfrage: sicht('bio-weight-row'), hinweis: sicht('bio-weight-egym'),
+                           reihe: weightSeries().map(w => w.kg), letzte: latestWeight() };
+
+        D.bio.weights = []; D.egym = { enabled: false, measurements: [] }; save();
+        return out;
+      });
+      const ok = r.ohneMessung.abfrage === true && r.ohneMessung.hinweis === false
+        && r.ohneGewicht.abfrage === true && JSON.stringify(r.ohneGewicht.reihe) === '[84]'
+        && r.gewichtNull.abfrage === true
+        && r.mitGewicht.abfrage === false && r.mitGewicht.hinweis === true
+        && JSON.stringify(r.mitGewicht.reihe) === '[84,81.5]' && r.mitGewicht.letzte === 81.5;
+      return [ok, JSON.stringify(r) + ' — erwartet: Abfrage bleibt, solange keine Messung ein Gewicht traegt'];
+    }
+  },
+  {
+    id: 'PB-092', title: 'Der letzte Satz einer Uebung bleibt korrigierbar, ohne sie erst aufzuklappen',
+    run: async () => {
+      /* Ebenfalls aus der Abnahme. Mit dem letzten Satz gilt die Uebung als
+         erledigt und klappt im Fokus-Layout zu einer Zeile zusammen — die
+         Satz-Chips verschwinden. Genau dann will man aber am ehesten
+         korrigieren: es ist der Satz, den man gerade getippt hat.
+         PB-081 verspricht „ein Tipp oeffnet den Editor"; ohne den Fix waeren
+         es zwei, und der erste stuende nirgends. */
+      const r = await page.evaluate(() => {
+        D.active = null;
+        const key = Object.keys(D.plan)[0];
+        startWorkout(key);
+        D.active.compact = false;              // Fokus-Layout, nicht „alles aufklappen"
+        const ex = D.active.exercises[0];
+        ex.sets = 2;
+        const logge = (w, wdh) => {
+          openLog(0);
+          document.getElementById('log-w').value = String(w);
+          document.getElementById('log-r').value = String(wdh);
+          document.getElementById('log-rir').value = '2';
+          confirmLog(); cm('m-log');
+        };
+        logge(60, 10);
+        const nachErstem = document.querySelectorAll('#wo-ex-0 .wo-chips .wsr:not(.empty)').length;
+        logge(62.5, 9);                        // schliesst die Uebung ab
+        const chips = document.querySelectorAll('#wo-ex-0 .wo-chips .wsr:not(.empty)');
+        const out = {
+          fertig: D.active.exercises[0].logged.length >= D.active.exercises[0].sets,
+          nachErstem,
+          chipsNachAbschluss: chips.length,
+          texte: [...chips].map(c => c.textContent)
+        };
+        // Und der Weg muss auch wirklich funktionieren, nicht nur sichtbar sein.
+        if (chips.length) {
+          chips[chips.length - 1].click();
+          out.editorOffen = document.getElementById('m-setedit').classList.contains('show');
+          document.getElementById('edit-set-w').value = '70';
+          saveEditSet(0, 1);
+          out.korrigiert = D.active.exercises[0].logged[1].w;
+        }
+        D.active = null; save();
+        return out;
+      });
+      const ok = r.fertig === true && r.nachErstem === 1
+        && r.chipsNachAbschluss === 2 && r.editorOffen === true && r.korrigiert === 70;
+      return [ok, JSON.stringify(r) + ' — erwartet: nach dem letzten Satz stehen beide Chips da und der Editor oeffnet mit einem Tipp'];
+    }
+  }
+  ,
+  {
+    id: 'PB-090', title: 'Die klebende Aktionszeile faengt keine Tipps in ihrem durchsichtigen Teil',
+    run: async () => {
+      /* Aus der Abnahme, gefunden mit einem echten Tap auf einem iPhone SE.
+         `.sheet-cta` klebt am unteren Rand und beginnt oben mit einem
+         durchsichtigen Verlauf — man SIEHT dort den Inhalt darunter und tippt
+         danach. Der Tipp landete trotzdem auf der Leiste: im Historien-Editor
+         traf ein Griff nach dem zweiten Satzfeld „✓ Änderungen speichern",
+         und das Sheet schloss sich ungefragt. Nichts im Bild deutete darauf
+         hin, dass dort ein Knopf liegt.
+
+         Nebenwirkung, die es schlimmer macht als ein Fehlgriff: dieses
+         versehentliche Speichern hebt `updatedAt`. Genau daran entscheidet
+         sich beim naechsten Abgleich, welche Fassung gewinnt.
+
+         Geprueft wird die Ursache, nicht das Symptom: Was liefert der Browser
+         an einem Punkt im durchsichtigen Streifen zurueck? */
+      const vorher = page.viewportSize();
+      await page.setViewportSize(pw.devices['iPhone SE'].viewport);
+      const r = await page.evaluate(async () => {
+        D.history = [{
+          id: 'S-cta', updatedAt: 1000, date: '15.03.2026', planKey: Object.keys(D.plan)[0], duration: 70,
+          sets: [1, 2, 3].map(n => ({ ex: 'Bankdrücken', nr: n, w: 60 + n, r: 8, rir: 2, muscle: 'chest', type: 'main' }))
+        }];
+        save();
+        openHistEdit(0);
+        /* Das Sheet faehrt herein. Wer sofort misst, misst eine Leiste, die
+           noch unter dem Bildrand steht — elementFromPoint liefert dann null
+           und der Test waere aus dem falschen Grund rot (PB-072). */
+        const sheet = document.querySelector('#m-histedit .mdl');
+        if (sheet && sheet.getAnimations) {
+          try { await Promise.all(sheet.getAnimations().map(a => a.finished.catch(() => {}))); } catch {}
+        }
+        /* Zur Ruhe kommen UND im Bild angekommen sein. Beides, weil sonst
+           eine stabile, aber falsche Lage gemessen wird: der Test war einmal
+           rot, weil elementFromPoint auf einen Knopf des Hintergrundscreens
+           zeigte — ein Ergebnis, das nichts ueber die Aktionszeile aussagt.
+           Was nicht ins Bild kommt, wird gemeldet, nicht gemessen (PB-072). */
+        const leiste = document.querySelector('#m-histedit .sheet-cta');
+        if (!leiste) return { fehler: 'keine Aktionszeile' };
+        let vorher = null, drin = false;
+        for (let i = 0; i < 90; i++) {
+          await new Promise(res => requestAnimationFrame(() => res()));
+          const rr = sheet.getBoundingClientRect();
+          const lr2 = leiste.getBoundingClientRect();
+          drin = lr2.top >= 0 && lr2.bottom <= innerHeight && lr2.height > 0;
+          const jetzt = Math.round(rr.top) + 'x' + Math.round(rr.height);
+          if (jetzt === vorher && drin) break;
+          vorher = jetzt;
+        }
+        if (!drin) return { fehler: 'Aktionszeile kam nicht ins Bild — nicht gemessen' };
+        const lr = leiste.getBoundingClientRect();
+        const knopf = leiste.querySelector('.btn');
+        const kr = knopf.getBoundingClientRect();
+        /* Ein Punkt im oberen Polster: sichtbar durchsichtig, oberhalb des
+           Knopfes. Dort darf nicht die Leiste antworten. */
+        const x = Math.round(lr.left + lr.width / 2);
+        const y = Math.round(lr.top + 3);
+        const treffer = document.elementFromPoint(x, y);
+        const out = {
+          polsterHoehe: Math.round(kr.top - lr.top),
+          getroffen: treffer ? (treffer.id || treffer.className || treffer.tagName) : null,
+          inDerLeiste: !!(treffer && treffer.closest && treffer.closest('.sheet-cta')),
+          // Der Knopf selbst muss weiterhin antworten - sonst waere er kaputt.
+          knopfTrifft: (() => {
+            const t = document.elementFromPoint(Math.round(kr.left + kr.width / 2), Math.round(kr.top + kr.height / 2));
+            return !!(t && t.closest && t.closest('.sheet-cta'));
+          })()
+        };
+        cm('m-histedit');
+        D.history = []; save();
+        /* Wenn nicht einmal der Knopf selbst antwortet, liegt etwas anderes
+           darueber und die Messung sagt nichts ueber die Aktionszeile aus.
+           Das wird gemeldet, nicht als Urteil ausgegeben — ein nicht zustande
+           gekommener Messwert ist kein Ergebnis (PB-072). */
+        if (!out.knopfTrifft) return { fehler: 'etwas liegt ueber dem Sheet, nicht gemessen', getroffen: out.getroffen };
+        return out;
+      });
+      await page.setViewportSize(vorher);
+      if (r.fehler) return [false, 'UNKLAR — ' + r.fehler + ' (' + JSON.stringify(r) + ')'];
+      const ok = r.polsterHoehe > 0 && r.inDerLeiste === false && r.knopfTrifft === true;
+      return [ok, JSON.stringify(r) + ' — erwartet: durchsichtiges Polster reicht durch, Knopf selbst faengt'];
+    }
+  }
+  ,
+  {
+    id: 'PB-093', title: 'Eine geloeschte Session bleibt geloescht — der Grabstein ueberlebt das Speichern',
+    run: async () => {
+      /* Von der Abnahme gefunden, und der aelteste der hier gelisteten Fehler:
+         er steckt seit PB-002 in der App.
+
+         `ensureTombstoneState()` raeumt beim Normalisieren auf:
+
+           D.deleted.history = D.deleted.history.filter(k => String(k).indexOf('v2|') === 0);
+
+         Gemeint war, alte Schluessel aus der Zeit vor PB-002 wegzuwerfen.
+         Getroffen wird aber jeder MODERNE Schluessel: seit PB-002 hat jede
+         Session eine `id`, und `histSessionKey` liefert dafuer `id|…`, nicht
+         `v2|…`. Der Grabstein wurde also im selben `save()` weggeworfen, das
+         ihn anlegte.
+
+         Ohne Grabstein holt `mergeHistory` die Session beim naechsten
+         Abgleich zurueck. Loeschen war damit fuer jeden mit Sync-Code
+         wirkungslos — die Einheit ist beim naechsten Start wieder da und
+         zaehlt weiter in Volumen, PR-Erkennung, Serie und Ampel.
+
+         Der Fehler ist genau deshalb so lange unentdeckt geblieben, weil er
+         ohne Cloud unsichtbar ist: lokal verschwindet die Session ja. */
+      const r = await page.evaluate(() => {
+        const mach = (id, datum) => ({
+          id, updatedAt: 1000, date: datum, planKey: Object.keys(D.plan)[0], duration: 60,
+          sets: [{ ex: 'Bankdrücken', nr: 1, w: 60, r: 8, rir: 2, muscle: 'chest', type: 'main' }]
+        });
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        D.history = [mach('S-bleibt', '01.03.2026'), mach('S-weg', '05.03.2026')];
+        save();
+        const schluessel = histSessionKey(D.history[1]);
+        const alt = window.confirm; window.confirm = () => true;
+        try { delSess(1); } finally { window.confirm = alt; }
+        const out = {
+          schluessel,
+          lokal: D.history.map(x => x.id),
+          grabsteine: [...(D.deleted.history || [])]
+        };
+        /* Die eigentliche Probe: haelt der Grabstein den Weg durch das
+           Zusammenfuehren aus? Genau das tut der Cloud-Abgleich. */
+        const wolke = { history: [mach('S-bleibt', '01.03.2026'), mach('S-weg', '05.03.2026')],
+                        deleted: { history: [], weights: [], egym: [], libraryCustom: [] },
+                        meta: { updatedAt: 1 } };
+        D = mergeSyncedData(wolke);
+        normalizeData();
+        out.nachAbgleich = (D.history || []).map(x => x.id);
+        out.grabsteineDanach = [...((D.deleted || {}).history || [])];
+        D.history = []; D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] }; save();
+        return out;
+      });
+      const ok = r.schluessel === 'id|S-weg'
+        && JSON.stringify(r.lokal) === '["S-bleibt"]'
+        && r.grabsteine.includes('id|S-weg')
+        && JSON.stringify(r.nachAbgleich) === '["S-bleibt"]'
+        && r.grabsteineDanach.includes('id|S-weg');
+      return [ok, JSON.stringify(r) + ' — erwartet: Grabstein id|S-weg ueberlebt und haelt die Session beim Abgleich draussen'];
+    }
+  }
+  ,
+  {
+    id: 'PB-094', title: 'Eine Altdaten-Session zu korrigieren legt sie nicht ein zweites Mal an',
+    run: async () => {
+      /* Von der Abnahme gefunden — und der Grund, warum PB-082 in genau der
+         Umgebung gruen war, in der es nichts zu beweisen gab: Jedes einzige
+         Historien-Fixture im Harness stempelt eine `id`. Die Form, FUER die
+         der Editor gebaut wurde — eine alte Einheit —, kam in keinem Test vor.
+
+         Eine Session aus der Zeit vor PB-002 hat keine id; `histSessionKey`
+         liefert fuer sie `v2|<Hash ueber den Inhalt>`. `saveHistEdit` vergibt
+         beim Korrigieren eine id — der Schluessel wechselt damit auf `id|…`.
+         In der Cloud liegt die Session aber noch unter dem alten. Nach dem
+         Abgleich steht sie ZWEIMAL da: einmal falsch, einmal korrigiert.
+         Volumen, Frequenz, Serie und Fitnessalter zaehlen sie doppelt, und
+         die falschen Zahlen, die man gerade korrigieren wollte, gehen
+         weiterhin voll in jede Auswertung ein. */
+      const r = await page.evaluate(() => {
+        const altSession = () => ({
+          // kein id, kein updatedAt — so sahen Sessions vor PB-002 aus
+          date: '01.07.2026', planKey: Object.keys(D.plan)[0], duration: 60,
+          sets: [{ ex: 'Bankdrücken', nr: 1, w: 60, r: 8, rir: 2, muscle: 'chest', type: 'main' }]
+        });
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        D.history = [altSession()];
+        save();
+        const out = { vorherId: D.history[0].id || null, vorherKey: histSessionKey(D.history[0]) };
+
+        calSelDay = null; calMonth = 6; calYear = 2026;
+        renderHist();
+        const stift = document.querySelector('#hl .hs-edit');
+        out.stiftDa = !!stift;
+        if (!stift) return out;
+        stift.click();
+        document.getElementById('he-w-0').value = '65';
+        saveHistEdit();
+        out.lokal = D.history.length;
+        out.nachherId = !!(D.history[0] || {}).id;
+        out.gewicht = ((D.history[0] || {}).sets || [])[0] && D.history[0].sets[0].w;
+
+        /* Die Cloud kennt nur die alte, unkorrigierte Fassung — genau so
+           sieht es beim naechsten Abgleich aus. */
+        const wolke = { history: [altSession()],
+                        deleted: { history: [], weights: [], egym: [], libraryCustom: [] },
+                        meta: { updatedAt: 1 } };
+        D = mergeSyncedData(wolke);
+        normalizeData();
+        out.nachAbgleich = (D.history || []).length;
+        out.gewichte = (D.history || []).map(x => (x.sets || [])[0] && x.sets[0].w);
+        D.history = []; D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] }; save();
+        return out;
+      });
+      const ok = r.vorherId === null && String(r.vorherKey).indexOf('v2|') === 0
+        && r.stiftDa && r.lokal === 1 && r.nachherId === true && r.gewicht === 65
+        && r.nachAbgleich === 1 && JSON.stringify(r.gewichte) === '[65]';
+      return [ok, JSON.stringify(r) + ' — erwartet: nach dem Abgleich genau EINE Session, und zwar die korrigierte (65 kg)'];
+    }
+  }
+  ,
+  {
+    id: 'PB-095', title: 'Eine korrigierte EGYM-Messung ueberlebt den Cloud-Abgleich',
+    run: async () => {
+      /* Zwei Funde der Abnahme, eine Wurzel — und beide treffen genau die
+         Zusage, fuer die PB-083 gebaut wurde.
+
+         (a) Ein GELEERTES Feld kam zurueck. `mergeEgymMeasurements` fuehrt
+             Messungen feldweise mit `pickValue(neu, alt)` zusammen: ein
+             `null` gilt als „nichts gesagt", der alte Wert bleibt stehen.
+             PB-083 versprach „was leer steht, ist danach leer" — das galt bis
+             zum naechsten Schreibvorgang, also Sekunden.
+
+         (b) Datum aendern und ZURUECKaendern loeschte die Messung fuer immer.
+             Der Datumswechsel legte einen Grabstein auf das alte Datum. Beim
+             Zusammenfuehren werden Grabsteine VEREINIGT — der lokal wieder
+             entfernte kam aus der Cloud zurueck und filterte die Messung
+             anschliessend dauerhaft weg. Samt BioAge, KFA, SMM und allen
+             Muskelwerten, ohne Meldung.
+
+         Die Wurzel: Eine Messung wurde ueber ihr DATUM identifiziert. Damit
+         ist jede Datumskorrektur ein Loeschen plus ein Anlegen. Jetzt hat sie
+         eine eigene Kennung und einen Zeitstempel — dieselbe Loesung, die
+         Sessions seit PB-002 haben. */
+      const r = await page.evaluate(() => {
+        const leer = () => ({ history: [], deleted: { history: [], weights: [], egym: [], libraryCustom: [] }, meta: { updatedAt: 1 } });
+        const out = {};
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        D.egym = { enabled: true, measurements: [{ date: '2026-07-01', kfp: 18.5, gewicht: 82, smm: 36 }] };
+        save();
+        const wolkeVorher = JSON.parse(JSON.stringify({ ...leer(), egym: JSON.parse(JSON.stringify(D.egym)) }));
+
+        // (a) Ein Feld leeren, dann kommt der Abgleich mit der alten Fassung.
+        renderEgym();
+        document.querySelectorAll('#egym-history .hs-edit')[0].click();
+        document.getElementById('eg-kfp').value = '';
+        saveEgymEntry();
+        out.direktLeer = D.egym.measurements[0].kfp;
+        D = mergeSyncedData(wolkeVorher);
+        normalizeData();
+        out.nachAbgleichLeer = (D.egym.measurements[0] || {}).kfp;
+        out.andereWerte = [(D.egym.measurements[0] || {}).gewicht, (D.egym.measurements[0] || {}).smm];
+
+        // (b) Datum aendern und wieder zurueck.
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        D.egym = { enabled: true, measurements: [{ date: '2026-07-01', kfp: 18.5, gewicht: 82, smm: 36 }] };
+        save();
+        renderEgym();
+        document.querySelectorAll('#egym-history .hs-edit')[0].click();
+        document.getElementById('egym-date').value = '2026-07-05';
+        saveEgymEntry();
+        out.nachWechsel = D.egym.measurements.map(m => m.date);
+        /* Zwischen den beiden Korrekturen laeuft ein Abgleich — der Normalfall,
+           die App schreibt nach jedem Speichern. Die Cloud kennt danach den
+           Grabstein auf das alte Datum. Genau daran scheiterte es: beim
+           Zusammenfuehren werden Grabsteine VEREINIGT, der lokal wieder
+           entfernte kam also zurueck. */
+        const wolkeMitGrabstein = JSON.parse(JSON.stringify({
+          history: [], meta: { updatedAt: 1 },
+          egym: JSON.parse(JSON.stringify(D.egym)),
+          deleted: JSON.parse(JSON.stringify(D.deleted))
+        }));
+        out.grabsteineInDerWolke = [...(wolkeMitGrabstein.deleted.egym || [])];
+        renderEgym();
+        document.querySelectorAll('#egym-history .hs-edit')[0].click();
+        document.getElementById('egym-date').value = '2026-07-01';
+        saveEgymEntry();
+        out.nachRueckwechsel = D.egym.measurements.map(m => m.date);
+        // Und jetzt der Abgleich mit der Cloud, die den Grabstein kennt.
+        D = mergeSyncedData(wolkeMitGrabstein);
+        normalizeData();
+        out.nachAbgleichZurueck = (D.egym.measurements || []).map(m => m.date);
+        out.werteDanach = ((D.egym.measurements || [])[0] || {}).smm;
+
+        D.egym = { enabled: false, measurements: [] };
+        D.deleted = { history: [], weights: [], egym: [], libraryCustom: [] };
+        save();
+        return out;
+      });
+      const ok = r.direktLeer === null && r.nachAbgleichLeer === null
+        && JSON.stringify(r.andereWerte) === '[82,36]'
+        && JSON.stringify(r.nachWechsel) === '["2026-07-05"]'
+        && JSON.stringify(r.nachRueckwechsel) === '["2026-07-01"]'
+        && JSON.stringify(r.nachAbgleichZurueck) === '["2026-07-01"]'
+        && r.werteDanach === 36;
+      return [ok, JSON.stringify(r) + ' — erwartet: geleertes Feld bleibt leer, Datum hin und zurueck laesst die Messung stehen'];
+    }
+  }
+  ,
+  {
+    id: 'PB-096', title: 'Der Historien-Editor beschriftet Cardio als Minuten, nicht als Wiederholungen',
+    run: async () => {
+      /* Aus der Abnahme. Der Editor beschriftete jede Zeile mit kg und Wdh —
+         auch die zwanzig Minuten Laufband. Der Rest der App macht das seit
+         jeher richtig; nur der neue Editor nicht. Kosmetisch, aber
+         irrefuehrend genug, dass jemand den vermeintlichen Fehler
+         „korrigiert" und damit erst einen macht. */
+      const r = await page.evaluate(() => {
+        D.history = [{
+          id: 'S-cardio', updatedAt: 1000, date: '15.03.2026', planKey: Object.keys(D.plan)[0], duration: 40,
+          sets: [
+            { ex: 'Bankdrücken', nr: 1, w: 60, r: 8, rir: 2, muscle: 'chest', type: 'main' },
+            { ex: 'Laufband', nr: 1, w: 9, r: 20, rir: 0, muscle: 'legs', type: 'main', mode: 'cardio' }
+          ]
+        }];
+        save();
+        openHistEdit(0);
+        const zeilen = [...document.querySelectorAll('#he-body .he-set')];
+        const labels = zeilen.map(z => [...z.querySelectorAll('label')].map(l => l.textContent));
+        cm('m-histedit');
+        D.history = []; save();
+        return { zeilen: zeilen.length, labels };
+      });
+      const ok = r.zeilen === 2
+        && JSON.stringify(r.labels[0]) === '["kg","Wdh","RIR"]'
+        && JSON.stringify(r.labels[1]) === '["Stufe","Min","RIR"]';
+      return [ok, JSON.stringify(r) + ' — erwartet Kraft: kg/Wdh, Cardio: Stufe/Min'];
+    }
+  },
+  {
+    id: 'PB-097', title: 'Eine von der Messung verdraengte Handwiegung bleibt loeschbar',
+    run: async () => {
+      /* Aus der Abnahme, und es ist die Kehrseite meines eigenen PB-084:
+         Bei gleichem Tag gewinnt die EGYM-Messung — das ist Absicht. Nicht
+         Absicht war, dass der verdraengte Handeintrag damit weder sichtbar
+         noch korrigierbar noch loeschbar wurde. Wer an einem Messtag
+         zusaetzlich eine falsche Zahl eingetippt hatte, wurde sie nie
+         wieder los. */
+      const r = await page.evaluate(() => {
+        D.bio.weights = [{ date: '01.06.2026', kg: 84 }, { date: '20.06.2026', kg: 83 }];
+        D.egym = { enabled: true, measurements: [{ date: '2026-06-01', gewicht: 84.6, kfp: 20 }] };
+        save(); renderBio();
+        const reihe = weightSeries();
+        const zeilen = [...document.querySelectorAll('#bio-entries-list .sr')];
+        const out = {
+          punkte: reihe.map(w => `${w.date}:${w.kg}:${w.quelle}`),
+          knoepfe: zeilen.map(z => !!z.querySelector('.be-del')),
+          handVorher: D.bio.weights.length
+        };
+        // Der Loeschknopf am Messtag muss den darunterliegenden Handeintrag treffen.
+        const messtag = zeilen.find(z => (z.textContent || '').includes('01.06.2026'));
+        out.messtagHatKnopf = !!(messtag && messtag.querySelector('.be-del'));
+        if (out.messtagHatKnopf) {
+          messtag.querySelector('.be-del').click();
+          out.handNachher = D.bio.weights.length;
+          out.uebrig = D.bio.weights.map(w => w.date);
+          out.messungBleibt = (D.egym.measurements || []).length;
+        }
+        D.bio.weights = []; D.egym = { enabled: false, measurements: [] }; save();
+        return out;
+      });
+      const ok = JSON.stringify(r.punkte) === '["01.06.2026:84.6:egym","20.06.2026:83:hand"]'
+        && r.handVorher === 2 && r.messtagHatKnopf === true
+        && r.handNachher === 1 && JSON.stringify(r.uebrig) === '["20.06.2026"]'
+        && r.messungBleibt === 1;
+      return [ok, JSON.stringify(r) + ' — erwartet: Messung gewinnt, der Handeintrag darunter bleibt loeschbar'];
     }
   }
 ];
@@ -3719,7 +4201,11 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
          Ein direkter Aufruf von openSetEditor könnte nicht sehen, dass der
          Weg dorthin abgeschnitten ist — genau das war PB-081. */
       if (!D.active) return;
-      const ei = D.active.exercises.findIndex(e => (e.logged || []).length);
+      /* Eine ÜBERSPRUNGENE Übung behält ihre geloggten Sätze, zeigt aber
+         keine Chips — sie zählt ja nicht mehr zur Session. Ohne diese
+         Bedingung meldete die Operation genau das als Fehler; der Weg zurück
+         ist `unskipEx`, nicht der Satz-Editor. */
+      const ei = D.active.exercises.findIndex(e => !e.skipped && (e.logged || []).length);
       if (ei < 0) return;
       // Eine eingeklappte Übung zeigt keine Chips — sonst prüfte der Test das Zuklappen.
       D.active.openEx = ei;
@@ -3728,7 +4214,8 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       if (!chip) throw new Error(`Übung ${ei} hat geloggte Sätze, aber keinen antippbaren Chip`);
       if (chip.tagName !== 'BUTTON') throw new Error('Satz-Chip ist kein Knopf mehr');
       chip.click();
-      if (!document.getElementById('set-popup')) throw new Error('Antippen des Satzes öffnete keinen Editor');
+      if (!document.getElementById('m-setedit').classList.contains('show'))
+        throw new Error('Antippen des Satzes öffnete keinen Editor');
       const w = rnd();
       if (w < .45) {
         /* Unsinn in die Felder: die Klemmung in saveEditSet ist die einzige
@@ -3742,7 +4229,8 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       } else {
         closeSetEditor();
       }
-      if (document.getElementById('set-popup')) throw new Error('Satz-Editor blieb offen');
+      if (document.getElementById('m-setedit').classList.contains('show'))
+        throw new Error('Satz-Editor blieb offen');
     }],
     ['histEdit', () => {
       /* Der Korrekturweg für beendete Sessions (PB-082). Geprüft wird nicht

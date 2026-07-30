@@ -131,11 +131,20 @@
 | [PB-086](#pb-086) | Plan-Editor schrieb an eine Position statt an eine Übung | **hoch** | Datenverlust | ✅ |
 | [PB-087](#pb-087) | Pause vorbei, Leiste sagte weiter „Pause läuft" | mittel | Toter DOM-Anker | ✅ |
 | [PB-088](#pb-088) | Vier Anker ohne Element — keine Prüfung sah so etwas | mittel | Testlücke | ✅ |
+| [PB-089](#pb-089) | Satz-Editor war kein Sheet und lag unter der Tastatur | **hoch** | iOS / Layout | ✅ |
+| [PB-090](#pb-090) | Klebende Aktionszeile fing Tipps in ihrem durchsichtigen Teil | mittel | Unsichtbare Trefferfläche | ✅ |
+| [PB-091](#pb-091) | EGYM-Schalter nahm die Gewichtseingabe weg, bevor es Messungen gab | mittel | Verfrühte Annahme | ✅ |
+| [PB-092](#pb-092) | Nach dem letzten Satz verschwand der Chip zum Korrigieren | niedrig | Fehlender Weg | ✅ |
+| [PB-093](#pb-093) | Löschen war für jeden mit Sync-Code wirkungslos — seit PB-002 | **kritisch** | Datenverlust | ✅ |
+| [PB-094](#pb-094) | Alte Einheit korrigieren legte sie ein zweites Mal an | **hoch** | Datenverlust | ✅ |
+| [PB-095](#pb-095) | EGYM-Messung über ihr Datum identifiziert — Korrektur löschte sie | **kritisch** | Datenverlust | ✅ |
+| [PB-096](#pb-096) | Cardio im Historien-Editor als kg und Wiederholungen beschriftet | niedrig | Darstellung | ✅ |
+| [PB-097](#pb-097) | Verdrängte Handwiegung weder sichtbar noch löschbar | niedrig | Fehlender Weg | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**47 von 47 im Frontend behebbaren Fehlern sind behoben.**
+**56 von 56 im Frontend behebbaren Fehlern sind behoben.**
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -3567,6 +3576,402 @@ Gefunden wurde das, indem ein Prüfer die bekannte Frage umdrehte: nicht
 
 ---
 
+### PB-089
+
+**Der neue Satz-Editor war kein Sheet — und lag deshalb unter der Tastatur**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | iOS / Layout — bekannter Fehler, neu gebaut |
+| **Gefunden** | Abnahme der Auslieferung, echte Taps auf iPhone SE und iPhone 15 |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** `openSetEditor()` baute sich sein eigenes Fenster:
+
+```js
+const popup=document.createElement('div');
+popup.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;…';
+```
+
+Es war damit **kein `.mbg`/`.mdl`-Sheet** — und hatte nichts von dem, was
+dieses Projekt über iOS-Tastaturen gelernt hat: kein Ausweichen des Containers
+um `--kb`, keine schrumpfende Maximalhöhe, keine klebende Aktionszeile. Alles
+Dinge, die in **PB-061** und **PB-066** erkämpft wurden.
+
+Schlimmer: Der Editor **holt die Tastatur selbst herbei** (`feld.focus()` beim
+Öffnen). Er erzeugt also genau die Bedingung, unter der er versagt.
+
+**Gemessen auf echten Geräteprofilen:**
+
+| Gerät | Tastatur | verdeckt |
+|---|---|---|
+| iPhone SE (320×568) | 216 px | RIR-Feld, **Speichern, Löschen, Abbrechen** |
+| iPhone 15 (393×659) | 226 px | **Speichern, Löschen, Abbrechen** |
+
+Ein Formular ohne Knopf. Und da PB-081 die Haltegeste ersatzlos entfernt hat,
+war dieser Editor **der einzige Weg**, einen vertippten Satz zu korrigieren.
+Der Ausweg, den man in dieser Lage nimmt — nach draußen tippen, damit die
+Tastatur verschwindet — schließt das Fenster und verwirft die Eingabe.
+
+**Warum kein Test das sah.** PB-061 prüft die Tastatursituation, indem es über
+die `.mbg`-Elemente der Seite läuft und jedes öffnet. Ein Popup, das keines
+ist, kam in dieser Liste nie vor. Die Prüfung war vorhanden, vollständig und
+für diesen Dialog blind.
+
+**Fix.** Der Editor ist jetzt das Sheet `m-setedit` mit `.sheet-cta` wie alle
+anderen — und steht damit automatisch in PB-061s Liste. Die beiden Aktionen
+bekommen ihr Ziel als Funktion zugewiesen statt als Zeichenkette im Markup;
+so kann kein Übungsname aus einem Handler ausbrechen (PB-018).
+
+**Lektion.** Ein Sonderweg umgeht nicht nur die gemeinsame Lösung, sondern
+auch die gemeinsame Prüfung. Beides fällt zusammen und beides fällt nicht auf.
+Wer ein Fenster baut, obwohl die App ein Fenstersystem hat, baut sich die
+gelösten Fehler neu ein — hier zwei auf einmal.
+
+---
+
+### PB-090
+
+**Die klebende Aktionszeile fing Tipps in ihrem durchsichtigen Teil**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Unsichtbare Trefferfläche |
+| **Gefunden** | Abnahme, echter Tap auf iPhone SE |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** `.sheet-cta` klebt am unteren Sheetrand und beginnt oben mit
+einem durchsichtigen Verlauf. Dort **sieht** man den Inhalt darunter — und
+tippt danach. Der Tipp landete trotzdem auf der Leiste.
+
+Im Historien-Editor (PB-082) bedeutete das auf dem iPhone SE: Wer bei einer
+Session mit drei Sätzen das **zweite Satzfeld** antippt, trifft
+„✓ Änderungen speichern". Das Sheet schließt sich ungefragt. Nichts im Bild
+deutet darauf hin, dass dort ein Knopf liegt.
+
+Die Nebenwirkung macht es schlimmer als einen Fehlgriff: Dieses versehentliche
+Speichern hebt `updatedAt` — und genau daran entscheidet sich beim nächsten
+Abgleich, welche Fassung gewinnt.
+
+**Belegt mit `elementFromPoint` an einem Punkt im durchsichtigen Polster:**
+
+| | Antwort des Browsers |
+|---|---|
+| vorher | `sheet-cta` — die Leiste |
+| nachher | `he-r-1` — das Feld, das der Nutzer meint |
+
+Der Knopf selbst antwortet unverändert.
+
+**Fix.** `pointer-events:none` auf dem Behälter, `auto` auf seinen Kindern.
+Dazu `scroll-padding-bottom` am Sheet, damit der Browser beim Hinscrollen zu
+einem Feld nicht genau hinter der Leiste anhält.
+
+**Lektion.** Ein Verlauf nach transparent ist eine **optische** Aussage
+(„hier hört etwas auf"). Für die Trefferbehandlung gilt sie nicht — und wo
+Optik und Trefferfläche auseinandergehen, entsteht ein Knopf, den niemand
+sieht. Der Fund kam nicht aus einer Zusicherung, sondern aus einem echten Tap
+mit `hasTouch` auf dem kleinsten realen Gerät.
+
+---
+
+### PB-091
+
+**Der EGYM-Schalter nahm die Gewichtseingabe weg, bevor es eine Messung gab**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Annahme, die erst später stimmt |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ behoben |
+
+**Der Fehler** steckt in **PB-084** selbst — also in der Änderung, die eine
+Stunde zuvor live ging. Dort wurde „EGYM ist eingeschaltet" mit „das Gewicht
+kommt von dort" gleichgesetzt:
+
+```js
+const perEgym=!!(D.egym&&D.egym.enabled);
+if(zeile)zeile.style.display=perEgym?'none':'';
+```
+
+Das stimmt aber erst, wenn eine Messung **mit Gewicht** existiert. Und der
+Schalter wird umgelegt, **bevor** man die erste Messung hat — aus Neugier,
+oder weil der Studiotermin nächste Woche ist. Dazu sind sämtliche EGYM-Felder
+freiwillig; eine Messung ohne Gewicht ist kein Sonderfall.
+
+Die Folge: Die einzige Möglichkeit, das Gewicht einzutragen, verschwand sofort
+und ohne Warnung — und an ihrer Stelle stand ein Satz, der etwas Falsches
+behauptete: *„Kommt aus deiner EGYM-Messung."* Es kam nichts.
+
+**Fix.** `egymLiefertGewicht()` prüft, was der Name sagt: Schalter an **und**
+mindestens eine Messung mit einem Gewicht > 0. Sonst bleibt die Handeingabe
+stehen.
+
+**Lektion.** Eine Einstellung ist eine Absicht, kein Zustand. „Der Nutzer will
+EGYM benutzen" und „es liegen EGYM-Daten vor" sind zwei verschiedene Aussagen,
+und die Oberfläche darf sich nur auf die zweite verlassen. Der Test zu PB-084
+prüfte den eingeschwungenen Fall — mit Messungen — und übersah damit genau die
+Woche, in der man den Schalter umlegt.
+
+---
+
+### PB-092
+
+**Nach dem letzten Satz verschwand der Chip — genau dann, wenn man ihn braucht**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Weg, der im entscheidenden Moment fehlt |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Mit dem letzten Satz gilt die Übung als erledigt und klappt im
+Fokus-Layout zu einer Zeile zusammen — die Satz-Chips verschwinden. Der
+häufigste Anlass für eine Korrektur ist aber genau dieser Satz: der, den man
+gerade getippt hat.
+
+PB-081 verspricht *„ein Tipp öffnet den Editor"*. In diesem Fall waren es
+zwei, und der erste — die zusammengeklappte Zeile antippen — stand nirgends.
+
+**Fix.** Die gerade abgeschlossene Übung bleibt aufgeklappt.
+
+**Lektion.** Ein neuer Weg muss in dem Zustand geprüft werden, in dem man ihn
+**braucht**, nicht in dem, in dem er am leichtesten zu prüfen ist. Der Test zu
+PB-081 loggte einen Satz in eine Übung, die danach noch offen war — der
+bequeme Fall, und der seltenere.
+
+---
+
+### PB-093
+
+**Löschen war für jeden mit Sync-Code wirkungslos — seit PB-002**
+
+| | |
+|---|---|
+| **Schwere** | **kritisch** |
+| **Klasse** | Aufräumfilter, der das Falsche trifft |
+| **Gefunden** | Abnahme der Auslieferung, von zwei Prüfern unabhängig |
+| **Status** | ✅ behoben |
+
+**Der Fehler** ist eine einzige Zeile, und er ist der älteste in dieser Liste:
+
+```js
+D.deleted.history = D.deleted.history.filter(k => String(k).indexOf('v2|') === 0);
+```
+
+Gemeint waren Schlüssel aus der Zeit **vor** PB-002. Getroffen wird jeder
+**moderne**: Seit PB-002 hat jede Session eine `id`, und `histSessionKey()`
+liefert dafür `id|…`. Der Grabstein wurde also in demselben `save()`
+weggeworfen, das ihn anlegte.
+
+Ohne Grabstein holt `mergeHistory` die Session beim nächsten Abgleich zurück.
+Der Ablauf für jeden Nutzer mit Sync-Code:
+
+1. Session löschen → sie verschwindet
+2. `save()` → Grabstein weg
+3. nächster Abgleich → Session wieder da
+
+**Löschen hat also nie funktioniert.** Die Einheit zählt weiter in Volumen,
+PR-Erkennung, e1RM, Serie und Volumen-Ampel.
+
+**Warum das so lange unentdeckt blieb.** Ohne Cloud ist der Fehler unsichtbar
+— lokal verschwindet die Session ja. Er zeigt sich erst beim nächsten
+`onSnapshot`, also nach dem Neustart oder auf dem zweiten Gerät. Genau die
+Sicht, die eine gefälschte Firestore herstellt — und die es erst seit
+`test/fakestore.mjs` gibt.
+
+**Fix.** Der Filter behält beide Formen, `id|` und `v2|`.
+
+**Lektion.** Ein Aufräumfilter formuliert, **was bleiben darf**, und veraltet
+damit schweigend, sobald ein neues Format dazukommt. Ein Filter, der
+formuliert, **was weg soll**, hätte hier nichts kaputt gemacht. Und: Der
+Fehler wurde durch eine Verbesserung eingeführt — PB-002 hat die IDs gebracht
+und den Filter nicht mitgezogen. Das ist Muster 1 dieses Registers, zum
+fünften Mal.
+
+**Test.** `PB-093` — löscht eine Session, prüft dass der Grabstein `save()`
+überlebt, und führt anschließend mit einer Cloud zusammen, die die Session
+noch kennt.
+
+---
+
+### PB-094
+
+**Eine alte Einheit zu korrigieren legte sie ein zweites Mal an**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Identitätswechsel ohne Grabstein |
+| **Gefunden** | Abnahme, Linse „Bestandsnutzer" |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Eine Session aus der Zeit vor PB-002 hat keine `id`;
+`histSessionKey()` liefert für sie `v2|<Hash über den Inhalt>`. Beim
+Korrigieren vergibt `saveHistEdit()` eine `id` — der Identitätsschlüssel
+wechselt damit auf `id|…`. In der Cloud liegt die Session aber noch unter dem
+alten Schlüssel.
+
+Ergebnis nach dem Abgleich: **dieselbe Einheit zweimal**, einmal falsch und
+einmal korrigiert. Volumen, Frequenz, Serie und Fitnessalter zählen sie
+doppelt — und die falschen Zahlen, die man gerade korrigieren wollte, gehen
+weiterhin voll in jede Auswertung ein. Mit PB-093 im selben Zustand ließ sich
+die Dublette nicht einmal wegräumen.
+
+**Warum kein Test das sah** — und das ist der eigentliche Befund: **Jedes
+einzige Historien-Fixture im Harness stempelt eine `id`.** `id: newSessionId()`,
+`id: 'T'+i`, `id: 'p'+date` … Die Datenform, **für die der Editor gebaut
+wurde** — eine ältere Einheit —, kam in keinem einzigen Test vor. PB-082 war
+grün in genau der Umgebung, in der es nichts zu beweisen gab.
+
+**Fix.** Beim Vergeben der `id` wird der alte Schlüssel begraben. Er wurde
+beim Öffnen ohnehin schon gemerkt (PB-085).
+
+**Lektion.** Ein Test, der seine Ausgangsdaten selbst baut, baut sie so, wie
+der Autor sich die Welt vorstellt — also im Neuzustand. Der Bestandsnutzer
+kommt darin nicht vor, obwohl er die Mehrheit ist. Dieselbe Blindheit wie beim
+`longPress`-Fund, nur andersherum: dort überlebte ein entfernter Name einen
+Aufrufer, hier überlebt ein ganzer Datenzustand ohne jede Prüfung.
+
+**Test.** `PB-094` — korrigiert eine Session **ohne id** über die Oberfläche
+und führt anschließend mit einer Cloud zusammen, die nur die alte Fassung
+kennt. Erwartet: genau eine Session, und zwar die korrigierte.
+
+---
+
+### PB-095
+
+**EGYM-Messungen waren über ihr Datum identifiziert — und damit zerbrechlich**
+
+| | |
+|---|---|
+| **Schwere** | **kritisch** |
+| **Klasse** | Identität an einem veränderlichen Merkmal |
+| **Gefunden** | Abnahme, Linse „zwei Geräte, zwei Fassungen" |
+| **Status** | ✅ behoben |
+
+Zwei Funde, eine Wurzel — und beide treffen genau die Zusage, für die PB-083
+gebaut wurde.
+
+**(a) Ein geleertes Feld kam zurück.** `mergeEgymMeasurements` führte
+Messungen **feldweise** zusammen:
+
+```js
+Object.keys({...second,...first}).forEach(k => { merged[k] = pickValue(first[k], second[k]) });
+```
+
+`pickValue` behandelt `null` als „nichts gesagt" und nimmt den alten Wert. Die
+zentrale Zusage von PB-083 — *„was im Formular leer steht, ist danach leer"* —
+galt damit bis zum nächsten Schreibvorgang. Also **Sekunden**. Die App zeigte
+Erfolg an und nahm ihn stillschweigend zurück.
+
+**(b) Datum ändern und zurückändern löschte die Messung für immer.** Der
+Datumswechsel legte einen Grabstein auf das alte Datum. Grabsteine werden beim
+Zusammenführen **vereinigt** — der lokal wieder entfernte kam aus der Cloud
+zurück und filterte die Messung anschließend dauerhaft weg. Samt BioAge, KFA,
+SMM und allen Muskel- und Wasserwerten. Ohne Meldung, ohne Rückfrage, und
+ohne dass irgendein Weg in der App sie zurückholt.
+
+Gemessen:
+
+```
+nach Datumswechsel      : ["2026-07-05"]
+Grabstein in der Cloud  : ["2026-07-01"]
+nach Rückwechsel        : ["2026-07-01"]     lokal noch da
+nach dem Abgleich       : []                 weg
+```
+
+**Die Wurzel.** Eine Messung wurde über ihr **Datum** identifiziert. Damit ist
+jede Datumskorrektur ein Löschen plus ein Anlegen — mit allem, was daran
+hängt. Und ein Grabstein ist eine Aussage ohne Verfallsdatum: Wer ein Datum
+einmal begräbt, vergiftet es dauerhaft.
+
+**Fix.** Jede Messung trägt eine eigene Kennung und einen Zeitstempel —
+dieselbe Lösung, die Sessions seit PB-002 haben:
+
+* Altdaten bekommen ihre Kennung aus dem Datum abgeleitet (`'m'+dateKey`),
+  damit zwei Geräte unabhängig auf dieselbe kommen.
+* Zusammengeführt wird nach Kennung; bei gleicher Kennung gewinnt die zuletzt
+  bearbeitete Fassung **ganz**. Ein geleertes Feld bleibt damit leer.
+* Beim Bearbeiten **wandert** die Messung, sie stirbt nicht. Kein Grabstein.
+* Nur echtes Löschen begräbt — und zwar die Kennung. Alte, datumsbasierte
+  Grabsteine greifen weiterhin, sonst käme eine vor dem Update gelöschte
+  Messung zurück.
+
+Für Altdaten **ohne** Zeitstempel bleibt das feldweise Auffüllen richtig:
+Keine der beiden Seiten hat dort je „leer" gemeint.
+
+**Lektion.** Identität darf nicht an einem Merkmal hängen, das der Nutzer
+ändern kann. Das Datum einer Messung ist genau so ein Merkmal — es ist der
+häufigste Tippfehler überhaupt. Und ein Grabstein ist die härteste Aussage im
+ganzen Datenmodell: er überlebt jede Zusammenführung und lässt sich nie
+zurücknehmen. Etwas so Endgültiges für eine **Korrektur** einzusetzen war der
+Fehler.
+
+Der Test zu PB-083 hatte das sogar festgeschrieben — er verlangte den
+Grabstein. Er prüfte also die Zusage in genau der Umgebung, in der sie gilt,
+und nie in der, in der sie bricht.
+
+**Test.** `PB-095` — leert ein Feld und führt mit der alten Cloud zusammen;
+ändert das Datum, lässt einen Abgleich dazwischenlaufen, ändert zurück und
+führt mit der Cloud zusammen, die den Grabstein kennt.
+
+---
+
+### PB-096
+
+**Zwanzig Minuten Laufband standen im Editor als „20 Wiederholungen"**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Beschriftung, die zur Falschkorrektur einlädt |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ behoben |
+
+`renderHistEdit` beschriftete jede Zeile mit *kg* und *Wdh* — auch Cardio. Der
+Rest der App macht das seit jeher richtig (`formatLoggedSetLine` schreibt
+Minuten). Kein Datenverlust, aber irreführend genug, dass jemand den
+vermeintlichen Fehler „korrigiert" und damit erst einen macht.
+
+**Fix.** `isCardioSet()` entscheidet über die Beschriftung: *Stufe* und *Min*.
+
+**Lektion.** Ein neuer Editor erbt die Daten, aber nicht das Wissen darüber,
+wie sie zu lesen sind. Wo die App an anderer Stelle bereits eine
+Fallunterscheidung trifft, ist ihr Fehlen im neuen Code kein Versehen mit
+kleiner Wirkung, sondern eine offene Einladung.
+
+---
+
+### PB-097
+
+**Eine von der Messung verdrängte Handwiegung war weder sichtbar noch löschbar**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Kehrseite einer bewussten Entscheidung |
+| **Gefunden** | Abnahme |
+| **Status** | ✅ behoben |
+
+Bei gleichem Tag gewinnt die EGYM-Messung — das ist die dokumentierte Absicht
+aus PB-084, die Waage im Studio weiß es genauer. Nicht Absicht war, dass der
+verdrängte Handeintrag damit **unerreichbar** wurde: nicht im Verlauf, nicht
+in der Liste, und ohne Löschknopf. Wer an einem Messtag zusätzlich eine
+falsche Zahl eingetippt hatte, wurde sie nie wieder los.
+
+**Fix.** Der Index des verdrängten Eintrags reist mit; die Liste zeigt weiter
+einen Löschknopf und sagt im Untertitel, dass darunter ein Handeintrag liegt.
+
+**Lektion.** Wenn zwei Quellen um eine Anzeige konkurrieren und eine gewinnt,
+verschwindet die andere nicht aus den **Daten** — nur aus dem **Bild**. Jede
+Vorrangregel braucht deshalb einen Weg zu dem, was sie verdrängt hat.
+
+---
+
 ### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
 
 Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
@@ -3800,6 +4205,15 @@ gestellt werden sollten:
 | 39 | **Muster erkannt, aber nicht weitergesucht** | PB-086 | Nach jedem neuen Muster gehört die Frage dazu: *wo noch?* Zwischen PB-085 und PB-086 lagen fünf Minuten Suche. |
 | 40 | **`if(el)` verbirgt, was es absichert** | PB-087 | Kann dieses Element überhaupt fehlen? Wenn nein, verwandelt die Prüfung „kaputt und laut" in „kaputt und still". |
 | 41 | **Fehlerklasse außerhalb dessen, was Verhalten zeigt** | PB-088 | Wenn nichts passiert, sieht ein Verhaltenstest nichts. Dagegen hilft eine andere *Art* Prüfung, kein weiterer Test derselben Art. |
+| 42 | **Sonderweg am eigenen System vorbei** | PB-089 | Wer ein Fenster baut, obwohl die App ein Fenstersystem hat, umgeht auch dessen Prüfung — beides fällt zusammen aus. |
+| 43 | **Optik und Trefferfläche gehen auseinander** | PB-090 | Ein Verlauf nach transparent sagt „hier hört etwas auf" — für die Trefferbehandlung gilt das nicht. |
+| 44 | **Einstellung mit Zustand verwechselt** | PB-091 | „Der Nutzer will X" und „X-Daten liegen vor" sind zwei Aussagen. Nur auf die zweite darf sich die Oberfläche verlassen. |
+| 45 | **Neuer Weg im bequemen statt im nötigen Zustand geprüft** | PB-092 | In welchem Zustand braucht man diesen Weg wirklich? Genau der ist selten der, in dem sich leicht testen lässt. |
+| 46 | **Aufräumfilter sagt, was BLEIBEN darf** | PB-093 | Er veraltet schweigend, sobald ein neues Format dazukommt. „Was weg soll" wäre unschädlich gewesen. |
+| 47 | **Testdaten immer im Neuzustand** | PB-094 | Jedes Fixture stempelte eine id. Der Bestandsnutzer kam in keinem Test vor — obwohl er die Mehrheit ist. |
+| 48 | **Identität an einem veränderlichen Merkmal** | PB-095 | Das Datum einer Messung ist der häufigste Tippfehler überhaupt. Wer daran die Identität hängt, macht jede Korrektur zu einem Löschen. |
+| 49 | **Grabstein für eine Korrektur benutzt** | PB-095 | Ein Grabstein überlebt jede Zusammenführung und lässt sich nie zurücknehmen — die härteste Aussage im Datenmodell für den harmlosesten Vorgang. |
+| 50 | **Vorrangregel ohne Weg zum Verdrängten** | PB-097 | Was aus dem Bild verschwindet, ist nicht aus den Daten verschwunden — und braucht trotzdem eine Tür. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
