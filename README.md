@@ -155,9 +155,11 @@ gefolgt von einem Gegencheck, der zeigte, dass der Schaden **größer** war als
 vermutet: nicht eine falsch beschriebene Session, sondern eine verschwundene.
 Grün heißt „die geprüften Fälle halten", nicht „es ist heil".
 Aus der Lektion von PB-085 — *merkt sich ein Dialog eine Position, ist das ein
-Fund* — fiel fünf Minuten später ein zweiter Fall derselben Bauart heraus
-(PB-086). Ein Muster im Register ist erst dann etwas wert, wenn nach dem
-Aufschreiben die Frage folgt: wo noch?
+Fund* — fielen zwei weitere Fälle derselben Bauart heraus (PB-086, PB-098). Ein
+Muster im Register ist erst dann etwas wert, wenn nach dem Aufschreiben die
+Frage folgt: wo noch? — und die Suche breit genug ist, sie zu beantworten. Eine
+Abnahme mit fünf unabhängigen Prüfern auf die ausgelieferten Bytes fand 26
+Funde; 14 wurden gegnerisch bestätigt, daraus wurden PB-085 bis PB-103.
 
 ### Die App ansehen, ohne sie zu installieren
 
