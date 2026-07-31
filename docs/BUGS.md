@@ -146,11 +146,12 @@
 | [PB-101](#pb-101) | Datumsfeld nahm ein Jahr 9999 an — Session unerreichbar | mittel | Eingabeprüfung | ✅ |
 | [PB-102](#pb-102) | Bearbeiten-Modus überlebte sein Fenster | — | Vorbeugung | ✅ |
 | [PB-103](#pb-103) | EGYM ließ sich in einem Sync-Konto nicht ausschalten | mittel | Zustand | ✅ |
+| [PB-104](#pb-104) | Wochenring verglich Sätze mit Volumenpunkten | **hoch** | Anzeige / Berechnung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
 
-**61 von 61 im Frontend behebbaren Fehlern sind behoben** (PB-102 ist Vorbeugung, kein Fehler).
+**62 von 62 im Frontend behebbaren Fehlern sind behoben** (PB-102 ist Vorbeugung, kein Fehler).
 Die drei offenen Punkte brauchen Änderungen an der Firebase-Konfiguration.
 
 ---
@@ -4241,6 +4242,83 @@ an hat, und prüft beide Richtungen sowie dass die Messungen bleiben.
 
 ---
 
+### PB-104
+
+**Der Wochenring verglich Sätze mit Volumenpunkten — und trieb zu mehr Training an**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Zwei Einheiten in einem Vergleich |
+| **Gefunden** | Nutzermeldung: *„Ich bin vom Volumen noch ziemlich weit weg — muss ich wirklich so viel machen?"* |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Der Ring auf dem Startbildschirm stellte zwei verschiedene
+Einheiten gegenüber:
+
+| Seite | was dort gezählt wurde | ein Satz Bankdrücken |
+|---|---|---|
+| links | Anzahl **ausgeführter** Sätze | **1** |
+| rechts | Summe der Muskel-Richtwerte, in denen die anteilige Beteiligung mitzählt | **2,0** (1,0 Brust + 0,5 Trizeps + 0,5 Schulter) |
+
+Am echten Plan des Nutzers gemessen: **99 ausgeführte Sätze sind in der
+Rechnung, aus der die Grenzen gebildet werden, 132,8.** Faktor 1,34.
+
+**Was der Nutzer sah — und was stimmte:**
+
+| | Anzeige | Wirklichkeit |
+|---|---|---|
+| Wochenvolumen | 99 von 148 — „weit unter dem Optimum" | 132,8 von 148 |
+| Brust | | **17,3** bei MAV 16 |
+| Rücken | | **20** bei MAV 18 |
+| Bizeps | | **16** bei MAV 14 |
+| Trizeps | | **15** bei MAV 14 |
+
+**Vier Muskelgruppen lagen bereits über ihrem MAV**, keine einzige unter MEV —
+und der Ring sagte, es fehle noch die Hälfte. Der Nutzer stand mit über zwei
+Stunden im Studio und fragte, ob das wirklich sein muss.
+
+Das ist die schlimmste Sorte Anzeigefehler: nicht eine falsche Zahl, sondern
+eine **falsche Handlungsempfehlung**. Sie zeigt in Richtung Übertraining, und
+sie zeigt dorthin genau bei dem, der ohnehin schon am Limit arbeitet.
+
+**Zweiter Fehler an derselben Stelle:** Einseitige Übungen zählten dort
+einfach, während `getWeeklyVolume()` sie über `setSides()` doppelt zählt. Die
+beiden Zählungen der App widersprachen sich also auch darin.
+
+**Fix.** `weeklyLoadPoints()` summiert genau die Gruppen, deren Grenzen
+`weeklyLandmarks()` summiert — mit derselben Zählweise. Dazu steht unter der
+Zahl jetzt, woher sie kommt, und wie viele Sätze wirklich ausgeführt wurden:
+
+> Gezählt wie die Muskelgrenzen: ein direkter Satz 1,0, ein mitbeteiligter
+> Muskel 0,5. Du hast **99 Sätze ausgeführt**.
+
+**Was der Fix NICHT repariert — und das gehört dazu.** Die Summe 148 bleibt
+eine fragwürdige Zielgröße. Sie entsteht aus „jeder einzelne Muskel
+gleichzeitig auf seinem Optimum" — das ist eine Rechenoperation, kein
+Trainingsplan. Nach Israetel arbeitet man **pro Muskel** von MEV Richtung MRV.
+Die ehrliche Ansicht ist die Gruppentabelle darunter, nicht die eine große
+Zahl. Der Ring ist jetzt wenigstens nicht mehr falsch.
+
+**Lektion.** Wo zwei Zahlen verglichen werden, muss jemand die Einheiten
+prüfen — und niemand tut das, solange beide „Sätze" heißen. Die App hatte die
+richtige Rechnung längst (`planWeeklyVolume`, `getWeeklyVolume` mit
+Sekundärbeteiligung) und benutzte sie in der Gruppentabelle völlig korrekt.
+Nur die auffälligste Zahl auf dem Startbildschirm griff daneben.
+
+Und: **Gefunden hat es kein Test, sondern ein Nutzer mit einem Bauchgefühl.**
+*„Ich habe irgendwie im Gefühl, dass die Berechnung nicht genau ist"* — das
+war die vollständige Fehlerbeschreibung, und sie war richtig. Kein
+Regressionstest hätte das je gefunden: beide Seiten des Vergleichs waren für
+sich genommen korrekt berechnet.
+
+**Test.** `PB-104` — eine Woche aus 4 Sätzen Drücken und 4 Sätzen Ziehen: 8
+ausgeführt, 15 in der Einheit der Grenzen. Der Ring muss 15 zeigen, den
+Rohwert wörtlich benennen und die Zählweise erklären. Der Test verlangt
+ausdrücklich, dass sich beide Zahlen unterscheiden — sonst prüfte er nichts.
+
+---
+
 ### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
 
 Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
@@ -4490,6 +4568,8 @@ gestellt werden sollten:
 | 55 | **Fund ist nicht gleich Fehler** | PB-102 | Wer den Unterschied nicht ausweist, bläht die eigene Bilanz auf und verliert das Gefühl dafür, welche Einträge wehgetan haben. |
 | 56 | **ODER statt Zusammenführung** | PB-103 | „Einmal an, immer an" ist keine Merge-Regel, sondern eine Sperrklinke — der Nutzer besitzt die Einstellung dann nicht mehr. |
 | 57 | **Auch das Abarbeiten einer Liste braucht eine Prüfung** | PB-103 | Ein Haken aus dem Gedächtnis ist so verlässlich wie eine Zahl aus dem Gedächtnis. Zeilenweise gegenzählen. |
+| 58 | **Zwei Zahlen verglichen, Einheiten nicht geprüft** | PB-104 | Beide hießen „Sätze" und meinten Verschiedenes. Beide Seiten für sich korrekt — der Vergleich trotzdem falsch. |
+| 59 | **Falsche Handlungsempfehlung schlägt falsche Zahl** | PB-104 | Eine Anzeige, die in Richtung Übertraining zeigt, ist gefährlicher als eine, die daneben liegt. Wohin schickt die Zahl den Nutzer? |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

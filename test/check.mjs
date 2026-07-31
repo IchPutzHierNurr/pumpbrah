@@ -3596,6 +3596,74 @@ const REGRESSIONS = [
       return [ok, JSON.stringify(r) + ' — erwartet: Ausschalten haelt, Messungen bleiben, Einschalten haelt ebenso'];
     }
   }
+  ,
+  {
+    id: 'PB-104', title: 'Wochenring und Muskelgrenzen rechnen in derselben Einheit',
+    run: async () => {
+      /* Vom Nutzer gemeldet: „Ich bin vom Volumen noch ziemlich weit weg —
+         muss ich wirklich so viel machen?" Sein Gefuehl war richtig, und der
+         Fehler steckte nicht im Plan, sondern in der Anzeige.
+
+         Der Ring stellte ZWEI VERSCHIEDENE EINHEITEN gegenueber:
+
+           links  weekSets = Anzahl der ausgefuehrten Saetze — Bankdruecken = 1
+           rechts weeklyLandmarks() = Summe der Muskel-Richtwerte, in denen
+                  derselbe Satz als 1,0 Brust + 0,5 Trizeps + 0,5 Schulter
+                  zaehlt, also 2,0
+
+         An seinem echten Plan gemessen: 99 ausgefuehrte Saetze sind in der
+         Rechnung, aus der die Grenzen gebildet werden, 132,8. Der Ring zeigte
+         99 von 148 („weit unter dem Optimum"), waehrend vier Muskelgruppen
+         bereits UEBER ihrem MAV lagen. Die Anzeige trieb ihn dazu, mehr zu
+         tun, obwohl er schon zu viel tat.
+
+         Zweiter Fehler in derselben Zeile: einseitige Uebungen zaehlten hier
+         EINFACH, waehrend getWeeklyVolume sie mit setSides doppelt zaehlt —
+         die beiden Zaehlungen der App widersprachen sich auch darin. */
+      const r = await page.evaluate(() => {
+        const heute = new Date().toLocaleDateString('de-DE');
+        const satz = (ex, muscle, type) => ({ ex, nr: 1, w: 60, r: 8, rir: 2, muscle, type });
+        D.history = [{
+          id: 'S-ring', updatedAt: Date.now(), date: heute, planKey: Object.keys(D.plan)[0], duration: 60,
+          sets: [
+            // Druecken: geht direkt auf die Brust, mit halber Last auf Trizeps und Schulter
+            satz('Bankdrücken', 'chest', 'main'), satz('Bankdrücken', 'chest', 'main'),
+            satz('Bankdrücken', 'chest', 'main'), satz('Bankdrücken', 'chest', 'main'),
+            // Ziehen: Ruecken direkt, Bizeps und hintere Schulter anteilig
+            satz('Langhantelrudern', 'back', 'main'), satz('Langhantelrudern', 'back', 'main'),
+            satz('Langhantelrudern', 'back', 'main'), satz('Langhantelrudern', 'back', 'main')
+          ]
+        }];
+        save();
+        renderDash();
+
+        const roh = D.history[0].sets.length;
+        const vol = getWeeklyVolume(true);
+        const erwartet = Math.round(plannedMuscleGroups()
+          .reduce((a, g) => a + ((vol[g] || {}).sets || 0), 0) * 10) / 10;
+
+        const num = document.querySelector('#d-week-card .mesh-num');
+        const gezeigt = num ? parseFloat(num.dataset.count) : null;
+        const karte = document.getElementById('d-week-card');
+        const out = {
+          roh, erwartet, gezeigt,
+          /* Der Rohwert darf nicht verschwinden - er gehoert in die Erklaerung.
+             Woertlich geprueft: die blosse Ziffer stuende sonst auch in
+             „148" und die Zusicherung waere immer wahr. */
+          rohGenannt: !!karte && karte.textContent.indexOf(`${roh} Sätze ausgeführt`) >= 0,
+          zaehlweiseErklaert: !!karte && /direkter Satz 1,0/.test(karte.textContent),
+          lm: weeklyLandmarks()
+        };
+        D.history = []; save();
+        return out;
+      });
+      // Die beiden Zaehlungen muessen sich unterscheiden, sonst prueft der Test nichts.
+      const trennt = r.erwartet !== r.roh;
+      const ok = trennt && r.gezeigt === r.erwartet
+        && r.rohGenannt === true && r.zaehlweiseErklaert === true;
+      return [ok, JSON.stringify(r) + ` — erwartet ${r.erwartet} im Ring (nicht ${r.roh}), Rohwert erklaert`];
+    }
+  }
 ];
 
 for (const t of REGRESSIONS) {
