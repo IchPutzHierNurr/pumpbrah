@@ -5842,6 +5842,29 @@ function plannedMuscleGroups(){
   if(!set.size)Object.keys(MUSCLE_LANDMARKS).forEach(k=>set.add(k));
   return [...set];
 }
+/* PB-104: Der Wochenring stellte zwei verschiedene Einheiten gegenüber.
+   Links stand die ANZAHL ausgeführter Sätze — Bankdrücken zählt 1. Rechts
+   stand die Summe der Muskel-Richtwerte, in denen derselbe Satz als
+   1,0 Brust + 0,5 Trizeps + 0,5 Schulter zählt, also 2,0.
+
+   An einem echten Plan gemessen: 99 ausgeführte Sätze sind in der Rechnung,
+   aus der die Grenzen gebildet werden, 132,8. Der Ring zeigte „99 von 148" —
+   also „weit unter dem Optimum" —, während vier Muskelgruppen bereits ÜBER
+   ihrem MAV lagen. Die Anzeige trieb zu mehr Training an, obwohl es schon zu
+   viel war. Das ist die schlimmste Sorte Anzeigefehler: keine falsche Zahl,
+   sondern eine falsche Handlungsempfehlung.
+
+   Zweiter Fehler an derselben Stelle: einseitige Übungen zählten dort
+   einfach, während `getWeeklyVolume` sie über `setSides` doppelt zählt.
+   Beide Zählungen der App widersprachen sich also auch darin.
+
+   Summiert werden genau die Gruppen, deren Grenzen `weeklyLandmarks()`
+   summiert — sonst wandert der Fehler nur eine Stelle weiter. */
+function weeklyLoadPoints(){
+  const vol=getWeeklyVolume(true);
+  const punkte=plannedMuscleGroups().reduce((a,g)=>a+((vol[g]||{}).sets||0),0);
+  return Math.round(punkte*10)/10;
+}
 function weeklyLandmarks(){
   const groups=plannedMuscleGroups();
   return groups.reduce((acc,m)=>{
@@ -7612,7 +7635,9 @@ function renderAnaReport(){
   const work=cur.flatMap(s=>strengthSets(s.sets).filter(x=>!x.type||x.type==='main'));
   const sets=work.length;
   const lm=weeklyLandmarks();
-  const st=landmarkState(sets,lm);
+  /* Dieselbe Einheit wie die Grenzen (PB-104) — `sets` bleibt daneben für
+     Aussagen, die wirklich die Zahl der ausgeführten Sätze meinen. */
+  const st=landmarkState(weeklyLoadPoints(),lm);
   const rir=work.length?(work.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/work.length):0;
   const minutes=cur.reduce((a,s)=>a+(parseInt(s.duration)||0),0);
   const{streak}=trainingStreak();
@@ -7827,7 +7852,7 @@ function runBarGrows(root){
     els.forEach(el=>{el.style.width=el.dataset.grow});
   }));
 }
-function buildWeekGauge(totalSets){
+function buildWeekGauge(totalSets,rohSaetze){
   const lm=weeklyLandmarks();
   const mev=lm.mev,mav=lm.mav,mrv=lm.mrv;
   const end=Math.max(mrv,1);
@@ -7835,19 +7860,24 @@ function buildWeekGauge(totalSets){
   const pct=Math.max(0,Math.min(100,(totalSets/end)*100));
   const mevPct=Math.min(100,(mev/end)*100);
   const mavPct=Math.min(100,(mav/end)*100);
-  const gap=mev-totalSets;
-  const note=totalSets<mev
+  const gap=Math.round((mev-totalSets)*10)/10;
+  const note=(totalSets<mev
     ? `<b>${gap} ${gap===1?'Satz':'Sätze'}</b> fehlen bis zum Minimum, ab dem Wachstum überhaupt anfängt.`
     : totalSets<=mav
       ? `Du liegst im produktiven Korridor. Optimum diese Woche: <b>${mav} Sätze</b>.`
       : totalSets<=mrv
         ? `Über dem Optimum, noch unter der Erholungsgrenze. Ab <b>${mrv} Sätzen</b> wird es zu viel.`
-        : `<b>${totalSets-mrv} Sätze</b> über der Grenze, ab der die Erholung nicht mehr mitkommt.`;
+        : `<b>${Math.round((totalSets-mrv)*10)/10} Sätze</b> über der Grenze, ab der die Erholung nicht mehr mitkommt.`)
+    /* Woher die Zahl kommt, gehört daneben — sonst wundert man sich, warum
+       hier mehr steht, als man Sätze gemacht hat (PB-104). */
+    +(Number.isFinite(rohSaetze)
+      ? `<br><small style="opacity:.72">Gezählt wie die Muskelgrenzen: ein direkter Satz 1,0, ein mitbeteiligter Muskel 0,5. Du hast <b>${rohSaetze} Sätze ausgeführt</b>.</small>`
+      : '');
   return`<div class="mesh-hero"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">`+
     `<div class="cap">Wochenvolumen</div>`+
     `<div class="rings-badge" style="color:${st.color};display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.05em;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">`+
     `<i style="width:8px;height:8px;border-radius:50%;display:inline-block;background:${st.color};box-shadow:0 0 12px ${st.color}"></i>${esc(st.caps)}</div></div>`+
-    `<div class="mesh-row"><div class="mesh-num countup" data-count="${totalSets}" data-count-dur="900">0</div>`+
+    `<div class="mesh-row"><div class="mesh-num countup" data-count="${totalSets}" data-count-dec="${totalSets%1?1:0}" data-count-dur="900">0</div>`+
     `<div class="mesh-side"><div class="u">SÄTZE</div><div class="o">von ${mav} im MAV</div></div></div>`+
     `<div class="mesh-bar"><i data-grow="${pct.toFixed(1)}%"></i>`+
     `<span class="mk" style="left:${mevPct.toFixed(1)}%"></span><span class="mk" style="left:${mavPct.toFixed(1)}%"></span></div>`+
@@ -8124,12 +8154,14 @@ function renderDash(){
   document.getElementById('d-quote').style.display='none';
   const week=weeklyHistorySeries(6);
   const currentWeek=week[week.length-1]||[];
-  /* Der Ring wird an MEV/MAV/MRV gemessen — also darf er auch nur zählen,
-     was dort hineinzählt: Arbeitssätze der Hauptübungen. Vorher flossen
-     Mobility-, Pre-Workout- und Cardio-Sätze mit ein und schoben den Wert
-     künstlich nach oben. */
-  const weekSets=currentWeek.reduce((a,s)=>a+strengthSets(s.sets).filter(x=>!x.type||x.type==='main').length,0);
-  document.getElementById('d-week-card').innerHTML=buildWeekGauge(weekSets);
+  /* Der Ring wird an MEV/MAV/MRV gemessen — also muss er auch RECHNEN wie
+     sie: mit der anteiligen Beteiligung der mitarbeitenden Muskeln und mit
+     einseitigen Übungen doppelt (PB-104). Der Rohwert daneben ist die Zahl,
+     die der Nutzer selbst gezählt hat; er gehört in die Erklärung, nicht in
+     den Vergleich. */
+  const punkte=weeklyLoadPoints();
+  const rohSaetze=currentWeek.reduce((a,s)=>a+strengthSets(s.sets).filter(x=>!x.type||x.type==='main').length,0);
+  document.getElementById('d-week-card').innerHTML=buildWeekGauge(punkte,rohSaetze);
   const workoutsCurrent=currentWeek.length;
   const workoutsPrev=(week[week.length-2]||[]).length;
   const tonnage=(sessions)=>sessions.reduce((sum,s)=>sum+sessionVolume(s),0);
