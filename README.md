@@ -30,7 +30,8 @@ Plan aus dem Onboarding erzeugt — Tage, Ort, Ziel und Erfahrung bestimmen ihn
 wirklich, gerechnet gegen dieselben Landmarks wie der Coach ·
 **Mesozyklus**: Volumen steigt über die Wochen von 72 % auf 100 % des Plans,
 danach eine Entlastungswoche — skaliert wird das Workout, nie der Plan ·
-Dauerschätzung je Trainingstag (einseitige Übungen zählen doppelt) ·
+Dauerschätzung je Trainingstag (einseitige Übungen zählen doppelt, dazu 60 s
+Wechselzeit je Übung — Station, Sitz, Scheiben) ·
 Mehrere Trainingstage mit Wochentagszuordnung · Übungsbibliothek mit eigenen
 Übungen · RIR-basierte Satzerfassung · Pausentimer mit Compound-/Isolations-
 Voreinstellung · Cardio getrennt in Minuten · persönliche Notizen pro Übung ·
@@ -41,7 +42,10 @@ Der mitgelieferte Plan ist ein 3-Tage-Ganzkörper (Di/Do/Sa), **33 Übungen,
 121 Sätze**, höchstens **4 Sätze je Übung** — lieber eine Übung mehr als ein
 Satz mehr, weil der fünfte und sechste Satz derselben Übung am wenigsten
 beiträgt. Alle zehn Volumengruppen liegen im Korridor zwischen MEV und MRV,
-die Pause steht einheitlich auf 120 s, jede Einheit dauert 101–112 min.
+die Pause steht einheitlich auf 120 s, jede Einheit dauert 111–124 min.
+Bis September 2026 stand hier 101–112: Die Schätzung zählte nur Arbeit und
+Pause, nicht den Umbau zwischen zwei Übungen — und lag damit an einer echten
+Einheit 10 bis 20 Minuten unter der Uhr.
 
 **Im laufenden Workout**
 „Wenig Zeit": kürzt die Einheit auf ein Zeitbudget — Grundübungen zuletzt,
