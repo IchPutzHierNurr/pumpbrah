@@ -147,6 +147,8 @@
 | [PB-102](#pb-102) | Bearbeiten-Modus überlebte sein Fenster | — | Vorbeugung | ✅ |
 | [PB-103](#pb-103) | EGYM ließ sich in einem Sync-Konto nicht ausschalten | mittel | Zustand | ✅ |
 | [PB-104](#pb-104) | Wochenring verglich Sätze mit Volumenpunkten | **hoch** | Anzeige / Berechnung | ✅ |
+| [PB-105](#pb-105) | Dashboard scrollte beim Start von selbst nach unten | mittel | UX / Renderer | ✅ |
+| [PB-106](#pb-106) | Dauerschätzung ohne Umbau — 10 bis 20 Minuten zu kurz | mittel | Falsche Berechnung | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -4319,6 +4321,117 @@ ausdrücklich, dass sich beide Zahlen unterscheiden — sonst prüfte er nichts.
 
 ---
 
+### PB-105
+
+**Das Dashboard scrollte beim Start von selbst nach unten**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | UX / Renderer bewegt das Fenster |
+| **Gefunden** | Nutzermeldung: *„Wenn ich Pumpbrah öffne, scrollt er direkt runter."* |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** `renderPlan()` zentriert den aktiven Trainingstag in der
+Tableiste — mit `scrollIntoView({block:'nearest', inline:'center'})`. Das
+zentriert nicht nur *in der Leiste*. Liegt die Leiste beim Aufruf außerhalb
+des Bildes, scrollt der Browser auch das **Fenster** dorthin. Beim Start mit
+offener Plan-Karte auf dem Dashboard heißt das: die App öffnet sich, und die
+Seite fährt um 1.689 px nach unten, bevor jemand etwas angetippt hat.
+
+Nachgemessen im iPhone-Viewport (393 × 659): `window.scrollY` von 0 auf 1.689
+innerhalb von 700 ms — die Zeit, die `behavior:'smooth'` braucht. Wer nach
+300 ms misst, sieht die Seite noch oben.
+
+Die Zeile stand seit den Trainingstag-Tabs im Code. Sie fiel nie auf, weil
+jeder Test die Plan-Karte zugeklappt vorfand: `resetDForNewUser()` setzt
+`homePlanOpen:false`, und mit zugeklappter Karte gibt es keine Leiste, die
+außerhalb des Bildes liegen könnte. Der Nutzer, der die Karte einmal
+aufgeklappt hatte, bekam den Fehler bei **jedem** Öffnen.
+
+**Fix.** Nur noch `scrollLeft` der Leiste wird gesetzt, über
+`getBoundingClientRect()` statt `offsetLeft` (die Leiste ist nicht
+positioniert, `offsetLeft` zählte vom nächsten positionierten Vorfahren aus).
+Das Fenster bleibt, wo es ist.
+
+**Wo noch?** `grep scrollIntoView index.html` findet fünf Stellen. Die vier
+übrigen sind gewollt: das Tastatur-Ausweichen holt das fokussierte Feld ins
+Bild (Nutzer hat gerade getippt), und drei im laufenden Workout springen zur
+nächsten offenen Übung — nach einem geloggten Satz, auf Knopfdruck, nach dem
+Ergänzen einer Übung. Alle vier folgen einer Handlung. Nur `renderPlan()`
+lief ohne eine.
+
+**Lektion.** Ein Renderer darf das Fenster nicht bewegen. Er wird von
+überall aufgerufen — beim Start, nach dem Sync, nach jedem Speichern — und
+weiß nie, ob der Nutzer gerade etwas angesehen hat. Scrollen gehört zu einer
+Handlung, nicht zu einem Rendering. Und: `scrollIntoView` hat **keine**
+Achse. `inline:'center'` liest sich wie „horizontal", ist aber nur die
+horizontale Hälfte eines Befehls, der beide Achsen bedient.
+
+**Test.** `PB-105` — eigener Browser-Context, gespeicherte Daten mit offener
+Plan-Karte, App frisch geladen wie vom Home-Screen: nach 1,2 s muss
+`scrollY` 0 sein. Gegenprobe mit sechs Trainingstagen und dem letzten als
+aktivem: die Leiste muss selbst gescrollt haben und der aktive Tab sichtbar
+sein — der Fix darf die Zentrierung nicht einfach entfernt haben.
+
+---
+
+### PB-106
+
+**Die Dauerschätzung rechnete ohne Umbau — 10 bis 20 Minuten zu kurz**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falsche Berechnung / falsche Handlungsempfehlung |
+| **Gefunden** | Nutzermeldung: *„Ich habe das Gefühl, ewig zu brauchen"* — bei einer Einheit, die die App mit 80 Minuten auswies |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Drei Schätzer in der App rechneten je Satz 40 s Arbeit
+(einseitig doppelt) plus die Pause aus den Einstellungen, Supersätze mit
+einer gemeinsamen Pause:
+
+| Schätzer | wo |
+|---|---|
+| `estimatedDuration()` | Planansicht, Unterzeile der Tableiste, README |
+| `remainingMinutes()` | laufendes Workout, „Wenig Zeit" (`trimWorkoutTo`) |
+| `dayMinutes()` in `buildPlanFromOnboarding()` | Deckel `OB_MAX_MIN` beim Erzeugen des Plans |
+
+Nicht enthalten: Station wechseln, Sitz und Griff einstellen, Scheiben
+auflegen, den ersten Satz anfahren. Am echten Plan des Nutzers — drei
+Ganzkörpertage mit 8 bis 10 Übungen und 31 bis 34 Sätzen — stand 76 bis 82
+Minuten in der App. Die Uhr sagte 90 bis 100.
+
+Das ist wieder die gefährlichere Sorte Fehler (siehe PB-104): nicht eine
+falsche Zahl, sondern eine **falsche Aussage über den Nutzer**. Er kam nach
+95 Minuten aus dem Studio, die App sagte 80, und der Schluss lag nahe, er
+trödle. Er trödelte nicht. Die Zahl war falsch.
+
+**Fix.** `EXERCISE_SETUP = 60` s je Übung, bei Supersätzen je Partner — beide
+Stationen müssen eingerichtet werden. An **allen drei** Stellen identisch;
+im Workout nur für Übungen mit offenen Sätzen, weil der Umbau der Übung, an
+der man steht, hinter einem liegt. Nachgemessen: der mitgelieferte Plan
+steht jetzt bei 111 bis 124 Minuten statt 101 bis 112; die Onboarding-Pläne
+bleiben unter dem 100-Minuten-Deckel, weil der Deckel jetzt mit derselben
+Rechnung arbeitet.
+
+**Warum drei Stellen.** Wäre der Zuschlag nur in `estimatedDuration()`
+gelandet, hätte das Onboarding weiter Tage bis 100 „innerer" Minuten
+erzeugt, die die Planansicht danach mit 108 auswies — und der bestehende
+Test auf `> 105` wäre rot geworden. Drei Schätzer für dieselbe Zeit sind
+Muster 3 (*zwei Quellen für dieselbe Wahrheit*), diesmal zu dritt. Sie
+zusammenzulegen war hier nicht drin — die Onboarding-Version rechnet auf
+Slots, nicht auf Übungen —, deshalb hält sie jetzt ein Test zusammen.
+
+**Test.** `PB-106` — drei Zusicherungen, je eine pro Schätzer: eine Übung
+mit einem Satz und 120 s Pause ergibt 4 Minuten, nicht 3; Plan und frisches
+Workout zeigen für dieselbe Einheit dieselbe Zahl, und ein geloggter Satz
+nimmt nur Arbeit und Pause weg; jeder aus dem Onboarding erzeugte Tag liegt
+in der Planansicht höchstens auf `OB_MAX_MIN`. Wer den Zuschlag an einer
+der drei Stellen wieder entfernt, sieht Rot.
+
+---
+
 ### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
 
 Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
@@ -4570,6 +4683,10 @@ gestellt werden sollten:
 | 57 | **Auch das Abarbeiten einer Liste braucht eine Prüfung** | PB-103 | Ein Haken aus dem Gedächtnis ist so verlässlich wie eine Zahl aus dem Gedächtnis. Zeilenweise gegenzählen. |
 | 58 | **Zwei Zahlen verglichen, Einheiten nicht geprüft** | PB-104 | Beide hießen „Sätze" und meinten Verschiedenes. Beide Seiten für sich korrekt — der Vergleich trotzdem falsch. |
 | 59 | **Falsche Handlungsempfehlung schlägt falsche Zahl** | PB-104 | Eine Anzeige, die in Richtung Übertraining zeigt, ist gefährlicher als eine, die daneben liegt. Wohin schickt die Zahl den Nutzer? |
+| 60 | **Renderer bewegt das Fenster** | PB-105 | Ein Renderer weiß nie, ob der Nutzer gerade etwas ansieht. Scrollen gehört zu einer Handlung — und `scrollIntoView` hat keine Achse. |
+| 61 | **Testdaten im Neuzustand, zweite Form** | PB-105 | `homePlanOpen:false` in jedem Fixture. Der Nutzer, der die Karte einmal aufgeklappt hat, kam in keinem Test vor — und bekam den Fehler bei jedem Start. |
+| 62 | **Eine Schätzung, die den Nutzer widerlegt** | PB-106 | Sagt die Zahl etwas über den Nutzer aus („du trödelst"), muss sie das aushalten. Was fehlt in der Rechnung, das in Wirklichkeit vorkommt? |
+| 63 | **Drei Quellen für dieselbe Wahrheit** | PB-106 | Muster 3 zu dritt. Lassen sie sich nicht zusammenlegen, hält sie ein Test zusammen — einer, der an jeder Stelle einzeln rot wird. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

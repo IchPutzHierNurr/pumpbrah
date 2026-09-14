@@ -3664,6 +3664,127 @@ const REGRESSIONS = [
       return [ok, JSON.stringify(r) + ` — erwartet ${r.erwartet} im Ring (nicht ${r.roh}), Rohwert erklaert`];
     }
   }
+  ,
+  {
+    id: 'PB-105', title: 'Das Dashboard bleibt beim Start oben — die Tableiste scrollt nur sich selbst',
+    run: async () => {
+      /* Vom Nutzer gemeldet: „Wenn ich Pumpbrah oeffne, scrollt er direkt
+         runter." renderPlan() zentrierte den aktiven Trainingstag mit
+         scrollIntoView({inline:'center'}). Das zentriert nicht nur in der
+         Leiste: liegt die Leiste ausserhalb des Bildes, scrollt der Browser
+         auch das FENSTER dorthin — beim Start mit offener Plan-Karte um
+         1.689 px, bevor jemand etwas angetippt hat.
+
+         Eigener Context, weil der Start selbst geprueft wird: die App wird
+         mit gespeicherten Daten frisch geladen, wie beim Oeffnen vom
+         Home-Screen. Die geteilte Seite bleibt unberuehrt. */
+      const daten = await page.evaluate(() => {
+        const d = JSON.parse(JSON.stringify(D));
+        d.active = null; d.ui = d.ui || {}; d.ui.homePlanOpen = true;
+        return JSON.stringify(d);
+      });
+      const c = await browser.newContext({ viewport: IPHONE.viewport, isMobile: BROWSER === 'firefox' ? undefined : true, hasTouch: true });
+      const p = await c.newPage();
+      p.on('dialog', d => d.accept());
+      try {
+        await p.goto(APP_URL);
+        await p.evaluate(d => { localStorage.setItem('pb_sync', 'offline'); localStorage.setItem('pb_data', d); }, daten);
+        await p.goto(APP_URL);
+        /* Der Fehler brauchte 700 ms (smooth). Wer nach 300 ms misst, sieht
+           die Seite noch oben und den Fehler nicht. */
+        await p.waitForTimeout(1200);
+        const start = await p.evaluate(() => ({
+          y: Math.round(window.scrollY), planOffen: !!(D.ui && D.ui.homePlanOpen),
+          tage: Object.keys(D.plan).length, app: document.getElementById('main-app').style.display !== 'none' }));
+        /* Gegenprobe: die Leiste muss weiterhin horizontal zum aktiven Tag
+           scrollen — der Fix darf die Zentrierung nicht einfach entfernen. */
+        const leiste = await p.evaluate(() => {
+          for (let i = 1; i <= 6; i++) D.plan['Tag_' + i] = { day: 'Mo', exercises: [normalizeExercise({
+            name: 'Bankdrücken', sets: 3, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle: 'chest', note: '' })] };
+          save(); curTab = 'Tag_6'; window.scrollTo(0, 0); renderPlan();
+          return new Promise(res => setTimeout(() => {
+            const t = document.getElementById('pt'); const a = t.querySelector('.dtab.on');
+            const r = a.getBoundingClientRect(), tr = t.getBoundingClientRect();
+            res({ y: Math.round(window.scrollY), scrollLeft: Math.round(t.scrollLeft),
+                  sichtbar: r.left >= tr.left - 1 && r.right <= tr.right + 1, breiter: t.scrollWidth > t.clientWidth + 10 });
+          }, 700));
+        });
+        const r = { start, leiste };
+        const ok = start.app && start.planOffen && start.tage >= 1 && start.y === 0
+          && leiste.y === 0 && leiste.breiter && leiste.scrollLeft > 0 && leiste.sichtbar;
+        return [ok, JSON.stringify(r) + ' — erwartet: scrollY 0 beim Start und nach renderPlan, Leiste selbst gescrollt, aktiver Tab sichtbar'];
+      } finally { await c.close(); }
+    }
+  }
+  ,
+  {
+    id: 'PB-106', title: 'Dauerschaetzung: Umbau je Uebung zaehlt mit — an allen drei Stellen gleich',
+    run: async () => {
+      /* Drei Schaetzer rechneten nur Arbeit plus Pause: estimatedDuration()
+         (Plan), remainingMinutes() (Workout, „Wenig Zeit") und dayMinutes()
+         im Onboarding-Deckel. Stationswechsel, Sitz, Scheiben fehlten — die
+         App versprach 80 Minuten, das Studio nahm 95. Der Nutzer hatte „das
+         Gefuehl, ewig zu brauchen", und die Zahl in der App sagte ihm, er
+         bilde sich das ein.
+
+         Drei Zusicherungen, jede trifft einen anderen Schaetzer:
+           1. Der Wert selbst: eine Uebung, ein Satz, 120 s Pause muss
+              (60+40+120)/60 = 4 min ergeben, nicht 3.
+           2. Plan und Workout zeigen fuer dieselbe frische Einheit dieselbe
+              Zahl; ein geloggter Satz nimmt nur Arbeit+Pause weg, nicht den
+              Umbau der Uebung, an der man schon steht.
+           3. Das Onboarding deckelt mit DEMSELBEN Schaetzer: kein erzeugter
+              Tag darf in der Planansicht ueber OB_MAX_MIN liegen. Ohne den
+              Zuschlag in dayMinutes() liefe der Deckel bis 100 und die
+              Planansicht zeigte danach 108. */
+      const r = await page.evaluate(() => {
+        const planVorher = JSON.parse(JSON.stringify(D.plan)), aktivVorher = D.active, settingsVorher = JSON.parse(JSON.stringify(D.settings));
+        const out = {};
+        try {
+          D.settings.compound = 120; D.settings.isolation = 120; D.active = null;
+          const ex = (id, name, sets, muscle, ss) => normalizeExercise({ id, name, sets, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle, note: '', ss: ss || null });
+          D.plan = { Tag_Z: { day: 'Mo', exercises: [ex(1, 'Bankdrücken', 1, 'chest')] } };
+          save();
+          out.einzeln = estimatedDuration('Tag_Z');                 // 1.
+          out.einzelnErwartet = Math.round((EXERCISE_SETUP + 40 + 120) / 60);
+          D.plan = { Tag_Z: { day: 'Mo', exercises: [
+            ex(1, 'Bankdrücken', 4, 'chest'), ex(2, 'KH Rudern einarmig', 3, 'back'),
+            ex(3, 'Face Pulls', 3, 'shoulders', 'SA'), ex(4, 'Trizepsdrücken Seil', 3, 'arms', 'SA')] } };
+          save();
+          out.plan = estimatedDuration('Tag_Z');
+          startWorkout('Tag_Z');                                    // 2.
+          out.workoutFrisch = D.active ? remainingMinutes() : null;
+          if (D.active) {
+            const e = D.active.exercises[0];
+            e.logged = [{ w: 60, r: 8, rir: 2 }];
+            out.workoutNachSatz = remainingMinutes();
+            /* Ein Satz weniger = 40 s Arbeit + 120 s Pause = 160 s, also
+               2,67 min — nach Rundung 2 oder 3 weniger. Der Umbau bleibt,
+               weil die Uebung noch offene Saetze hat. */
+            out.satzDifferenz = out.plan - out.workoutNachSatz;
+          }
+          D.active = null; save();
+          let max = 0, worst = '';                                  // 3.
+          for (const days of [2, 3, 4, 5, 6]) for (const location of ['gym', 'home'])
+            for (const experience of ['beginner', 'intermediate', 'advanced'])
+              for (const focus of ['hypertrophy', 'strength', 'balanced', 'recomp', 'bbp']) {
+                D.plan = buildPlanFromOnboarding({ days, location, experience, focus });
+                Object.keys(D.plan).forEach(k => { const m = estimatedDuration(k);
+                  if (m > max) { max = m; worst = days + 'd/' + location + '/' + experience + '/' + focus + '/' + k; } });
+              }
+          out.obMax = max; out.obWorst = worst; out.obDeckel = OB_MAX_MIN;
+        } finally {
+          D.plan = planVorher; D.active = aktivVorher; D.settings = settingsVorher; save(); renderAll();
+        }
+        return out;
+      });
+      const ok = r.einzeln === r.einzelnErwartet && r.einzeln === 4
+        && r.workoutFrisch === r.plan
+        && r.satzDifferenz >= 2 && r.satzDifferenz <= 3
+        && r.obMax > 0 && r.obMax <= r.obDeckel;
+      return [ok, JSON.stringify(r) + ' — erwartet: 4 min fuer eine Uebung, Plan = frisches Workout, Onboarding-Tage hoechstens ' + r.obDeckel + ' min'];
+    }
+  }
 ];
 
 for (const t of REGRESSIONS) {
