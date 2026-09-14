@@ -4278,8 +4278,18 @@ function renderPlan(){
     d.onclick=()=>{curTab=k;renderPlan();haptic(8)};
     t.appendChild(d);
   });
+  /* Den aktiven Tab in der Leiste zentrieren — aber NUR die Leiste bewegen.
+     scrollIntoView() scrollt auch die Seite, sobald die Leiste nicht im Bild
+     ist: beim Start mit offener Plan-Karte fuhr das Dashboard damit um
+     1.700 px nach unten, bevor jemand etwas angetippt hatte. Deshalb hier
+     scrollLeft von Hand, das Fenster bleibt, wo es ist. */
   const active=t.querySelector('.dtab.on');
-  if(active&&active.scrollIntoView)active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+  if(active){
+    /* Über Rechtecke statt offsetLeft: die Leiste ist nicht positioniert,
+       offsetLeft zählte also vom nächsten positionierten Vorfahren aus. */
+    const left=active.getBoundingClientRect().left-t.getBoundingClientRect().left+t.scrollLeft-(t.clientWidth-active.offsetWidth)/2;
+    try{t.scrollTo({left:Math.max(0,left),behavior:'smooth'})}catch{t.scrollLeft=Math.max(0,left)}
+  }
   renderPL();
   renderPlanSaveState();
   /* Der Plan kann sich zwischen zwei Renderings geändert haben, ohne dass
