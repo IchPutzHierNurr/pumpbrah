@@ -3091,7 +3091,10 @@ function buildPlanFromOnboarding(ob){
   const dayMinutes=di=>{
     let sec=0;
     slots.filter(s=>s.di===di).forEach(s=>{
-      sec+=s.sets*(40*s.sides+restSecondsFor(s.name,s.muscle,'main'));
+      /* Dieselbe Rechnung wie estimatedDuration(), inklusive Wechselzuschlag.
+         Läuft der Deckel hier ohne ihn, erzeugt das Onboarding Einheiten, die
+         die Planansicht danach über dem Deckel ausweist. */
+      sec+=EXERCISE_SETUP+s.sets*(40*s.sides+restSecondsFor(s.name,s.muscle,'main'));
     });
     return sec/60;
   };
@@ -5760,6 +5763,7 @@ function estimatedDuration(dayKey){
     if(!sets)return;
     const work=sets*40*setSides(e.name,e);
     const rest=restSecondsFor(e.name,e.muscle,e.type);
+    sec+=EXERCISE_SETUP;
     if(e.ss){
       if(!groups[e.ss])groups[e.ss]={work:0,rest:0,rounds:0,n:0};
       const g=groups[e.ss];
@@ -5790,6 +5794,14 @@ const COMPOUND_PATTERNS=['push','pushh','pulld','row','hinge','squat'];
    Kopplung wird deshalb nicht automatisch vergeben, sondern vorgeschlagen.
    -------------------------------------------------------------------------- */
 const SUPERSET_GAP=25;          /* Sekunden zwischen den Partnern */
+/* Wechselzuschlag je Übung: Station wechseln, Sitz und Griff einstellen,
+   Scheiben auflegen, den ersten Satz anfahren. Ohne ihn zählte die Schätzung
+   nur Arbeit plus Pause und lag bei einer Einheit mit neun Übungen 10 bis 20
+   Minuten unter der Uhr — „wenig Zeit" versprach 80 Minuten, das Studio
+   nahm 95. 60 s je Übung, bei Supersätzen je Partner: beide Stationen
+   müssen eingerichtet werden. Wird an DREI Stellen benutzt — Planansicht,
+   laufendes Workout, Onboarding-Deckel — und muss dort identisch bleiben. */
+const EXERCISE_SETUP=60;
 function supersetPartners(list,ex){
   if(!ex||!ex.ss)return[];
   return (list||[]).filter(e=>e!==ex&&e.ss&&e.ss===ex.ss);
@@ -8465,6 +8477,10 @@ function remainingMinutes(){
     if(!open)return;
     const work=open*40*setSides(e.name,e);
     const rest=restSecondsFor(e.name,e.muscle,e.type);
+    /* Nur Übungen mit offenen Sätzen — wer schon dran ist, hat den Umbau
+       hinter sich. Gerechnet wird trotzdem mit demselben Zuschlag wie im
+       Plan, sonst zeigen Plan und Workout für dieselbe Einheit zwei Zahlen. */
+    sec+=EXERCISE_SETUP;
     if(e.ss){
       if(!groups[e.ss])groups[e.ss]={work:0,rest:0,rounds:0,n:0};
       const g=groups[e.ss];
