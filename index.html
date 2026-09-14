@@ -3188,7 +3188,7 @@ function icon(key,size){
    beim Rendern abgetrennt und durch das passende Strich-Icon ersetzt. */
 const CAT_ICONS=[[/aufwärm|pre-?workout/i,'pre'],[/brust|chest/i,'chest'],[/rücken|back/i,'back'],
   [/bein|leg/i,'legs'],[/schulter|shoulder/i,'shoulders'],[/arm/i,'arms'],
-  [/bauch|core/i,'core'],[/eigene/i,'edit'],[/plan/i,'book'],[/mobil|dehn/i,'mob']];
+  [/bauch|core/i,'core'],[/eigene/i,'edit'],[/plan/i,'book'],[/mobil|dehn/i,'mob'],[/cardio|ausdauer/i,'legs']];
 function catLabel(cat){
   /* Führende Emoji und Variantenselektoren entfernen. */
   return String(cat||'').replace(/^[^\p{L}\p{N}]+/u,'').trim();
@@ -3612,7 +3612,7 @@ function withViewTransition(fn){fn()}
    wird es am Namen, weil genau dort die Information steht; ein explizites
    Feld `uni` an der Übung schlägt die Namenserkennung.
    -------------------------------------------------------------------------- */
-const UNILATERAL_RE=/(einarmig|einbeinig|one[ -]?arm|single[ -]?(arm|leg)|unilateral|pro seite|je seite|bulgarian|split ?squat|ausfallschritt|lunge|step ?up|pistol|poliquin)/i;
+const UNILATERAL_RE=/(einarmig|einbeinig|one[ -]?arm|single[ -]?(arm|leg)|unilateral|pro seite|je seite|bulgarian|split ?squat|ausfallschritt|lunge|step ?up|pistol|poliquin|kosak|cossack|einseitig)/i;
 function isUnilateral(name,ex){
   if(ex&&ex.uni!==undefined&&ex.uni!==null)return !!ex.uni;
   return UNILATERAL_RE.test(String(name||''));
@@ -3624,7 +3624,11 @@ function setSides(name,ex){return isUnilateral(name,ex)?2:1}
    hier einmal und wird von der Mustertabelle mitbenutzt. */
 const REAR_DELT_RE=/(reverse ?(butterfly|fly|flye|pec ?deck)|rear ?delt|hintere ?schulter|face ?pull|gesichtziehen)/i;
 const MOVE_PATTERNS=[
-  {k:'hinge',   re:/(kreuzheben|deadlift|rdl|rumänisch|romanian|good ?morning|hip ?thrust|hüftheben|jefferson|hyperext|rückenstrecker|back ?extension|kettlebell ?swing)/i},
+  /* Gesäß und Hüftabduktion gehören zur hinteren Kette: dieselbe Volumen-
+     gruppe wie Hüftheben, es gibt keine eigene für den Po. „Glute Ham
+     Raise" ist Kniebeugung, landet aber über dasselbe Wort hier — gleiche
+     Gruppe, also kein Schaden. */
+  {k:'hinge',   re:/(kreuzheben|deadlift|rdl|rumänisch|romanian|good ?morning|hip ?thrust|hüftheben|jefferson|hyperext|rückenstrecker|back ?extension|kettlebell ?swing|rack ?pull|beckenheben|glute|gesäß|abdukt|abduction|reverse ?hyper|swing)/i},
   /* Waden GANZ nach vorn, aus demselben Grund wie die hintere Schulter: Der
      Name sagt den Muskel, das Gerät ist nebensächlich. „Wadenpresse an der
      Beinpresse" enthält „beinpresse" und wurde deshalb von der squat-Regel
@@ -3634,7 +3638,7 @@ const MOVE_PATTERNS=[
   /* Auch `beinbeuge.*stehend` stand hier und machte aus dem STEHENDEN
      BEINBEUGER — einer Ischio-Übung — eine Kniebeuge. Ersatzlos gestrichen;
      die legcurl-Regel weiter unten fängt ihn korrekt ab. */
-  {k:'squat',   re:/(kniebeuge|squat|beinpresse|leg ?press|hackenschmidt|ausfallschritt|lunge|split ?squat|step ?up|pistol|poliquin)/i},
+  {k:'squat',   re:/(kniebeuge|squat|beinpresse|leg ?press|hackenschmidt|ausfallschritt|lunge|split ?squat|step ?up|pistol|poliquin|addukt|adduction|sissy|kosak|cossack|hocke)/i},
   /* Rückwärts ausgeführte Fliegende sind KEIN Brustdrücken. „Reverse
      Butterfly" enthält aber „butterfly" und wurde deshalb von der push-Regel
      gefangen, die weiter unten steht — dieselbe Falle wie bei „Leg Curl"
@@ -3642,12 +3646,16 @@ const MOVE_PATTERNS=[
      sie horizontale Abduktion sind, keine Ruderbewegung. Beides gehört zur
      hinteren Schulter und damit vor die allgemeinen Regeln (PB-047). */
   {k:'raise',   re:REAR_DELT_RE},
-  {k:'pushh',   re:/(schulterdrücken|overhead ?press|ohp|military|arnold ?press|schulterpresse|shoulder ?press|handstand)/i},
-  {k:'push',    re:/(bankdrücken|bench|brustpresse|chest ?press|butterfly|fliegende|fly|dips?|liegestütz|push ?ups?|pec ?deck|kabelzug.*brust)/i},
+  /* Aufrechtes Rudern heißt Rudern und ist keins — die Ellenbogen führen
+     seitlich nach oben, das ist seitliches Heben. Muss VOR der row-Regel
+     stehen, sonst gewinnt das Wort „Rudern". */
+  {k:'raise',   re:/(aufrechtes ?rudern|upright ?row)/i},
+  {k:'pushh',   re:/(schulterdrücken|overhead ?press|ohp|military|arnold ?press|schulterpresse|shoulder ?press|handstand|push ?press|pike|frontdrücken|nackendrücken)/i},
+  {k:'push',    re:/(bankdrücken|bench|brustpresse|chest ?press|butterfly|fliegende|fly|dips?|liegestütz|push ?ups?|pec ?deck|kabelzug.*brust|floor ?press|bodendrücken|landmine|crossover)/i},
   /* „klimmzug" traf den Plural „Klimmzüge" nicht — Umlaut. Die Übung fiel
      durch alle Regeln und landete über den Muskel-Fallback bei „Rudern",
      also horizontalem statt vertikalem Ziehen (PB-053). */
-  {k:'pulld',   re:/(latziehen|lat ?pulldown|klimmz|pull ?ups?|chin ?ups?|pullover|überzug|überzüge)/i},
+  {k:'pulld',   re:/(latziehen|lat ?pulldown|klimmz|pull ?ups?|chin ?ups?|pullover|überzug|überzüge|latzug)/i},
   {k:'row',     re:/(rudern|row|ring ?row|shrug|nackenziehen)/i},
   /* REIHENFOLGE IST BEDEUTUNG: Die erste passende Regel gewinnt. "Leg Curl"
      enthält "curl" und wurde deshalb als Bizeps-Curl erkannt — die Animation
@@ -3666,10 +3674,10 @@ const MOVE_PATTERNS=[
      Bizeps. Eine Trizepsstreckung zählte damit auf den Bizeps (PB-049).
      Die Regel steht hinter legext/legcurl und hinter hinge, deshalb bleiben
      „Leg Extension", „Back Extension" und „Hyperextension" unberührt. */
-  {k:'triext',  re:/(trizeps|triceps|pushdown|drücken.*seil|french ?press|skull ?crusher|stirndrücken|kickback|dip ?machine|katana|extensions?)/i},
+  {k:'triext',  re:/(trizeps|triceps|pushdown|drücken.*seil|french ?press|skull ?crusher|stirndrücken|kickback|dip ?machine|katana|extensions?|jm ?press)/i},
   {k:'raise',   re:/(seitheben|lateral ?raise|frontheben|front ?raise|seitenheben|upright ?row|aufrechtes ?rudern)/i},
   /* calf steht jetzt ganz oben, siehe dort. */
-  {k:'core',    re:/(crunch|sit ?up|plank|unterarmstütz|bauch|core|russian ?twist|beinheben|leg ?raise|hollow|ab ?wheel|wood ?chop|seitbeuge|side ?bend|pallof)/i},
+  {k:'core',    re:/(crunch|sit ?up|plank|unterarmstütz|bauch|core|russian ?twist|beinheben|leg ?raise|hollow|ab ?wheel|wood ?chop|seitbeuge|side ?bend|pallof|knieheben|dead ?bug|bird ?dog|v-?ups?|toes ?to ?bar|dragon ?flag|farmer|koffer|suitcase|carry|seitstütz)/i},
   {k:'cardio',  re:/(cardio|laufband|treadmill|stair|treppe|bike|ergometer|crosstrainer|elliptical|rudergerät|skierg|assault|seilspringen|jump ?rope|sprint|walk|gehen|lauf|jog|run)/i},
   {k:'mobility',re:/(mobility|dehnen|stretch|pigeon|taube|yoga|foam|faszien|rotation|cat ?cow|90\/90|hüftöffner)/i}
 ];
@@ -4392,7 +4400,14 @@ const EXLIB=[
   {cat:"🔥 Aufwärmen / Pre-Workout",items:[
     {name:"ATG: Schienbeinheben (Tibialis Raise)",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
     {name:"ATG: Keilbrett-Ausfallschritt (Split Squat Slantboard)",s:3,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Keilbrett, Knie weit vor, LANGSAM"},
-    {name:"ATG: Sitzender Guten Morgen (Seated Good Morning KH)",s:3,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Auf Bank, Hohlkreuz, Brust zwischen Beine"}]},
+    {name:"ATG: Sitzender Guten Morgen (Seated Good Morning KH)",s:3,rn:10,rx:10,rir:null,t:"pre",m:"back",note:"Auf Bank, Hohlkreuz, Brust zwischen Beine"},
+    {name:"Außenrotation Kabel (Cable External Rotation)",s:2,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Ellbogen am Rumpf, leicht — Rotatorenmanschette wecken"},
+    {name:"Band Pull-Apart (Band Pull-Apart)",s:2,rn:15,rx:20,rir:null,t:"pre",m:"shoulders",note:"Arme gestreckt, Band zur Brust, Schulterblätter zusammen"},
+    {name:"Schulterkreisen mit Band (Band Dislocates)",s:2,rn:10,rx:10,rir:null,t:"pre",m:"shoulders",note:"Weit greifen, langsam über den Kopf nach hinten"},
+    {name:"Leichte Kniebeugen ohne Gewicht (Bodyweight Squats)",s:2,rn:15,rx:15,rir:null,t:"pre",m:"legs",note:"Tief, Fersen unten, Tempo ruhig"},
+    {name:"Glute Bridge Aufwärmen (Warm-Up Glute Bridge)",s:2,rn:15,rx:15,rir:null,t:"pre",m:"legs",note:"Oben 1s halten, Gesäß bewusst anspannen"},
+    {name:"Rudergerät Aufwärmen (Rowing Warm-Up)",s:1,rn:5,rx:5,rir:null,t:"pre",m:"back",note:"Minuten, locker, Puls hochbringen"},
+    {name:"Laufband Aufwärmen (Treadmill Warm-Up)",s:1,rn:5,rx:5,rir:null,t:"pre",m:"legs",note:"Minuten, zügiges Gehen mit Steigung"}]},
   {cat:"🫁 Brust (Chest)",items:[
     {name:"Bankdrücken (Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Ellenbogen 45°, Exzentrik 2-3s"},
     {name:"Schrägbankdrücken (Incline Bench Press)",s:3,rn:8,rx:10,rir:3,t:"main",m:"chest",note:"Winkel 30°, kontrolliert"},
@@ -4400,7 +4415,31 @@ const EXLIB=[
     {name:"Brustpresse Maschine (Machine Chest Press)",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Gut für die letzten Sätze, kein Ablegerisiko"},
     {name:"Butterfly (Pec Deck)",s:3,rn:12,rx:15,rir:1,t:"main",m:"chest",note:"Isolation, gedehnte Position betonen"},
     {name:"Kabelzug Brust tief (Low Cable Fly)",s:3,rn:12,rx:15,rir:1,t:"main",m:"chest",note:"Von unten nach oben, obere Brust"},
-    {name:"Dips Brustversion (Chest Dips)",s:3,rn:6,rx:10,rir:2,t:"main",m:"chest",note:"Oberkörper vorlehnen, tief gehen"}]},
+    {name:"Dips Brustversion (Chest Dips)",s:3,rn:6,rx:10,rir:2,t:"main",m:"chest",note:"Oberkörper vorlehnen, tief gehen"},
+    {name:"Bankdrücken Langhantel eng (Close-Grip Bench Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Schulterbreit greifen, Ellbogen eng — Trizeps zuerst"},
+    {name:"Negativbankdrücken (Decline Bench Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Bank 15° negativ, untere Brust, kurzer Weg"},
+    {name:"Schrägbankdrücken Kurzhantel (Incline DB Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"30°, Hanteln unten weit — Dehnung, oben nicht zusammenschlagen"},
+    {name:"KH Negativbankdrücken (Decline DB Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Kontrolliert ablassen, Schulterblätter bleiben fixiert"},
+    {name:"KH Bankdrücken neutral (Neutral-Grip DB Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Handflächen zueinander, schonend für die Schulter"},
+    {name:"Bankdrücken Multipresse (Smith Machine Bench Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Bank so stellen, dass die Stange die untere Brust trifft"},
+    {name:"Schrägbankdrücken Multipresse (Smith Incline Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"30°, Stange auf Höhe des Schlüsselbeins"},
+    {name:"Brustpresse schräg Maschine (Incline Chest Press Machine)",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Griffe auf Höhe der oberen Brust, Ellbogen hinter den Rumpf"},
+    {name:"Hammer Strength Brustpresse (Plate-Loaded Chest Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Einseitig belastbar, Sitz so, dass die Griffe unter der Brust starten"},
+    {name:"Brustpresse sitzend Kabel (Seated Cable Press)",s:3,rn:10,rx:15,rir:2,t:"main",m:"chest",note:"Konstante Spannung, oben nicht ganz durchstrecken"},
+    {name:"Kabelzug-Fliegende (Cable Crossover)",s:3,rn:10,rx:15,rir:1,t:"main",m:"chest",note:"Schulterhöhe, in der Dehnung 1s halten, Hände nicht weit kreuzen"},
+    {name:"Kabelzug Brust hoch (High Cable Fly)",s:3,rn:12,rx:15,rir:1,t:"main",m:"chest",note:"Von oben nach unten, untere Brust, leicht vorgebeugt"},
+    {name:"Kabelzug-Fliegende einarmig (Single-Arm Cable Fly)",s:3,rn:10,rx:15,rir:1,t:"main",m:"chest",note:"Pro Seite, Rumpf gegen die Drehung halten"},
+    {name:"KH Fliegende flach (DB Fly)",s:3,rn:10,rx:15,rir:1,t:"main",m:"chest",note:"Ellbogen leicht gebeugt fixieren, nur bis Schulterhöhe ablassen"},
+    {name:"KH Fliegende Schrägbank (Incline DB Fly)",s:3,rn:10,rx:15,rir:1,t:"main",m:"chest",note:"30°, tief ablassen, oben nicht zusammenschlagen"},
+    {name:"Fliegende Maschine (Machine Fly)",s:3,rn:12,rx:15,rir:1,t:"main",m:"chest",note:"Wie Butterfly mit Griffen — gedehnte Position 1s halten"},
+    {name:"Dips an der Maschine (Machine Dip)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Leicht vorgelehnt für die Brust, tief bis die Schulter stabil bleibt"},
+    {name:"Liegestütze (Push Ups)",s:3,rn:10,rx:20,rir:2,t:"main",m:"chest",note:"Körper gerade, Ellbogen 45°, Brust bis knapp über den Boden"},
+    {name:"Liegestütze Defizit (Deficit Push Ups)",s:3,rn:8,rx:15,rir:2,t:"main",m:"chest",note:"Hände auf Hanteln oder Griffen, tiefer als der Boden erlaubt"},
+    {name:"Liegestütze erhöht (Incline Push Ups)",s:3,rn:12,rx:20,rir:2,t:"main",m:"chest",note:"Hände auf Bank — leichter, gut für hohe Wiederholungen"},
+    {name:"Liegestütze Füße erhöht (Decline Push Ups)",s:3,rn:8,rx:15,rir:2,t:"main",m:"chest",note:"Füße auf Bank, obere Brust und Schulter"},
+    {name:"Bodendrücken KH (DB Floor Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Oberarme auf dem Boden ablegen, kurze Pause, explosiv hoch"},
+    {name:"Landmine-Drücken (Landmine Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"chest",note:"Stange aus dem Eck, Winkel wie Schrägbank, schonend für die Schulter"},
+    {name:"Brustpresse Maschine einarmig (Single-Arm Machine Press)",s:3,rn:10,rx:12,rir:2,t:"main",m:"chest",note:"Pro Seite, Rumpf gegen die Drehung halten"}]},
   {cat:"🔙 Rücken (Back)",items:[
     {name:"Latziehen breit (Wide Lat Pulldown)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter runter, Brust raus"},
     {name:"Maschinenrudern eng (Machine Row Close)",s:3,rn:8,rx:12,rir:3,t:"main",m:"back",note:"Schulterblätter zusammen"},
@@ -4409,7 +4448,42 @@ const EXLIB=[
     {name:"KH Rudern einarmig (One-Arm DB Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Pro Seite, Hüfte bleibt ruhig"},
     {name:"Rumänisches Kreuzheben (Romanian Deadlift)",s:3,rn:6,rx:10,rir:3,t:"main",m:"back",note:"Hüfte nach hinten, Stange körpernah"},
     {name:"KH Pullover (DB Pullover)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Lat in gedehnter Position"},
-    {name:"Ring Rows",s:3,rn:8,rx:15,rir:2,t:"main",m:"back",note:"Körperwinkel bestimmt die Schwierigkeit"}]},
+    {name:"Ring Rows",s:3,rn:8,rx:15,rir:2,t:"main",m:"back",note:"Körperwinkel bestimmt die Schwierigkeit"},
+    {name:"Latziehen breit Obergriff (Wide-Grip Lat Pulldown)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Max. 15° Rücklage, oben die Schultern hochlaufen lassen"},
+    {name:"Latziehen eng neutral (Close Neutral-Grip Pulldown)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Ellbogen nach unten-hinten, Brust hoch"},
+    {name:"Latziehen Untergriff (Underhand Pulldown)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Schulterbreit, Bizeps arbeitet mit — Ellbogen zur Hüfte"},
+    {name:"Latziehen einarmig Kabel (Single-Arm Pulldown)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Pro Seite, Ellbogen an der Rippe vorbei, oben voll strecken"},
+    {name:"Latziehen Maschine (Machine Pulldown)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Oberschenkelpolster fest, Bewegung nur aus dem Rücken"},
+    {name:"Latzug gerade Arme (Straight-Arm Pulldown)",s:3,rn:12,rx:15,rir:1,t:"main",m:"back",note:"Arme fast gestreckt, Bewegung aus der Schulter — Lat in der Länge"},
+    {name:"Überzüge am Kabel (Cable Pullover)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Bank vor dem Turm, Arme fast gestreckt, trifft den Lat gedehnt"},
+    {name:"Klimmzüge weit (Wide-Grip Pull Ups)",s:3,rn:5,rx:10,rir:2,t:"main",m:"back",note:"Voll aushängen, oben die Brust Richtung Stange"},
+    {name:"Klimmzüge Untergriff (Chin Ups)",s:3,rn:6,rx:12,rir:2,t:"main",m:"back",note:"Schulterbreit, mehr Bizeps, voller Weg"},
+    {name:"Klimmzüge neutral (Neutral-Grip Pull Ups)",s:3,rn:6,rx:12,rir:2,t:"main",m:"back",note:"Handflächen zueinander, schulterfreundlichste Variante"},
+    {name:"Klimmzüge mit Band (Band-Assisted Pull Ups)",s:3,rn:6,rx:12,rir:2,t:"main",m:"back",note:"Band unter den Füßen, Technik wie ohne — dünneres Band als Progression"},
+    {name:"Klimmzugmaschine (Assisted Pull Up Machine)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Gegengewicht so, dass die letzten Wdh. schwer werden"},
+    {name:"Klimmzüge negativ (Negative Pull Ups)",s:3,rn:3,rx:6,rir:2,t:"main",m:"back",note:"Oben starten, 4–5 s ablassen — Weg zum ersten Klimmzug"},
+    {name:"Klimmzüge mit Zusatzgewicht (Weighted Pull Ups)",s:3,rn:4,rx:8,rir:2,t:"main",m:"back",note:"Dip-Gürtel, gleiche Technik, langsam ablassen"},
+    {name:"Kabelrudern sitzend eng (Seated Cable Row Close)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Vorne Schultern nach vorn laufen lassen, hinten Ellbogen an den Rumpf"},
+    {name:"Kabelrudern sitzend breit (Seated Cable Row Wide)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Ellbogen hoch und weit — oberer Rücken und hintere Schulter"},
+    {name:"Kabelrudern einarmig (Single-Arm Cable Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Pro Seite, Rumpf ruhig, volle Streckung vorne"},
+    {name:"Maschinenrudern eng Kabel (Cable Machine Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Brust am Polster, Ellbogen eng am Rumpf"},
+    {name:"Maschinenrudern eng neutral (Machine Row Neutral Grip)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Vorne voll ausstrecken lassen, hinten Schulterblätter zusammen"},
+    {name:"Maschinenrudern breit (Machine Row Wide)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Ellbogen nach außen — mittlerer Trapez und hintere Schulter"},
+    {name:"Hammer Strength Rudern (Plate-Loaded Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Brust am Polster, einseitig belastbar, Lat in der Streckung"},
+    {name:"T-Bar Rudern (T-Bar Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Rumpf 45°, Stange zur Brust, kein Schwung aus der Hüfte"},
+    {name:"Brustgestütztes KH Rudern (Chest-Supported DB Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Bank 30–45°, Brust liegt an — kein unterer Rücken beteiligt"},
+    {name:"Kurzhantel Rudern (Two-Arm DB Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Vorgebeugt, beide Hanteln gleichzeitig, Rücken neutral"},
+    {name:"Pendlay Rudern (Pendlay Row)",s:3,rn:6,rx:10,rir:2,t:"main",m:"back",note:"Stange jedes Mal am Boden ablegen, Rumpf waagerecht"},
+    {name:"Meadows Rudern einarmig (Meadows Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Landmine, Obergriff am Stangenende, Ellbogen weit"},
+    {name:"Bankrudern Langhantel (Seal Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Bauchlage auf erhöhter Bank, kein Schwung möglich"},
+    {name:"Rudern Multipresse (Smith Machine Row)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Vorgebeugt, Stange zum Bauch, feste Bahn"},
+    {name:"Ring Rows / Inverted Rows (Inverted Row)",s:3,rn:8,rx:15,rir:2,t:"main",m:"back",note:"Körper gerade, Brust zur Stange, Füße höher = schwerer"},
+    {name:"Shrugs Kurzhantel (DB Shrug)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Schultern gerade hoch, oben 1s halten, nicht kreisen"},
+    {name:"Shrugs Langhantel (Barbell Shrug)",s:3,rn:8,rx:12,rir:2,t:"main",m:"back",note:"Schwer, kurzer Weg, oben halten"},
+    {name:"Shrugs Multipresse (Smith Machine Shrug)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Feste Bahn, volle Dehnung unten"},
+    {name:"Rückenstrecker (Back Extension)",s:3,rn:10,rx:15,rir:2,t:"main",m:"back",note:"Hüfte am Polster, Rücken neutral bis waagerecht, kein Überstrecken"},
+    {name:"Rack Pulls (Rack Pull)",s:3,rn:5,rx:8,rir:2,t:"main",m:"back",note:"Stange auf Kniehöhe, schwer, oberer Rücken fest"},
+    {name:"Face Pulls (Face Pull)",s:3,rn:15,rx:20,rir:2,t:"main",m:"shoulders",note:"Seil auf Augenhöhe, außenrotieren — hintere Schulter und Schultergesundheit"}]},
   {cat:"🦵 Beine (Legs)",items:[
     {name:"Kniebeugen (Back Squat)",s:3,rn:6,rx:10,rir:3,t:"main",m:"legs",note:"Stange auf Trapez, parallel"},
     {name:"Beinpresse (Leg Press)",s:3,rn:10,rx:12,rir:3,t:"main",m:"legs",note:"Hüftbreit, Knie nicht locken"},
@@ -4417,14 +4491,84 @@ const EXLIB=[
     {name:"Beinbeuger liegend (Lying Leg Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Hamstrings, langsam ablassen"},
     {name:"Bulgarischer Ausfallschritt (Bulgarian Split Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Pro Bein, hinterer Fuß erhöht"},
     {name:"Hüftheben (Hip Thrust)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Gesäß, oben 1s halten"},
-    {name:"Wadenheben stehend (Standing Calf Raise)",s:4,rn:12,rx:20,rir:1,t:"main",m:"legs",note:"Volle Dehnung unten, oben halten"}]},
+    {name:"Wadenheben stehend (Standing Calf Raise)",s:4,rn:12,rx:20,rir:1,t:"main",m:"legs",note:"Volle Dehnung unten, oben halten"},
+    {name:"Frontkniebeuge (Front Squat)",s:3,rn:6,rx:10,rir:2,t:"main",m:"legs",note:"Ellbogen hoch, Rumpf aufrecht, Quadrizeps-betont"},
+    {name:"Goblet-Kniebeuge (Goblet Squat)",s:3,rn:8,rx:15,rir:2,t:"main",m:"legs",note:"Hantel vor der Brust, Ellbogen zwischen die Knie"},
+    {name:"Hackenschmidt-Kniebeuge (Hack Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Füße mittig, tief, bis das Becken stabil bleibt"},
+    {name:"Pendelkniebeuge (Pendulum Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Rücken liegt an, Knie dürfen weit nach vorn — Quadrizeps ohne Rumpfermüdung"},
+    {name:"Kniebeuge Multipresse (Smith Machine Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Füße leicht vor der Stange, tief, Rücken an der Bahn"},
+    {name:"Safety-Bar-Kniebeuge (Safety Bar Squat)",s:3,rn:6,rx:10,rir:2,t:"main",m:"legs",note:"Aufrechter als mit gerader Stange, schont die Schultern"},
+    {name:"Zercher-Kniebeuge (Zercher Squat)",s:3,rn:6,rx:10,rir:2,t:"main",m:"legs",note:"Stange in den Armbeugen, Rumpf arbeitet stark mit"},
+    {name:"Box-Kniebeuge (Box Squat)",s:3,rn:6,rx:10,rir:2,t:"main",m:"legs",note:"Auf die Box setzen, Spannung halten, ohne Schwung hoch"},
+    {name:"Sumo-Kniebeuge KH (DB Sumo Squat)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Weiter Stand, Fußspitzen nach außen, Adduktoren und Gesäß"},
+    {name:"Beinpresse eng (Leg Press Narrow)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Füße eng und tief auf der Platte — Quadrizeps"},
+    {name:"Beinpresse hoch und weit (Leg Press High Wide)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Füße hoch auf der Platte — Gesäß und Beinbeuger"},
+    {name:"Beinpresse einbeinig (Single-Leg Press)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Pro Seite, Fuß mittig, Becken bleibt an der Lehne"},
+    {name:"Beinpresse horizontal (Horizontal Leg Press)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Sitzende Variante, volle Beugung, kein Durchstrecken"},
+    {name:"Ausfallschritte gehend (Walking Lunges)",s:3,rn:10,rx:12,rir:2,t:"main",m:"legs",note:"Pro Seite, langer Schritt, Knie knapp über dem Boden"},
+    {name:"Ausfallschritte rückwärts (Reverse Lunges)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Pro Seite, schonender für das Knie als vorwärts"},
+    {name:"Split Squat Multipresse (Smith Split Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Pro Seite, vorderer Fuß weit vorn, gerade runter"},
+    {name:"Step-Ups (Step Up)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Pro Seite, Box kniehoch, aus der Ferse drücken, nicht abstoßen"},
+    {name:"Pistol Squat (Pistol Squat)",s:3,rn:5,rx:8,rir:2,t:"main",m:"legs",note:"Pro Seite, an einem Griff festhalten, bis die Tiefe sauber geht"},
+    {name:"Kosakenhocke (Cossack Squat)",s:3,rn:8,rx:10,rir:2,t:"main",m:"legs",note:"Pro Seite, weit auseinander, ein Bein gestreckt — Adduktoren"},
+    {name:"Sissy Squat (Sissy Squat)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Knie weit vor, Hüfte gestreckt — Rectus femoris in voller Dehnung"},
+    {name:"Spanish Squat (Spanish Squat)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Band hinter den Knien, Schienbeine senkrecht"},
+    {name:"Beinstrecker einbeinig (Single-Leg Extension)",s:3,rn:10,rx:15,rir:1,t:"main",m:"legs",note:"Pro Seite, oben 1s halten"},
+    {name:"Leg Extension (Leg Extension)",s:3,rn:10,rx:15,rir:1,t:"main",m:"legs",note:"Oben 1s halten, Lehne zurück für mehr Rectus femoris"},
+    {name:"Beinbeuger sitzend (Seated Leg Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Gebeugte Hüfte = längere Position für die Ischios — die belegte Variante"},
+    {name:"Beinbeuger stehend (Standing Leg Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Pro Seite, Hüfte gestreckt, kein Vorbeugen"},
+    {name:"Beinbeuger liegend einbeinig (Single-Leg Lying Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Pro Seite, langsam ablassen, Becken auf dem Polster"},
+    {name:"Nordic Curls (Nordic Hamstring Curl)",s:3,rn:4,rx:8,rir:2,t:"main",m:"legs",note:"Füße fixiert, so langsam wie möglich nach vorn ablassen"},
+    {name:"Beinbeugen Gymnastikball (Swiss Ball Leg Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"legs",note:"Hüfte oben halten, Fersen zum Gesäß ziehen"},
+    {name:"Glute Ham Raise (Glute Ham Raise)",s:3,rn:6,rx:10,rir:2,t:"main",m:"legs",note:"Aus der Kniebeugung heben, Hüfte gestreckt lassen"},
+    {name:"Kreuzheben (Conventional Deadlift)",s:3,rn:4,rx:6,rir:2,t:"main",m:"legs",note:"Stange über Mittelfuß, Rücken neutral, Beine drücken den Boden weg"},
+    {name:"Sumo-Kreuzheben (Sumo Deadlift)",s:3,rn:4,rx:6,rir:2,t:"main",m:"legs",note:"Weiter Stand, Schienbeine senkrecht, Knie nach außen"},
+    {name:"Trap-Bar-Kreuzheben (Trap Bar Deadlift)",s:3,rn:5,rx:8,rir:2,t:"main",m:"legs",note:"Aufrechter als konventionell, gut zu lernen und zu laden"},
+    {name:"Rumänisches Kreuzheben KH (DB Romanian Deadlift)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Hanteln an den Oberschenkeln entlang, Hüfte nach hinten"},
+    {name:"Rumänisches Kreuzheben einbeinig (Single-Leg RDL)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Pro Seite, Hüfte gerade halten, Standbein leicht gebeugt"},
+    {name:"Steifbeiniges Kreuzheben (Stiff-Leg Deadlift)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Knie fast gestreckt, Dehnung in den Beinbeugern, Rücken neutral"},
+    {name:"Good Mornings (Good Morning)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Leicht, Hüfte nach hinten, Rücken neutral bis waagerecht"},
+    {name:"Hüftheben Langhantel (Barbell Hip Thrust)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Schulterblätter auf der Bank, oben Kinn zur Brust und 1s halten"},
+    {name:"Hüftheben Maschine (Hip Thrust Machine)",s:3,rn:8,rx:12,rir:2,t:"main",m:"legs",note:"Gurt über der Hüfte, oben voll strecken und halten"},
+    {name:"Beckenheben (Glute Bridge)",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Rücken am Boden, Fersen nah, Gesäß oben anspannen"},
+    {name:"Gesäß-Kickback Kabel (Cable Glute Kickback)",s:3,rn:12,rx:15,rir:1,t:"main",m:"legs",note:"Pro Seite, Bein nach hinten-oben, Rumpf ruhig"},
+    {name:"Abduktoren Maschine (Hip Abduction Machine)",s:3,rn:12,rx:20,rir:1,t:"main",m:"legs",note:"Gesäß seitlich — leicht vorgebeugt trifft es mehr"},
+    {name:"Adduktoren Maschine (Hip Adduction Machine)",s:3,rn:12,rx:20,rir:1,t:"main",m:"legs",note:"Innenseite, langsam öffnen, kein Reißen"},
+    {name:"Kettlebell Swing (Kettlebell Swing)",s:3,rn:12,rx:20,rir:2,t:"main",m:"legs",note:"Hüftschnapp, Arme nur führen, nicht heben"},
+    {name:"Wadenheben sitzend (Seated Calf Raise)",s:3,rn:12,rx:20,rir:1,t:"main",m:"legs",note:"Gebeugtes Knie = Soleus. Ergänzt das stehende Wadenheben"},
+    {name:"Wadenpresse an der Beinpresse (Leg Press Calf Raise)",s:3,rn:10,rx:15,rir:1,t:"main",m:"legs",note:"Nur die Waden arbeiten, Knie fast gestreckt, volle Dehnung unten"},
+    {name:"Slantboard Calf Raise (Slantboard Calf Raise)",s:3,rn:10,rx:15,rir:1,t:"main",m:"legs",note:"Gestrecktes Knie = Gastrocnemius. Ferse tief sinken lassen, oben 1s halten"},
+    {name:"Wadenheben einbeinig (Single-Leg Calf Raise)",s:3,rn:10,rx:15,rir:1,t:"main",m:"legs",note:"Pro Seite, Kurzhantel in der Hand, volle Dehnung"},
+    {name:"Wadenheben Multipresse (Smith Machine Calf Raise)",s:3,rn:10,rx:15,rir:1,t:"main",m:"legs",note:"Stufe unter den Ballen, oben 1s halten, kein Federn"},
+    {name:"Wadenheben an der Hackenschmidt (Hack Squat Calf Raise)",s:3,rn:10,rx:15,rir:1,t:"main",m:"legs",note:"Schulterpolster tragen die Last, tiefe Dehnung"}]},
   {cat:"🏔️ Schultern (Shoulders)",items:[
     {name:"KH Seitheben (DB Lateral Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Kontrolliert, seitliche Delts"},
     {name:"Gesichtziehen (Face Pulls)",s:3,rn:12,rx:15,rir:2,t:"main",m:"shoulders",note:"Schultergesundheit"},
     {name:"Schulterdrücken KH (DB Shoulder Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Rippen unten, kein Hohlkreuz"},
     {name:"Schulterdrücken LH (Overhead Press)",s:3,rn:5,rx:8,rir:3,t:"main",m:"shoulders",note:"Stehend, Rumpf fest"},
     {name:"Reverse Butterfly (Reverse Pec Deck)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Hintere Schulter, meist unterentwickelt"},
-    {name:"Kabel Seitheben (Cable Lateral Raise)",s:3,rn:12,rx:15,rir:1,t:"main",m:"shoulders",note:"Gleichmäßiger Widerstand über den ganzen Weg"}]},
+    {name:"Kabel Seitheben (Cable Lateral Raise)",s:3,rn:12,rx:15,rir:1,t:"main",m:"shoulders",note:"Gleichmäßiger Widerstand über den ganzen Weg"},
+    {name:"Schulterdrücken Maschine (Machine Shoulder Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Nur so tief, wie die Schulter stabil bleibt"},
+    {name:"Schulterdrücken Multipresse (Smith Machine Shoulder Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Sitzend, Stange vor dem Gesicht, feste Bahn"},
+    {name:"Schulterdrücken sitzend LH (Seated Barbell Press)",s:3,rn:6,rx:10,rir:2,t:"main",m:"shoulders",note:"Lehne 80–85°, Stange bis unters Kinn"},
+    {name:"Schulterdrücken rotierend (Rotational DB Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Unten neutral, oben proniert — ergänzt das Seitheben um die vertikale Richtung"},
+    {name:"Arnold-Drücken (Arnold Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Unten Handflächen zu dir, beim Drücken drehen"},
+    {name:"Landmine Schulterdrücken (Landmine Shoulder Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"shoulders",note:"Pro Seite, Winkel schont die Schulter, Rumpf fest"},
+    {name:"Push Press (Push Press)",s:3,rn:4,rx:8,rir:2,t:"main",m:"shoulders",note:"Kurzer Beinschub, dann Schulter — mehr Gewicht als beim Strict Press"},
+    {name:"Pike Push Ups (Pike Push Ups)",s:3,rn:8,rx:15,rir:2,t:"main",m:"shoulders",note:"Hüfte hoch, Kopf zum Boden — vertikales Drücken ohne Gewicht"},
+    {name:"Seitheben Maschine (Machine Lateral Raise)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Polster am Oberarm, oben nicht über Schulterhöhe"},
+    {name:"Seitheben Kabel (Cable Lateral Raise Behind Back)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Kabel hinter dem Rücken, konstante Spannung auch unten"},
+    {name:"Seitheben Kabel einarmig (Single-Arm Cable Lateral Raise)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Pro Seite, Kabel tief, Bewegung leicht nach vorn-außen"},
+    {name:"Seitheben vorgebeugt KH (Bent-Over Reverse Fly)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Rumpf fast waagerecht, Daumen nach unten — hintere Schulter"},
+    {name:"Seitheben liegend Schrägbank (Incline Lateral Raise)",s:3,rn:12,rx:15,rir:1,t:"main",m:"shoulders",note:"Seitlich auf der Schrägbank, mehr Spannung unten"},
+    {name:"Frontheben KH (DB Front Raise)",s:3,rn:12,rx:15,rir:1,t:"main",m:"shoulders",note:"Bis Augenhöhe, Daumen leicht nach oben"},
+    {name:"Frontheben Scheibe (Plate Front Raise)",s:3,rn:12,rx:15,rir:1,t:"main",m:"shoulders",note:"Scheibe mit beiden Händen, kein Schwung aus dem Rücken"},
+    {name:"Aufrechtes Rudern (Upright Row)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Weiter Griff, Ellbogen führen, nur bis Brusthöhe"},
+    {name:"Reverse Butterfly Maschine (Reverse Pec Deck)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Brust am Polster, Ellbogen leicht gebeugt fixieren"},
+    {name:"Kurzhantel Reverse Butterfly (DB Reverse Fly)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Vorgebeugt oder Brust auf Schrägbank, Bewegung nur aus der Schulter"},
+    {name:"Reverse Fly Kabel (Cable Reverse Fly)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Kabel auf Schulterhöhe gekreuzt, Arme weit öffnen"},
+    {name:"Hintere Schulter Rudern KH (Rear Delt Row)",s:3,rn:10,rx:15,rir:2,t:"main",m:"shoulders",note:"Ellbogen hoch und weit, zur oberen Brust ziehen"},
+    {name:"Hintere Schulter Kabel einarmig (Single-Arm Rear Delt Pull)",s:3,rn:12,rx:20,rir:1,t:"main",m:"shoulders",note:"Pro Seite, Griff quer vor dem Körper, Ellbogen weit nach außen"}]},
   {cat:"💪 Arme",items:[
     {name:"KH Curls (DB Curls)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Supination, langsam exzentrisch"},
     {name:"Trizepsdrücken Seil (Rope Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Seil auseinanderziehen unten"},
@@ -4432,14 +4576,82 @@ const EXLIB=[
     {name:"Stirndrücken (Skull Crusher)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Ellenbogen bleiben an Ort und Stelle"},
     {name:"Scottcurls (Preacher Curl)",s:3,rn:10,rx:12,rir:1,t:"main",m:"arms",note:"Bizeps in gedehnter Position"},
     {name:"Überkopf-Trizeps Kabel (Overhead Cable Extension)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Langer Trizepskopf, gedehnt"},
-    {name:"Dips Trizepsversion (Triceps Dips)",s:3,rn:6,rx:12,rir:2,t:"main",m:"arms",note:"Oberkörper aufrecht"}]},
+    {name:"Dips Trizepsversion (Triceps Dips)",s:3,rn:6,rx:12,rir:2,t:"main",m:"arms",note:"Oberkörper aufrecht"},
+    {name:"Langhantelcurls (Barbell Curl)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Oberarme am Rumpf, kein Schwung, unten voll strecken"},
+    {name:"SZ-Curls (EZ-Bar Curl)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Schonender fürs Handgelenk, langsam ablassen"},
+    {name:"Schrägbank-Kurzhantelcurl (Incline DB Curl)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Bank ca. 60°, Arme hängen hinter dem Rumpf — dort liegt die Dehnung"},
+    {name:"Spidercurls (Spider Curl)",s:3,rn:10,rx:15,rir:1,t:"main",m:"arms",note:"Brust auf der Schrägbank, Arme hängen senkrecht — kurze Muskellänge"},
+    {name:"Konzentrationscurls (Concentration Curl)",s:3,rn:10,rx:15,rir:1,t:"main",m:"arms",note:"Pro Seite, Ellbogen am Oberschenkel, oben drehen"},
+    {name:"Kabelcurls (Cable Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Konstante Spannung, Ellbogen fixiert"},
+    {name:"Kabelcurls hinter dem Körper (Bayesian Cable Curl)",s:3,rn:10,rx:15,rir:1,t:"main",m:"arms",note:"Pro Seite, Kabel hinter dir, Arm gedehnt — langer Bizepskopf"},
+    {name:"Scottcurls Maschine (Machine Preacher Curl)",s:3,rn:10,rx:12,rir:1,t:"main",m:"arms",note:"Polster unter den Achseln, unten nicht ganz durchstrecken"},
+    {name:"Bizepscurls Maschine (Machine Bicep Curl)",s:3,rn:10,rx:15,rir:1,t:"main",m:"arms",note:"Feste Bahn, gut nah ans Versagen"},
+    {name:"Hammercurls Kabel (Rope Hammer Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Neutraler Griff — trifft Brachialis und Unterarm mit"},
+    {name:"Hammercurls quer (Cross-Body Hammer Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Pro Seite, Hantel zur gegenüberliegenden Brust"},
+    {name:"Zottman-Curls (Zottman Curl)",s:3,rn:10,rx:12,rir:2,t:"main",m:"arms",note:"Hoch supiniert, oben drehen, proniert ablassen — Unterarm"},
+    {name:"Reverse Curls (Reverse Curl)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Obergriff, Brachioradialis und Unterarm"},
+    {name:"Drag Curls (Drag Curl)",s:3,rn:10,rx:12,rir:2,t:"main",m:"arms",note:"Stange am Körper hochziehen, Ellbogen nach hinten"},
+    {name:"Handgelenkcurls (Wrist Curl)",s:3,rn:15,rx:20,rir:2,t:"main",m:"arms",note:"Unterarme auf der Bank, nur das Handgelenk bewegt"},
+    {name:"Trizepsdrücken Stange (Straight-Bar Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Ellbogen am Rumpf, unten voll strecken"},
+    {name:"Trizepsdrücken V-Griff (V-Bar Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Neutraler Griff, Oberarm fixiert"},
+    {name:"Trizepsdrücken einarmig Kabel (Single-Arm Pushdown)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Pro Seite, Handfläche nach oben oder unten wechseln"},
+    {name:"Extensions Kabel (Cable Overhead Extension)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Ellbogen fixiert, in der Dehnung kurz halten"},
+    {name:"Katana Extensions Kabel (Katana Extension)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Kabel gekreuzt über Kopf, Ellbogen vorn — langer Kopf gedehnt"},
+    {name:"Überkopf-Trizepsstrecken KH (Overhead DB Extension)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Beide Hände an einer Hantel, Ellbogen zeigen nach vorn"},
+    {name:"Französisches Drücken SZ (EZ French Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Liegend, Stange hinter den Kopf ablassen, Ellbogen still"},
+    {name:"Trizeps-Kickbacks KH (DB Kickback)",s:3,rn:12,rx:15,rir:1,t:"main",m:"arms",note:"Pro Seite, Oberarm waagerecht, oben 1s halten"},
+    {name:"Trizepsmaschine (Triceps Extension Machine)",s:3,rn:10,rx:15,rir:1,t:"main",m:"arms",note:"Oberarme auf dem Polster, voll strecken"},
+    {name:"Dip-Maschine (Dip Machine)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Aufrecht sitzen, Ellbogen eng — Trizeps"},
+    {name:"Trizeps-Dips Bank (Bench Dips)",s:3,rn:10,rx:15,rir:2,t:"main",m:"arms",note:"Hände auf der Bank, Rücken nah an der Kante"},
+    {name:"Diamant-Liegestütze (Diamond Push Ups)",s:3,rn:8,rx:15,rir:2,t:"main",m:"arms",note:"Hände unter der Brust zusammen, Ellbogen eng"},
+    {name:"JM-Drücken (JM Press)",s:3,rn:8,rx:12,rir:2,t:"main",m:"arms",note:"Enges Bankdrücken mit Ellbogen nach vorn, Stange zum Hals ablassen — Trizeps"}]},
   {cat:"🎯 Bauch / Core",items:[
     {name:"Kabelcrunches (Cable Crunch)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Kniend einrollen"},
     {name:"Unterarmstütz (Plank)",s:3,rn:30,rx:60,rir:null,t:"main",m:"core",note:"Körper gerade. Sekunden"},
     {name:"Hängendes Beinheben (Hanging Leg Raise)",s:3,rn:8,rx:15,rir:2,t:"main",m:"core",note:"Becken einrollen, kein Schwung"},
     {name:"Ab Wheel Rollout",s:3,rn:8,rx:12,rir:2,t:"main",m:"core",note:"Rippen unten, kein Durchhängen"},
     {name:"Russian Twist",s:3,rn:15,rx:20,rir:2,t:"main",m:"core",note:"Rotation aus dem Rumpf, nicht aus den Armen"},
-    {name:"Holzhacker Kabel (Cable Wood Chop)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Diagonal, Hüfte dreht mit"}]}
+    {name:"Holzhacker Kabel (Cable Wood Chop)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Diagonal, Hüfte dreht mit"},
+    {name:"Crunches (Crunch)",s:3,rn:15,rx:20,rir:2,t:"main",m:"core",note:"Kinn locker, Schulterblätter vom Boden, oben 1s halten"},
+    {name:"Crunch-Maschine (Ab Crunch Machine)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Einrollen, nicht Hüfte beugen — Gewicht langsam steigern"},
+    {name:"Reverse Crunches (Reverse Crunch)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Becken vom Boden rollen, Beine nur mitführen"},
+    {name:"Sit-Ups (Sit Up)",s:3,rn:12,rx:20,rir:2,t:"main",m:"core",note:"Füße nicht fixieren, Wirbel für Wirbel hoch"},
+    {name:"Sit-Ups Negativbank (Decline Sit Up)",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Mit Gewicht auf der Brust progressiv"},
+    {name:"Beinheben liegend (Lying Leg Raise)",s:3,rn:10,rx:20,rir:2,t:"main",m:"core",note:"Unterer Rücken bleibt am Boden, Becken einrollen"},
+    {name:"Knieheben hängend (Hanging Knee Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Leichter als Beinheben, Becken trotzdem einrollen"},
+    {name:"Knieheben am Captain's Chair (Captain's Chair Knee Raise)",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Rücken am Polster, Schwung vermeiden"},
+    {name:"Toes to Bar (Toes to Bar)",s:3,rn:6,rx:12,rir:2,t:"main",m:"core",note:"Aus dem Hang, Füße zur Stange — kontrolliert, kein Kipping"},
+    {name:"V-Ups (V-Up)",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Arme und Beine gleichzeitig, oben Hände zu den Füßen"},
+    {name:"Dead Bug (Dead Bug)",s:3,rn:10,rx:12,rir:2,t:"main",m:"core",note:"Pro Seite, unterer Rücken bleibt am Boden, langsam"},
+    {name:"Bird Dog (Bird Dog)",s:3,rn:10,rx:12,rir:2,t:"main",m:"core",note:"Pro Seite, Arm und Gegenbein, Hüfte bleibt gerade"},
+    {name:"Hollow Body Hold (Hollow Hold)",s:3,rn:20,rx:40,rir:null,t:"main",m:"core",note:"Sekunden. Unterer Rücken in den Boden drücken"},
+    {name:"Seitstütz (Side Plank)",s:3,rn:20,rx:45,rir:null,t:"main",m:"core",note:"Sekunden pro Seite, Hüfte oben"},
+    {name:"Pallof Press (Pallof Press)",s:3,rn:10,rx:15,rir:2,t:"main",m:"core",note:"Pro Seite, Kabel seitlich, Arme strecken ohne zu drehen"},
+    {name:"Seitbeugen KH (DB Side Bend)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Pro Seite, nur seitlich, nicht nach vorn"},
+    {name:"Bauchpresse Kabel stehend (Standing Cable Crunch)",s:3,rn:12,rx:15,rir:2,t:"main",m:"core",note:"Seil hinter dem Kopf, Rippen zur Hüfte"},
+    {name:"Dragon Flag (Dragon Flag)",s:3,rn:5,rx:8,rir:2,t:"main",m:"core",note:"Bank festhalten, Körper gerade ablassen — schwer"},
+    {name:"Farmers Walk (Farmers Walk)",s:3,rn:30,rx:60,rir:null,t:"main",m:"core",note:"Meter oder Sekunden, schwer, aufrecht — Griff und Rumpf"},
+    {name:"Koffer-Tragen einseitig (Suitcase Carry)",s:3,rn:30,rx:45,rir:null,t:"main",m:"core",note:"Pro Seite, Gewicht in einer Hand, nicht zur Seite kippen"}]},
+  {cat:"🏃 Cardio",items:[
+    {name:"Laufband (Treadmill)",s:1,rn:10,rx:30,rir:null,t:"main",m:"legs",note:"Minuten. Zone 2: reden geht noch"},
+    {name:"Crosstrainer (Elliptical)",s:1,rn:10,rx:30,rir:null,t:"main",m:"legs",note:"Minuten, gelenkschonend"},
+    {name:"Ergometer Fahrrad (Stationary Bike)",s:1,rn:10,rx:30,rir:null,t:"main",m:"legs",note:"Minuten, Sattel auf Hüfthöhe"},
+    {name:"Rudergerät (Rowing Machine)",s:1,rn:10,rx:20,rir:null,t:"main",m:"back",note:"Minuten. Beine, dann Rumpf, dann Arme"},
+    {name:"Treppensteiger StairMaster (Stair Climber)",s:1,rn:10,rx:20,rir:null,t:"main",m:"legs",note:"Minuten, nicht am Geländer abstützen"},
+    {name:"Seilspringen (Jump Rope)",s:1,rn:5,rx:15,rir:null,t:"main",m:"legs",note:"Minuten, kleine Sprünge, Fußballen"},
+    {name:"SkiErg (SkiErg)",s:1,rn:5,rx:15,rir:null,t:"main",m:"back",note:"Minuten, Rumpf mitbeugen, Hüfte arbeitet"},
+    {name:"Air Bike (Assault Bike)",s:1,rn:5,rx:15,rir:null,t:"main",m:"legs",note:"Minuten oder Intervalle, Arme und Beine"}]},
+  {cat:"🧘 Mobilität / Dehnen",items:[
+    {name:"Hüftöffner 90/90 (90/90 Hip Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, Rumpf aufrecht"},
+    {name:"Taube (Pigeon Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, Hüfte gerade"},
+    {name:"Katzenbuckel (Cat-Cow)",s:2,rn:10,rx:10,rir:null,t:"mob",m:"back",note:"Wirbel für Wirbel, mit dem Atem"},
+    {name:"Weltbeste Dehnung (World's Greatest Stretch)",s:2,rn:5,rx:8,rir:null,t:"mob",m:"legs",note:"Pro Seite, Ausfallschritt mit Rotation"},
+    {name:"Brustwirbelsäule Rotation (Thoracic Rotation)",s:2,rn:10,rx:10,rir:null,t:"mob",m:"back",note:"Pro Seite, Hüfte ruhig, Blick folgt der Hand"},
+    {name:"Hüftbeuger Dehnung kniend (Kneeling Hip Flexor Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, Gesäß anspannen"},
+    {name:"Waden Dehnung Wand (Wall Calf Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, Ferse am Boden"},
+    {name:"Schulter Dehnung Türrahmen (Doorway Pec Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"chest",note:"Sekunden, Ellbogen auf Schulterhöhe"},
+    {name:"Faszienrolle Oberschenkel (Foam Roll Quads)",s:1,rn:60,rx:90,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, langsam"},
+    {name:"Dehnen Beinbeuger (Hamstring Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, Rücken gerade"}]}
 ];function filterLib(q){renderLib(q)}
 function stepVal(id,delta){const el=document.getElementById(id);const v=parseFloat(el.value)||0;el.value=Math.max(0,+(v+delta).toFixed(1))}
 let stepTimer=null,stepDelay=null;
