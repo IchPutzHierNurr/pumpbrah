@@ -32,8 +32,9 @@ wirklich, gerechnet gegen dieselben Landmarks wie der Coach ·
 danach eine Entlastungswoche — skaliert wird das Workout, nie der Plan ·
 Dauerschätzung je Trainingstag (einseitige Übungen zählen doppelt, dazu 60 s
 Wechselzeit je Übung — Station, Sitz, Scheiben) ·
-Mehrere Trainingstage mit Wochentagszuordnung · Übungsbibliothek mit eigenen
-Übungen · RIR-basierte Satzerfassung · Pausentimer mit Compound-/Isolations-
+Mehrere Trainingstage mit Wochentagszuordnung · Übungsbibliothek mit 246
+Einträgen (deutsch, englischer Name in Klammern, neun Kategorien inklusive
+Cardio und Mobilität) plus eigene Übungen · RIR-basierte Satzerfassung · Pausentimer mit Compound-/Isolations-
 Voreinstellung · Cardio getrennt in Minuten · persönliche Notizen pro Übung ·
 Aufwärmrampe je Hauptübung (zählt nicht ins Volumen) · Deload-Modus, der die
 Workouts sieben Tage lang automatisch reduziert und den Plan unberührt lässt
