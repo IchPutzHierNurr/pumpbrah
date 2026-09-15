@@ -3,8 +3,14 @@
 Trainings-Tracker als einzelne HTML-Datei. Kein Build, keine Abhängigkeiten,
 läuft per `file://` und offline. Optionaler Cloud-Sync über Firestore.
 
+Die App ist **eine** HTML-Datei, und das bleibt so: Sie läuft per `file://`,
+offline, ohne Build und ohne zweiten Netzwerk-Request. Der Preis dafür ist
+eine lange Datei; bezahlt wird er mit einer Karte statt mit Ordnern — der
+Skript-Block beginnt mit einem Inhaltsverzeichnis, jeder Abschnitt trägt eine
+Marke der Form `§N`, und `grep -n '§7' index.html` springt hin.
+
 ```
-index.html          Die komplette App (HTML + CSS + JS)
+index.html          Die komplette App (HTML + CSS + JS), 18 Abschnitte
 sw.js               Service Worker: die App läuft auch ohne Empfang
 test/check.mjs      Funktionstest-Harness: Smoke, Regressionen, Sync, Fuzzing
 test/fakestore.mjs  Gefälschte Firestore — macht den Sync und zwei Geräte prüfbar
@@ -26,12 +32,17 @@ docs/BUGS.md        Register aller je gefundenen Fehler + Regressionstests
 ## Funktionen
 
 **Training**
-Plan aus dem Onboarding erzeugt — Tage, Ort, Ziel und Erfahrung bestimmen ihn
-wirklich, gerechnet gegen dieselben Landmarks wie der Coach ·
+Plan aus dem Onboarding erzeugt — neun Fragen, die ihn wirklich bestimmen:
+Tage, Ort, Ziel, Erfahrung **und Zeitbudget, Beschwerden, Zeitspar-Methoden**.
+Das Zeitbudget ist eine harte Grenze, keine Absicht; Beschwerden tauschen
+Übungen gegen gelenkschonende Varianten desselben Musters, statt sie zu
+streichen. Gerechnet wird gegen dieselben Landmarks wie der Coach ·
 **Mesozyklus**: Volumen steigt über die Wochen von 72 % auf 100 % des Plans,
 danach eine Entlastungswoche — skaliert wird das Workout, nie der Plan ·
-Dauerschätzung je Trainingstag (einseitige Übungen zählen doppelt, dazu 60 s
-Wechselzeit je Übung — Station, Sitz, Scheiben) ·
+Dauerschätzung je Trainingstag, **an deiner gemessenen Dauer geeicht** —
+einseitige Übungen zählen doppelt, dazu 60 s Wechselzeit je Übung, und ab drei
+beendeten Einheiten multipliziert die App mit deinem eigenen Tempo statt mit
+einem Mittelwert ·
 Mehrere Trainingstage mit Wochentagszuordnung · Übungsbibliothek mit 246
 Einträgen (deutsch, englischer Name in Klammern, neun Kategorien inklusive
 Cardio und Mobilität) plus eigene Übungen · RIR-basierte Satzerfassung · Pausentimer mit Compound-/Isolations-
@@ -43,10 +54,16 @@ Der mitgelieferte Plan ist ein 3-Tage-Ganzkörper (Di/Do/Sa), **33 Übungen,
 121 Sätze**, höchstens **4 Sätze je Übung** — lieber eine Übung mehr als ein
 Satz mehr, weil der fünfte und sechste Satz derselben Übung am wenigsten
 beiträgt. Alle zehn Volumengruppen liegen im Korridor zwischen MEV und MRV,
-die Pause steht einheitlich auf 120 s, jede Einheit dauert 111–124 min.
+die Pause steht einheitlich auf 120 s, jede Einheit dauert 111–127 min.
 Bis September 2026 stand hier 101–112: Die Schätzung zählte nur Arbeit und
 Pause, nicht den Umbau zwischen zwei Übungen — und lag damit an einer echten
-Einheit 10 bis 20 Minuten unter der Uhr.
+Einheit 10 bis 20 Minuten unter der Uhr (PB-106).
+
+Der Plan trug außerdem eine Lücke, die niemand sehen konnte: Solange
+Schulterdrücken auf dieselbe Volumengruppe zählte wie Seitheben, stand dort
+„Schultern 6 — im Korridor". Tatsächlich hatte die **seitliche** Schulter
+sechs Sätze bei einem Minimum von acht. Seit sie eigene Grenzen hat (PB-109),
+ist die Lücke sichtbar — und im mitgelieferten Plan geschlossen.
 
 **Im laufenden Workout**
 „Wenig Zeit": kürzt die Einheit auf ein Zeitbudget — Grundübungen zuletzt,
@@ -59,11 +76,16 @@ Trainingstag wechseln (anhängen / nur Geloggtes behalten / ersetzen) ·
 Ziel für den nächsten Satz nach doppelter Progression · Wake Lock
 
 **Auswertung**
-Wochenvolumen gegen MEV/MAV/MRV über **zehn Muskeln** — Bizeps und Trizeps
-getrennt, Quadrizeps, Beinbeuger und Waden getrennt, seitliche und hintere
-Schulter getrennt (Begründung in
+Wochenvolumen gegen MEV/MAV/MRV über **elf Muskeln** — Bizeps und Trizeps
+getrennt, Quadrizeps, Beinbeuger und Waden getrennt, vordere, seitliche und
+hintere Schulter getrennt (Begründung in
 [`docs/EVIDENZ.md`](docs/EVIDENZ.md)) · wahlweise inklusive indirekt
 beteiligter Muskeln (0,5 Sätze) · Volumen-Radar · Tonnage- und RIR-Trends ·
+Die Karte auf dem Startbildschirm nennt keine Gesamtsumme mehr, sondern die
+Zahl der Gruppen **im produktiven Korridor** — eine Summe über Muskeln, die
+nichts miteinander zu tun haben, war nie ein Trainingsziel (PB-104) ·
+Der Vergleich zweier Einheiten läuft über die **Schnittmenge** ihrer Übungen:
+Wer aus Zeitmangel etwas auslässt, bekommt dafür kein rotes Minus (PB-107) ·
 e1RM-Verlauf pro Übung statt nur Rohgewicht · PR-Erkennung · Deload-Empfehlung
 aus Trend, RIR und Volumen · Fitnessalter · Gewichtsverlauf · EGYM-BioAge in
 Altersdifferenzen statt Rohwerten · Kalenderhistorie · einklappbare Abschnitte (auch die Volumenkarte auf dem Startbildschirm, eingeklappt mit Kurzfassung)
@@ -77,14 +99,22 @@ Tempo-Umschalter (2 s / 3 s / 5 s betonte Exzentrik).
 
 **Volumen-Coach**
 Wochenvolumen je Muskel gegen MEV/MAV/MRV, Frequenz, fehlende
-Bewegungsmuster — im Plan wie im laufenden Workout. Fehlt Volumen, schlägt er
+Bewegungsmuster — im Plan wie im laufenden Workout. Dazu **drei Befunde aus
+der Historie**, die der Plan über sich selbst nicht weiß: eine Übung, die
+regelmäßig übersprungen wird (sie zählt ins Volumen, findet aber nicht statt),
+eine, die seit Einheiten keinen Bestwert mehr sieht, und ein Trainingstag, der
+real über dem gewählten Zeitbudget liegt. Jeder Befund trägt eine ausführbare
+Aktion: nach vorn schieben, entfernen, Variante tauschen, koppeln. Fehlt Volumen, schlägt er
 eine konkrete Übung aus einem Katalog von 52 Einträgen vor, jede mit sichtbarer
 Konfidenzstufe und „warum?"-Beleg (siehe [`docs/EVIDENZ.md`](docs/EVIDENZ.md)).
 
 **Plan teilen**
 Ein Trainingsplan wird zu einem komprimierten Code, einem Link oder einem
-QR-Code (eigener Encoder, ohne Bibliothek). Beim Import zeigt die App zuerst
-eine Vorschau; Historie und eigene Daten des Empfängers bleiben unberührt.
+QR-Code (eigener Encoder, ohne Bibliothek). Der Code trägt auch die
+**Pausenlängen** — derselbe Tag mit 90 statt 120 Sekunden Isolationspause ist
+zwölf Minuten kürzer und eine andere Trainingsabsicht. Beim Import zeigt die
+App zuerst eine Vorschau; Historie und eigene Daten des Empfängers bleiben
+unberührt, die Pausen übernimmt der Empfänger nur, wenn er es ankreuzt.
 
 **Daten**
 JSON-Backup mit Erinnerung, wenn länger als 30 Tage nichts gesichert wurde ·
@@ -149,7 +179,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **107 Prüfungen grün** — 86 Regressionstests, 6 Sync-Tests über
+Aktueller Stand: **115 Prüfungen grün** — 94 Regressionstests, 6 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 93 Operationen, in Chromium und
 WebKit.
 
@@ -236,10 +266,10 @@ und sucht sie im Testskript.
 
 | | |
 |---|---|
-| Funktionen in `index.html` | 387 |
-| vom Test erreicht | 232 |
+| Funktionen in `index.html` | 417 |
+| vom Test erreicht | 250 |
 | **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
-| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 155 |
+| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 167 |
 | außerhalb des Harnesses | **0** |
 
 Die letzte Zeile stand einmal bei acht. Sieben fielen weg, als die gefälschte
@@ -250,9 +280,9 @@ Fehler der Schwere *hoch* (PB-073).
 
 Vier Grenzen, die keine Zahl sichtbar macht:
 
-* **„Erreicht" ist nicht „geprüft".** Die 232 enthalten Funktionen, die der
+* **„Erreicht" ist nicht „geprüft".** Die 250 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
-  59 Regressionstests, die 5 Sync-Tests, die 3 Offline-Tests und die 22
+  94 Regressionstests, die 6 Sync-Tests, die 3 Offline-Tests und die 22
   Invarianten — nicht die Abdeckungszahl.
 * **Kein iOS-Simulator.** Der läuft nur auf macOS mit Xcode. Was geht: die
   echten Geräteprofile aus Playwright — Viewport, Pixeldichte, Touch,

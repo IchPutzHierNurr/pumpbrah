@@ -429,6 +429,23 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .wo-compare-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
 .wo-compare-title{font-size:12px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--text2)}
 .wo-compare-meta{font-size:12px;color:var(--text3)}
+.wo-compare-note{margin-top:10px;font-size:11.5px;line-height:1.55;color:var(--text3);
+  padding:9px 11px;border-radius:10px;background:var(--bg3);border:1px solid var(--line)}
+.wg-list{margin:12px 0 2px;display:flex;flex-direction:column;gap:6px}
+.wg-row{display:flex;align-items:center;gap:9px;font-size:11px}
+.wg-n{flex:0 0 84px;color:var(--text3);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wg-bar{flex:1;position:relative;height:7px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.wg-bar>i{display:block;height:100%;width:0;border-radius:99px;transition:width .7s var(--ease)}
+.wg-mk{position:absolute;top:0;width:1px;height:100%;background:rgba(255,255,255,.4)}
+.wg-v{flex:0 0 32px;text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700}
+.libhint{margin:-6px 0 12px;padding:10px 12px;border-radius:12px;background:var(--bg3);
+  border:1px solid var(--line);font-size:11.5px;line-height:1.5;color:var(--text2);
+  display:flex;align-items:center;gap:10px}
+.libhint b{color:var(--text)}
+.coach-fix.two{flex-wrap:wrap}
+.coach-fix-acts{display:flex;gap:6px;flex:0 0 100%;margin-top:2px;justify-content:flex-end}
+.libhint button{flex:0 0 auto;border:0;border-radius:9px;padding:7px 12px;cursor:pointer;
+  background:var(--neon);color:#000;font-size:11px;font-weight:800;letter-spacing:.03em}
 .wo-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
 .wo-compare-stat{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:11px 13px}
 .wo-compare-stat .label{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--text3)}
@@ -2383,7 +2400,8 @@ html,body{
 <div class="mt">ÜBUNG <button class="mc" onclick="cm('m-add')">✕</button></div>
 <button class="btn btn-g" style="margin-bottom:12px" onclick="cm('m-add');openLibrary()">📚 AUS BIBLIOTHEK WÄHLEN</button>
 <div class="sep" style="margin:0 0 12px"></div>
-<div class="ir"><div class="ig"><label>Übungsname</label><input type="text" id="a-name" placeholder="z.B. Bankdrücken"></div></div>
+<div class="ir"><div class="ig"><label>Übungsname</label><input type="text" id="a-name" placeholder="z.B. Bankdrücken" oninput="refreshLibHint()"></div></div>
+<div id="a-libhint" class="libhint" style="display:none"></div>
 <div class="ir">
 <div class="ig"><label>Sätze</label><input type="number" id="a-sets" value="3"></div>
 <div class="ig"><label>Wdh Min</label><input type="number" id="a-rmin" value="8"></div>
@@ -2500,10 +2518,47 @@ html,body{
 </div></div>
 </div>
 <script>
+/* ==========================================================================
+   PUMPBRAH — KARTE DIESER DATEI
+
+   Die App ist eine einzige HTML-Datei, und das bleibt so. Der Grund steht im
+   README: Sie läuft per file://, offline, ohne Build und ohne zweiten
+   Netzwerk-Request. Ein ausgelagertes exercises.js wäre ein zweiter Request,
+   den der Service Worker ebenfalls halten müsste, eine zweite Datei in der
+   Vorschau, eine zweite in jedem geteilten Ordner — und die erste Gelegenheit,
+   dass jemand die App ohne ihre Daten weitergibt. Der Preis dafür ist eine
+   lange Datei; bezahlt wird er mit einer Karte statt mit Ordnern.
+
+   Jeder Abschnitt trägt eine Marke der Form §N. Suchen mit: grep -n '§7'
+
+     § 1  MITGELIEFERTER TRAININGSPLAN (Daten)
+     § 2  ÜBUNGSPOOL FÜRS ONBOARDING (Daten)
+     § 3  ICON-PFADE (Daten)
+     § 4  SICHERHEITS- UND KOMFORT-PRIMITIVEN
+     § 5  ÜBUNGS-ANIMATIONEN
+     § 6  BEWEGUNGSMUSTER-ERKENNUNG (Daten)
+     § 7  DIAGRAMME
+     § 8  ÜBUNGSBIBLIOTHEK, 246 EINTRÄGE (Daten)
+     § 9  ÜBUNGS-DEMO
+     §10  TRAININGSPLAN-VERWALTUNG
+     §11  PAUSENTIMER
+     §12  VOLUMEN-LANDMARKS
+     §13  VOLUMEN-COACH
+     §14  EVIDENZKATALOG (Daten)
+     §15  QR-TABELLEN (Daten)
+     §16  PLAN TEILEN UND IMPORTIEREN
+     §17  LIVE-STEUERUNG IM WORKOUT
+     §18  ÜBUNGSTAUSCH
+
+   Alles vor §1 ist Zustand und Start: das Datenobjekt D, normalizeData(),
+   der Firestore-Sync, das Onboarding. Alles nach der letzten Marke ist
+   Bibliotheksverwaltung und Mesozyklus.
+   ========================================================================== */
 const FIREBASE_CONFIG={apiKey:"AIzaSyCaWvytYF7RnkX8ouIlsDiBRy0MP4pZW-g",authDomain:"pumpbrah-9e21e.firebaseapp.com",projectId:"pumpbrah-9e21e",storageBucket:"pumpbrah-9e21e.firebasestorage.app",messagingSenderId:"190452878389",appId:"1:190452878389:web:eac735f8031f68eb8df57c"};
 let db=null,useFirebase=false,syncCode='',unsubscribe=null,cloudWriteQueue=Promise.resolve();
 let D={plan:null,history:[],active:null,settings:{compound:120,isolation:120},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[]}};
-const DEFAULT_PLAN={"FullBody_A":{"day":"Di","exercises":[{"id":1,"name":"Bankdrücken","sets":4,"rmin":6,"rmax":10,"rir":2,"note":"Schulterblätter fixiert, Ellenbogen 45°, kurzer Brustkontakt ohne Abfedern","type":"main","muscle":"chest"},{"id":2,"name":"Maschinenrudern eng neutral","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Vorne voll ausstrecken lassen, hinten Schulterblätter zusammen","type":"main","muscle":"back"},{"id":3,"name":"Klimmzüge weit","sets":3,"rmin":6,"rmax":12,"rir":2,"note":"Voll aushängen lassen, oben die Brust Richtung Stange. Mit Band, bis 8 sauber gehen","type":"main","muscle":"back"},{"id":4,"name":"Beinpresse","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Hüftbreit-mittig, Knie nicht locken, so tief wie das Becken stabil bleibt","type":"main","muscle":"legs"},{"id":5,"name":"Beinbeuger sitzend","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Sitzend statt liegend: gebeugte Hüfte = längere Position für die Ischios","type":"main","muscle":"legs"},{"id":6,"name":"KH Seitheben","sets":3,"rmin":12,"rmax":20,"rir":2,"note":"Kontrolliert, kein Schwung — hier zählt Technik vor Gewicht","type":"main","muscle":"shoulders"},{"id":7,"name":"Face Pulls","sets":4,"rmin":15,"rmax":20,"rir":2,"note":"Seil auf Augenhöhe, außenrotieren — hintere Schulter und Schultergesundheit","type":"main","muscle":"shoulders"},{"id":8,"name":"Slantboard Calf Raise","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Gestrecktes Knie = Gastrocnemius. Ferse tief sinken lassen, oben 1s halten","type":"main","muscle":"legs"},{"id":9,"name":"Wadenheben sitzend","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Gebeugtes Knie = Soleus. Ergänzt das stehende Wadenheben, ersetzt es nicht","type":"main","muscle":"legs"},{"id":10,"name":"Trizepsdrücken Seil","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Oberarm fixiert, unten das Seil auseinanderziehen","type":"main","muscle":"arms"},{"id":11,"name":"Kabelcrunches","sets":4,"rmin":12,"rmax":15,"rir":2,"note":"Kniend, Becken einrollen statt Hüfte beugen","type":"main","muscle":"core"}]},"FullBody_B":{"day":"Do","exercises":[{"id":12,"name":"Schrägbankdrücken Kurzhantel","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"30°, nicht steiler — darüber übernimmt die vordere Schulter","type":"main","muscle":"chest"},{"id":13,"name":"Latziehen breit Obergriff","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Max. 15° Rücklage, oben die Schultern hochlaufen lassen","type":"main","muscle":"back"},{"id":14,"name":"Rumänisches Kreuzheben","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Hüfte nach hinten, Stange körpernah, Rücken neutral","type":"main","muscle":"legs"},{"id":15,"name":"Leg Extension","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Oben 1s halten, Lehne zurück für mehr Rectus femoris","type":"main","muscle":"legs"},{"id":16,"name":"Beinbeuger stehend","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Gestreckte Hüfte — trifft die Ischios in anderer Länge als sitzend und liegend","type":"main","muscle":"legs"},{"id":17,"name":"Schulterdrücken Maschine","sets":3,"rmin":8,"rmax":12,"rir":2,"note":"Nur so tief, wie die Schulter stabil bleibt. Ergänzt das Seitheben um die vertikale Richtung","type":"main","muscle":"shoulders"},{"id":18,"name":"Kurzhantel Reverse Butterfly","sets":4,"rmin":12,"rmax":20,"rir":2,"note":"Ellbogen leicht gebeugt fixieren, Bewegung nur aus der Schulter","type":"main","muscle":"shoulders"},{"id":19,"name":"Wadenheben stehend","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Gestrecktes Knie, volle Dehnung unten, kein Wippen","type":"main","muscle":"legs"},{"id":20,"name":"Schrägbank-Kurzhantelcurl","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Bank ca. 60°, Arme hängen hinter dem Rumpf — dort liegt die Dehnung","type":"main","muscle":"arms"},{"id":21,"name":"Hängendes Beinheben","sets":4,"rmin":8,"rmax":15,"rir":2,"note":"Becken einrollen, kein Schwung","type":"main","muscle":"core"}]},"FullBody_C":{"day":"Sa","exercises":[{"id":22,"name":"Dips an der Maschine","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Leicht vorgelehnt für die Brust, aufrecht wäre Trizeps. Hier: vorgelehnt","type":"main","muscle":"chest"},{"id":23,"name":"Kabelzug-Fliegende","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"In der Dehnung 1s halten, oben die Hände nicht weit kreuzen","type":"main","muscle":"chest"},{"id":24,"name":"Kabelrudern sitzend eng","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Vorne Schultern nach vorn laufen lassen, hinten Ellbogen an den Rumpf","type":"main","muscle":"back"},{"id":25,"name":"Überzüge am Kabel","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Arme fast gestreckt, Bewegung nur aus der Schulter — trifft den Lat in der Länge","type":"main","muscle":"back"},{"id":26,"name":"Hackenschmidt-Kniebeuge","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Füße mittig, tief bis das Becken stabil bleibt. Ersatz: Beinpresse eng","type":"main","muscle":"legs"},{"id":27,"name":"Pendelkniebeuge","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Rücken liegt an, Knie dürfen weit nach vorn — Quadrizeps ohne Rumpfermüdung","type":"main","muscle":"legs"},{"id":28,"name":"Beinbeuger liegend","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Langsam ablassen, Becken bleibt an der Auflage","type":"main","muscle":"legs"},{"id":29,"name":"Seitheben Kabel","sets":3,"rmin":12,"rmax":20,"rir":2,"note":"Kabel hinter dem Rücken, konstante Spannung auch unten","type":"main","muscle":"shoulders"},{"id":30,"name":"Reverse Butterfly Maschine","sets":4,"rmin":12,"rmax":20,"rir":2,"note":"Brust am Polster, Ellbogen leicht gebeugt fixieren","type":"main","muscle":"shoulders"},{"id":31,"name":"Wadenpresse an der Beinpresse","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Nur die Waden arbeiten, Knie fast gestreckt. Volle Dehnung unten","type":"main","muscle":"legs"},{"id":32,"name":"Katana Extensions Kabel","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Ellbogen fixiert, in der Dehnung kurz halten","type":"main","muscle":"arms"},{"id":33,"name":"Hammercurls Kabel","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Neutraler Griff — trifft Brachialis und Unterarm mit","type":"main","muscle":"arms"}]}};
+/* ======================== §1 — MITGELIEFERTER TRAININGSPLAN (Daten) ==================== */
+const DEFAULT_PLAN={"FullBody_A":{"day":"Di","exercises":[{"id":1,"name":"Bankdrücken","sets":4,"rmin":6,"rmax":10,"rir":2,"note":"Schulterblätter fixiert, Ellenbogen 45°, kurzer Brustkontakt ohne Abfedern","type":"main","muscle":"chest"},{"id":2,"name":"Maschinenrudern eng neutral","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Vorne voll ausstrecken lassen, hinten Schulterblätter zusammen","type":"main","muscle":"back"},{"id":3,"name":"Klimmzüge weit","sets":3,"rmin":6,"rmax":12,"rir":2,"note":"Voll aushängen lassen, oben die Brust Richtung Stange. Mit Band, bis 8 sauber gehen","type":"main","muscle":"back"},{"id":4,"name":"Beinpresse","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Hüftbreit-mittig, Knie nicht locken, so tief wie das Becken stabil bleibt","type":"main","muscle":"legs"},{"id":5,"name":"Beinbeuger sitzend","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Sitzend statt liegend: gebeugte Hüfte = längere Position für die Ischios","type":"main","muscle":"legs"},{"id":6,"name":"KH Seitheben","sets":4,"rmin":12,"rmax":20,"rir":2,"note":"Kontrolliert, kein Schwung — hier zählt Technik vor Gewicht","type":"main","muscle":"shoulders"},{"id":7,"name":"Face Pulls","sets":4,"rmin":15,"rmax":20,"rir":2,"note":"Seil auf Augenhöhe, außenrotieren — hintere Schulter und Schultergesundheit","type":"main","muscle":"shoulders"},{"id":8,"name":"Slantboard Calf Raise","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Gestrecktes Knie = Gastrocnemius. Ferse tief sinken lassen, oben 1s halten","type":"main","muscle":"legs"},{"id":9,"name":"Wadenheben sitzend","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Gebeugtes Knie = Soleus. Ergänzt das stehende Wadenheben, ersetzt es nicht","type":"main","muscle":"legs"},{"id":10,"name":"Trizepsdrücken Seil","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Oberarm fixiert, unten das Seil auseinanderziehen","type":"main","muscle":"arms"},{"id":11,"name":"Kabelcrunches","sets":4,"rmin":12,"rmax":15,"rir":2,"note":"Kniend, Becken einrollen statt Hüfte beugen","type":"main","muscle":"core"}]},"FullBody_B":{"day":"Do","exercises":[{"id":12,"name":"Schrägbankdrücken Kurzhantel","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"30°, nicht steiler — darüber übernimmt die vordere Schulter","type":"main","muscle":"chest"},{"id":13,"name":"Latziehen breit Obergriff","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Max. 15° Rücklage, oben die Schultern hochlaufen lassen","type":"main","muscle":"back"},{"id":14,"name":"Rumänisches Kreuzheben","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Hüfte nach hinten, Stange körpernah, Rücken neutral","type":"main","muscle":"legs"},{"id":15,"name":"Leg Extension","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Oben 1s halten, Lehne zurück für mehr Rectus femoris","type":"main","muscle":"legs"},{"id":16,"name":"Beinbeuger stehend","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Gestreckte Hüfte — trifft die Ischios in anderer Länge als sitzend und liegend","type":"main","muscle":"legs"},{"id":17,"name":"Schulterdrücken Maschine","sets":3,"rmin":8,"rmax":12,"rir":2,"note":"Nur so tief, wie die Schulter stabil bleibt. Ergänzt das Seitheben um die vertikale Richtung","type":"main","muscle":"shoulders"},{"id":18,"name":"Kurzhantel Reverse Butterfly","sets":4,"rmin":12,"rmax":20,"rir":2,"note":"Ellbogen leicht gebeugt fixieren, Bewegung nur aus der Schulter","type":"main","muscle":"shoulders"},{"id":19,"name":"Wadenheben stehend","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Gestrecktes Knie, volle Dehnung unten, kein Wippen","type":"main","muscle":"legs"},{"id":20,"name":"Schrägbank-Kurzhantelcurl","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Bank ca. 60°, Arme hängen hinter dem Rumpf — dort liegt die Dehnung","type":"main","muscle":"arms"},{"id":21,"name":"Hängendes Beinheben","sets":4,"rmin":8,"rmax":15,"rir":2,"note":"Becken einrollen, kein Schwung","type":"main","muscle":"core"}]},"FullBody_C":{"day":"Sa","exercises":[{"id":22,"name":"Dips an der Maschine","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Leicht vorgelehnt für die Brust, aufrecht wäre Trizeps. Hier: vorgelehnt","type":"main","muscle":"chest"},{"id":23,"name":"Kabelzug-Fliegende","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"In der Dehnung 1s halten, oben die Hände nicht weit kreuzen","type":"main","muscle":"chest"},{"id":24,"name":"Kabelrudern sitzend eng","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Vorne Schultern nach vorn laufen lassen, hinten Ellbogen an den Rumpf","type":"main","muscle":"back"},{"id":25,"name":"Überzüge am Kabel","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Arme fast gestreckt, Bewegung nur aus der Schulter — trifft den Lat in der Länge","type":"main","muscle":"back"},{"id":26,"name":"Hackenschmidt-Kniebeuge","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Füße mittig, tief bis das Becken stabil bleibt. Ersatz: Beinpresse eng","type":"main","muscle":"legs"},{"id":27,"name":"Pendelkniebeuge","sets":4,"rmin":8,"rmax":12,"rir":2,"note":"Rücken liegt an, Knie dürfen weit nach vorn — Quadrizeps ohne Rumpfermüdung","type":"main","muscle":"legs"},{"id":28,"name":"Beinbeuger liegend","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Langsam ablassen, Becken bleibt an der Auflage","type":"main","muscle":"legs"},{"id":29,"name":"Seitheben Kabel","sets":4,"rmin":12,"rmax":20,"rir":2,"note":"Kabel hinter dem Rücken, konstante Spannung auch unten","type":"main","muscle":"shoulders"},{"id":30,"name":"Reverse Butterfly Maschine","sets":4,"rmin":12,"rmax":20,"rir":2,"note":"Brust am Polster, Ellbogen leicht gebeugt fixieren","type":"main","muscle":"shoulders"},{"id":31,"name":"Wadenpresse an der Beinpresse","sets":4,"rmin":10,"rmax":15,"rir":2,"note":"Nur die Waden arbeiten, Knie fast gestreckt. Volle Dehnung unten","type":"main","muscle":"legs"},{"id":32,"name":"Katana Extensions Kabel","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Ellbogen fixiert, in der Dehnung kurz halten","type":"main","muscle":"arms"},{"id":33,"name":"Hammercurls Kabel","sets":3,"rmin":10,"rmax":15,"rir":2,"note":"Neutraler Griff — trifft Brachialis und Unterarm mit","type":"main","muscle":"arms"}]}};
 function cloudSafeSnapshot(data){
   const copy=cloneData(data);
   if(copy.ui&&copy.ui.avatar)delete copy.ui.avatar;
@@ -2755,6 +2810,13 @@ function normalizeData(){
        Altdaten laufen weiter über den Inhalts-Hash, neue Sessions über ihre
        beim Anlegen vergebene ID. */
     if(session.updatedAt===undefined)session.updatedAt=0;
+    /* Übersprungene Übungen: Liste von Namen, sonst weg. Sie kommt auch aus
+       der Cloud und damit aus einer Quelle, die dieses Gerät nicht
+       kontrolliert. */
+    if(Array.isArray(session.skipped)){
+      session.skipped=session.skipped.map(n=>String(n||'').slice(0,120)).filter(Boolean).slice(0,40);
+      if(!session.skipped.length)delete session.skipped;
+    }else if(session.skipped!==undefined)delete session.skipped;
     if(!Array.isArray(session.sets))session.sets=[];
     session.sets=session.sets.map(set=>({
       ex:String(set.ex||'Unbenannte Übung'),
@@ -2955,10 +3017,71 @@ function showApp(){normalizeData();document.getElementById('login-screen').style
   if(IS_STANDALONE)document.documentElement.classList.add('standalone');
   registerServiceWorker();
 }
-let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym',birthday:null};
+/* --------------------------------------------------------------------------
+   ONBOARDING — die Fragen, die den Plan wirklich bestimmen
+
+   Acht Schritte fragten nach Geschlecht, Geburtstag, Größe, Gewicht, Ort,
+   Tagen, Ziel und Erfahrung. Drei davon (Geburtstag, Größe, Gewicht) sind
+   Profildaten und gehören auf eine Seite; sie ändern am Plan nichts. Was den
+   Plan wirklich formt, wurde nie gefragt:
+
+   · Wie lange darf eine Einheit dauern? Der Deckel stand fest auf 100 Minuten
+     — für jemanden mit einer Stunde Mittagspause eine unbrauchbare Zahl.
+   · Sind Supersätze und kurze Isolationspausen in Ordnung? Das entscheidet
+     über zehn bis fünfzehn Minuten je Einheit, ohne einen Satz zu streichen.
+   · Gibt es Gelenke, die geschont werden müssen? Ein Plan mit Dips und
+     steilem Drücken ist für eine gereizte Schulter der falsche Plan.
+
+   Drei Fragen dazu, drei zu einer zusammengelegt: neun Schritte statt acht,
+   und der Plan kommt näher an das, was der Nutzer tatsächlich tun kann.
+   -------------------------------------------------------------------------- */
+let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym',birthday:null,
+  minutes:75,limits:[],methods:['superset','shortrest']};
+function obToggleList(field,value,el){
+  const list=obData[field]||(obData[field]=[]);
+  /* „Keine" schließt alles andere aus — sonst steht da „keine Beschwerden,
+     Schulter". */
+  if(value==='none'){obData[field]=list.includes('none')?[]:['none']}
+  else{
+    const ohneNone=list.filter(x=>x!=='none');
+    obData[field]=ohneNone.includes(value)?ohneNone.filter(x=>x!==value):[...ohneNone,value];
+  }
+  if(el&&el.parentElement)[...el.parentElement.children].forEach(c=>{
+    c.style.borderColor=(obData[field]||[]).includes(c.dataset.v)?'var(--neon)':'var(--bg4)';
+  });
+  haptic(8);
+}
 function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';obStep=0;renderObStep()}
-function renderObStep(){const c=document.getElementById('ob-content');const sub=document.getElementById('ob-sub');const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');const steps=[{sub:'Schritt 1/8 — Über dich',html:`<div style="margin-bottom:12px">${obSel('ob-gen',[{k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}],'gender','male')}</div>${obBtn('WEITER →','obNext(0)')}`},{sub:'Schritt 2/8 — Geburtsdatum',html:`<div class="ig" style="margin-bottom:12px"><label>Wann bist du geboren?</label><input type="date" id="ob-birthday" style="font-size:18px;padding:14px;width:100%;font-family:'JetBrains Mono',monospace"></div><div style="font-size:12px;color:var(--text3);margin-bottom:12px">Wird für dein Fitnessalter benötigt</div>${obBtn('WEITER →','obNext(1)')}${obBack}`},{sub:'Schritt 3/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Wie groß bist du? (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(2)')}${obBack}`},{sub:'Schritt 4/8 — Körperdaten',html:`<div class="ig" style="margin-bottom:12px"><label>Aktuelles Körpergewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:20px;padding:14px;width:100%"></div>${obBtn('WEITER →','obNext(3)')}${obBack}`},{sub:'Schritt 5/8 — Trainingsort',html:`<div style="margin-bottom:12px">${obSel('ob-loc',[{k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}],'location','gym')}</div>${obBtn('WEITER →','obNext(4)')}${obBack}`},{sub:'Schritt 6/8 — Trainingsfrequenz',html:`<div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label><div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===3?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>${obBtn('WEITER →','obNext(5)')}${obBack}`},{sub:'Schritt 7/8 — Trainingsziel',html:`<div style="margin-bottom:12px">${obSel('ob-focus',[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},{k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},{k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},{k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])],'focus','balanced')}</div>${obBtn('WEITER →','obNext(6)')}${obBack}`},{sub:'Schritt 8/8 — Erfahrung',html:`<div style="margin-bottom:12px">${obSel('ob-exp',[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},{k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},{k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre'}],'experience','beginner')}</div>${obBtn('🚀 PLAN ERSTELLEN','finishOnboarding()')}${obBack}`}];sub.textContent=steps[obStep].sub;c.innerHTML=steps[obStep].html}
-function obNext(step){if(step===1){obData.birthday=document.getElementById('ob-birthday').value||null;if(!obData.birthday){toast('Geburtsdatum eingeben!');return}}if(step===2){obData.height=parseFloat(document.getElementById('ob-height').value)||null;if(!obData.height){toast('Größe eingeben!');return}}if(step===3){obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;if(!obData.weight){toast('Gewicht eingeben!');return}}obStep++;renderObStep()}
+function renderObStep(){const c=document.getElementById('ob-content');const sub=document.getElementById('ob-sub');const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');const obMulti=(field,items)=>items.map(i=>`<div class="ob-multi" data-v="${i.k}" onclick="obToggleList('${field}','${i.k}',this)" style="padding:13px;background:var(--bg3);border:2px solid ${(obData[field]||[]).includes(i.k)?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:14px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');
+  const steps=[
+    {sub:'Schritt 1/9 — Über dich',html:`<div style="margin-bottom:12px">${obSel('ob-gen',[{k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}],'gender','male')}</div>${obBtn('WEITER →','obNext(0)')}`},
+    {sub:'Schritt 2/9 — Körperdaten',html:`<div class="ig" style="margin-bottom:10px"><label>Geburtsdatum</label><input type="date" id="ob-birthday" style="font-size:17px;padding:13px;width:100%;font-family:'JetBrains Mono',monospace"></div>`+
+      `<div class="ir" style="margin-bottom:10px"><div class="ig"><label>Größe (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:19px;padding:13px;width:100%"></div>`+
+      `<div class="ig"><label>Gewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:19px;padding:13px;width:100%"></div></div>`+
+      `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Für Fitnessalter und Gewichtsverlauf. Ändert am Plan nichts.</div>${obBtn('WEITER →','obNext(1)')}${obBack}`},
+    {sub:'Schritt 3/9 — Trainingsort',html:`<div style="margin-bottom:12px">${obSel('ob-loc',[{k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}],'location','gym')}</div>${obBtn('WEITER →','obNext(2)')}${obBack}`},
+    {sub:'Schritt 4/9 — Trainingsfrequenz',html:`<div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label><div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===obData.days?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>${obBtn('WEITER →','obNext(3)')}${obBack}`},
+    {sub:'Schritt 5/9 — Zeit pro Einheit',html:`<div style="margin-bottom:10px">${obSel('ob-min',[{k:'45',l:'⏱️ 45 Minuten',d:'Nur Grundübungen, kleine Muskeln über die Woche verteilt'},{k:'60',l:'⏱️ 60 Minuten',d:'Kompakt, Isolation gekoppelt'},{k:'75',l:'⏱️ 75 Minuten',d:'Alle Muskelgruppen versorgt, ohne Hetze'},{k:'90',l:'⏱️ 90 Minuten',d:'Voller Umfang, längere Pausen'}],'minutes','75')}</div>`+
+      `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Gerechnet mit Umbauzeit zwischen den Übungen — also die Zeit, die du wirklich im Studio stehst.</div>${obBtn('WEITER →','obNext(4)')}${obBack}`},
+    {sub:'Schritt 6/9 — Trainingsziel',html:`<div style="margin-bottom:12px">${obSel('ob-focus',[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},{k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},{k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},{k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])],'focus','balanced')}</div>${obBtn('WEITER →','obNext(5)')}${obBack}`},
+    {sub:'Schritt 7/9 — Erfahrung',html:`<div style="margin-bottom:12px">${obSel('ob-exp',[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},{k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},{k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre'}],'experience','beginner')}</div>${obBtn('WEITER →','obNext(6)')}${obBack}`},
+    {sub:'Schritt 8/9 — Beschwerden',html:`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Mehrfachauswahl. Betroffene Übungen werden durch schonendere ersetzt — nicht weggelassen.</div>`+
+      `<div style="margin-bottom:12px">${obMulti('limits',[{k:'none',l:'✅ Keine',d:'Alle Bewegungsmuster erlaubt'},{k:'shoulder',l:'🫱 Schulter',d:'Kein steiles Drücken, keine Dips'},{k:'lowback',l:'🦴 Unterer Rücken',d:'Kein freies Kreuzheben, Maschine statt Langhantel'},{k:'knee',l:'🦵 Knie',d:'Weniger Beinstrecken, mehr geführte Übungen'},{k:'elbow',l:'💪 Ellbogen',d:'Kein Stirndrücken, Kabel statt Langhantel'}])}</div>${obBtn('WEITER →','obNext(7)')}${obBack}`},
+    {sub:'Schritt 9/9 — Zeit sparen',html:`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Beides kostet nach der Datenlage keinen Muskelzuwachs und spart zusammen zehn bis fünfzehn Minuten je Einheit.</div>`+
+      `<div style="margin-bottom:12px">${obMulti('methods',[{k:'superset',l:'🔗 Supersätze bei Isolation',d:'Zwei Übungen im Wechsel mit gemeinsamer Pause'},{k:'shortrest',l:'⏩ 90 s Pause bei Isolation',d:'Grundübungen behalten zwei Minuten'}])}</div>${obBtn('🚀 PLAN ERSTELLEN','finishOnboarding()')}${obBack}`}
+  ];sub.textContent=steps[obStep].sub;c.innerHTML=steps[obStep].html}
+function obNext(step){
+  if(step===1){
+    obData.birthday=document.getElementById('ob-birthday').value||null;
+    obData.height=parseFloat(document.getElementById('ob-height').value)||null;
+    obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;
+    if(!obData.birthday){toast('Geburtsdatum eingeben!');return}
+    if(!obData.height){toast('Größe eingeben!');return}
+    if(!obData.weight){toast('Gewicht eingeben!');return}
+  }
+  if(step===4)obData.minutes=parseInt(obData.minutes)||75;
+  obStep++;renderObStep();
+}
 /* --------------------------------------------------------------------------
    PLAN AUS DEN ONBOARDING-ANTWORTEN
    Acht Fragen, davon vier ohne Wirkung: Trainingsort, Tage pro Woche, Ziel
@@ -2973,6 +3096,7 @@ function obNext(step){if(step===1){obData.birthday=document.getElementById('ob-b
    dieselben Landmarks wie im Coach — der Plan kommt also aus demselben
    Modell, an dem er später gemessen wird.
    -------------------------------------------------------------------------- */
+/* ======================== §2 — ÜBUNGSPOOL FÜRS ONBOARDING (Daten) ==================== */
 const OB_POOL={
   push:  {gym:['Bankdrücken','chest',6,10,2],       home:['Kurzhantel-Bankdrücken','chest',8,12,2]},
   push2: {gym:['Schrägbankdrücken Kurzhantel','chest',8,12,2], home:['Liegestütze','chest',8,20,2]},
@@ -3004,8 +3128,12 @@ const OB_POOL={
 /* Ein Bauplan je Tageszahl. Jeder Eintrag ist ein Tag: Name und die Muster,
    die an diesem Tag drankommen. Kein Muster zweimal am selben Tag. */
 const OB_TEMPLATES={
+  /* Zwei Seitheben-Varianten auch im Zwei-Tage-Plan: Eine Übung deckelt bei
+     sechs Sätzen, das MEV der seitlichen Schulter liegt bei acht. Solange
+     Schulterdrücken fälschlich auf dieselbe Gruppe zählte, fiel die Lücke
+     nicht auf — seit die vordere Schulter eigene Grenzen hat, schon. */
   2:[['Ganzkoerper A',['push','row','squat','legcurl','raise','triext','calf','core']],
-     ['Ganzkoerper B',['push2','pulld','hinge','legext','rear','curl','calf2','core2']]],
+     ['Ganzkoerper B',['push2','pulld','hinge','legext','raise2','rear','curl','calf2','core2']]],
   3:[['FullBody A',['push','row','squat','legcurl','raise','calf','triext','core']],
      ['FullBody B',['push2','pulld','hinge','legext','rear','curl','calf2','core2']],
      ['FullBody C',['fly','row2','squat2','legcurl2','raise2','rear2','triext2','curl2']]],
@@ -3031,8 +3159,51 @@ const OB_WEEKDAYS={2:['Di','Fr'],3:['Di','Do','Sa'],4:['Mo','Di','Do','Fr'],
    dem Minimum, Fortgeschrittene am Optimum. Nicht „mehr Sätze für alle" —
    das reißt bei den kleinen Muskeln die Obergrenze. */
 const OB_LEVEL={beginner:.2,intermediate:.65,advanced:1};
-/* Obergrenze für eine erzeugte Einheit. Wer mehr will, erhöht die Sätze selbst. */
+/* Obergrenze für eine erzeugte Einheit, wenn nichts anderes gewählt wurde.
+   Seit das Onboarding nach der Zeit fragt, ist das nur noch der Rückfallwert
+   für Aufrufe ohne Antwort (Tests, alte Profile). */
 const OB_MAX_MIN=100;
+/* --------------------------------------------------------------------------
+   BESCHWERDEN: TAUSCHEN STATT WEGLASSEN
+
+   Eine gereizte Schulter ist kein Grund, die Brust nicht zu trainieren — sie
+   ist ein Grund, anders zu drücken. Jeder Eintrag ersetzt eine Übung aus dem
+   Pool durch eine, die dasselbe Muster mit weniger Belastung auf dem
+   betroffenen Gelenk trifft. Das Volumen bleibt, die Gruppe bleibt, nur das
+   Gerät ändert sich. Wer eine Einschränkung angibt, bekommt einen
+   vollständigen Plan, keinen halbierten.
+   -------------------------------------------------------------------------- */
+const OB_LIMIT_SWAPS={
+  shoulder:{
+    push:  {gym:['Brustpresse Maschine','chest',8,12,2],        home:['Kurzhantel-Bankdrücken neutral','chest',8,12,2]},
+    push2: {gym:['Brustpresse schräg Maschine','chest',10,12,2],home:['Liegestütze erhöht','chest',10,20,2]},
+    pushh: {gym:['Schulterdrücken Maschine','shoulders',8,12,2],home:['Kurzhantel-Schulterdrücken neutral','shoulders',8,12,2]},
+    fly:   {gym:['Fliegende Maschine','chest',12,15,1],         home:['Kurzhantel-Fliegende','chest',12,15,1]}
+  },
+  lowback:{
+    hinge: {gym:['Beinbeuger sitzend','legs',10,15,1],          home:['Beinbeugen mit Band','legs',10,15,1]},
+    row:   {gym:['Brustgestütztes KH Rudern','back',8,12,2],    home:['Ring Rows','back',8,15,2]},
+    squat2:{gym:['Beinpresse eng','legs',10,15,2],              home:['Goblet Squat','legs',10,15,2]}
+  },
+  knee:{
+    legext:{gym:['Beinpresse eng','legs',12,15,2],              home:['Beckenheben','legs',12,20,2]},
+    squat2:{gym:['Beinpresse hoch und weit','legs',10,15,2],    home:['Hüftheben Kurzhantel','legs',10,15,2]}
+  },
+  elbow:{
+    triext2:{gym:['Trizepsmaschine','arms',10,15,1],            home:['Trizeps-Dips Bank','arms',10,15,1]},
+    curl:  {gym:['Kabelcurls','arms',10,15,1],                  home:['Kurzhantel-Curls','arms',10,15,1]}
+  }
+};
+function obPoolEntry(key,limits){
+  /* Der erste Treffer gewinnt: Wer Schulter UND Ellbogen angibt, bekommt für
+     eine Drückübung die schulterfreundliche Variante — dort sitzt das
+     Problem. */
+  for(const l of (limits||[])){
+    const t=OB_LIMIT_SWAPS[l];
+    if(t&&t[key])return t[key];
+  }
+  return OB_POOL[key];
+}
 /* Das Ziel verschiebt den Anteil im Korridor, nicht die Satzzahl direkt. */
 const OB_FOCUS_BONUS={
   hypertrophy:{chest:.12,back:.12,shoulders:.12,biceps:.12,triceps:.12},
@@ -3053,16 +3224,43 @@ function buildPlanFromOnboarding(ob){
   const tpl=OB_TEMPLATES[days]||OB_TEMPLATES[3];
   const weekdays=OB_WEEKDAYS[days]||OB_WEEKDAYS[3];
 
+  const limits=(ob&&Array.isArray(ob.limits)?ob.limits:[]).filter(x=>x&&x!=='none');
+  const methods=(ob&&Array.isArray(ob.methods))?ob.methods:[];
+  /* Das gewählte Zeitbudget ersetzt den festen Deckel. 30 bis 150 Minuten,
+     damit ein Tippfehler den Generator nicht in eine Endlosschleife oder in
+     einen leeren Plan schickt. */
+  const budget=Math.min(150,Math.max(30,parseInt(ob&&ob.minutes)||OB_MAX_MIN));
   const slots=[];
   tpl.forEach(([dayName,patterns],di)=>{
     patterns.forEach(pk=>{
-      const entry=OB_POOL[pk];
+      const entry=obPoolEntry(pk,limits);
       if(!entry)return;
       const[name,muscle,rmin,rmax,rir]=entry[home?'home':'gym'];
-      slots.push({di,dayName,name,muscle,rmin,rmax,rir,
+      slots.push({di,dayName,pk,name,muscle,rmin,rmax,rir,
         group:volGroupOf(name,muscle,'main'),sides:setSides(name),sets:3});
     });
   });
+  /* Supersätze koppeln, BEVOR der Zeitdeckel greift: Die Kopplung spart die
+     halbe Pausenzeit, und wer sie zulässt, soll dafür Sätze behalten dürfen
+     statt sie zu verlieren. Gekoppelt wird nur Isolation gegen Isolation und
+     nur über verschiedene Volumengruppen — zwei schwere Muster im Wechsel
+     behindern sich gegenseitig. */
+  if(methods.includes('superset')){
+    tpl.forEach((_,di)=>{
+      const frei=slots.filter(x=>x.di===di&&!x.ss&&
+        !COMPOUND_PATTERNS.includes(detectMovePattern(x.name,x.muscle,'main')));
+      let n=0;
+      for(let i=0;i<frei.length;i++){
+        if(frei[i].ss)continue;
+        for(let j=i+1;j<frei.length;j++){
+          if(frei[j].ss||frei[j].group===frei[i].group)continue;
+          const key='S'+String.fromCharCode(65+(n++%26));
+          frei[i].ss=key;frei[j].ss=key;
+          break;
+        }
+      }
+    });
+  }
   const target={};
   Object.keys(MUSCLE_LANDMARKS).forEach(g=>{
     const lm=MUSCLE_LANDMARKS[g];
@@ -3088,16 +3286,11 @@ function buildPlanFromOnboarding(ob){
   /* Zeitdeckel. Bei zwei Trainingstagen passt das Optimum schlicht nicht in
      zwei Einheiten — dann lieber ehrlich weniger Volumen als eine Einheit,
      die niemand durchhält. Der Coach sagt danach, was fehlt. */
-  const dayMinutes=di=>{
-    let sec=0;
-    slots.filter(s=>s.di===di).forEach(s=>{
-      /* Dieselbe Rechnung wie estimatedDuration(), inklusive Wechselzuschlag.
-         Läuft der Deckel hier ohne ihn, erzeugt das Onboarding Einheiten, die
-         die Planansicht danach über dem Deckel ausweist. */
-      sec+=EXERCISE_SETUP+s.sets*(40*s.sides+restSecondsFor(s.name,s.muscle,'main'));
-    });
-    return sec/60;
-  };
+  /* Dieselbe Funktion wie Planansicht und Workout, sonst erzeugt das
+     Onboarding Einheiten, die die Planansicht danach über dem Deckel
+     ausweist (PB-106). */
+  const dayMinutes=di=>workloadMinutes(slots.filter(s=>s.di===di)
+    .map(s=>({name:s.name,muscle:s.muscle,type:'main',sets:s.sets,sides:s.sides,ss:s.ss})));
   const groupVolume=g=>{
     let v=0;
     slots.forEach(s=>{
@@ -3107,18 +3300,67 @@ function buildPlanFromOnboarding(ob){
     });
     return v;
   };
-  for(let guard=0;guard<200;guard++){
+  /* --------------------------------------------------------------------------
+     ZEITDECKEL IN DREI STUFEN
+
+     Bis September 2026 gab es nur die erste: Sätze kürzen, solange jede
+     Gruppe über ihrem Minimum bleibt. Bei zwei Trainingstagen findet die
+     Stufe keinen einzigen Kandidaten — jede Gruppe liegt dort ohnehin am
+     Minimum — und der Deckel lief wirkungslos durch. Das Onboarding
+     versprach 45 Minuten und lieferte 76.
+
+     Ein Zeitbudget, das der Nutzer angegeben hat, ist eine harte Grenze: Wer
+     eine Stunde Mittagspause hat, hat sie auch dann, wenn die Grenzwerttabelle
+     etwas anderes möchte. Also notfalls auch unter das Minimum kürzen und im
+     letzten Schritt eine Übung ganz streichen — aber in dieser Reihenfolge,
+     und der Coach sagt danach, was fehlt.
+     -------------------------------------------------------------------------- */
+  const ueberBudget=()=>{
     let worst=-1,worstMin=0;
-    tpl.forEach((_,di)=>{const m=dayMinutes(di);if(m>OB_MAX_MIN&&m>worstMin){worst=di;worstMin=m}});
+    tpl.forEach((_,di)=>{const m=dayMinutes(di);if(m>budget&&m>worstMin){worst=di;worstMin=m}});
+    return worst;
+  };
+  /* 1. Sätze kürzen, solange danach noch das Minimum steht. */
+  for(let guard=0;guard<200;guard++){
+    const worst=ueberBudget();
     if(worst<0)break;
-    /* Gekürzt wird nur, wo danach noch das Minimum steht. Sonst spart der
-       Zeitdeckel genau dort, wo ohnehin am wenigsten Volumen liegt, und
-       schiebt eine Muskelgruppe unter MEV. */
     const cand=slots.filter(s=>s.di===worst&&s.sets>2&&
         groupVolume(s.group)-s.sides>=(MUSCLE_LANDMARKS[s.group]||{mev:0}).mev)
       .sort((a,b)=>b.sets-a.sets)[0];
     if(!cand)break;
     cand.sets--;
+  }
+  /* 2. Reicht das nicht, kürzen auch unter das Minimum — aber nie unter zwei
+     Sätze und zuerst dort, wo im Verhältnis am meisten liegt. */
+  for(let guard=0;guard<200;guard++){
+    const worst=ueberBudget();
+    if(worst<0)break;
+    const cand=slots.filter(s=>s.di===worst&&s.sets>2)
+      .sort((a,b)=>(groupVolume(b.group)/Math.max(1,(MUSCLE_LANDMARKS[b.group]||{mev:1}).mev))
+                  -(groupVolume(a.group)/Math.max(1,(MUSCLE_LANDMARKS[a.group]||{mev:1}).mev))
+                  ||b.sets-a.sets)[0];
+    if(!cand)break;
+    cand.sets--;
+  }
+  /* 3. Immer noch zu lang: eine Übung fällt weg. Isolation zuerst, nie die
+     letzte des Tages, und nie die letzte ihrer Volumengruppe im ganzen Plan —
+     sonst verschwindet eine Muskelgruppe komplett aus dem Programm. */
+  for(let guard=0;guard<40;guard++){
+    const worst=ueberBudget();
+    if(worst<0)break;
+    const amTag=slots.filter(s=>s.di===worst);
+    if(amTag.length<=3)break;
+    const schwer=x=>COMPOUND_PATTERNS.includes(detectMovePattern(x.name,x.muscle,'main'));
+    const proGruppe={};
+    slots.forEach(x=>{proGruppe[x.group]=(proGruppe[x.group]||0)+1});
+    const cand=amTag.filter(x=>proGruppe[x.group]>1)
+      .sort((a,b)=>(schwer(a)-schwer(b))||(b.sets-a.sets))[0];
+    if(!cand)break;
+    const idx=slots.indexOf(cand);
+    if(idx<0)break;
+    /* Ein Supersatz-Partner darf nicht allein zurückbleiben. */
+    if(cand.ss)slots.forEach(x=>{if(x!==cand&&x.ss===cand.ss)x.ss=null});
+    slots.splice(idx,1);
   }
   const plan={};
   let id=1;
@@ -3126,7 +3368,7 @@ function buildPlanFromOnboarding(ob){
     const key=name.replace(/\s+/g,'_');
     plan[key]={day:weekdays[di]||'',exercises:slots.filter(s=>s.di===di).map(s=>({
       id:id++,name:s.name,sets:s.sets,rmin:s.rmin,rmax:s.rmax,rir:s.rir,
-      note:'',type:'main',muscle:s.muscle
+      note:'',type:'main',muscle:s.muscle,ss:s.ss||null
     }))};
   });
   return plan;
@@ -3136,11 +3378,24 @@ function finishOnboarding(){
   if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];
   /* Die Antworten bleiben erhalten: sie erklären später, warum der Plan so
      aussieht, und ein Neuaufbau kann sie wiederverwenden. */
-  D.profile={days:obData.days,focus:obData.focus,experience:obData.experience,location:obData.location};
+  D.profile={days:obData.days,focus:obData.focus,experience:obData.experience,location:obData.location,
+    minutes:obData.minutes,limits:[...(obData.limits||[])],methods:[...(obData.methods||[])]};
+  /* Die kurze Isolationspause ist eine EINSTELLUNG, kein Planinhalt — sie
+     muss gesetzt sein, BEVOR der Generator die Dauer rechnet, sonst deckelt
+     er gegen die falsche Zahl. */
+  if((obData.methods||[]).includes('shortrest'))D.settings.isolation=90;
   D.plan=buildPlanFromOnboarding(obData);
   save();if(useFirebase)startSync();setTimeout(()=>save(),1000);showApp();
   const n=Object.keys(D.plan).length;
-  toast(`Plan erstellt — ${n} Trainingstage`);
+  const dauer=Math.max(...Object.keys(D.plan).map(k=>estimatedDuration(k)));
+  toast(`Plan erstellt — ${n} Trainingstage, bis ${dauer} min`);
+  /* Passt das Gewünschte nicht in die gewählte Zeit, sagt die App es sofort
+     statt es zu verschweigen. Der Coach zeigt danach, welche Gruppe fehlt. */
+  const luecken=plannedMuscleGroups().filter(g=>{
+    const lm=MUSCLE_LANDMARKS[g];
+    return lm&&lm.mev>0&&((planWeeklyVolume(true)[g]||{}).sets||0)<lm.mev;
+  });
+  if(luecken.length)setTimeout(()=>toast(`${luecken.length} Muskelgruppen bleiben unter dem Minimum — mehr Zeit oder ein Tag mehr würde das lösen`),2600);
 }
 /* --------------------------------------------------------------------------
    ICON-SET
@@ -3151,6 +3406,7 @@ function finishOnboarding(){
    Akzent kollidieren. Ein eigenes Strich-Icon-Set erbt currentColor, hat
    überall dieselbe Strichstärke und passt zur bestehenden Navigations-Ikonik.
    -------------------------------------------------------------------------- */
+/* ======================== §3 — ICON-PFADE (Daten) ==================== */
 const ICON_PATHS={
   chest:'<path d="M3 8.5c1.9-1.6 4.4-1.6 6.3 0 .7.6 1.7.6 2.4 0M21 8.5c-1.9-1.6-4.4-1.6-6.3 0-.7.6-1.7.6-2.4 0M3 8.5v3.2A5.3 5.3 0 0 0 8.3 17h.4A3.3 3.3 0 0 0 12 13.7M21 8.5v3.2A5.3 5.3 0 0 1 15.7 17h-.4A3.3 3.3 0 0 1 12 13.7"/>',
   back:'<path d="M12 3v18M12 3 4.5 6.2 6 12.4 12 21M12 3l7.5 3.2L18 12.4 12 21"/>',
@@ -3296,7 +3552,7 @@ function reps(e){return e.rmin===e.rmax?e.rmin:e.rmin+'–'+e.rmax}
 function rc(r){return r<=0?'r0':r===1?'r1':r<=2?'r2':'r3'}
 function fmtT(s){const m=Math.floor(s/60),ss=s%60;return m+':'+(ss<10?'0':'')+ss}
 /* ==========================================================================
-   1. SICHERHEITS- UND KOMFORT-PRIMITIVEN
+   §4 — SICHERHEITS- UND KOMFORT-PRIMITIVEN
    Alle Renderer der App bauen HTML per String-Konkatenation. Ohne Escaping
    ist jeder Übungsname, jede Notiz und jeder gesyncte Fremddatensatz ein
    HTML-Injection-Vektor. esc() für Textknoten, attr() für Attributwerte,
@@ -3597,7 +3853,7 @@ function segmentedControl(id,items,activeKey,onPick){
 function withViewTransition(fn){fn()}
 
 /* ==========================================================================
-   2. ÜBUNGS-ANIMATIONEN
+   §5 — ÜBUNGS-ANIMATIONEN
    Statt externe GIFs zu laden (offline tot, DSGVO-Thema, langsam) erzeugen
    wir animierte Inline-SVG-Strichfiguren. Ein Bewegungsmuster wird aus dem
    Übungsnamen erkannt; jedes Muster ist eine kleine CSS-Keyframe-Choreografie
@@ -3623,6 +3879,11 @@ function setSides(name,ex){return isUnilateral(name,ex)?2:1}
    wie seitliches Heben. Die Unterscheidung hängt am Namen, deshalb steht sie
    hier einmal und wird von der Mustertabelle mitbenutzt. */
 const REAR_DELT_RE=/(reverse ?(butterfly|fly|flye|pec ?deck)|rear ?delt|hintere ?schulter|face ?pull|gesichtziehen)/i;
+/* Frontheben trifft das Muster „seitliches Heben", meint aber die vordere
+   Schulter. Ohne eigene Regel zählte es auf die seitliche und täuschte dort
+   Volumen vor, das nie ankam. */
+const FRONT_DELT_RE=/(frontheben|front ?raise|vordere ?schulter|front ?delt)/i;
+/* ======================== §6 — BEWEGUNGSMUSTER-ERKENNUNG (Daten) ==================== */
 const MOVE_PATTERNS=[
   /* Gesäß und Hüftabduktion gehören zur hinteren Kette: dieselbe Volumen-
      gruppe wie Hüftheben, es gibt keine eigene für den Po. „Glute Ham
@@ -3650,7 +3911,7 @@ const MOVE_PATTERNS=[
      seitlich nach oben, das ist seitliches Heben. Muss VOR der row-Regel
      stehen, sonst gewinnt das Wort „Rudern". */
   {k:'raise',   re:/(aufrechtes ?rudern|upright ?row)/i},
-  {k:'pushh',   re:/(schulterdrücken|overhead ?press|ohp|military|arnold ?press|schulterpresse|shoulder ?press|handstand|push ?press|pike|frontdrücken|nackendrücken)/i},
+  {k:'pushh',   re:/(schulterdrücken|overhead ?press|ohp|military|arnold ?press|schulterpresse|shoulder ?press|handstand|push ?press|pike|frontdrücken|nackendrücken|arnold)/i},
   {k:'push',    re:/(bankdrücken|bench|brustpresse|chest ?press|butterfly|fliegende|fly|dips?|liegestütz|push ?ups?|pec ?deck|kabelzug.*brust|floor ?press|bodendrücken|landmine|crossover)/i},
   /* „klimmzug" traf den Plural „Klimmzüge" nicht — Umlaut. Die Übung fiel
      durch alle Regeln und landete über den Muskel-Fallback bei „Rudern",
@@ -4070,7 +4331,7 @@ function exerciseVisual(name,muscle,type,opts={}){
 }
 
 /* ==========================================================================
-   3. DIAGRAMME
+   §7 — DIAGRAMME
    svgChart zeichnet sich jetzt beim Einblenden (stroke-dashoffset),
    Fläche und Punkte staffeln nach, und jeder Punkt ist antippbar.
    ========================================================================== */
@@ -4200,7 +4461,16 @@ function svgChart(data,opts={}){
   },{passive:true});
 })();
 function getLastW(name){for(let i=D.history.length-1;i>=0;i--){const f=D.history[i].sets.filter(s=>s.ex===name&&s.w>0);if(f.length){const l=f[f.length-1];return{w:l.w,r:l.r,rir:l.rir}}}return null}
-function getAllSets(name){const arr=[];D.history.forEach(s=>s.sets.forEach(set=>{if(set.ex===name)arr.push({...set,date:s.date})}));return arr}
+/* Zeichengenau war hier falsch: „Bankdrücken" und „Bankdrücken (Bench
+   Press)" sind dieselbe Übung, und wer sie einmal anders geschrieben hat,
+   verlor seinen ganzen Verlauf. Abgeglichen wird über den klammerfreien
+   Schlüssel. */
+function getAllSets(name){
+  const key=baseNameKey(name);
+  const arr=[];
+  D.history.forEach(s=>s.sets.forEach(set=>{if(baseNameKey(set.ex)===key)arr.push({...set,date:s.date})}));
+  return arr;
+}
 /* EINE Trendrechnung für die ganze App. Vorher gab es zwei: diese hier
    verglich die letzten drei SÄTZE mit den drei davor über das rohe Gewicht,
    die Stats-Liste dagegen das beste e1RM der letzten drei EINHEITEN. Bei zwei
@@ -4374,8 +4644,55 @@ function openPlanExMenu(i){
 }
 function delEx(i){if(!confirm('Löschen?'))return;D.plan[curTab].exercises.splice(i,1);save();markPlanDirty();renderPL();toast('Gelöscht')}
 function mvEx(i,d){const a=D.plan[curTab].exercises;const n=i+d;if(n<0||n>=a.length)return;[a[i],a[n]]=[a[n],a[i]];save();markPlanDirty();renderPL()}
-function openAddEx(){editRef=null;editTab=curTab;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';om('m-add')}
-function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';om('m-add')}
+/* --------------------------------------------------------------------------
+   NAME GEÄNDERT — MUSKEL NICHT
+
+   Aus „Kabelcrunches" wurden im Editor „Spidercurls", und die Übung behielt
+   Muskelgruppe „Core" und den Crunch-Hinweis. Vier Sätze Bizeps zählten
+   danach auf den Rumpf, der Coach meldete eine Lücke, die keine war, und der
+   Ausführungshinweis beschrieb eine andere Bewegung.
+
+   Der Editor weiß es besser: Der neue Name steht in der Bibliothek, mit
+   Muskel, Wiederholungsbereich und Hinweis. Er übernimmt sie aber nicht von
+   selbst — wer bewusst eine eigene Variante baut, will seine Werte behalten.
+   Also: anbieten, ein Knopf, fertig.
+   -------------------------------------------------------------------------- */
+let libHintItem=null;
+function libraryItemFor(name){
+  const key=baseNameKey(name);
+  if(!key)return null;
+  return allLibraryCategories().flatMap(c=>c.items).find(i=>baseNameKey(i.name)===key)||null;
+}
+function refreshLibHint(){
+  const box=document.getElementById('a-libhint');
+  if(!box)return;
+  const name=(document.getElementById('a-name').value||'').trim();
+  const item=libraryItemFor(name);
+  libHintItem=item;
+  /* Nichts anbieten, was ohnehin schon dasteht: passt der Muskel bereits,
+     ist der Hinweis nur Lärm. */
+  const gleich=item&&document.getElementById('a-mus').value===item.m&&document.getElementById('a-type').value===(item.t||'main');
+  if(!item||gleich){box.style.display='none';box.innerHTML='';return}
+  box.style.display='';
+  box.innerHTML=`<span style="flex:1">In der Bibliothek: <b>${esc(muscleName(volGroupOf(item.name,item.m,item.t)||item.m))}</b> · ${esc(item.rn)}–${esc(item.rx)} Wdh.`+
+    (item.note?` · ${esc(String(item.note).slice(0,60))}`:'')+`</span>`+
+    `<button type="button" onclick="applyLibHint()">Übernehmen</button>`;
+}
+function applyLibHint(){
+  const item=libHintItem;
+  if(!item)return;
+  document.getElementById('a-mus').value=item.m||'chest';
+  document.getElementById('a-type').value=item.t||'main';
+  document.getElementById('a-rmin').value=item.rn;
+  document.getElementById('a-rmax').value=item.rx;
+  if(item.note)document.getElementById('a-note').value=item.note;
+  setAddRir(item.rir===undefined?2:item.rir);
+  refreshLibHint();
+  haptic(8);
+  toast('Werte aus der Bibliothek übernommen');
+}
+function openAddEx(){editRef=null;editTab=curTab;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';refreshLibHint();om('m-add')}
+function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';refreshLibHint();om('m-add')}
 function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
   if(editRef){
     /* PB-086: Hier stand ein gemerkter INDEX. Der Cloud-Listener ersetzt in
@@ -4396,6 +4713,7 @@ function confirmAddEx(){const n=document.getElementById('a-name').value.trim();i
   }
   const geaendert=!!editRef;
   save();markPlanDirty();cm('m-add');renderPL();toast(geaendert?'Änderung gespeichert ✓':'Übung hinzugefügt ✓');editRef=null;editTab=null}
+/* ======================== §8 — ÜBUNGSBIBLIOTHEK, 246 EINTRÄGE (Daten) ==================== */
 const EXLIB=[
   {cat:"🔥 Aufwärmen / Pre-Workout",items:[
     {name:"ATG: Schienbeinheben (Tibialis Raise)",s:1,rn:25,rx:25,rir:null,t:"pre",m:"legs",note:"Wand-Version: Zehen hochziehen 1s halten"},
@@ -4657,7 +4975,7 @@ function stepVal(id,delta){const el=document.getElementById(id);const v=parseFlo
 let stepTimer=null,stepDelay=null;
 function stepHold(id,delta){stepVal(id,delta);stepDelay=setTimeout(()=>{stepTimer=setInterval(()=>stepVal(id,delta),100)},350);const stop=(e)=>{if(e)e.preventDefault();clearTimeout(stepDelay);clearInterval(stepTimer);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop)};document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop)}
 /* ==========================================================================
-   6. ÜBUNGS-DEMO
+   §9 — ÜBUNGS-DEMO
    Vorher öffnete das Kamera-Icon eine Google-Bildersuche in einem neuen Tab —
    im Studio ohne Empfang nutzlos und mitten im Satz ein Kontextwechsel.
    Jetzt: animierte Inline-Demo direkt im Modal, mit Muskel-Tags, Ausführungs-
@@ -4709,7 +5027,7 @@ function setLogRir(v){document.getElementById('log-rir').value=v;document.queryS
 function pickRirAdd(el,v){document.querySelectorAll('#a-rir-circles .rir-c').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('a-rir').value=v}
 function setAddRir(v){document.getElementById('a-rir').value=v;document.querySelectorAll('#a-rir-circles .rir-c').forEach(c=>c.classList.toggle('sel',parseInt(c.dataset.v)===v))}
 /* ==========================================================================
-   5. TRAININGSPLAN-VERWALTUNG
+   §10 — TRAININGSPLAN-VERWALTUNG
    Vorher: drei verschachtelte prompt()-Dialoge. Auf iOS blockieren die den
    Main-Thread, sehen aus wie ein Browser-Fehler und erlauben keine
    Mehrfachauswahl von Wochentagen. Jetzt: ein Modal, Wochentag-Chips,
@@ -5066,7 +5384,7 @@ function skipEx(ei){
   save();renderWo();toast('Übung übersprungen ⏭');
 }
 /* ==========================================================================
-   9. PAUSENTIMER
+   §11 — PAUSENTIMER
    Drei Fehler waren drin: (a) Pause/Weiter startete die Pause von vorn, weil
    nur timerStartedAt neu gesetzt wurde; (b) ein Reload mitten in der Pause
    verlor den Timer komplett; (c) der „Piep“ war eine 0-Byte-WAV, also immer
@@ -5853,7 +6171,7 @@ function miniSpark(values,color='var(--accent)'){
     `<circle cx="${last.x.toFixed(1)}" cy="${last.y.toFixed(1)}" r="3.4" fill="${color}" class="chart-dot pop" style="animation-delay:.85s;stroke:none"/></svg>`;
 }
 /* ==========================================================================
-   4. VOLUMEN-LANDMARKS
+   §12 — VOLUMEN-LANDMARKS
    Vorher wurden MEV/MAV/MRV aus dem aktuellen Wochenwert selbst abgeleitet
    (totalSets*0.66 usw.) — dadurch lag man rechnerisch fast immer „im MAV“,
    egal ob man 4 oder 90 Sätze gemacht hat. Jetzt kommen die Grenzen aus
@@ -5879,10 +6197,16 @@ const EX_MUSCLES=['chest','back','legs','shoulders','arms','core'];
    abgeleitet, greift also auch bei eigenen Übungen.
    Richtwerte: RP-Schema, pro Muskel und Woche.
    -------------------------------------------------------------------------- */
+/* Vordere Schulter hat MEV 0 — mit Absicht. Sie arbeitet bei jedem
+   horizontalen und jedem vertikalen Drücken mit; ein Plan mit Brust und
+   Schulterdrücken versorgt sie, ohne dass ein einziger direkter Satz nötig
+   wäre. Eine Untergrenze würde Volumen fordern, das niemand braucht. Die
+   Obergrenze bleibt, weil zu viel Drücken sehr wohl die Schulter überlastet. */
 const MUSCLE_LANDMARKS={
   chest:    {mev:8, mav:16,mrv:22},
   back:     {mev:10,mav:18,mrv:25},
   shoulders:{mev:8, mav:16,mrv:22},
+  front:    {mev:0, mav:8, mrv:14},
   rear:     {mev:6, mav:14,mrv:20},
   biceps:   {mev:6, mav:14,mrv:20},
   triceps:  {mev:6, mav:14,mrv:18},
@@ -5894,7 +6218,8 @@ const MUSCLE_LANDMARKS={
 const VOL_GROUP_META={
   chest:    {name:'Brust',      short:'BRU',icon:'chest',    muscle:'chest',    pats:null},
   back:     {name:'Rücken',     short:'RÜC',icon:'back',     muscle:'back',     pats:null},
-  shoulders:{name:'Schultern',  short:'SCH',icon:'shoulders',muscle:'shoulders',pats:null},
+  shoulders:{name:'Seitliche Schulter',short:'SCH',mx:'Seitl. Sch.',icon:'shoulders',muscle:'shoulders',pats:['raise']},
+  front:    {name:'Vordere Schulter',short:'VSC',mx:'Vord. Sch.',icon:'shoulders',muscle:'shoulders',pats:['pushh']},
   rear:     {name:'Hintere Schulter',short:'HSC',mx:'Hint. Sch.',icon:'shoulders',muscle:'shoulders',pats:['raise']},
   biceps:   {name:'Bizeps',     short:'BIZ',icon:'arms',     muscle:'arms',     pats:['curl']},
   triceps:  {name:'Trizeps',    short:'TRI',icon:'arms',     muscle:'arms',     pats:['triext']},
@@ -5909,9 +6234,21 @@ const VOL_GROUP_META={
 function volGroupOf(name,muscle,type){
   const m=muscle||'';
   if(m==='arms')return detectMovePattern(name,m,type)==='curl'?'biceps':'triceps';
-  /* Seitliche und hintere Schulter reagieren völlig verschieden: beim Drücken
-     bekommt die vordere alles ab, die hintere nichts. Eigene Grenzen also. */
-  if(m==='shoulders')return REAR_DELT_RE.test(String(name||''))?'rear':'shoulders';
+  /* Die drei Schulterköpfe reagieren völlig verschieden, und ein gemeinsamer
+     Topf verwischt genau die Lücke, die am häufigsten vorkommt.
+
+     Vorher zählte Schulterdrücken auf dieselbe Gruppe wie Seitheben. Ein Plan
+     mit drei Sätzen Schulterdrücken und drei Sätzen Seitheben stand damit bei
+     „Schultern 6 — im Korridor", während die SEITLICHE Schulter, die als
+     einzige direktes Volumen braucht, nur die Hälfte davon bekam. Beim
+     Drücken bekommt die vordere alles ab, die seitliche wenig, die hintere
+     nichts. Also drei Gruppen, abgeleitet aus dem Bewegungsmuster. */
+  if(m==='shoulders'){
+    const n=String(name||'');
+    if(REAR_DELT_RE.test(n))return'rear';
+    if(FRONT_DELT_RE.test(n))return'front';
+    return detectMovePattern(name,m,type)==='pushh'?'front':'shoulders';
+  }
   if(m==='legs'){
     const p=detectMovePattern(name,m,type);
     if(p==='calf')return'calves';
@@ -5921,6 +6258,7 @@ function volGroupOf(name,muscle,type){
   return MUSCLE_LANDMARKS[m]?m:null;
 }
 function volGroupIcon(key){return icon((VOL_GROUP_META[key]||{}).icon||'arms',20)}
+function volGroupShort(key){const m=VOL_GROUP_META[key]||{};return m.mx||m.name||key}
 /* --------------------------------------------------------------------------
    SEKUNDÄRE MUSKELBETEILIGUNG
    Bankdrücken ist nicht nur Brust: Trizeps und vordere Schulter leisten
@@ -5934,7 +6272,11 @@ function volGroupIcon(key){return icon((VOL_GROUP_META[key]||{}).icon||'arms',20
    nicht beides auf denselben Zähler.
    -------------------------------------------------------------------------- */
 const SECONDARY_BY_PATTERN={
-  push:   {triceps:.5,shoulders:.5},
+  /* Bankdrücken lädt die vordere Schulter mit, nicht die seitliche. Solange
+     beides derselbe Zähler war, meldete die App „Schultern versorgt", während
+     die seitliche leer ausging — genau der Fehler, den die eigene Gruppe
+     behebt. */
+  push:   {triceps:.5,front:.5},
   pushh:  {triceps:.5,chest:.25},
   pulld:  {biceps:.5},
   row:    {biceps:.5,rear:.25},
@@ -5965,27 +6307,7 @@ function secondaryContribution(name,muscle,type){
 function estimatedDuration(dayKey){
   const day=(D.plan||{})[dayKey];
   if(!day)return 0;
-  const list=day.exercises||[];
-  let sec=0;
-  /* Gekoppelte Übungen laufen im Wechsel: Arbeitszeit addiert sich, die lange
-     Pause fällt aber nur EINMAL pro Runde an, dazwischen nur der Wechsel. */
-  const groups={};
-  list.forEach(e=>{
-    const sets=parseInt(e.sets)||0;
-    if(!sets)return;
-    const work=sets*40*setSides(e.name,e);
-    const rest=restSecondsFor(e.name,e.muscle,e.type);
-    sec+=EXERCISE_SETUP;
-    if(e.ss){
-      if(!groups[e.ss])groups[e.ss]={work:0,rest:0,rounds:0,n:0};
-      const g=groups[e.ss];
-      g.work+=work;g.rest=Math.max(g.rest,rest);g.rounds=Math.max(g.rounds,sets);g.n++;
-    }else sec+=work+sets*rest;
-  });
-  Object.values(groups).forEach(g=>{
-    sec+=g.work+g.rounds*(g.rest+SUPERSET_GAP*Math.max(0,g.n-1));
-  });
-  return Math.round(sec/60);
+  return workloadMinutes(day.exercises||[]);
 }
 /* Pausenlänge nach der BEWEGUNG, nicht nach dem gespeicherten Muskel.
    Vorher entschied `muscle`: alles unter „legs" bekam die Grundübungspause.
@@ -6014,6 +6336,86 @@ const SUPERSET_GAP=25;          /* Sekunden zwischen den Partnern */
    müssen eingerichtet werden. Wird an DREI Stellen benutzt — Planansicht,
    laufendes Workout, Onboarding-Deckel — und muss dort identisch bleiben. */
 const EXERCISE_SETUP=60;
+/* Arbeitszeit eines Satzes. Stand dreimal als nackte 40 im Code. */
+const SET_SECONDS=40;
+/* --------------------------------------------------------------------------
+   EINE Rechnung für alle drei Anzeigen: Planansicht, laufendes Workout und
+   der Deckel im Onboarding. Vorher rechnete jede Stelle für sich — dreimal
+   dieselbe Wahrheit, dreimal eine Gelegenheit, auseinanderzulaufen (PB-106).
+   Die Liste kommt aus verschiedenen Quellen, deshalb nimmt die Funktion nur,
+   was alle drei haben: Name, Muskel, Typ, Satzzahl, optionale Supersatz-
+   Kennung. Die Seitenzahl darf mitgegeben werden, wo sie schon feststeht.
+   -------------------------------------------------------------------------- */
+function workloadSeconds(items){
+  let sec=0;
+  const groups={};
+  (items||[]).forEach(it=>{
+    if(!it)return;
+    const sets=parseInt(it.sets)||0;
+    if(!sets)return;
+    const work=sets*SET_SECONDS*(it.sides||setSides(it.name,it));
+    const rest=restSecondsFor(it.name,it.muscle,it.type);
+    /* Umbau je Übung, bei Supersätzen je Partner: beide Stationen müssen
+       eingerichtet werden. */
+    sec+=EXERCISE_SETUP;
+    if(it.ss){
+      if(!groups[it.ss])groups[it.ss]={work:0,rest:0,rounds:0,n:0};
+      const g=groups[it.ss];
+      g.work+=work;g.rest=Math.max(g.rest,rest);g.rounds=Math.max(g.rounds,sets);g.n++;
+    }else sec+=work+sets*rest;
+  });
+  /* Gekoppelte Übungen laufen im Wechsel: Arbeitszeit addiert sich, die lange
+     Pause fällt aber nur EINMAL pro Runde an, dazwischen nur der Wechsel. */
+  Object.values(groups).forEach(g=>{
+    sec+=g.work+g.rounds*(g.rest+SUPERSET_GAP*Math.max(0,g.n-1));
+  });
+  return sec;
+}
+/* --------------------------------------------------------------------------
+   PERSÖNLICHER ZEITFAKTOR
+   40 Sekunden je Satz und 60 je Umbau sind Mittelwerte. Wer zwischen den
+   Sätzen zügig weitermacht, braucht weniger; wer sich unterhält, mehr. Die
+   App weiß es besser als jede Konstante: sie hat die gemessene Dauer jeder
+   beendeten Einheit gespeichert und benutzte sie bisher nur als Anzeige.
+
+   Verglichen wird die gemessene Dauer mit der Rohschätzung derselben Einheit.
+   Median statt Mittelwert — eine einzelne Einheit mit langem Gespräch soll die
+   Anzeige nicht auf Monate verziehen. Gedeckelt auf 0,7 bis 1,6, damit ein
+   kaputter Wert (Einheit vergessen zu beenden) die Zahl nicht unbrauchbar
+   macht. Unter drei brauchbaren Messungen bleibt es bei 1,0.
+   -------------------------------------------------------------------------- */
+const DURATION_SAMPLE_MIN=3;
+function sessionRawMinutes(session){
+  const byEx={};
+  strengthSets((session&&session.sets)||[]).forEach(x=>{
+    if(x.type&&x.type!=='main')return;
+    const k=libKey(x.ex);
+    if(!byEx[k])byEx[k]={name:x.ex,muscle:x.muscle,type:x.type||'main',sets:0};
+    byEx[k].sets++;
+  });
+  /* Cardio hat keine Sätze und keine Pausen, kostet aber die Zeit, die
+     drinsteht — sonst sieht jede Einheit mit Cardio nach „zu langsam" aus. */
+  return workloadSeconds(Object.values(byEx))/60+cardioMinutes((session&&session.sets)||[]);
+}
+function durationFactor(){
+  const werte=[];
+  [...(D.history||[])].slice(-10).forEach(sess=>{
+    const gemessen=parseInt(sess&&sess.duration)||0;
+    if(gemessen<10||gemessen>300)return;
+    const roh=sessionRawMinutes(sess);
+    if(roh<10)return;
+    werte.push(gemessen/roh);
+  });
+  if(werte.length<DURATION_SAMPLE_MIN)return 1;
+  werte.sort((a,b)=>a-b);
+  const median=werte.length%2
+    ? werte[(werte.length-1)/2]
+    : (werte[werte.length/2-1]+werte[werte.length/2])/2;
+  return Math.min(1.6,Math.max(.7,median));
+}
+function workloadMinutes(items){
+  return Math.round(workloadSeconds(items)*durationFactor()/60);
+}
 function supersetPartners(list,ex){
   if(!ex||!ex.ss)return[];
   return (list||[]).filter(e=>e!==ex&&e.ss&&e.ss===ex.ss);
@@ -6108,7 +6510,7 @@ function weeklyLandmarks(){
   },{mev:0,mav:0,mrv:0});
 }
 /* ==========================================================================
-   9. VOLUMEN-COACH
+   §13 — VOLUMEN-COACH
    Die Landmarks MEV/MAV/MRV lagen bisher nur als Balken herum: Der Nutzer
    sah, dass etwas zu wenig ist, aber nicht, was er dagegen tun soll. Der
    Coach schließt genau diese Lücke — er rechnet den PLAN durch (nicht die
@@ -6155,6 +6557,7 @@ function weeklyLandmarks(){
    Meinungsverschiedenheiten über Einordnung, nicht über Tatsachen — die
    offenen Punkte stehen in docs/EVIDENZ.md.
    ========================================================================== */
+/* ======================== §14 — EVIDENZKATALOG (Daten) ==================== */
 const EVIDENCE_DB=[
   {"n":"Schrägbank-Kurzhantelcurl (Incline Dumbbell Curl)","m":"arms","p":"curl","t":"A","s":3,"rn":8,"rx":12,"rir":1,"c":1,"w":"Die Schulterextension dehnt den zweigelenkigen Bizeps zusätzlich, wodurch die Übung in längerer Muskellänge stattfindet als der stehende Curl. Gemessen wurde dabei eine eher proximale Betonung des Zuwachses.","ev":"Vergleichsstudie Scott- vs. Schrägbankcurl (2025): unterschiedliche regionale Zuwächse, Schrägbank proximal stärker, Scott distal stärker (Stichprobengröße und Trainingsstatus im Rohkatalog nicht dokumentiert). Eine Kombinationsgruppe wurde nicht getestet, und regionale Ultraschallmessungen haben einen Messfehler in der Größenordnung der Effekte — deshalb keine hohe Konfidenz.","cue":"Bank auf 45-60°, Arme frei hängen lassen, unten vollständig strecken — Schulter bleibt hinten, nicht nach vorne rollen."},
   {"n":"Überkopf-Trizepsdrücken am Kabel (Overhead Cable Triceps Extension)","m":"arms","p":"triext","t":"A","s":3,"rn":8,"rx":15,"rir":1,"c":1,"w":"Der lange Trizepskopf überspannt das Schultergelenk und wird nur bei gebeugter Schulter wirklich gedehnt. Überkopfarbeit trainiert den Trizeps dadurch in deutlich längerer Position als Pushdowns.","ev":"Maeo et al. 2022 (Eur J Sport Sci, n=21, 12 Wochen, within-subject, MRT, jeweils 70 % 1RM): Überkopf- vs. neutrale Armposition ergab 19,9 % vs. 13,5 % Trizeps-Hypertrophie zugunsten Überkopf, mit Vorteil in allen drei Köpfen (langer Kopf 28,5 % vs. 19,6 %). Direkter kontrollierter Trainingsvergleich zu genau dieser Armposition. Trainingsstatus im Rohkatalog nicht dokumentiert; die Last war prozentual angeglichen, absolut überkopf also niedriger.","cue":"Rumpf leicht vorgeneigt, Oberarme neben den Ohren fixiert, tief in die Dehnung hinter den Kopf ablassen."},
@@ -6368,14 +6771,19 @@ function coachAnalyzePlan(){
         action:{label:'− Satz',call:`coachTrimSet('${jsStr(m.key)}')`,ghost:true}});
       return;
     }
-    if(m.freq<COACH_FREQ_MIN&&dayKeys.length>=2){
+    /* Eine Gruppe ohne Untergrenze braucht kein direktes Volumen und damit
+       auch keine Frequenz: „Vordere Schulter nur 0× pro Woche" wäre eine
+       Mahnung, etwas zu tun, das niemand tun muss. */
+    if(m.lm.mev>0&&m.freq<COACH_FREQ_MIN&&dayKeys.length>=2){
       issues.push({sev:2,muscle:m.key,color:'#ffb020',
         title:`${m.name} nur ${m.freq}× pro Woche`,
         detail:`Die Proteinsynthese läuft rund 48 Stunden. Dasselbe Volumen auf zwei Tage verteilt wirkt besser als alles an einem Tag.`,
         action:{label:'Verteilen',call:`coachSpreadMuscle('${jsStr(m.key)}')`,ghost:true}});
       return;
     }
-    if(m.sets<m.lm.mav){
+    /* Auch hier: eine Gruppe ohne Untergrenze bekommt genug vom Drücken.
+       „Billigster Zuwachs im Plan" wäre für sie schlicht falsch. */
+    if(m.lm.mev>0&&m.sets<m.lm.mav){
       const room=Math.round((m.lm.mav-m.sets)*10)/10;
       issues.push({sev:3,muscle:m.key,color:'#4ea1ff',
         title:`${m.name}: Luft nach oben`,
@@ -6383,9 +6791,145 @@ function coachAnalyzePlan(){
         action:{label:'+ Übung',call:`coachAddExercise('${jsStr(m.key)}',false)`,ghost:true}});
     }
   });
+  historyIssues().forEach(i=>issues.push(i));
   issues.sort((a,b)=>a.sev-b.sev);
   const fine=muscles.filter(m=>m.sets>0&&!issues.some(i=>i.muscle===m.key));
   return{muscles,issues,fine,totalSets,dayKeys,withSecondary};
+}
+/* --------------------------------------------------------------------------
+   WAS DER PLAN ÜBER SICH SELBST NICHT WEISS
+
+   Der Coach rechnete bisher ausschließlich den PLAN durch: Sätze, Gruppen,
+   Frequenz, Bewegungsmuster. Das ist die halbe Wahrheit. Die andere Hälfte
+   steht in der Historie, und sie war für die Planung nie zugänglich:
+
+   · Eine Übung, die in drei von vier Einheiten übersprungen wird, steht im
+     Plan, findet aber nicht statt. Sie zählt trotzdem ins Volumen, und der
+     Coach meldet die Gruppe als versorgt, obwohl sie es nicht ist.
+   · Eine Übung, die seit sechs Einheiten nicht mehr schwerer wird, ist kein
+     Trainingsreiz mehr, sondern eine Gewohnheit.
+   · Ein Trainingstag, der real regelmäßig deutlich länger dauert als geplant,
+     ist zu voll — unabhängig davon, was die Schätzung sagt.
+
+   Die App hat diese Daten seit dem ersten Tag. Sie hat sie nur als Statistik
+   angezeigt, statt etwas damit zu tun. Ein Befund braucht mindestens drei
+   Einheiten zum selben Trainingstag, sonst ist ein schlechter Tag schon ein
+   Urteil.
+   -------------------------------------------------------------------------- */
+const HIST_MIN_SESSIONS=3;
+const HIST_SKIP_RATIO=.5;
+const HIST_STAGNATION=5;
+function recentSessionsFor(planKey,limit){
+  return (D.history||[]).filter(s=>s.planKey===planKey).slice(-(limit||6));
+}
+function historyIssues(){
+  const out=[];
+  Object.entries(D.plan||{}).forEach(([key,day])=>{
+    const sessions=recentSessionsFor(key,6);
+    if(sessions.length<HIST_MIN_SESSIONS)return;
+    (day.exercises||[]).forEach((ex,idx)=>{
+      if(ex.type!=='main')return;
+      /* Übersprungen heißt: in der Einheit war die Übung geplant, aber es kam
+         kein Satz an. Beides zählt — der ausdrückliche Skip und das stille
+         Weglassen. */
+      const weg=sessions.filter(sess=>{
+        if((sess.skipped||[]).some(n=>sameExercise(n,ex.name)))return true;
+        return !(sess.sets||[]).some(x=>sameExercise(x.ex,ex.name));
+      }).length;
+      if(weg/sessions.length>=HIST_SKIP_RATIO){
+        out.push({sev:2,muscle:volGroupOf(ex.name,ex.muscle,ex.type),color:'#ffb020',
+          title:`${ex.name} findet nicht statt`,
+          detail:`In ${weg} von ${sessions.length} Einheiten übersprungen — im Plan zählt sie trotzdem ins Wochenvolumen. Entweder raus damit oder an eine frühere Stelle im Tag.`,
+          action:{label:'Nach vorn',call:`coachMoveUp('${jsStr(key)}',${idx})`,ghost:true},
+          action2:{label:'Entfernen',call:`coachDropExercise('${jsStr(key)}',${idx})`,ghost:true}});
+        return;
+      }
+      /* Stagnation: seit N Einheiten kein neuer Bestwert. exerciseProgress
+         rechnet über e1RM, fängt also auch „mehr Wiederholungen bei gleichem
+         Gewicht" — echte Progression ohne Scheibenwechsel. */
+      const p=(typeof exerciseProgress==='function')?exerciseProgress(ex.name):null;
+      if(p&&p.sessions>=HIST_STAGNATION&&p.delta!==null&&p.delta<=0){
+        out.push({sev:3,muscle:volGroupOf(ex.name,ex.muscle,ex.type),color:'#4ea1ff',
+          title:`${ex.name} steht seit ${p.sessions} Einheiten`,
+          detail:`Kein neuer Bestwert über e1RM. Ein Variantenwechsel im selben Bewegungsmuster bringt oft mehr als ein weiterer Satz.`,
+          action:{label:'Variante',call:`openSwapFromPlan('${jsStr(key)}',${idx})`,ghost:true}});
+      }
+    });
+    /* Der Tag als Ganzes: dauert er real deutlich länger als geschätzt, ist
+       er zu voll. Gemessen am Median, damit ein langer Tag nichts entscheidet. */
+    /* Gemessen wird gegen das ZEITBUDGET aus dem Onboarding, nicht gegen die
+       Schätzung: Die Schätzung eicht sich an genau diesen Messwerten (siehe
+       durationFactor) und zieht dem Befund damit den Boden weg. Die Frage ist
+       ohnehin eine andere — nicht „schätzt die App richtig", sondern „passt
+       der Tag in die Zeit, die du hast". */
+    const budget=parseInt(D.profile&&D.profile.minutes)||0;
+    const zeiten=sessions.map(x=>parseInt(x.duration)||0).filter(x=>x>=10&&x<=300).sort((a,b)=>a-b);
+    if(budget>0&&zeiten.length>=HIST_MIN_SESSIONS){
+      const med=zeiten.length%2?zeiten[(zeiten.length-1)/2]:(zeiten[zeiten.length/2-1]+zeiten[zeiten.length/2])/2;
+      if(med>budget*1.15&&med-budget>=10){
+        const koppelbar=(day.exercises||[]).filter(e=>e.type==='main'&&!e.ss&&
+          !COMPOUND_PATTERNS.includes(detectMovePattern(e.name,e.muscle,e.type))).length;
+        out.push({sev:2,muscle:null,color:'#ffb020',
+          title:`${planDisplayName(key)} sprengt dein Zeitbudget`,
+          detail:`Du wolltest ${budget} min, gebraucht hast du im Mittel ${Math.round(med)} min.`+
+            (koppelbar>=2?` ${koppelbar} Isolationsübungen an diesem Tag sind noch ungekoppelt — als Supersatz kosten zwei davon zusammen eine Pause statt zwei.`:' Ein Satz weniger bei der Übung mit dem meisten Volumen holt das heraus.'),
+          action:koppelbar>=2?{label:'Koppeln',call:`coachPairDay('${jsStr(key)}')`,ghost:true}
+                             :{label:'Tag ansehen',call:`curTab='${jsStr(key)}';renderPlan();go('dash')`,ghost:true}});
+      }
+    }
+  });
+  return out;
+}
+/* Eine Übung, die dauernd hinten liegen bleibt, gehört nach vorn — dort wird
+   sie gemacht. Das ist der billigere Eingriff als sie zu streichen. */
+function coachMoveUp(dayKey,idx){
+  const list=(D.plan[dayKey]||{}).exercises;
+  if(!list||idx<=0||idx>=list.length)return;
+  const ex=list.splice(idx,1)[0];
+  /* Hinter die letzte Grundübung, nicht an Position eins: eine Isolation vor
+     dem Bankdrücken hilft niemandem. */
+  let ziel=0;
+  list.forEach((e,i)=>{if(COMPOUND_PATTERNS.includes(detectMovePattern(e.name,e.muscle,e.type)))ziel=i+1});
+  list.splice(Math.min(ziel,list.length),0,ex);
+  save();markPlanDirty();coachInvalidate();
+  curTab=dayKey;renderPlan();renderDash();
+  haptic([10,30,10]);
+  toast(`${ex.name} nach vorn verschoben`);
+}
+/* Die Antwort auf „zu lang" ist fast nie „weniger trainieren", sondern
+   „weniger warten". Koppelt alle noch freien Isolationsübungen des Tages
+   paarweise über verschiedene Volumengruppen. */
+function coachPairDay(dayKey){
+  const list=(D.plan[dayKey]||{}).exercises;
+  if(!list){toast('Trainingstag nicht gefunden');return}
+  const frei=list.filter(e=>e.type==='main'&&!e.ss&&
+    !COMPOUND_PATTERNS.includes(detectMovePattern(e.name,e.muscle,e.type)));
+  let paare=0;
+  for(let i=0;i<frei.length;i++){
+    if(frei[i].ss)continue;
+    for(let j=i+1;j<frei.length;j++){
+      if(frei[j].ss||!supersetFits(frei[i],frei[j]))continue;
+      const k=nextSupersetKey(list);
+      frei[i].ss=k;frei[j].ss=k;paare++;
+      break;
+    }
+  }
+  if(!paare){toast('Keine zwei Übungen, die sich koppeln lassen');return}
+  save();markPlanDirty();coachInvalidate();
+  curTab=dayKey;renderPlan();renderDash();
+  haptic([12,40,12]);
+  toast(`${paare} ${paare===1?'Supersatz':'Supersätze'} gekoppelt — ${estimatedDuration(dayKey)} min`);
+}
+function coachDropExercise(dayKey,idx){
+  const list=(D.plan[dayKey]||{}).exercises;
+  if(!list||!list[idx])return;
+  const name=list[idx].name;
+  if(!confirm(`„${name}" aus ${planDisplayName(dayKey)} entfernen?\n\nDeine geloggten Sätze bleiben in der Historie.`))return;
+  if(list[idx].ss){const k=list[idx].ss;const rest=list.filter((e,i)=>i!==idx&&e.ss===k);if(rest.length===1)rest[0].ss=null}
+  list.splice(idx,1);
+  save();markPlanDirty();coachInvalidate();
+  curTab=dayKey;renderPlan();renderDash();
+  toast(`${name} entfernt`);
 }
 
 /* --- Maßnahmen -----------------------------------------------------------
@@ -6465,11 +7009,14 @@ function coachSpreadMuscle(muscle){
 
 /* --- Darstellung --------------------------------------------------------- */
 function coachIssueHTML(issue,rank){
-  const act=issue.action
-    ?`<button type="button" class="go${issue.action.ghost?' ghost':''}" onclick="${issue.action.call}">${esc(issue.action.label)}</button>`
-    :'';
-  return`<div class="coach-fix"><div class="pri" style="background:${issue.color}">${esc(rank)}</div>`+
-    `<div class="bd"><div class="t">${esc(issue.title)}</div><div class="d">${issue.detail}</div></div>${act}</div>`;
+  const btn=a=>a?`<button type="button" class="go${a.ghost?' ghost':''}" onclick="${a.call}">${esc(a.label)}</button>`:'';
+  /* Zwei Aktionen brauchen eine eigene Zeile — nebeneinander gequetscht
+     unterschreiten sie auf dem iPhone SE die Antippfläche. */
+  const acts=issue.action2
+    ?`<div class="coach-fix-acts">${btn(issue.action)}${btn(issue.action2)}</div>`
+    :btn(issue.action);
+  return`<div class="coach-fix${issue.action2?' two':''}"><div class="pri" style="background:${issue.color}">${esc(rank)}</div>`+
+    `<div class="bd"><div class="t">${esc(issue.title)}</div><div class="d">${issue.detail}</div></div>${acts}</div>`;
 }
 /* Kurze, EINDEUTIGE Spaltenüberschriften. Der naive Weg — die ersten sechs
    Zeichen des Plannamens — macht aus "FullBody A" und "FullBody B" zweimal
@@ -6629,6 +7176,7 @@ function coachSessionHTML(){
    Referenzimplementierung Modul für Modul verglichen worden — siehe den
    Regressionstest PB-041.
    ========================================================================== */
+/* ======================== §15 — QR-TABELLEN (Daten) ==================== */
 const QR_BLOCKS=[[[1,26,19]],[[1,44,34]],[[1,70,55]],[[1,100,80]],[[1,134,108]],[[2,86,68]],[[2,98,78]],[[2,121,97]],[[2,146,116]],[[2,86,68],[2,87,69]],[[4,101,81]],[[2,116,92],[2,117,93]],[[4,133,107]],[[3,145,115],[1,146,116]],[[5,109,87],[1,110,88]],[[5,122,98],[1,123,99]],[[1,135,107],[5,136,108]],[[5,150,120],[1,151,121]],[[3,141,113],[4,142,114]],[[3,135,107],[5,136,108]],[[4,144,116],[4,145,117]],[[2,139,111],[7,140,112]],[[4,151,121],[5,152,122]],[[6,147,117],[4,148,118]],[[8,132,106],[4,133,107]],[[10,142,114],[2,143,115]],[[8,152,122],[4,153,123]],[[3,147,117],[10,148,118]],[[7,146,116],[7,147,117]],[[5,145,115],[10,146,116]],[[13,145,115],[3,146,116]],[[17,145,115]],[[17,145,115],[1,146,116]],[[13,145,115],[6,146,116]],[[12,151,121],[7,152,122]],[[6,151,121],[14,152,122]],[[17,152,122],[4,153,123]],[[4,152,122],[18,153,123]],[[20,147,117],[4,148,118]],[[19,148,118],[6,149,119]]];
 const QR_ALIGN=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]];
 const QR_FORMAT=[30660,29427,32170,30877,26159,25368,27713,26998];
@@ -6877,7 +7425,7 @@ function qrSVG(text,opts={}){
 }
 
 /* ==========================================================================
-   10. PLAN TEILEN UND IMPORTIEREN
+   §16 — PLAN TEILEN UND IMPORTIEREN
    Ein Plan soll zu einem anderen Menschen wandern können, ohne dass beide
    dasselbe Profil benutzen. Deshalb gilt hier eine harte Trennung:
 
@@ -6906,6 +7454,14 @@ function planSharePayload(dayKeys){
     n:String(name).slice(0,SHARE_MAX_TEXT),
     a:String((syncCode&&syncCode!=='offline')?syncCode:'').slice(0,60),
     t:new Date().toISOString().slice(0,10),
+    /* Die Pausenlängen gehören zum Plan, nicht zum Gerät: ein Tag mit 90 s
+       Isolationspause ist eine andere Einheit als derselbe Tag mit 120 s —
+       zwölf Minuten Unterschied und eine andere Trainingsabsicht. Wer den
+       Code bekam, trainierte bisher mit seinen eigenen Werten weiter und
+       wunderte sich über die Dauer. Empfänger entscheidet, ob er sie
+       übernimmt. */
+    p:[Math.max(0,parseInt(D.settings&&D.settings.compound)||120),
+       Math.max(0,parseInt(D.settings&&D.settings.isolation)||120)],
     d:keys.slice(0,SHARE_MAX_DAYS).map(k=>[
       String(k).slice(0,SHARE_MAX_TEXT),
       String((D.plan[k]||{}).day||'').slice(0,12),
@@ -6983,8 +7539,12 @@ function sanitizeSharePayload(obj){
   const int=(v,lo,hi,dflt)=>{const n=parseInt(v);return Number.isFinite(n)?Math.min(hi,Math.max(lo,n)):dflt};
   const days=Array.isArray(obj.d)?obj.d:[];
   if(!days.length)throw new Error('Der Plan enthält keine Trainingstage.');
+  /* Fremde Zahlen, also Wertebereich erzwingen. Null Sekunden Pause ist
+     erlaubt (manche trainieren im Zirkel), zehn Minuten nicht. */
+  const pausen=Array.isArray(obj.p)?obj.p:null;
   const out={
     v:1,n:str(obj.n)||'Geteilter Plan',a:str(obj.a,60),t:str(obj.t,10),
+    p:pausen?[int(pausen[0],0,600,120),int(pausen[1],0,600,120)]:null,
     d:days.slice(0,SHARE_MAX_DAYS).map(day=>{
       const key=str(Array.isArray(day)?day[0]:'',80)||'Tag';
       const wd=str(Array.isArray(day)?day[1]:'',12);
@@ -7089,7 +7649,7 @@ function downloadSharePlan(){
 }
 
 /* --- Importieren --------------------------------------------------------- */
-let importState={payload:null,mode:'add'};
+let importState={payload:null,mode:'add',pausen:false};
 function openPlanImport(){
   document.getElementById('import-body').innerHTML=
     `<div class="share-sub">Code einfügen, Datei wählen oder einen geteilten Link öffnen.</div>`+
@@ -7119,13 +7679,18 @@ async function startPlanImport(code){
   let payload;
   try{payload=await decodeShareCode(code)}
   catch(e){toast(e&&e.message?e.message:'Code nicht lesbar');return}
-  importState={payload,mode:'add'};
+  importState={payload,mode:'add',pausen:false};
   renderImportPreview();
   cm('m-import');
   om('m-importpreview');
 }
 function setImportMode(mode){
   importState.mode=mode==='replace'?'replace':'add';
+  renderImportPreview();
+  haptic(8);
+}
+function toggleImportPausen(){
+  importState.pausen=!importState.pausen;
   renderImportPreview();
   haptic(8);
 }
@@ -7143,7 +7708,11 @@ function renderImportPreview(){
         `<div class="n">${esc(e[0])}</div><div class="s">${esc(e[1])}×${e[2]===e[3]?esc(e[2]):esc(e[2])+'–'+esc(e[3])}</div></div>`).join('')+
       (day[2].length>4?`<div class="imp-row more"><div class="d">…</div><div class="n">${day[2].length-4} weitere</div><div class="s"></div></div>`:'')+
     `</div>`).join('')+
-    `<div class="share-note info">Importiert wird <b>nur der Plan</b>. Deine Historie, deine geloggten Gewichte, dein Profil und deine Einstellungen bleiben unverändert.</div>`+
+    `<div class="share-note info">Importiert wird <b>nur der Plan</b>. Deine Historie, deine geloggten Gewichte und dein Profil bleiben unverändert.</div>`+
+    (p.p&&(p.p[0]!==(D.settings.compound|0)||p.p[1]!==(D.settings.isolation|0))
+      ? `<div class="optrow ${importState.pausen?'on':''}" onclick="toggleImportPausen()"><div class="optmark"></div>`+
+        `<div><div class="optt">Pausenlängen mit übernehmen</div><div class="optd">Dieser Plan ist für ${p.p[0]} s bei Grundübungen und ${p.p[1]} s bei Isolation gerechnet. Du stehst auf ${D.settings.compound} s und ${D.settings.isolation} s.</div></div></div>`
+      : '')+
     `<div class="optrow ${importState.mode==='add'?'on':''}" onclick="setImportMode('add')"><div class="optmark"></div>`+
       `<div><div class="optt">Als neue Tage hinzufügen</div><div class="optd">Deine bestehenden Trainingstage bleiben. Namensgleiche Tage bekommen einen Zusatz.</div></div></div>`+
     `<div class="optrow ${importState.mode==='replace'?'on':''}" onclick="setImportMode('replace')"><div class="optmark"></div>`+
@@ -7156,6 +7725,10 @@ function confirmPlanImport(){
   if(!p)return;
   if(importState.mode==='replace'&&!confirm(`Alle ${Object.keys(D.plan||{}).length} bisherigen Trainingstage entfernen und durch ${p.d.length} neue ersetzen?\n\nDeine Historie bleibt erhalten.`))return;
   if(importState.mode==='replace')D.plan={};
+  if(importState.pausen&&Array.isArray(p.p)){
+    D.settings.compound=Math.max(0,parseInt(p.p[0])||120);
+    D.settings.isolation=Math.max(0,parseInt(p.p[1])||120);
+  }
   let added=0;
   p.d.forEach(day=>{
     /* Ein Schlüssel darf nicht überschreiben, was schon da ist — sonst
@@ -7182,7 +7755,7 @@ function confirmPlanImport(){
   go('dash');
   haptic([15,50,15]);
   toast(`${added} ${added===1?'Trainingstag':'Trainingstage'} importiert ✓`);
-  importState={payload:null,mode:'add'};
+  importState={payload:null,mode:'add',pausen:false};
 }
 /* Ein geteilter Link öffnet direkt die Vorschau. Das Fragment wird danach aus
    der Adresszeile entfernt, damit ein Neuladen nicht ein zweites Mal fragt. */
@@ -7805,13 +8378,13 @@ function alternativeFor(ex,inPlanNames){
     &&volGroupOf(n,m,'main')===group;
   const db=EVIDENCE_DB.filter(it=>fits(it.n,it.m,it.p))
     .sort((a,b)=>({A:0,B:1,C:2}[a.t]||3)-({A:0,B:1,C:2}[b.t]||3)||(b.c||0)-(a.c||0));
-  if(db.length)return{name:db[0].n,note:db[0].cue||'',source:'Katalog'};
+  if(db.length)return{name:db[0].n,note:db[0].cue||'',m:db[0].m,source:'Katalog'};
   let found=null;
   allLibraryCategories().forEach(cat=>cat.items.forEach(it=>{
     if(found)return;
     const m=it.m||it.muscle,t=it.t||it.type||'main';
     if(t!=='main')return;
-    if(fits(it.name,m,detectMovePattern(it.name,m,t)))found={name:it.name,note:it.note||'',source:'Bibliothek'};
+    if(fits(it.name,m,detectMovePattern(it.name,m,t)))found={name:exDisplayName(it.name),note:it.note||'',m:m,source:'Bibliothek'};
   }));
   return found;
 }
@@ -8067,6 +8640,10 @@ function clearProfileImage(){
    „unter MEV" auf dem Home-Screen, in den Stats und im Coach garantiert
    dieselbe Farbe und dasselbe Wort trägt. */
 function landmarkState(sets,lm){
+  /* Eine Gruppe ohne Untergrenze mit null direkten Sätzen ist nicht „im MAV" —
+     sie ist gedeckt, weil andere Übungen sie mittragen. „Im MAV" bei null
+     Sätzen war genau der Fehler aus PB-013, nur an einer neuen Stelle. */
+  if(lm.mev<=0&&sets<=0)return{key:'none',label:'gedeckt',caps:'GEDECKT',color:'#7d8794'};
   if(sets<lm.mev)return{key:'low',label:'unter MEV',caps:'UNTER MEV',color:'#ffb020'};
   if(sets<=lm.mav)return{key:'mid',label:'im MAV',caps:'IM MAV',color:'#2ee06a'};
   if(sets<=lm.mrv)return{key:'ok',label:'über MAV',caps:'ÜBER MAV',color:'#4ea1ff'};
@@ -8086,36 +8663,77 @@ function runBarGrows(root){
     els.forEach(el=>{el.style.width=el.dataset.grow});
   }));
 }
+/* --------------------------------------------------------------------------
+   WOCHENVOLUMEN — eine Aussage statt einer Summe
+
+   Hier stand bis September 2026 eine große Zahl gegen eine Summe: „132,8 von
+   148". Die 148 entsteht, indem man das Optimum JEDER Muskelgruppe addiert —
+   das ist eine Rechenoperation, kein Trainingsziel. Niemand trainiert alle
+   zehn Gruppen gleichzeitig an ihrem Optimum, und niemand sollte es.
+
+   Schlimmer: Die Summe verdeckt genau das, was zählt. 132,8 von 148 klingt
+   nach „fast am Ziel", während darin vier Gruppen über ihrem Optimum und zwei
+   unter ihrem Minimum stecken können. Ein Mittelwert über Muskeln, die nichts
+   miteinander zu tun haben, ist keine Information.
+
+   Jetzt steht dort die Frage, die man wirklich beantwortet haben will: Wie
+   viele Gruppen liegen im produktiven Korridor, und welche nicht? Die Summe
+   ist nicht verschwunden — sie steht in der Erklärzeile, in derselben Einheit
+   wie die Grenzen (PB-104), zusammen mit der Zahl roher Sätze.
+   -------------------------------------------------------------------------- */
+function weeklyGroupStatus(){
+  const vol=getWeeklyVolume(true);
+  return plannedMuscleGroups().map(g=>{
+    const lm=MUSCLE_LANDMARKS[g];
+    const sets=Math.round((((vol[g]||{}).sets)||0)*10)/10;
+    return{g,sets,lm,st:landmarkState(sets,lm)};
+  });
+}
 function buildWeekGauge(totalSets,rohSaetze){
-  const lm=weeklyLandmarks();
-  const mev=lm.mev,mav=lm.mav,mrv=lm.mrv;
-  const end=Math.max(mrv,1);
-  const st=landmarkState(totalSets,lm);
-  const pct=Math.max(0,Math.min(100,(totalSets/end)*100));
-  const mevPct=Math.min(100,(mev/end)*100);
-  const mavPct=Math.min(100,(mav/end)*100);
-  const gap=Math.round((mev-totalSets)*10)/10;
-  const note=(totalSets<mev
-    ? `<b>${gap} ${gap===1?'Satz':'Sätze'}</b> fehlen bis zum Minimum, ab dem Wachstum überhaupt anfängt.`
-    : totalSets<=mav
-      ? `Du liegst im produktiven Korridor. Optimum diese Woche: <b>${mav} Sätze</b>.`
-      : totalSets<=mrv
-        ? `Über dem Optimum, noch unter der Erholungsgrenze. Ab <b>${mrv} Sätzen</b> wird es zu viel.`
-        : `<b>${Math.round((totalSets-mrv)*10)/10} Sätze</b> über der Grenze, ab der die Erholung nicht mehr mitkommt.`)
-    /* Woher die Zahl kommt, gehört daneben — sonst wundert man sich, warum
-       hier mehr steht, als man Sätze gemacht hat (PB-104). */
+  const groups=weeklyGroupStatus();
+  const gesamt=groups.length;
+  /* „Im Korridor" heißt: mindestens am Minimum, höchstens an der
+     Erholungsgrenze. Über dem Optimum ist ausdrücklich in Ordnung — das ist
+     der obere Teil des produktiven Bereichs, keine Warnung. */
+  /* „Gedeckt" zählt als in Ordnung: Die Gruppe braucht kein direktes Volumen
+     und bekommt es über die Grundübungen. */
+  const drin=groups.filter(x=>x.st.key!=='low'&&x.st.key!=='high');
+  const unten=groups.filter(x=>x.st.key==='low');
+  const oben=groups.filter(x=>x.st.key==='high');
+  const farbe=!gesamt?'var(--text3)':oben.length?'#ff3b5c':unten.length?'#ffb020':'#2ee06a';
+  const wort=!gesamt?'KEIN PLAN':oben.length?'ÜBER DER GRENZE':unten.length?'LÜCKEN':'ALLES IM KORRIDOR';
+  const pct=gesamt?Math.round((drin.length/gesamt)*100):0;
+  const nennen=list=>list.map(x=>`${esc(muscleName(x.g))} <b>${x.sets}</b>/${x.g==='front'?x.lm.mrv:x.lm.mev}`).join(' · ');
+  const note=(!gesamt
+    ? 'Sobald ein Trainingsplan steht, wird hier Woche für Woche gemessen.'
+    : unten.length
+      ? `<b>${unten.length} ${unten.length===1?'Gruppe liegt':'Gruppen liegen'} unter dem Minimum</b>, ab dem Wachstum überhaupt anfängt: ${nennen(unten)}.`
+      : oben.length
+        ? `<b>${oben.length} ${oben.length===1?'Gruppe liegt':'Gruppen liegen'} über der Erholungsgrenze</b>: ${nennen(oben)}. Hier hilft weniger.`
+        : 'Jede trainierte Gruppe liegt im produktiven Bereich. Genau so soll eine Woche aussehen.')
+    /* Die alte Summenzahl ist nicht falsch, sie ist nur keine Überschrift.
+       Hier unten erklärt sie sich selbst — in derselben Einheit wie die
+       Grenzen, neben der Zahl, die der Nutzer selbst gezählt hat (PB-104). */
     +(Number.isFinite(rohSaetze)
-      ? `<br><small style="opacity:.72">Gezählt wie die Muskelgrenzen: ein direkter Satz 1,0, ein mitbeteiligter Muskel 0,5. Du hast <b>${rohSaetze} Sätze ausgeführt</b>.</small>`
+      ? `<br><small style="opacity:.72">Gezählt wie die Muskelgrenzen: ein direkter Satz 1,0, ein mitbeteiligter Muskel 0,5. Du hast <b>${rohSaetze} Sätze ausgeführt</b>, gewichtet ${totalSets} Punkte.</small>`
       : '');
+  const balken=groups.map(x=>{
+    const ende=Math.max(x.lm.mrv,1);
+    const breite=Math.max(0,Math.min(100,(x.sets/ende)*100));
+    return `<div class="wg-row"><span class="wg-n">${esc(volGroupShort(x.g))}</span>`+
+      `<span class="wg-bar"><i data-grow="${breite.toFixed(1)}%" style="background:${x.st.color}"></i>`+
+      `<span class="wg-mk" style="left:${Math.min(100,(x.lm.mev/ende)*100).toFixed(1)}%"></span>`+
+      `<span class="wg-mk" style="left:${Math.min(100,(x.lm.mav/ende)*100).toFixed(1)}%"></span></span>`+
+      `<span class="wg-v" style="color:${x.st.color}">${x.sets}</span></div>`;
+  }).join('');
   return`<div class="mesh-hero"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">`+
     `<div class="cap">Wochenvolumen</div>`+
-    `<div class="rings-badge" style="color:${st.color};display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.05em;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">`+
-    `<i style="width:8px;height:8px;border-radius:50%;display:inline-block;background:${st.color};box-shadow:0 0 12px ${st.color}"></i>${esc(st.caps)}</div></div>`+
-    `<div class="mesh-row"><div class="mesh-num countup" data-count="${totalSets}" data-count-dec="${totalSets%1?1:0}" data-count-dur="900">0</div>`+
-    `<div class="mesh-side"><div class="u">SÄTZE</div><div class="o">von ${mav} im MAV</div></div></div>`+
-    `<div class="mesh-bar"><i data-grow="${pct.toFixed(1)}%"></i>`+
-    `<span class="mk" style="left:${mevPct.toFixed(1)}%"></span><span class="mk" style="left:${mavPct.toFixed(1)}%"></span></div>`+
-    `<div class="mesh-scale"><span>MEV ${mev}</span><span>MAV ${mav}</span><span>MRV ${mrv}</span></div>`+
+    `<div class="rings-badge" style="color:${farbe};display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:800;letter-spacing:.05em;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">`+
+    `<i style="width:8px;height:8px;border-radius:50%;display:inline-block;background:${farbe};box-shadow:0 0 12px ${farbe}"></i>${esc(wort)}</div></div>`+
+    `<div class="mesh-row"><div class="mesh-num countup" data-count="${drin.length}" data-count-dur="900">0</div>`+
+    `<div class="mesh-side"><div class="u">VON ${gesamt} GRUPPEN</div><div class="o">im produktiven Korridor</div></div></div>`+
+    `<div class="mesh-bar"><i data-grow="${pct}%"></i></div>`+
+    (balken?`<div class="wg-list">${balken}</div>`:'')+
     `<div class="mesh-note">${note}</div></div>`;
 }function renderSettings(){
   applyVisualTheme();
@@ -8475,20 +9093,57 @@ function renderDash(){
     sa.innerHTML=`<div class="sick-banner"><div class="si">🤒</div><div><div class="st2">Krank gemeldet</div><div class="sd">Tag ${days} — Training pausiert</div></div><button class="btn btn-s btn-green" style="margin-left:auto" onclick="toggleSick()">✓ Gesund</button></div>`;
   }else sa.innerHTML='';
 }
+/* --------------------------------------------------------------------------
+   VERGLEICH ZWEIER EINHEITEN — nur über das, was in BEIDEN vorkam
+
+   Vom Nutzer gemeldet: „Wenn ich aus Zeitmangel eine Übung skippe, wird sie
+   negativ im Trend dargestellt." Zu Recht. Der Block verglich die SUMME der
+   heutigen Einheit mit der Summe der letzten. Wer drei von neun Übungen
+   auslässt, bewegt zwangsläufig weniger Kilogramm — und bekam dafür ein rotes
+   Minus, obwohl er an jeder Übung, die er gemacht hat, stärker war.
+
+   Eine Summe über verschiedene Übungsmengen ist kein Vergleich. Gerechnet
+   wird deshalb über die SCHNITTMENGE: nur Übungen, die in beiden Einheiten
+   geloggt sind. Was fehlt oder neu dazukam, steht als Hinweis daneben, statt
+   sich als Leistungsabfall zu verkleiden.
+   -------------------------------------------------------------------------- */
+function sessionExerciseKeys(session){
+  return new Set(strengthSets((session&&session.sets)||[]).map(x=>libKey(x.ex)));
+}
+function comparableStats(session,keys){
+  const sets=strengthSets((session&&session.sets)||[]).filter(x=>keys.has(libKey(x.ex)));
+  const w=sets.map(x=>parseFloat(x.w)||0);
+  return{
+    sets:sets.length,
+    volume:sets.reduce((a,x)=>a+setVolume(x),0),
+    max:w.length?Math.max(...w):0,
+    avg:w.length?w.reduce((a,b)=>a+b,0)/w.length:0
+  };
+}
 function workoutCompareBlock(currentSession,previousSession){
   if(!previousSession)return '';
-  const curStr=strengthSets(currentSession.sets),prevStr=strengthSets(previousSession.sets);
-  const currentVolume=sessionVolume(currentSession);
-  const previousVolume=sessionVolume(previousSession);
-  const currentSets=currentSession.sets.length;
-  const previousSets=previousSession.sets.length;
-  const currentAvg=curStr.length?curStr.reduce((a,x)=>a+(parseFloat(x.w)||0),0)/curStr.length:0;
-  const previousAvg=prevStr.length?prevStr.reduce((a,x)=>a+(parseFloat(x.w)||0),0)/prevStr.length:0;
-  const currentMax=curStr.length?Math.max(...curStr.map(x=>parseFloat(x.w)||0)):0;
-  const previousMax=prevStr.length?Math.max(...prevStr.map(x=>parseFloat(x.w)||0)):0;
-  const chart=svgChart([{v:previousVolume,label:'Letztes'},{v:currentVolume,label:'Heute'}],{h:88,color:'var(--accent)',showGrid:true,showArea:true,showDots:true,xLabels:true});
+  const curKeys=sessionExerciseKeys(currentSession);
+  const prevKeys=sessionExerciseKeys(previousSession);
+  const shared=new Set([...curKeys].filter(k=>prevKeys.has(k)));
+  const fehlend=[...prevKeys].filter(k=>!curKeys.has(k)).length;
+  const neu=[...curKeys].filter(k=>!prevKeys.has(k)).length;
+  /* Keine gemeinsame Übung: dann gibt es nichts zu vergleichen, und eine
+     erfundene Zahl wäre schlechter als keine. */
+  if(!shared.size){
+    return `<div class="wo-compare"><div class="wo-compare-head"><div class="wo-compare-title">Kein Vergleich möglich</div>`+
+      `<div class="wo-compare-meta">Keine Übung aus ${esc(previousSession.date)} kam heute noch einmal vor.</div></div></div>`;
+  }
+  const cur=comparableStats(currentSession,shared);
+  const prev=comparableStats(previousSession,shared);
+  const chart=svgChart([{v:prev.volume,label:'Letztes'},{v:cur.volume,label:'Heute'}],{h:88,color:'var(--accent)',showGrid:true,showArea:true,showDots:true,xLabels:true});
   const delta=(now,before,unit,decimals=0)=>{const diff=now-before;const cls=diff>0?'up':diff<0?'down':'flat';const sign=diff>0?'+':'';return `<div class="delta ${cls}">${sign}${diff.toFixed(decimals)} ${unit}</div>`;};
-  return `<div class="wo-compare"><div class="wo-compare-head"><div class="wo-compare-title">Vergleich zum letzten Training</div><div class="wo-compare-meta">${esc(previousSession.date)} vs. ${esc(currentSession.date)}</div></div>${chart}<div class="wo-compare-grid"><div class="wo-compare-stat"><div class="label">Volumen</div><div class="value">${Math.round(currentVolume)}</div>${delta(currentVolume,previousVolume,'kg',0)}</div><div class="wo-compare-stat"><div class="label">Max Gewicht</div><div class="value">${currentMax.toFixed(currentMax%1?1:0)}</div>${delta(currentMax,previousMax,'kg',currentMax%1||previousMax%1?1:0)}</div><div class="wo-compare-stat"><div class="label">Sätze</div><div class="value">${currentSets}</div>${delta(currentSets,previousSets,'Sets',0)}</div><div class="wo-compare-stat"><div class="label">Ø Gewicht</div><div class="value">${currentAvg?currentAvg.toFixed(1):'0.0'}</div>${delta(currentAvg,previousAvg,'kg',1)}</div></div></div>`;
+  const teile=[];
+  if(fehlend)teile.push(`${fehlend} heute ausgelassen`);
+  if(neu)teile.push(`${neu} neu dabei`);
+  const hinweis=teile.length
+    ? `<div class="wo-compare-note">Verglichen werden die <b>${shared.size} Übungen</b>, die in beiden Einheiten vorkamen — ${teile.join(', ')} und deshalb außen vor. Eine ausgelassene Übung ist kein Leistungsabfall.</div>`
+    : '';
+  return `<div class="wo-compare"><div class="wo-compare-head"><div class="wo-compare-title">Vergleich zum letzten Training</div><div class="wo-compare-meta">${esc(previousSession.date)} vs. ${esc(currentSession.date)}</div></div>${chart}<div class="wo-compare-grid"><div class="wo-compare-stat"><div class="label">Volumen</div><div class="value">${Math.round(cur.volume)}</div>${delta(cur.volume,prev.volume,'kg',0)}</div><div class="wo-compare-stat"><div class="label">Max Gewicht</div><div class="value">${cur.max.toFixed(cur.max%1?1:0)}</div>${delta(cur.max,prev.max,'kg',cur.max%1||prev.max%1?1:0)}</div><div class="wo-compare-stat"><div class="label">Sätze</div><div class="value">${cur.sets}</div>${delta(cur.sets,prev.sets,'Sets',0)}</div><div class="wo-compare-stat"><div class="label">Ø Gewicht</div><div class="value">${cur.avg?cur.avg.toFixed(1):'0.0'}</div>${delta(cur.avg,prev.avg,'kg',1)}</div></div>${hinweis}</div>`;
 }
 function endWorkout(){
   if(!D.active)return;
@@ -8496,6 +9151,15 @@ function endWorkout(){
   const dur=Math.floor((Date.now()-D.active.startTime)/60000);
   const s={id:newSessionId(),updatedAt:Date.now(),date:new Date().toLocaleDateString('de-DE'),planKey:D.active.planKey,duration:dur,sets:[]};
   D.active.exercises.forEach(ex=>{if(!ex.skipped)ex.logged.forEach((l,i)=>{s.sets.push({ex:ex.name,nr:i+1,w:l.w,r:l.r,rir:l.rir,note:l.note,muscle:ex.muscle,type:ex.type})})});
+  /* Was übersprungen wurde, gehört in die Einheit — nicht als Strafe, sondern
+     als Erklärung. Ohne diese Liste sieht eine gekürzte Einheit in der
+     Historie aus wie eine schwache. Der Coach liest sie später mit: eine
+     Übung, die dauernd wegfällt, gehört nicht in den Plan. */
+  const uebersprungen=D.active.exercises
+    .filter(ex=>ex.skipped&&!(ex.logged||[]).length)
+    .map(ex=>String(ex.name||''))
+    .filter(Boolean);
+  if(uebersprungen.length)s.skipped=uebersprungen;
   if(s.sets.length===0){D.active=null;save();resetTmr();renderWo();toast('Kein Satz geloggt');return}
   const previousSimilar=[...D.history].reverse().find(h=>h.planKey===s.planKey&&h.sets&&h.sets.length);
   const progData=[];
@@ -8681,26 +9345,14 @@ function confirmLog(){
    -------------------------------------------------------------------------- */
 function remainingMinutes(){
   if(!D.active)return 0;
-  let sec=0;
-  const groups={};
-  D.active.exercises.forEach(e=>{
-    if(e.skipped)return;
+  /* Nur Übungen mit offenen Sätzen — wer schon an der Station steht, hat den
+     Umbau hinter sich. Gerechnet wird mit derselben Funktion wie im Plan,
+     sonst zeigen Plan und Workout für dieselbe Einheit zwei Zahlen. */
+  return workloadMinutes(D.active.exercises.map(e=>{
+    if(e.skipped)return null;
     const open=Math.max(0,(parseInt(e.sets)||0)-((e.logged||[]).length));
-    if(!open)return;
-    const work=open*40*setSides(e.name,e);
-    const rest=restSecondsFor(e.name,e.muscle,e.type);
-    /* Nur Übungen mit offenen Sätzen — wer schon dran ist, hat den Umbau
-       hinter sich. Gerechnet wird trotzdem mit demselben Zuschlag wie im
-       Plan, sonst zeigen Plan und Workout für dieselbe Einheit zwei Zahlen. */
-    sec+=EXERCISE_SETUP;
-    if(e.ss){
-      if(!groups[e.ss])groups[e.ss]={work:0,rest:0,rounds:0,n:0};
-      const g=groups[e.ss];
-      g.work+=work;g.rest=Math.max(g.rest,rest);g.rounds=Math.max(g.rounds,open);g.n++;
-    }else sec+=work+open*rest;
-  });
-  Object.values(groups).forEach(g=>{sec+=g.work+g.rounds*(g.rest+SUPERSET_GAP*Math.max(0,g.n-1))});
-  return Math.round(sec/60);
+    return open?{name:e.name,muscle:e.muscle,type:e.type,sets:open,ss:e.ss,uni:e.uni}:null;
+  }));
 }
 function trimWorkoutTo(budget){
   if(!D.active)return null;
@@ -8934,7 +9586,7 @@ function toggleWoRow(ei){
   renderWo();haptic(6);
 }
 /* ==========================================================================
-   7. LIVE-STEUERUNG IM WORKOUT
+   §17 — LIVE-STEUERUNG IM WORKOUT
    Der alte Stand konnte im laufenden Workout praktisch nichts: startWorkout()
    ignorierte den übergebenen Plan, wenn schon eine Session lief, ein Tausch
    löschte kommentarlos alle geloggten Sätze, und Übungen ließen sich weder
@@ -9024,7 +9676,7 @@ function pushExerciseToActiveWorkout(item){
   if(!D.active)return false;
   const ex=normalizeExercise({
     id:Date.now()+Math.random()*1000|0,
-    name:item.name,
+    name:exDisplayName(item.name),
     sets:item.s||item.sets||3,
     rmin:item.rn||item.rmin||8,
     rmax:item.rx||item.rmax||12,
@@ -9250,7 +9902,7 @@ function rotationCandidates(limit){
       if(prog&&prog.dir==='up')return;
       const alt=alternativeFor(ex,taken);
       if(!alt)return;
-      out.push({dayKey,idx,from:ex.name,to:alt.name,note:alt.note,
+      out.push({dayKey,idx,from:ex.name,to:alt.name,note:alt.note,muscle:alt.m,
         stale:prog?prog.stale||0:0,sessions:prog?prog.sessions:0});
     });
   });
@@ -9258,19 +9910,39 @@ function rotationCandidates(limit){
   return out.slice(0,Math.max(1,parseInt(limit)||3));
 }
 let rotationPlan=[];
-function proposeRotation(){
-  rotationPlan=rotationCandidates(3);
+/* Der Rotationsdialog konnte bisher nur den ganzen Block. Ein Befund des
+   Coaches betrifft aber EINE Übung — dann soll auch nur die zur Auswahl
+   stehen, statt zwei weitere ungefragt mitzunehmen. */
+function openSwapFromPlan(dayKey,idx){
+  const ex=(D.plan[dayKey]||{exercises:[]}).exercises[idx];
+  if(!ex){toast('Übung nicht mehr im Plan');return}
+  const taken=new Set();
+  Object.values(D.plan||{}).forEach(d=>(d.exercises||[]).forEach(e=>taken.add(baseNameKey(e.name))));
+  const alt=alternativeFor(ex,taken);
+  if(!alt){toast('Keine passende Variante gefunden');return}
+  const prog=exerciseProgress(ex.name);
+  rotationPlan=[{dayKey,idx,from:ex.name,to:alt.name,note:alt.note,muscle:alt.m,
+    stale:prog?prog.stale||0:0,sessions:prog?prog.sessions:0}];
+  renderRotationList();
+  om('m-rotation');
+}
+function renderRotationList(){
   const box=document.getElementById('rot-list');
   if(!box)return;
   if(!rotationPlan.length){
     box.innerHTML='<div class="empty">Alles im Fluss — keine Übung, die einen Wechsel nötig hätte.</div>';
-  }else{
-    box.innerHTML=rotationPlan.map((r,i)=>
-      `<label class="rot-row"><input type="checkbox" checked data-i="${i}">`+
-      `<span><b>${esc(r.from)}</b> → <b style="color:var(--accent)">${esc(r.to)}</b>`+
-      `<small>${esc(planDisplayName(r.dayKey))}${r.stale?` · ${r.stale} Einheiten ohne Bestwert`:' · kein Fortschritt zuletzt'}</small></span></label>`
-    ).join('');
+    return;
   }
+  box.innerHTML=rotationPlan.map((r,i)=>
+    `<label class="rot-row"><input type="checkbox" checked data-i="${i}">`+
+    `<span><b>${esc(r.from)}</b> → <b style="color:var(--accent)">${esc(r.to)}</b>`+
+    `<small>${esc(planDisplayName(r.dayKey))}${r.stale?` · ${r.stale} Einheiten ohne Bestwert`:' · kein Fortschritt zuletzt'}</small></span></label>`
+  ).join('');
+}
+function proposeRotation(){
+  rotationPlan=rotationCandidates(3);
+  if(!document.getElementById('rot-list'))return;
+  renderRotationList();
   om('m-rotation');
 }
 function applyRotation(){
@@ -9284,6 +9956,11 @@ function applyRotation(){
     if(!ex||ex.name!==r.from)return;
     ex.name=r.to;
     if(r.note)ex.note=r.note;
+    /* Der Name allein reicht nicht: Wer „Kabelcrunches" gegen „Spidercurls"
+       tauscht und den Muskel „Core" stehen lässt, verschiebt vier Sätze in
+       die falsche Volumengruppe. Die Quelle kennt den Muskel, also mitnehmen. */
+    const lib=r.muscle||(libraryItemFor(r.to)||{}).m;
+    if(lib)ex.muscle=lib;
   });
   save();markPlanDirty();coachInvalidate();
   renderPlan();renderDash();renderAna();
@@ -9405,6 +10082,30 @@ function ensureLibraryState(){
   if(!Array.isArray(D.library.deleted))D.library.deleted=[];
 }
 function libKey(name){return String(name||'').trim().toLowerCase();}
+/* --------------------------------------------------------------------------
+   EIN NAME, EINE ÜBUNG
+
+   Dieselbe Übung stand bis September 2026 unter drei Schreibweisen im
+   Programm: „Bankdrücken" im Plan, „Bankdrücken (Bench Press)" in der
+   Bibliothek, „Bankdrücken Langhantel" in einem geteilten Plan. Drei Folgen,
+   alle unangenehm:
+
+   · Die Bibliothek listete die Planübung ein zweites Mal unter „Aus
+     Trainingsplänen" — dieselbe Übung, zwei Zeilen.
+   · getAllSets() vergleicht Namen ZEICHENGENAU. Wer die Übung einmal anders
+     schrieb, bekam einen leeren Verlauf und verlor seinen Bestwert aus der
+     Anzeige — die Sätze lagen noch da, nur unter einem anderen Schlüssel.
+   · Die Alternativen-Liste schlug die Übung vor, die man gerade macht.
+
+   Der englische Name bleibt in den Daten, weil danach gesucht wird; angezeigt
+   und in den Plan übernommen wird nur der deutsche. Verglichen wird über
+   baseNameKey — klammerfrei und satzzeichenfrei.
+   -------------------------------------------------------------------------- */
+function exDisplayName(name){
+  const s=String(name||'').replace(/\s*\([^)]*\)\s*$/,'').trim();
+  return s||String(name||'');
+}
+function sameExercise(a,b){return baseNameKey(a)===baseNameKey(b)}
 /* Die Bibliothek führt viele Übungen doppelt: einmal deutsch, einmal mit
    englischer Klammer ("Bankdrücken" vs. "Bankdrücken (Bench Press)").
    Für die Alternativen-Liste ist das derselbe Reiz — also über einen
@@ -9440,12 +10141,16 @@ function allLibraryCategories(){
   if(D.library.custom.length){
     base.push({cat:'⭐ Eigene Übungen',items:D.library.custom.map(item=>({...item,custom:true}))});
   }
-  const seen=new Set(base.flatMap(cat=>cat.items).map(item=>libKey(item.name)));
+  /* Über den KLAMMERFREIEN Schlüssel, sonst steht „Bankdrücken" aus dem Plan
+     noch einmal unter „Aus Trainingsplänen", obwohl die Bibliothek sie als
+     „Bankdrücken (Bench Press)" längst führt. */
+  const seen=new Set(base.flatMap(cat=>cat.items).map(item=>baseNameKey(item.name)));
+  const deletedBase=new Set(D.library.deleted.map(baseNameKey));
   const planItems=[];
   Object.entries(D.plan||{}).forEach(([planKey,day])=>{
     (day.exercises||[]).forEach(ex=>{
-      const key=libKey(ex.name);
-      if(!key||seen.has(key)||deleted.has(key))return;
+      const key=baseNameKey(ex.name);
+      if(!key||seen.has(key)||deletedBase.has(key))return;
       seen.add(key);
       planItems.push({...planExerciseToLibraryItem(ex),catHint:planKey.replace(/_/g,' ')});
     });
@@ -9471,7 +10176,7 @@ function renderLib(q){
       const rp=item.rn===item.rx?item.rn:item.rn+'–'+item.rx;
       h+=`<div class="lib-item" onclick="event.stopPropagation();pickLibraryItem('${encodeURIComponent(item.name)}')">`+
         `<span class="exdemo-thumb" style="width:38px;height:38px;flex:0 0 38px" onclick="event.stopPropagation();showExDemo('${jsStr(item.name)}','${jsStr(item.m)}','${jsStr(item.t)}')">${exerciseVisual(item.name,item.m,item.t,{speed:3,thumb:true})}</span>`+
-        `<div class="li-name">${esc(item.name)}</div><div class="li-info">${esc(item.s)}×${esc(rp)}</div></div>`;
+        `<div class="li-name">${esc(exDisplayName(item.name))}</div><div class="li-info">${esc(item.s)}×${esc(rp)}</div></div>`;
     });
     h+=`</div></div>`;
   });
@@ -9489,7 +10194,9 @@ function pickLibraryItem(encodedName){
     if(pushExerciseToActiveWorkout(item))return;
   }
   editRef=null;editTab=curTab;
-  document.getElementById('a-name').value=item.name;
+  /* Der kurze Name wandert in den Plan — der englische in der Klammer ist
+     Suchhilfe, kein Teil der Übung. */
+  document.getElementById('a-name').value=exDisplayName(item.name);
   document.getElementById('a-sets').value=item.s;
   document.getElementById('a-rmin').value=item.rn;
   document.getElementById('a-rmax').value=item.rx;
@@ -9623,7 +10330,7 @@ function renderLibraryEditor(q){
   }).join('');
 }
 /* ==========================================================================
-   8. ÜBUNGSTAUSCH
+   §18 — ÜBUNGSTAUSCH
    Vorher: harte Filterung auf identische Muskelgruppe (bei Pre-/Mobility-
    Übungen kam damit oft eine leere Liste), keine Suche, kein Bewegungsmuster-
    Bezug und der Tausch löschte grundsätzlich alle geloggten Sätze.
