@@ -156,10 +156,21 @@ await page.click('text=Offline-Modus (ohne Sync)');
 await page.waitForTimeout(300);
 check('smoke', 'Onboarding erscheint', await page.isVisible('#onboard-screen'));
 
-for (let i = 0; i < 8; i++) {
-  if (i === 1) await page.fill('#ob-birthday', '1993-06-21');
-  if (i === 2) await page.fill('#ob-height', '181');
-  if (i === 3) await page.fill('#ob-weight', '82');
+/* Neun Schritte seit September 2026: Geburtstag, Groesse und Gewicht stehen
+   auf EINER Seite (sie aendern am Plan nichts), dafuer fragt das Onboarding
+   jetzt nach Zeitbudget, Beschwerden und Zeitspar-Methoden — den drei
+   Antworten, die den Plan tatsaechlich formen. */
+for (let i = 0; i < 9; i++) {
+  if (i === 1) {
+    await page.fill('#ob-birthday', '1993-06-21');
+    await page.fill('#ob-height', '181');
+    await page.fill('#ob-weight', '82');
+  }
+  /* Schritt 8 und 9 sind Mehrfachauswahl. Sie NICHT anzuklicken hiesse, den
+     Zweig zu ueberspringen, der den Plan am staerksten formt — und obToggleList
+     stuende an einem Knopf, den kein Test je beruehrt. */
+  if (i === 7) { await page.click('.ob-multi[data-v="shoulder"]'); await page.click('.ob-multi[data-v="knee"]'); await page.click('.ob-multi[data-v="knee"]'); }
+  if (i === 8) await page.click('.ob-multi[data-v="superset"]');
   await page.click('#ob-content .btn');
   await page.waitForTimeout(90);
 }
@@ -409,9 +420,23 @@ const REGRESSIONS = [
     run: async () => {
       const r = await page.evaluate(() => {
         const lm = MUSCLE_LANDMARKS;
-        return Object.entries(lm).every(([k, v]) => v.mev > 0 && v.mev < v.mav && v.mav < v.mrv);
+        /* Seit September 2026 hat die VORDERE SCHULTER bewusst MEV 0: Sie
+           arbeitet bei jedem Drücken mit, ein Mindestvolumen zu fordern waere
+           falsch. Eine Obergrenze braucht sie trotzdem. Alle uebrigen Gruppen
+           bleiben bei mev>0 — sonst koennte jede Luecke wegdefiniert werden. */
+        const ohneMinimum = Object.keys(lm).filter(k => lm[k].mev === 0);
+        return {
+          aufsteigend: Object.values(lm).every(v => v.mev < v.mav && v.mav < v.mrv),
+          ohneMinimum,
+          /* Und die Gruppe ohne Minimum darf mit 0 Saetzen nicht als versorgt
+             durchgehen — der urspruengliche Fehler von PB-013. */
+          nullNichtImMav: landmarkState(0, lm.core).key === 'low' &&
+                          landmarkState(0, lm[ohneMinimum[0] || 'core']).key !== 'mid'
+        };
       });
-      return [r, 'alle Landmarks streng aufsteigend und mev>0'];
+      const ok = r.aufsteigend && r.ohneMinimum.length <= 1 &&
+        (!r.ohneMinimum.length || r.ohneMinimum[0] === 'front') && r.nullNichtImMav;
+      return [ok, JSON.stringify(r) + ' — aufsteigend, hoechstens die vordere Schulter ohne Minimum'];
     }
   },
   {
@@ -726,7 +751,12 @@ const REGRESSIONS = [
           keinSammeltopf: !direct.arms && !total.arms,
           trizepsDirekt: (direct.triceps && direct.triceps.sets) || 0,
           trizepsTotal: (total.triceps && total.triceps.sets) || 0,
-          schultern: (total.shoulders && total.shoulders.sets) || 0,
+          /* Bankdruecken laedt die VORDERE Schulter mit, nicht die seitliche.
+             Solange beides derselbe Zaehler war, meldete die App „Schultern
+             versorgt", waehrend die seitliche — die einzige, die direktes
+             Volumen braucht — leer ausging. */
+          vordereSchulter: (total.front && total.front.sets) || 0,
+          seitlicheUnberuehrt: !total.shoulders,
           bizepsUnberuehrt: !total.biceps,
           // 3 Sätze Drücken -> 1,5 Sätze Trizeps, sauber gerundet
           clean: Object.values(total).every(v =>
@@ -734,7 +764,8 @@ const REGRESSIONS = [
         };
       });
       const ok = r.chestSame && r.keinSammeltopf && r.trizepsDirekt === 0 &&
-                 r.trizepsTotal === 1.5 && r.schultern === 1.5 && r.bizepsUnberuehrt && r.clean;
+                 r.trizepsTotal === 1.5 && r.vordereSchulter === 1.5 &&
+                 r.seitlicheUnberuehrt && r.bizepsUnberuehrt && r.clean;
       return [ok, JSON.stringify(r)];
     }
   },
@@ -3645,12 +3676,23 @@ const REGRESSIONS = [
         const num = document.querySelector('#d-week-card .mesh-num');
         const gezeigt = num ? parseFloat(num.dataset.count) : null;
         const karte = document.getElementById('d-week-card');
+        /* Seit September 2026 steht im Ring nicht mehr die Summe, sondern die
+           Zahl der Gruppen im Korridor — eine Summe ueber Muskeln, die nichts
+           miteinander zu tun haben, war nie ein Trainingsziel. Der Fehler von
+           PB-104 kann damit strukturell nicht mehr auftreten; die Pruefung
+           bleibt trotzdem, und zwar an der Stelle, wo die Summe noch steht:
+           in der Erklaerzeile, in derselben Einheit wie die Grenzen. */
+        const gruppen = weeklyGroupStatus();
+        const drin = gruppen.filter(g => g.st.key !== 'low' && g.st.key !== 'high').length;
         const out = {
-          roh, erwartet, gezeigt,
+          roh, erwartet, gezeigt, drin, gruppen: gruppen.length,
           /* Der Rohwert darf nicht verschwinden - er gehoert in die Erklaerung.
              Woertlich geprueft: die blosse Ziffer stuende sonst auch in
              „148" und die Zusicherung waere immer wahr. */
           rohGenannt: !!karte && karte.textContent.indexOf(`${roh} Sätze ausgeführt`) >= 0,
+          /* Die gewichtete Summe muss WOERTLICH in der Erklaerung stehen —
+             sonst waere „steht irgendwo eine Zahl" die ganze Zusicherung. */
+          summeGenannt: !!karte && karte.textContent.indexOf(`gewichtet ${erwartet} Punkte`) >= 0,
           zaehlweiseErklaert: !!karte && /direkter Satz 1,0/.test(karte.textContent),
           lm: weeklyLandmarks()
         };
@@ -3659,9 +3701,12 @@ const REGRESSIONS = [
       });
       // Die beiden Zaehlungen muessen sich unterscheiden, sonst prueft der Test nichts.
       const trennt = r.erwartet !== r.roh;
-      const ok = trennt && r.gezeigt === r.erwartet
-        && r.rohGenannt === true && r.zaehlweiseErklaert === true;
-      return [ok, JSON.stringify(r) + ` — erwartet ${r.erwartet} im Ring (nicht ${r.roh}), Rohwert erklaert`];
+      const ok = trennt
+        // Im Ring steht die Zahl der Gruppen im Korridor, nicht die Summe.
+        && r.gezeigt === r.drin && r.gezeigt <= r.gruppen
+        // Und BEIDE Zahlen stehen benannt in der Erklaerung: roh und gewichtet.
+        && r.rohGenannt === true && r.summeGenannt === true && r.zaehlweiseErklaert === true;
+      return [ok, JSON.stringify(r) + ` — erwartet ${r.drin} von ${r.gruppen} im Ring, ${r.roh} rohe und ${r.erwartet} gewichtete Saetze benannt`];
     }
   }
   ,
@@ -3785,6 +3830,340 @@ const REGRESSIONS = [
       return [ok, JSON.stringify(r) + ' — erwartet: 4 min fuer eine Uebung, Plan = frisches Workout, Onboarding-Tage hoechstens ' + r.obDeckel + ' min'];
     }
   }
+  ,
+  {
+    id: 'PB-107', title: 'Eine uebersprungene Uebung ist kein Leistungsabfall',
+    run: async () => {
+      /* Vom Nutzer gemeldet: „Wenn ich aus Zeitmangel eine Uebung skippe,
+         wird sie negativ im Trend dargestellt." Der Vergleichsblock stellte
+         die SUMME der heutigen Einheit der Summe der letzten gegenueber. Wer
+         drei von neun Uebungen auslaesst, bewegt zwangslaeufig weniger
+         Kilogramm — und bekam ein rotes Minus, obwohl er an jeder Uebung, die
+         er gemacht hat, STAERKER war.
+
+         Der Test baut genau diesen Fall: gleiche Uebungen, heute die Haelfte
+         ausgelassen, an den verbliebenen jeweils 5 kg mehr. Das Volumendelta
+         MUSS positiv sein. Ohne den Fix ist es stark negativ. */
+      const r = await page.evaluate(() => {
+        const mk = (namen, gewicht) => ({
+          id: 'CMP' + namen.length + gewicht, updatedAt: Date.now(),
+          date: new Date().toLocaleDateString('de-DE'), planKey: 'FullBody_A', duration: 60,
+          sets: namen.flatMap(n => [0, 1, 2].map(i => ({
+            ex: n, nr: i + 1, w: gewicht, r: 10, rir: 2, note: '',
+            muscle: 'chest', type: 'main', mode: '' })))
+        });
+        const voll = mk(['Bankdrücken', 'Langhantelrudern', 'Beinpresse', 'KH Curls'], 60);
+        const kurz = mk(['Bankdrücken', 'Langhantelrudern'], 65);
+        const html = workoutCompareBlock(kurz, voll);
+        const volumen = /class="delta (\w+)">([+-][\d.]+) kg</.exec(html);
+        return {
+          richtung: volumen ? volumen[1] : null,
+          delta: volumen ? parseFloat(volumen[2]) : null,
+          hinweis: /wo-compare-note/.test(html),
+          nennenAusgelassen: /2 heute ausgelassen/.test(html),
+          /* Gegenprobe: ohne gemeinsame Uebung wird gar nicht verglichen,
+             statt eine Zahl zu erfinden. */
+          ohneSchnittmenge: /Kein Vergleich möglich/.test(
+            workoutCompareBlock(mk(['Beinbeuger sitzend'], 40), mk(['Bankdrücken'], 60)))
+        };
+      });
+      const ok = r.richtung === 'up' && r.delta > 0 && r.hinweis &&
+        r.nennenAusgelassen && r.ohneSchnittmenge;
+      return [ok, JSON.stringify(r) + ' — erwartet: positives Delta trotz halbierter Einheit'];
+    }
+  }
+  ,
+  {
+    id: 'PB-108', title: 'Die Schaetzung eicht sich an der gemessenen Dauer',
+    run: async () => {
+      /* 40 Sekunden je Satz und 60 je Umbau sind Mittelwerte. Die App hat die
+         gemessene Dauer jeder Einheit gespeichert und nie damit gerechnet.
+         Geprueft wird: ohne Historie bleibt der Faktor 1,0 (sonst waere der
+         erste Plan eines neuen Nutzers geraten), mit durchweg laengeren
+         Einheiten steigt er, und er ist gedeckelt — eine vergessene Session
+         mit sechs Stunden darf die Anzeige nicht unbrauchbar machen. */
+      const r = await page.evaluate(() => {
+        const planVorher = JSON.parse(JSON.stringify(D.plan)), histVorher = D.history;
+        try {
+          const ex = (id, name, sets, muscle) => normalizeExercise({ id, name, sets, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle, note: '' });
+          D.plan = { Tag_E: { day: 'Mo', exercises: [
+            ex(1, 'Bankdrücken', 4, 'chest'), ex(2, 'Beinpresse', 4, 'legs'),
+            ex(3, 'KH Seitheben', 3, 'shoulders')] } };
+          D.settings.compound = 120; D.settings.isolation = 120;
+          D.history = [];
+          const roh = estimatedDuration('Tag_E');
+          const faktorLeer = durationFactor();
+          const einheit = (dauer, i) => ({ id: 'F' + i, updatedAt: Date.now(),
+            date: new Date(Date.now() - i * 3 * 864e5).toLocaleDateString('de-DE'),
+            planKey: 'Tag_E', duration: dauer,
+            sets: D.plan.Tag_E.exercises.flatMap(e => Array.from({ length: e.sets }, (_, n) => ({
+              ex: e.name, nr: n + 1, w: 50, r: 10, rir: 2, note: '', muscle: e.muscle, type: 'main', mode: '' }))) });
+          // Zwei Messungen reichen ausdruecklich NICHT.
+          D.history = [einheit(roh * 2, 0), einheit(roh * 2, 1)];
+          const faktorZuWenig = durationFactor();
+          // Vier lange Einheiten: der Faktor steigt, bleibt aber gedeckelt.
+          D.history = [0, 1, 2, 3].map(i => einheit(roh * 3, i));
+          const faktorLang = durationFactor();
+          const langMin = estimatedDuration('Tag_E');
+          // Und nach unten ebenso.
+          D.history = [0, 1, 2, 3].map(i => einheit(Math.max(10, Math.round(roh * .2)), i));
+          const faktorKurz = durationFactor();
+          return { roh, faktorLeer, faktorZuWenig, faktorLang, langMin, faktorKurz };
+        } finally { D.plan = planVorher; D.history = histVorher; save(); }
+      });
+      const ok = r.faktorLeer === 1 && r.faktorZuWenig === 1
+        && r.faktorLang > 1 && r.faktorLang <= 1.6 && r.langMin > r.roh
+        && r.faktorKurz < 1 && r.faktorKurz >= 0.7;
+      return [ok, JSON.stringify(r) + ' — erwartet: 1,0 unter drei Messungen, danach gedeckelt zwischen 0,7 und 1,6'];
+    }
+  }
+  ,
+  {
+    id: 'PB-109', title: 'Die vordere Schulter hat eigene Grenzen',
+    run: async () => {
+      /* Schulterdruecken zaehlte auf dieselbe Gruppe wie Seitheben. Ein Plan
+         mit drei Saetzen Druecken und drei Saetzen Seitheben stand damit bei
+         „Schultern 6 — im Korridor", waehrend die SEITLICHE Schulter, die als
+         einzige direktes Volumen braucht, nur die Haelfte bekam. */
+      const r = await page.evaluate(() => ({
+        druecken: volGroupOf('Schulterdrücken Maschine', 'shoulders', 'main'),
+        druecken2: volGroupOf('Arnold-Drücken', 'shoulders', 'main'),
+        frontheben: volGroupOf('Frontheben KH', 'shoulders', 'main'),
+        seitheben: volGroupOf('KH Seitheben', 'shoulders', 'main'),
+        facepull: volGroupOf('Face Pulls', 'shoulders', 'main'),
+        bank: secondaryContribution('Bankdrücken', 'chest', 'main'),
+        /* Eine Gruppe ohne Untergrenze darf mit null Saetzen nicht als
+           „im MAV" erscheinen — siehe PB-013. */
+        nullGedeckt: landmarkState(0, MUSCLE_LANDMARKS.front).key,
+        mev: MUSCLE_LANDMARKS.front.mev
+      }));
+      const ok = r.druecken === 'front' && r.druecken2 === 'front' && r.frontheben === 'front'
+        && r.seitheben === 'shoulders' && r.facepull === 'rear'
+        && r.bank.front === 0.5 && r.bank.shoulders === undefined
+        && r.nullGedeckt === 'none' && r.mev === 0;
+      return [ok, JSON.stringify(r) + ' — erwartet: Druecken auf front, Seitheben auf shoulders, Bankdruecken sekundaer auf front'];
+    }
+  }
+  ,
+  {
+    id: 'PB-110', title: 'Ein Name, eine Uebung — Verlauf ueberlebt die Schreibweise',
+    run: async () => {
+      /* getAllSets verglich Namen ZEICHENGENAU. Wer dieselbe Uebung einmal
+         als „Bankdrücken" und einmal als „Bankdrücken (Bench Press)" im Plan
+         hatte, bekam einen leeren Verlauf — die Saetze lagen noch da, nur
+         unter einem anderen Schluessel. Und die Bibliothek listete die
+         Planuebung ein zweites Mal unter „Aus Trainingsplaenen". */
+      const r = await page.evaluate(() => {
+        const planVorher = JSON.parse(JSON.stringify(D.plan)), histVorher = D.history;
+        try {
+          D.history = [{ id: 'NAM1', updatedAt: Date.now(), date: new Date().toLocaleDateString('de-DE'),
+            planKey: 'FullBody_A', duration: 60, sets: [
+              { ex: 'Bankdrücken (Bench Press)', nr: 1, w: 80, r: 8, rir: 2, note: '', muscle: 'chest', type: 'main', mode: '' },
+              { ex: 'bankdrücken', nr: 2, w: 82.5, r: 8, rir: 2, note: '', muscle: 'chest', type: 'main', mode: '' }] }];
+          D.plan = { Tag_N: { day: 'Mo', exercises: [normalizeExercise({
+            id: 1, name: 'Bankdrücken', sets: 3, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle: 'chest', note: '' })] } };
+          save();
+          const cats = allLibraryCategories();
+          return {
+            verlauf: getAllSets('Bankdrücken').length,
+            anzeige: exDisplayName('Bankdrücken (Bench Press)'),
+            gleich: sameExercise('Bankdrücken', 'Bankdrücken (Bench Press)'),
+            verschieden: sameExercise('Bankdrücken', 'Schrägbankdrücken'),
+            /* Die Planuebung darf nicht noch einmal als eigener Eintrag
+               auftauchen, weil die Bibliothek sie mit Klammer fuehrt. */
+            dublette: cats.some(c => /Trainingspl/.test(c.cat) &&
+              c.items.some(i => baseNameKey(i.name) === baseNameKey('Bankdrücken')))
+          };
+        } finally { D.plan = planVorher; D.history = histVorher; save(); }
+      });
+      const ok = r.verlauf === 2 && r.anzeige === 'Bankdrücken' && r.gleich === true
+        && r.verschieden === false && r.dublette === false;
+      return [ok, JSON.stringify(r) + ' — erwartet: beide Schreibweisen im Verlauf, keine Dublette'];
+    }
+  }
+  ,
+  {
+    id: 'PB-111', title: 'Umbenennen bietet die Bibliothekswerte an',
+    run: async () => {
+      /* Aus „Kabelcrunches" wurden im Editor „Spidercurls", und die Uebung
+         behielt Muskelgruppe „Core" und den Crunch-Hinweis. Vier Saetze
+         Bizeps zaehlten danach auf den Rumpf. Der Editor weiss es besser —
+         er uebernimmt es nur nicht von selbst, sondern bietet es an. */
+      const r = await page.evaluate(() => {
+        const planVorher = JSON.parse(JSON.stringify(D.plan));
+        try {
+          D.plan = { Tag_R: { day: 'Mo', exercises: [normalizeExercise({
+            id: 1, name: 'Kabelcrunches', sets: 4, rmin: 12, rmax: 15, rir: 2,
+            type: 'main', muscle: 'core', note: 'Kniend einrollen' })] } };
+          save(); curTab = 'Tag_R'; renderPlan();
+          openEditEx(0);
+          const box = document.getElementById('a-libhint');
+          const vorMuskel = document.getElementById('a-mus').value;
+          const vorherVersteckt = box.style.display === 'none';
+          document.getElementById('a-name').value = 'Spidercurls';
+          refreshLibHint();
+          const sichtbar = box.style.display !== 'none';
+          const nenntBizeps = /Bizeps/.test(box.textContent);
+          applyLibHint();
+          const nachMuskel = document.getElementById('a-mus').value;
+          cm('m-add');
+          return { vorMuskel, vorherVersteckt, sichtbar, nenntBizeps, nachMuskel,
+            gruppe: volGroupOf('Spidercurls', nachMuskel, 'main') };
+        } finally { D.plan = planVorher; save(); }
+      });
+      const ok = r.vorMuskel === 'core' && r.vorherVersteckt && r.sichtbar &&
+        r.nenntBizeps && r.nachMuskel === 'arms' && r.gruppe === 'biceps';
+      return [ok, JSON.stringify(r) + ' — erwartet: Hinweis erscheint erst beim Umbenennen und setzt arms/biceps'];
+    }
+  }
+  ,
+  {
+    id: 'PB-112', title: 'Der Plan-Code traegt die Pausenlaengen mit',
+    run: async () => {
+      /* Die Pausenlaenge gehoert zum Plan: ein Tag mit 90 s Isolationspause
+         ist eine andere Einheit als derselbe Tag mit 120 s — zwoelf Minuten
+         Unterschied. Wer den Code bekam, trainierte mit seinen eigenen Werten
+         weiter und wunderte sich ueber die Dauer. */
+      const r = await page.evaluate(async () => {
+        const vorher = JSON.parse(JSON.stringify(D.settings));
+        try {
+          D.settings.compound = 150; D.settings.isolation = 75;
+          const code = await encodeSharePayload(planSharePayload(Object.keys(D.plan).slice(0, 1)));
+          const zurueck = await decodeShareCode(code);
+          /* Fremde Zahlen: Wertebereich muss erzwungen werden. */
+          const kaputt = sanitizeSharePayload({ ...zurueck, p: [99999, -5] });
+          return { p: zurueck.p, gehaertet: kaputt.p,
+            ohne: sanitizeSharePayload({ ...zurueck, p: undefined }).p };
+        } finally { D.settings = vorher; save(); }
+      });
+      /* Und die Uebernahme selbst: Der Empfaenger kreuzt an, die Werte
+         landen in den Einstellungen — ohne Klick bleibt alles, wie es war. */
+      const u = await page.evaluate(async () => {
+        const vorher = JSON.parse(JSON.stringify(D.settings)), planVorher = JSON.parse(JSON.stringify(D.plan));
+        try {
+          D.settings.compound = 120; D.settings.isolation = 120; save();
+          await startPlanImport(await encodeSharePayload({ v: 1, n: 'Test', a: '', t: '2026-09-15',
+            p: [150, 75], d: [['Tag_P', 'Mo', [['Bankdrücken', 3, 8, 12, 2, 'main', 'chest', '', null]]]] }));
+          const optionDa = /Pausenlängen mit übernehmen/.test(document.getElementById('importpreview-body').innerHTML);
+          confirmPlanImport();
+          const ohneKlick = [D.settings.compound, D.settings.isolation];
+          await startPlanImport(await encodeSharePayload({ v: 1, n: 'Test2', a: '', t: '2026-09-15',
+            p: [150, 75], d: [['Tag_Q', 'Di', [['Bankdrücken', 3, 8, 12, 2, 'main', 'chest', '', null]]]] }));
+          toggleImportPausen();
+          confirmPlanImport();
+          return { optionDa, ohneKlick, mitKlick: [D.settings.compound, D.settings.isolation] };
+        } finally { D.settings = vorher; D.plan = planVorher; save(); }
+      });
+      const ok = Array.isArray(r.p) && r.p[0] === 150 && r.p[1] === 75
+        && r.gehaertet[0] === 600 && r.gehaertet[1] === 0 && r.ohne === null
+        && u.optionDa && u.ohneKlick[0] === 120 && u.ohneKlick[1] === 120
+        && u.mitKlick[0] === 150 && u.mitKlick[1] === 75;
+      return [ok, JSON.stringify(r) + ' ' + JSON.stringify(u) + ' — erwartet: 150/75 im Code, Uebernahme nur auf Klick'];
+    }
+  }
+  ,
+  {
+    id: 'PB-113', title: 'Das Zeitbudget aus dem Onboarding ist eine harte Grenze',
+    run: async () => {
+      /* Der Deckel kuerzte nur, solange jede Gruppe ueber ihrem Minimum
+         blieb. Bei zwei Trainingstagen findet diese Stufe keinen einzigen
+         Kandidaten — jede Gruppe liegt dort ohnehin am Minimum — und der
+         Deckel lief wirkungslos durch: Das Onboarding versprach 45 Minuten
+         und lieferte 76. Ein Zeitbudget, das der Nutzer angegeben hat, ist
+         eine harte Grenze. */
+      const r = await page.evaluate(() => {
+        const planVorher = JSON.parse(JSON.stringify(D.plan)), setVorher = JSON.parse(JSON.stringify(D.settings));
+        const bad = [];
+        let geprueft = 0;
+        try {
+          for (const minutes of [45, 60, 75, 90])
+            for (const days of [2, 3, 4, 6])
+              for (const experience of ['beginner', 'advanced'])
+                for (const limits of [[], ['shoulder'], ['lowback'], ['knee'], ['elbow']])
+                  for (const methods of [[], ['superset']]) {
+                    D.plan = buildPlanFromOnboarding({ days, location: 'gym', experience, focus: 'balanced', minutes, limits, methods });
+                    geprueft++;
+                    const tag = minutes + 'min/' + days + 'd/' + experience + '/' + (limits.join('+') || '-') + '/' + (methods.join('+') || '-');
+                    if (Object.keys(D.plan).length !== days) bad.push(tag + ': ' + Object.keys(D.plan).length + ' Tage');
+                    Object.keys(D.plan).forEach(k => {
+                      const m = estimatedDuration(k);
+                      /* Sechs Minuten Toleranz: Der Deckel arbeitet in ganzen
+                         Saetzen, der letzte Schritt kann nicht beliebig fein
+                         landen. Mehr waere keine Grenze mehr. */
+                      if (m > minutes + 6) bad.push(tag + '/' + k + '=' + m + 'min');
+                      if (!D.plan[k].exercises.length) bad.push(tag + ': ' + k + ' leer');
+                      /* Ein Supersatz-Partner darf nie allein zurueckbleiben. */
+                      const ss = {};
+                      D.plan[k].exercises.forEach(e => { if (e.ss) ss[e.ss] = (ss[e.ss] || 0) + 1 });
+                      Object.entries(ss).forEach(([key, n]) => { if (n < 2) bad.push(tag + ': ' + k + ' einsamer Supersatz ' + key) });
+                    });
+                  }
+          /* Und die Einschraenkung TAUSCHT, sie streicht nicht: der
+             schulterschonende Plan hat genauso viele Uebungen. */
+          const ohne = buildPlanFromOnboarding({ days: 3, location: 'gym', experience: 'intermediate', focus: 'balanced', minutes: 75, limits: [], methods: [] });
+          const mit = buildPlanFromOnboarding({ days: 3, location: 'gym', experience: 'intermediate', focus: 'balanced', minutes: 75, limits: ['shoulder'], methods: [] });
+          const zahl = p => Object.values(p).reduce((a, d) => a + d.exercises.length, 0);
+          const namenGleich = JSON.stringify(Object.values(ohne).flatMap(d => d.exercises.map(e => e.name)))
+            === JSON.stringify(Object.values(mit).flatMap(d => d.exercises.map(e => e.name)));
+          return { geprueft, bad: bad.slice(0, 6), anzahl: bad.length,
+            uebungenOhne: zahl(ohne), uebungenMit: zahl(mit), namenGleich };
+        } finally { D.plan = planVorher; D.settings = setVorher; save(); }
+      });
+      const ok = r.anzahl === 0 && r.geprueft >= 160 &&
+        r.uebungenOhne === r.uebungenMit && r.namenGleich === false;
+      return [ok, JSON.stringify(r) + ' — erwartet: jeder Tag im Budget, Einschraenkung tauscht statt zu streichen'];
+    }
+  }
+  ,
+  {
+    id: 'PB-114', title: 'Der Coach liest die Historie mit',
+    run: async () => {
+      /* Der Coach rechnete ausschliesslich den PLAN durch. Eine Uebung, die in
+         drei von vier Einheiten uebersprungen wird, steht im Plan, findet aber
+         nicht statt — sie zaehlt trotzdem ins Wochenvolumen, und die Gruppe
+         gilt als versorgt. Die Daten lagen seit dem ersten Tag da. */
+      const r = await page.evaluate(() => {
+        const planVorher = JSON.parse(JSON.stringify(D.plan)), histVorher = D.history,
+              profVorher = D.profile;
+        try {
+          const ex = (id, name, sets, muscle) => normalizeExercise({ id, name, sets, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle, note: '' });
+          D.plan = { Tag_H: { day: 'Mo', exercises: [
+            ex(1, 'Bankdrücken', 4, 'chest'), ex(2, 'Beinpresse', 4, 'legs'),
+            ex(3, 'KH Seitheben', 3, 'shoulders'), ex(4, 'Wadenheben stehend', 3, 'legs')] } };
+          D.profile = { minutes: 45 };
+          D.history = [0, 1, 2, 3].map(i => ({
+            id: 'HI' + i, updatedAt: Date.now(),
+            date: new Date(Date.now() - (i * 7 + 1) * 864e5).toLocaleDateString('de-DE'),
+            planKey: 'Tag_H', duration: 95,
+            sets: D.plan.Tag_H.exercises.filter(e => !(i < 3 && e.name === 'Wadenheben stehend'))
+              .flatMap(e => Array.from({ length: e.sets }, (_, n) => ({
+                ex: e.name, nr: n + 1, w: 50, r: 10, rir: 2, note: '', muscle: e.muscle, type: 'main', mode: '' }))),
+            ...(i < 3 ? { skipped: ['Wadenheben stehend'] } : {})
+          }));
+          save(); coachInvalidate();
+          const titel = coachAnalyzePlan().issues.map(i => i.title);
+          const vorher = D.plan.Tag_H.exercises.map(e => e.name);
+          coachMoveUp('Tag_H', 3);
+          const nachher = D.plan.Tag_H.exercises.map(e => e.name);
+          /* Zwei Einheiten reichen ausdruecklich nicht — ein schlechter Tag
+             ist noch kein Urteil. */
+          D.history = D.history.slice(0, 2);
+          coachInvalidate();
+          const zuWenig = coachAnalyzePlan().issues.some(i => /findet nicht statt/.test(i.title));
+          return {
+            skipBefund: titel.filter(x => /findet nicht statt/.test(x)),
+            budgetBefund: titel.filter(x => /Zeitbudget/.test(x)),
+            vorher, nachher, zuWenig
+          };
+        } finally { D.plan = planVorher; D.history = histVorher; D.profile = profVorher; save(); coachInvalidate(); }
+      });
+      const ok = r.skipBefund.length === 1 && /Wadenheben/.test(r.skipBefund[0])
+        && r.budgetBefund.length === 1
+        && r.nachher.indexOf('Wadenheben stehend') < r.vorher.indexOf('Wadenheben stehend')
+        && r.zuWenig === false;
+      return [ok, JSON.stringify(r) + ' — erwartet: Skip- und Budgetbefund ab drei Einheiten, Verschieben wirkt'];
+    }
+  }
 ];
 
 for (const t of REGRESSIONS) {
@@ -3834,10 +4213,12 @@ async function login(dev, code) {
   await dev.page.waitForTimeout(500);
 }
 async function onboard(dev) {
-  for (let i = 0; i < 8; i++) {
-    if (i === 1) await dev.page.fill('#ob-birthday', '1993-06-21');
-    if (i === 2) await dev.page.fill('#ob-height', '181');
-    if (i === 3) await dev.page.fill('#ob-weight', '82');
+  for (let i = 0; i < 9; i++) {
+    if (i === 1) {
+      await dev.page.fill('#ob-birthday', '1993-06-21');
+      await dev.page.fill('#ob-height', '181');
+      await dev.page.fill('#ob-weight', '82');
+    }
     await dev.page.click('#ob-content .btn');
     await dev.page.waitForTimeout(110);
   }
@@ -4200,10 +4581,12 @@ async function neuerNutzer() {
   await p.waitForTimeout(500);
   await p.click('text=Offline-Modus (ohne Sync)');
   await p.waitForTimeout(300);
-  for (let i = 0; i < 8; i++) {
-    if (i === 1) await p.fill('#ob-birthday', '1993-06-21');
-    if (i === 2) await p.fill('#ob-height', '181');
-    if (i === 3) await p.fill('#ob-weight', '82');
+  for (let i = 0; i < 9; i++) {
+    if (i === 1) {
+      await p.fill('#ob-birthday', '1993-06-21');
+      await p.fill('#ob-height', '181');
+      await p.fill('#ob-weight', '82');
+    }
     await p.click('#ob-content .btn');
     await p.waitForTimeout(100);
   }

@@ -44,8 +44,9 @@ const AUSSERHALB = {};
    findet den Test. */
 const UEBER_DIE_OBERFLAECHE = {
   offlineMode: 'SMOKE — click(text=Offline-Modus (ohne Sync))',
+  obToggleList: 'SMOKE — click(.ob-multi) in Schritt 8 und 9 des Onboardings',
   doLogin: 'SYNC PB-067/068/069/070 — click(text=LOS GEHT\'S)',
-  obNext: 'SMOKE + SYNC — click(#ob-content .btn) durch alle acht Schritte',
+  obNext: 'SMOKE + SYNC — click(#ob-content .btn) durch alle neun Schritte',
   finishOnboarding: 'SMOKE + SYNC — letzter Onboarding-Schritt'
 };
 

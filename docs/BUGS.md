@@ -149,6 +149,14 @@
 | [PB-104](#pb-104) | Wochenring verglich Sätze mit Volumenpunkten | **hoch** | Anzeige / Berechnung | ✅ |
 | [PB-105](#pb-105) | Dashboard scrollte beim Start von selbst nach unten | mittel | UX / Renderer | ✅ |
 | [PB-106](#pb-106) | Dauerschätzung ohne Umbau — 10 bis 20 Minuten zu kurz | mittel | Falsche Berechnung | ✅ |
+| [PB-107](#pb-107) | Übersprungene Übung als Leistungsabfall gewertet | mittel | Falscher Vergleich | ✅ |
+| [PB-108](#pb-108) | Dauerschätzung rechnete mit Mittelwerten statt mit dir | niedrig | Verbesserung | ✅ |
+| [PB-109](#pb-109) | Schulterdrücken zählte in den Seitheben-Topf | **hoch** | Falsche Berechnung | ✅ |
+| [PB-110](#pb-110) | Verlauf verschwand bei anderer Schreibweise | mittel | Datenzugriff | ✅ |
+| [PB-111](#pb-111) | Umbenennen behielt Muskelgruppe und Hinweis | mittel | Falsche Berechnung | ✅ |
+| [PB-112](#pb-112) | Geteilter Plan ohne seine Pausenlängen | niedrig | Unvollständige Daten | ✅ |
+| [PB-113](#pb-113) | Zeitdeckel lief bei knappem Budget wirkungslos durch | mittel | Falsches Versprechen | ✅ |
+| [PB-114](#pb-114) | Der Coach kannte die Historie nicht | mittel | Fehlender Weg | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -4432,6 +4440,355 @@ der drei Stellen wieder entfernt, sieht Rot.
 
 ---
 
+### PB-107
+
+**Eine übersprungene Übung wurde als Leistungsabfall gewertet**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falscher Vergleich / falsche Handlungsempfehlung |
+| **Gefunden** | Nutzermeldung: *„Wenn ich aus Zeitmangel eine Übung skippe, wird sie negativ im Trend dargestellt"* |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Der Block „Vergleich zum letzten Training" stellte die **Summe**
+der heutigen Einheit der Summe der letzten gegenüber: Volumen, Sätze,
+Ø Gewicht, Maximalgewicht. Wer drei von neun Übungen auslässt, bewegt
+zwangsläufig weniger Kilogramm — und bekam dafür ein rotes Minus, obwohl er
+an jeder Übung, die er tatsächlich gemacht hat, **stärker** war.
+
+Gemessen an einem echten Fall: vier Übungen à drei Sätzen mit 60 kg gegen
+zwei Übungen à drei Sätzen mit 65 kg. Die Anzeige sagte **−1.350 kg**. Die
+Wahrheit ist **+300 kg** an denselben Übungen.
+
+Eine Summe über verschiedene Übungsmengen ist kein Vergleich. Sie misst, wie
+viel Zeit jemand hatte, und nennt das Leistung.
+
+**Fix.** Gerechnet wird über die **Schnittmenge**: nur Übungen, die in beiden
+Einheiten geloggt sind. Was fehlt oder neu dazukam, steht als Hinweis
+daneben — *„Verglichen werden die 2 Übungen, die in beiden Einheiten vorkamen
+— 2 heute ausgelassen und deshalb außen vor"* — statt sich als Rückgang zu
+verkleiden. Gibt es keine gemeinsame Übung, wird gar nicht verglichen; eine
+erfundene Zahl wäre schlechter als keine.
+
+Dazu hält die Einheit jetzt fest, **welche** Übungen übersprungen wurden.
+Nicht als Strafe, sondern als Erklärung: Ohne diese Liste sieht eine gekürzte
+Einheit in der Historie aus wie eine schwache. Der Coach liest sie mit
+(PB-114).
+
+**Lektion.** Bevor zwei Zahlen verglichen werden, muss jemand prüfen, ob sie
+dasselbe **messen** — nicht nur, ob sie dieselbe Einheit tragen. PB-104 war
+derselbe Fehlertyp eine Ebene tiefer: dort stimmten die Einheiten nicht, hier
+die Grundgesamtheit. Beide Male war jede Seite für sich korrekt.
+
+**Test.** `PB-107` — vier Übungen gegen zwei, an den verbliebenen 5 kg mehr.
+Das Volumendelta muss positiv sein, der Hinweis muss die Zahl der
+ausgelassenen Übungen nennen, und ohne Schnittmenge muss die Karte
+„Kein Vergleich möglich" zeigen.
+
+---
+
+### PB-108
+
+**Die Dauerschätzung rechnete mit Mittelwerten statt mit dir**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Verbesserung / ungenutzte Daten |
+| **Gefunden** | Folgearbeit zu PB-106 |
+| **Status** | ✅ behoben |
+
+**Der Punkt.** 40 Sekunden je Satz und 60 je Umbau sind Populationsmittelwerte.
+Sie stimmen für niemanden genau. Die App hat die **gemessene** Dauer jeder
+beendeten Einheit seit dem ersten Tag gespeichert — und sie ausschließlich als
+Anzeige benutzt.
+
+**Fix.** `durationFactor()` vergleicht die gemessene Dauer der letzten zehn
+Einheiten mit der Rohschätzung derselben Einheit und bildet den **Median**.
+Alle drei Schätzer multiplizieren damit. Wer zügig trainiert, sieht kürzere
+Zahlen; wer sich unterhält, längere.
+
+Drei Absicherungen, jede gegen einen konkreten Schaden:
+
+| Regel | wogegen |
+|---|---|
+| Unter drei brauchbaren Messungen bleibt der Faktor 1,0 | Der erste Plan eines neuen Nutzers darf nicht geraten sein |
+| Median statt Mittelwert | Eine Einheit mit langem Gespräch verzieht die Anzeige sonst auf Monate |
+| Gedeckelt auf 0,7 bis 1,6 | Eine vergessene, nie beendete Einheit macht die Zahl sonst unbrauchbar |
+
+Cardio-Minuten zählen in der Rohschätzung mit, sonst sieht jede Einheit mit
+zwanzig Minuten Laufband nach „zu langsam" aus.
+
+**Nebenwirkung, die dazugehört.** Die Eichung zieht dem Coach-Befund
+*„Tag dauert länger als geschätzt"* den Boden weg — sie rechnet genau dieses
+Delta weg. Deshalb misst der Befund in PB-114 gegen das **Zeitbudget aus dem
+Onboarding**, nicht gegen die Schätzung. Die interessante Frage ist ohnehin
+nicht, ob die App richtig schätzt, sondern ob der Tag in die Zeit passt, die
+man hat.
+
+**Test.** `PB-108` — Faktor 1,0 bei leerer und bei zweielementiger Historie,
+steigend bei vier langen Einheiten, fallend bei vier kurzen, in beiden
+Richtungen innerhalb der Deckel.
+
+---
+
+### PB-109
+
+**Schulterdrücken zählte in den Seitheben-Topf**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Falsche Berechnung / verdeckte Lücke |
+| **Gefunden** | Review des eigenen Plans |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Die Volumengruppe `shoulders` fasste zwei Muskeln zusammen, die
+auf völlig verschiedene Reize reagieren: die **vordere** Schulter, die bei
+jedem Drücken mitarbeitet, und die **seitliche**, die als einzige direktes
+Volumen braucht.
+
+Am echten Plan: drei Sätze Schulterdrücken plus drei Sätze Seitheben ergaben
+„Schultern 6 — im Korridor". Tatsächlich hatte die seitliche Schulter **drei**
+Sätze bei einem Minimum von acht. Die Lücke war da, die App meldete sie nicht.
+Umgekehrt zählte jeder Satz Bankdrücken 0,5 auf denselben Zähler und schob ihn
+weiter nach oben — die vordere Schulter kaschierte die seitliche.
+
+**Fix.** Eine elfte Volumengruppe: **Vordere Schulter**, abgeleitet aus dem
+Bewegungsmuster `pushh` und aus Namen wie „Frontheben". Die seitliche Gruppe
+heißt jetzt so, wie sie ist. Bankdrücken zahlt sekundär auf `front` statt auf
+`shoulders`.
+
+Die vordere Schulter bekommt **MEV 0** — mit Absicht. Sie wird von jedem
+Drücken versorgt; ein Mindestvolumen zu fordern hieße, Sätze zu verlangen, die
+niemand braucht. Die Obergrenze bleibt, weil zu viel Drücken die Schulter sehr
+wohl überlastet.
+
+**Ein Fehler, den der Fix erst sichtbar gemacht hat.** Mit eigenen Grenzen
+fiel auf, dass der **Zwei-Tage-Plan** die seitliche Schulter nie versorgen
+konnte: eine einzige Seitheben-Übung, gedeckelt bei sechs Sätzen, gegen ein
+Minimum von acht. Das Onboarding-Template hat jetzt eine zweite Variante.
+Solange Schulterdrücken mitzählte, war die Lücke unsichtbar.
+
+**Und einer, den der Test gefunden hat.** „Arnold-Drücken" traf keine einzige
+Regel der Mustererkennung — die Regel kannte nur das englische `arnold press`.
+Die Übung fiel auf den Muskel-Rückfallwert und landete bei „seitliches Heben".
+
+**Lektion.** Dieselbe Lektion wie bei „Arme" und bei „Beine", zum dritten Mal
+(siehe `docs/EVIDENZ.md`): Eine Gruppe, die zwei Muskeln mit verschiedenen
+Reizen zusammenfasst, verdeckt die Lücke des schwächeren. Die Frage lautet
+nicht „wie heißt der Körperteil", sondern „reagieren diese Fasern auf
+dieselbe Übung".
+
+**Test.** `PB-109` — Schulterdrücken und Arnold-Drücken auf `front`, Seitheben
+auf `shoulders`, Face Pulls auf `rear`, Bankdrücken sekundär auf `front` und
+**nicht** auf `shoulders`. Dazu: eine Gruppe ohne Untergrenze darf mit null
+Sätzen nicht als „im MAV" gelten — das wäre PB-013 an neuer Stelle. Sie zeigt
+jetzt „gedeckt".
+
+---
+
+### PB-110
+
+**Der Verlauf verschwand, wenn die Übung anders geschrieben war**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Datenzugriff / Identität aus Inhalt abgeleitet |
+| **Gefunden** | Review nach der Bibliothekserweiterung |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** `getAllSets(name)` verglich Übungsnamen **zeichengenau**. Die
+App führte dieselbe Übung aber unter drei Schreibweisen: „Bankdrücken" im
+Plan, „Bankdrücken (Bench Press)" in der Bibliothek, „Bankdrücken Langhantel"
+in einem geteilten Plan. Drei Folgen:
+
+* Wer die Übung einmal anders schrieb, bekam einen **leeren Verlauf** und
+  verlor seinen Bestwert aus der Anzeige. Die Sätze lagen noch da, nur unter
+  einem anderen Schlüssel.
+* Die Bibliothek listete die Planübung ein zweites Mal unter „Aus
+  Trainingsplänen" — 24 Einträge, die alle schon oben standen.
+* Die Alternativen-Liste schlug die Übung vor, die man gerade macht.
+
+**Fix.** Abgeglichen wird über `baseNameKey` — klammerfrei und
+satzzeichenfrei. Angezeigt und in den Plan übernommen wird nur der deutsche
+Name; der englische bleibt in den Daten, weil danach gesucht wird. Die
+Kategorie „Aus Trainingsplänen" ist danach leer, wo sie leer sein soll.
+
+**Lektion.** Muster 2 aus diesem Register (*Identität aus Inhalt abgeleitet*),
+diesmal über eine Zeichenkette, die als Fremdschlüssel diente. Ein Name, den
+Menschen tippen, ist keine Identität.
+
+**Test.** `PB-110` — zwei Schreibweisen in der Historie, beide müssen im
+Verlauf auftauchen; die Planübung darf nicht als Dublette in der Bibliothek
+erscheinen; und „Bankdrücken" und „Schrägbankdrücken" dürfen **nicht**
+zusammenfallen, sonst hätte der Abgleich zu grob gematcht.
+
+---
+
+### PB-111
+
+**Umbenennen behielt Muskelgruppe und Ausführungshinweis**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falsche Berechnung / stille Übernahme |
+| **Gefunden** | Nutzerplan: Spidercurls standen als „Core" |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Im Übungseditor lässt sich der Name ändern. Muskelgruppe, Typ
+und Notiz blieben dabei unverändert stehen. Aus „Kabelcrunches" wurden
+„Spidercurls" — mit Muskelgruppe **Core** und dem Hinweis „Kniend einrollen".
+
+Vier Sätze Bizeps zählten danach auf den Rumpf. Der Coach meldete eine
+Bizepslücke, die keine war, und eine Core-Versorgung, die nicht existierte.
+Der Ausführungshinweis beschrieb eine andere Bewegung.
+
+**Fix.** Unter dem Namensfeld erscheint beim Tippen eine Zeile: *„In der
+Bibliothek: Bizeps · 10–15 Wdh. · Brust auf der Schrägbank …"* mit einem Knopf
+„Übernehmen". Angeboten, nicht erzwungen: Wer bewusst eine eigene Variante
+baut, behält seine Werte. Der Hinweis erscheint nur, wenn sich Muskel oder Typ
+tatsächlich unterscheiden — sonst wäre er Lärm.
+
+Dieselbe Lücke steckte in der Übungsrotation zum Blockwechsel: `applyRotation`
+setzte `name` und `note`, nie `muscle`. Auch dort wird der Muskel jetzt
+mitgenommen.
+
+**Lektion.** Ein Feld, das den Sinn anderer Felder bestimmt, darf sich nicht
+allein ändern lassen. Entweder ziehen die abhängigen Felder mit, oder es gibt
+eine sichtbare Nachfrage — stillschweigend stehenbleiben ist die einzige
+Variante, die garantiert falsch ist.
+
+**Test.** `PB-111` — Kabelcrunches im Plan, im Editor auf „Spidercurls"
+umbenannt: Der Hinweis muss erscheinen (vorher versteckt sein), „Bizeps"
+nennen, und nach dem Übernehmen muss die Volumengruppe `biceps` sein.
+
+---
+
+### PB-112
+
+**Ein geteilter Plan reiste ohne seine Pausenlängen**
+
+| | |
+|---|---|
+| **Schwere** | niedrig |
+| **Klasse** | Unvollständige Daten |
+| **Gefunden** | Review beim Teilen eines 90-Sekunden-Plans |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Der Plan-Code trug Tage, Übungen, Sätze, Wiederholungen, RIR,
+Notizen und Supersätze — aber nicht die Pausenlängen. Dabei sind sie Teil des
+Plans: Derselbe Trainingstag mit 90 statt 120 Sekunden Isolationspause ist
+zwölf Minuten kürzer und eine andere Trainingsabsicht. Wer den Code bekam,
+trainierte mit seinen eigenen Werten weiter und wunderte sich über die Dauer.
+
+**Fix.** Zwei Zahlen im Code, beim Import als **abwählbare** Option: *„Dieser
+Plan ist für 120 s bei Grundübungen und 90 s bei Isolation gerechnet. Du
+stehst auf 120 s und 120 s."* Die Option erscheint nur, wenn sich die Werte
+unterscheiden. Alte Codes ohne das Feld funktionieren unverändert.
+
+Wie jedes Feld aus einer fremden Quelle wird der Wertebereich erzwungen: null
+Sekunden sind erlaubt (manche trainieren im Zirkel), zehn Minuten nicht.
+
+**Test.** `PB-112` — 150/75 gesetzt, geteilt, zurückgelesen; dazu die
+Härtung: `[99999, -5]` muss als `[600, 0]` ankommen, ein fehlendes Feld als
+`null`.
+
+---
+
+### PB-113
+
+**Der Zeitdeckel lief bei knappem Budget wirkungslos durch**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Falsches Versprechen |
+| **Gefunden** | Beim Einbau der Zeitfrage ins Onboarding |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Der Plangenerator kürzte Sätze, solange danach **jede** Gruppe
+über ihrem Minimum blieb. Bei zwei Trainingstagen findet diese Bedingung
+keinen einzigen Kandidaten — dort liegt ohnehin jede Gruppe am Minimum — und
+die Schleife lief wirkungslos durch. Das Onboarding fragte nach 45 Minuten und
+lieferte 76.
+
+**Fix.** Drei Stufen statt einer:
+
+1. Sätze kürzen, solange jede Gruppe über ihrem Minimum bleibt.
+2. Reicht das nicht: weiter kürzen, auch unter das Minimum, nie unter zwei
+   Sätze, zuerst dort, wo im Verhältnis am meisten liegt.
+3. Immer noch zu lang: eine Übung fällt weg. Isolation zuerst, nie die letzte
+   ihrer Volumengruppe im ganzen Plan, und ein Supersatz-Partner bleibt nie
+   allein zurück.
+
+Ein Zeitbudget, das der Nutzer angegeben hat, ist eine **harte** Grenze: Wer
+eine Stunde Mittagspause hat, hat sie auch dann, wenn die Grenzwerttabelle
+etwas anderes möchte. Was dabei unter das Minimum fällt, sagt die App sofort —
+ein zweiter Hinweis nach dem Onboarding nennt die Zahl der Lücken, und der
+Coach zeigt danach, welche Gruppe betroffen ist.
+
+Im selben Zug nutzt der Generator die beiden anderen neuen Antworten:
+**Beschwerden** tauschen Übungen gegen gelenkschonende Varianten desselben
+Musters (Volumen bleibt, Gruppe bleibt, nur das Gerät ändert sich), und
+**Supersätze** werden vor dem Deckel gekoppelt — wer sie zulässt, soll dafür
+Sätze behalten dürfen statt sie zu verlieren.
+
+**Test.** `PB-113` — 320 Kombinationen aus Budget, Tagen, Erfahrung,
+Beschwerden und Methoden. Jeder erzeugte Tag muss innerhalb von sechs Minuten
+zum Budget liegen, keiner darf leer sein, kein Supersatz-Partner allein
+zurückbleiben. Dazu: Der schulterschonende Plan hat **gleich viele** Übungen
+wie der normale, aber andere Namen — getauscht, nicht gestrichen.
+
+---
+
+### PB-114
+
+**Der Coach kannte die Historie nicht**
+
+| | |
+|---|---|
+| **Schwere** | mittel |
+| **Klasse** | Fehlender Weg / ungenutzte Daten |
+| **Gefunden** | Review nach PB-107 |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Der Volumen-Coach rechnete ausschließlich den **Plan** durch:
+Sätze, Gruppen, Frequenz, Bewegungsmuster. Das ist die halbe Wahrheit. Die
+andere Hälfte steht in der Historie und war für die Planung nie zugänglich:
+
+* Eine Übung, die in drei von vier Einheiten übersprungen wird, steht im Plan,
+  **findet aber nicht statt**. Sie zählt trotzdem ins Wochenvolumen, und der
+  Coach meldet die Gruppe als versorgt.
+* Eine Übung, die seit sechs Einheiten nicht mehr schwerer wird, ist kein
+  Trainingsreiz mehr, sondern eine Gewohnheit.
+* Ein Trainingstag, der real regelmäßig über dem gewählten Zeitbudget liegt,
+  ist zu voll — unabhängig davon, was die Schätzung sagt.
+
+**Fix.** `historyIssues()` liefert drei neue Befundarten an dieselbe Liste, in
+der schon die Volumenbefunde stehen. Jeder Befund trägt eine ausführbare
+Aktion: *Nach vorn* (eine übersprungene Übung hinter die letzte Grundübung
+schieben — dort wird sie gemacht), *Entfernen*, *Variante* (Tausch im selben
+Bewegungsmuster), *Koppeln* (alle freien Isolationsübungen des Tages
+paarweise).
+
+Ein Befund braucht mindestens **drei** Einheiten zum selben Trainingstag.
+Ein schlechter Tag ist noch kein Urteil.
+
+**Warum das zusammengehört.** Die Skip-Liste, die PB-107 eingeführt hat, ist
+hier die Datenquelle. Zwei Änderungen, ein Gedanke: Was nicht stattgefunden
+hat, darf weder als Leistungsabfall gewertet noch als Volumen verbucht werden.
+
+**Test.** `PB-114` — vier Einheiten, dreimal dieselbe Übung übersprungen,
+Zeitbudget 45 Minuten bei 95 Minuten realer Dauer: beide Befunde müssen
+erscheinen, das Verschieben muss wirken, und mit nur zwei Einheiten darf
+**kein** Befund kommen.
+
+---
+
 ### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
 
 Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
@@ -4617,7 +4974,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **31
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **70
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -4687,6 +5044,13 @@ gestellt werden sollten:
 | 61 | **Testdaten im Neuzustand, zweite Form** | PB-105 | `homePlanOpen:false` in jedem Fixture. Der Nutzer, der die Karte einmal aufgeklappt hat, kam in keinem Test vor — und bekam den Fehler bei jedem Start. |
 | 62 | **Eine Schätzung, die den Nutzer widerlegt** | PB-106 | Sagt die Zahl etwas über den Nutzer aus („du trödelst"), muss sie das aushalten. Was fehlt in der Rechnung, das in Wirklichkeit vorkommt? |
 | 63 | **Drei Quellen für dieselbe Wahrheit** | PB-106 | Muster 3 zu dritt. Lassen sie sich nicht zusammenlegen, hält sie ein Test zusammen — einer, der an jeder Stelle einzeln rot wird. |
+| 64 | **Summe über verschiedene Grundgesamtheiten** | PB-107 | Zwei Zahlen dürfen erst verglichen werden, wenn sie dasselbe MESSEN — dieselbe Einheit reicht nicht. |
+| 65 | **Gemessene Daten nur angezeigt, nie benutzt** | PB-108, PB-114 | Die App speichert es seit dem ersten Tag. Was könnte sie damit tun, statt es auszugeben? |
+| 66 | **Gruppe verdeckt die Lücke des schwächeren Mitglieds** | PB-109 | Zum dritten Mal nach „Arme" und „Beine". Reagieren diese Fasern auf dieselbe Übung — oder heißt nur der Körperteil gleich? |
+| 67 | **Menschlich getippter Name als Fremdschlüssel** | PB-110 | Zeichengenauer Vergleich über etwas, das drei Schreibweisen hat. Woran hängt die Identität wirklich? |
+| 68 | **Feld geändert, abhängige Felder nicht** | PB-111 | Entweder ziehen sie mit oder es gibt eine Nachfrage. Stehenbleiben ist die einzige Variante, die garantiert falsch ist. |
+| 69 | **Eine Grenze, die nur unter Vorbehalt gilt** | PB-113 | Der Deckel kürzte nur, wo eine zweite Bedingung erlaubte. Bei knappen Fällen gilt diese nie — und die Grenze wird zum Vorschlag. |
+| 70 | **Ein neuer Wert macht einen alten Test falsch** | PB-109 | MEV 0 brach PB-013, weil dessen Zusicherung zu breit formuliert war. Eine Ausnahme gehört in den Test, nicht um ihn herum. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
