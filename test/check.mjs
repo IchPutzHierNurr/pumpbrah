@@ -1044,42 +1044,7 @@ const REGRESSIONS = [
       return [r.ok, JSON.stringify(r)];
     }
   },
-  {
-    id: 'PB-040', title: 'Coach-Maßnahmen lassen den Plan gültig zurück',
-    run: async () => {
-      // Vorwaertsgerichteter Test (wie PB-029/PB-030): Die Massnahmen des
-      // Coaches schreiben in D.plan. Zwei Zusagen muessen dabei halten:
-      //   "Verteilen" aendert die Frequenz, NICHT das Volumen.
-      //   "- Satz" faellt nie unter einen Satz.
-      const r = await page.evaluate(() => {
-        const before = JSON.parse(JSON.stringify(D.plan));
-        const sets = () => Object.values(D.plan).flatMap(d => d.exercises || [])
-          .filter(e => e.type === 'main' && e.muscle === 'chest')
-          .reduce((a, e) => a + (parseInt(e.sets) || 0), 0);
-        const days = () => Object.values(D.plan)
-          .filter(d => (d.exercises || []).some(e => e.type === 'main' && e.muscle === 'chest')).length;
-        D.plan = {
-          Tag_A: { day: 'Mo', exercises: [
-            { id: 1, name: 'Bankdrücken', sets: 4, rmin: 8, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' },
-            { id: 2, name: 'Butterfly', sets: 3, rmin: 12, rmax: 15, rir: 1, type: 'main', muscle: 'chest', note: '' }] },
-          Tag_B: { day: 'Do', exercises: [
-            { id: 3, name: 'Kniebeugen', sets: 3, rmin: 6, rmax: 10, rir: 2, type: 'main', muscle: 'legs', note: '' }] }
-        };
-        const volBefore = sets(), freqBefore = days();
-        coachSpreadMuscle('chest');
-        const volAfter = sets(), freqAfter = days();
-        // Auf 1 Satz herunterfahren und dann weiter druecken.
-        D.plan = { Tag_A: { day: 'Mo', exercises: [
-          { id: 1, name: 'Bankdrücken', sets: 1, rmin: 8, rmax: 10, rir: 2, type: 'main', muscle: 'chest', note: '' }] } };
-        coachTrimSet('chest'); coachTrimSet('chest');
-        const floor = D.plan.Tag_A.exercises[0].sets;
-        D.plan = before; save(); coachInvalidate();
-        return { volBefore, volAfter, freqBefore, freqAfter, floor };
-      });
-      return [r.volBefore === r.volAfter && r.freqAfter > r.freqBefore && r.floor >= 1, JSON.stringify(r)];
-    }
-  },
-  {
+{
     id: 'PB-044', title: 'Session-Vergleich nur bei vergleichbaren Sessions',
     run: async () => {
       // Derselbe Plan-Schluessel garantiert nicht denselben Inhalt. Wer den Tag
@@ -1330,7 +1295,6 @@ const REGRESSIONS = [
             ['m-import', () => openPlanImport(), 'formular'],
             ['m-lib-edit', () => openLibraryEditor(), 'inline'],
             ['m-alt', () => { wo(); openAlternative(0); }, 'auswahl'],
-            ['m-evidence', () => showEvidence(EVIDENCE_DB[0].n), 'auswahl'],
             ['m-exdemo', () => { const e = ersteUebung(); showExDemo(e.name, e.muscle, e.type); }, 'auswahl'],
             ['m-exhist', () => showExHist(ersteUebung().name), 'auswahl'],
             ['m-lib', () => openLibrary(), 'auswahl'],
@@ -4115,55 +4079,6 @@ const REGRESSIONS = [
     }
   }
   ,
-  {
-    id: 'PB-114', title: 'Der Coach liest die Historie mit',
-    run: async () => {
-      /* Der Coach rechnete ausschliesslich den PLAN durch. Eine Uebung, die in
-         drei von vier Einheiten uebersprungen wird, steht im Plan, findet aber
-         nicht statt — sie zaehlt trotzdem ins Wochenvolumen, und die Gruppe
-         gilt als versorgt. Die Daten lagen seit dem ersten Tag da. */
-      const r = await page.evaluate(() => {
-        const planVorher = JSON.parse(JSON.stringify(D.plan)), histVorher = D.history,
-              profVorher = D.profile;
-        try {
-          const ex = (id, name, sets, muscle) => normalizeExercise({ id, name, sets, rmin: 8, rmax: 12, rir: 2, type: 'main', muscle, note: '' });
-          D.plan = { Tag_H: { day: 'Mo', exercises: [
-            ex(1, 'Bankdrücken', 4, 'chest'), ex(2, 'Beinpresse', 4, 'legs'),
-            ex(3, 'KH Seitheben', 3, 'shoulders'), ex(4, 'Wadenheben stehend', 3, 'legs')] } };
-          D.profile = { minutes: 45 };
-          D.history = [0, 1, 2, 3].map(i => ({
-            id: 'HI' + i, updatedAt: Date.now(),
-            date: new Date(Date.now() - (i * 7 + 1) * 864e5).toLocaleDateString('de-DE'),
-            planKey: 'Tag_H', duration: 95,
-            sets: D.plan.Tag_H.exercises.filter(e => !(i < 3 && e.name === 'Wadenheben stehend'))
-              .flatMap(e => Array.from({ length: e.sets }, (_, n) => ({
-                ex: e.name, nr: n + 1, w: 50, r: 10, rir: 2, note: '', muscle: e.muscle, type: 'main', mode: '' }))),
-            ...(i < 3 ? { skipped: ['Wadenheben stehend'] } : {})
-          }));
-          save(); coachInvalidate();
-          const titel = coachAnalyzePlan().issues.map(i => i.title);
-          const vorher = D.plan.Tag_H.exercises.map(e => e.name);
-          coachMoveUp('Tag_H', 3);
-          const nachher = D.plan.Tag_H.exercises.map(e => e.name);
-          /* Zwei Einheiten reichen ausdruecklich nicht — ein schlechter Tag
-             ist noch kein Urteil. */
-          D.history = D.history.slice(0, 2);
-          coachInvalidate();
-          const zuWenig = coachAnalyzePlan().issues.some(i => /findet nicht statt/.test(i.title));
-          return {
-            skipBefund: titel.filter(x => /findet nicht statt/.test(x)),
-            budgetBefund: titel.filter(x => /Zeitbudget/.test(x)),
-            vorher, nachher, zuWenig
-          };
-        } finally { D.plan = planVorher; D.history = histVorher; D.profile = profVorher; save(); coachInvalidate(); }
-      });
-      const ok = r.skipBefund.length === 1 && /Wadenheben/.test(r.skipBefund[0])
-        && r.budgetBefund.length === 1
-        && r.nachher.indexOf('Wadenheben stehend') < r.vorher.indexOf('Wadenheben stehend')
-        && r.zuWenig === false;
-      return [ok, JSON.stringify(r) + ' — erwartet: Skip- und Budgetbefund ab drei Einheiten, Verschieben wirkt'];
-    }
-  }
 ];
 
 for (const t of REGRESSIONS) {
@@ -4879,13 +4794,17 @@ const fuzz = await page.evaluate(async ({ iterations, seed }) => {
       const a = coachAnalyzePlan();
       coachMatrixHTML(a); coachDayLabels(a.dayKeys);
       renderCoachCard(); coachSessionHTML();
-      Object.keys(MUSCLE_LANDMARKS).forEach(m => { coachBadge(m, 'main'); coachSuggestExercise(m); coachBestDayFor(m, int(0,1) === 1); });
-      Object.keys(D.plan || {}).forEach(k => coachDayHintHTML(k));
-      const m = pick(Object.keys(MUSCLE_LANDMARKS));
-      // Evidenz-Katalog mitbeschiessen: Vorschlag, Begruendungsblatt, Badge
-      coachSuggestExercise(m); confBadge(int(-2, 5));
-      showEvidence(pick(EVIDENCE_DB).n); showEvidence('Gibt es nicht ' + int(1, 99)); cm('m-evidence');
-      pick([() => coachAddExercise(m, false), () => coachTrimSet(m), () => coachSpreadMuscle(m)])();
+      /* Seit der Volumen-Coach entfernt ist (nur noch Anzeige, keine
+         Empfehlung), bleiben genau zwei Aufrufe: das Badge an der Uebung und
+         die Muskel-mal-Tag-Matrix. */
+      Object.keys(MUSCLE_LANDMARKS).forEach(m => coachBadge(m, 'main'));
+      /* Der Evidenz-Katalog bleibt als Datenquelle fuer den Uebungstausch —
+         nur das Begruendungsblatt haengt nicht mehr an einem Knopf, weil sein
+         einziger Aufrufer der Coach-Vorschlag war. Beschossen wird er
+         deshalb ueber alternativeFor. */
+      const tage = Object.keys(D.plan || {});
+      const ex = tage.length ? (D.plan[pick(tage)].exercises || [])[0] : null;
+      if (ex) alternativeFor(ex, new Set());
     }],
     ['pureMath', () => {
       // Reine Rechenfunktionen mit Grenzwerten beschießen.

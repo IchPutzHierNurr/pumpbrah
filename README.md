@@ -36,7 +36,8 @@ Plan aus dem Onboarding erzeugt — neun Fragen, die ihn wirklich bestimmen:
 Tage, Ort, Ziel, Erfahrung **und Zeitbudget, Beschwerden, Zeitspar-Methoden**.
 Das Zeitbudget ist eine harte Grenze, keine Absicht; Beschwerden tauschen
 Übungen gegen gelenkschonende Varianten desselben Musters, statt sie zu
-streichen. Gerechnet wird gegen dieselben Landmarks wie der Coach ·
+streichen. Gerechnet wird gegen dieselben Volumen-Landmarks, gegen die die
+App den fertigen Plan danach misst ·
 **Mesozyklus**: Volumen steigt über die Wochen von 72 % auf 100 % des Plans,
 danach eine Entlastungswoche — skaliert wird das Workout, nie der Plan ·
 Dauerschätzung je Trainingstag, **an deiner gemessenen Dauer geeicht** —
@@ -97,16 +98,21 @@ eingefärbt nach Muskelgruppe. In der Demo läuft die animierte Strichfigur aus
 der eigenen Pose-Engine, dazu Zielmuskulatur, Ausführungs-Cue und
 Tempo-Umschalter (2 s / 3 s / 5 s betonte Exzentrik).
 
-**Volumen-Coach**
-Wochenvolumen je Muskel gegen MEV/MAV/MRV, Frequenz, fehlende
-Bewegungsmuster — im Plan wie im laufenden Workout. Dazu **drei Befunde aus
-der Historie**, die der Plan über sich selbst nicht weiß: eine Übung, die
-regelmäßig übersprungen wird (sie zählt ins Volumen, findet aber nicht statt),
-eine, die seit Einheiten keinen Bestwert mehr sieht, und ein Trainingstag, der
-real über dem gewählten Zeitbudget liegt. Jeder Befund trägt eine ausführbare
-Aktion: nach vorn schieben, entfernen, Variante tauschen, koppeln. Fehlt Volumen, schlägt er
-eine konkrete Übung aus einem Katalog von 52 Einträgen vor, jede mit sichtbarer
-Konfidenzstufe und „warum?"-Beleg (siehe [`docs/EVIDENZ.md`](docs/EVIDENZ.md)).
+**Volumen gegen MEV, MAV und MRV**
+Wochenvolumen je Muskel gegen die Volumen-Landmarks, im Plan wie im laufenden
+Workout: eine Muskel-mal-Tag-Matrix, ein Warn-Badge an jeder Übung, deren
+Muskel unter dem Minimum oder über der Erholungsgrenze liegt, und die Zahlen
+der laufenden Einheit auf die Woche gerechnet.
+
+Bis September 2026 stand hier ein **Volumen-Coach**: dieselben Zahlen, aber
+mit Befunden nach Dringlichkeit, Übungsvorschlägen aus dem Evidenzkatalog und
+Knöpfen, die den Plan selbsttätig umbauten. Er ist auf Wunsch entfernt. Die
+Grenzwerte sind Populationsmittelwerte mit kleinen Effektgrößen — eine Zahl
+daneben zu stellen ist ehrlich, aus derselben Zahl eine Handlungsanweisung
+abzuleiten und sie per Knopfdruck auszuführen gab mehr Sicherheit vor, als die
+Datenlage hergibt (Begründung in [`docs/EVIDENZ.md`](docs/EVIDENZ.md), Details
+im Nachtrag von [`docs/BUGS.md`](docs/BUGS.md)). Der Katalog bleibt als
+Datenquelle für den Übungstausch.
 
 **Plan teilen**
 Ein Trainingsplan wird zu einem komprimierten Code, einem Link oder einem
@@ -179,7 +185,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **115 Prüfungen grün** — 94 Regressionstests, 6 Sync-Tests über
+Aktueller Stand: **113 Prüfungen grün** — 92 Regressionstests, 6 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 93 Operationen, in Chromium und
 WebKit.
 
@@ -266,10 +272,10 @@ und sucht sie im Testskript.
 
 | | |
 |---|---|
-| Funktionen in `index.html` | 417 |
-| vom Test erreicht | 250 |
+| Funktionen in `index.html` | 403 |
+| vom Test erreicht | 241 |
 | **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
-| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 167 |
+| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 162 |
 | außerhalb des Harnesses | **0** |
 
 Die letzte Zeile stand einmal bei acht. Sieben fielen weg, als die gefälschte
@@ -280,9 +286,9 @@ Fehler der Schwere *hoch* (PB-073).
 
 Vier Grenzen, die keine Zahl sichtbar macht:
 
-* **„Erreicht" ist nicht „geprüft".** Die 250 enthalten Funktionen, die der
+* **„Erreicht" ist nicht „geprüft".** Die 241 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
-  94 Regressionstests, die 6 Sync-Tests, die 3 Offline-Tests und die 22
+  92 Regressionstests, die 6 Sync-Tests, die 3 Offline-Tests und die 22
   Invarianten — nicht die Abdeckungszahl.
 * **Kein iOS-Simulator.** Der läuft nur auf macOS mit Xcode. Was geht: die
   echten Geräteprofile aus Playwright — Viewport, Pixeldichte, Touch,

@@ -4974,7 +4974,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **70
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **71
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -5051,6 +5051,7 @@ gestellt werden sollten:
 | 68 | **Feld geändert, abhängige Felder nicht** | PB-111 | Entweder ziehen sie mit oder es gibt eine Nachfrage. Stehenbleiben ist die einzige Variante, die garantiert falsch ist. |
 | 69 | **Eine Grenze, die nur unter Vorbehalt gilt** | PB-113 | Der Deckel kürzte nur, wo eine zweite Bedingung erlaubte. Bei knappen Fällen gilt diese nie — und die Grenze wird zum Vorschlag. |
 | 70 | **Ein neuer Wert macht einen alten Test falsch** | PB-109 | MEV 0 brach PB-013, weil dessen Zusicherung zu breit formuliert war. Eine Ausnahme gehört in den Test, nicht um ihn herum. |
+| 71 | **Test räumt nur im Erfolgsfall auf** | PB-040 | Wirft er vorher, bleibt sein Testzustand stehen und kippt die nächsten drei. Jeder Test, der D anfasst, gehört in try/finally. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen
@@ -5138,3 +5139,45 @@ Derselbe Fehlertyp — ein Dialog merkt sich eine *Position* statt einer
 ersten Mal wurde die Regel aufgeschrieben und danach gesucht; gefunden wurden
 zwei von drei. Der dritte versteckte sich in einem Funktionsargument statt in
 einer Variablen — dort, wo `grep` nach `let …Idx` nicht hinsieht.
+
+---
+
+## Nachtrag September 2026: Der Volumen-Coach ist entfernt
+
+Auf Wunsch des Nutzers — *„Volumencoach komplett raus. NUR MRV etc. drin
+lassen"* — ist die Empfehlungsmaschinerie aus der App verschwunden. Das
+betrifft zwei Registereinträge, deren Tests damit gegenstandslos werden. Die
+Einträge bleiben, wie es die Regel dieses Dokuments verlangt; die Tests sind
+gestrichen, und hier steht warum.
+
+| Eintrag | Test | Grund |
+|---|---|---|
+| [PB-040](#pb-040) | gestrichen | Die geprüften Maßnahmen (`coachSpreadMuscle`, `coachTrimSet`, `coachAddExercise`) existieren nicht mehr. Es gibt keinen Weg mehr, über den die App den Plan selbsttätig umbaut — damit auch keinen, der ihn ungültig zurücklassen könnte. |
+| [PB-114](#pb-114) | gestrichen | `historyIssues()` ist entfernt. Die Daten, die der Befund las (die Skip-Liste aus PB-107), bleiben in der Einheit gespeichert. |
+
+**Was genau raus ist:** Befunde nach Dringlichkeit, Übungsvorschläge aus dem
+Evidenzkatalog, das Begründungsblatt am Vorschlag, die Aktionsknöpfe
+(Übung ergänzen, Satz streichen, Volumen verteilen, nach vorn schieben,
+entfernen, koppeln), der Hinweisbalken über einem Trainingstag und die
+Ratschlagzeile im laufenden Workout.
+
+**Was bleibt:** alles, was misst. MEV, MAV und MRV über elf Volumengruppen,
+die Muskel-mal-Tag-Matrix im Plan, das Warn-Badge an einer Übung, deren Muskel
+unter dem Minimum oder über der Erholungsgrenze liegt, der Wochenring auf dem
+Startbildschirm, der Volumen-Radar, die Auswertung und die Zahlen im laufenden
+Workout. Der Evidenzkatalog bleibt als Datenquelle für den Übungstausch.
+
+**Warum das kein Rückschritt ist.** Die Grenzwerte sind
+Populationsmittelwerte mit kleinen Effektgrößen — das steht seit jeher in
+`docs/EVIDENZ.md`. Eine Zahl daneben zu stellen ist ehrlich. Aus derselben
+Zahl eine Handlungsanweisung abzuleiten und sie per Knopfdruck auszuführen,
+war der Teil, der mehr Sicherheit vorgab, als die Datenlage hergibt.
+
+**Ein Fund beim Ausbauen, der hierher gehört.** Das Entfernen riss vier Tests
+mit, aber nur einer davon war ein echter Treffer: PB-040 benutzte die
+gelöschten Funktionen. Die anderen drei (PB-046, PB-061, PB-065) fielen um,
+weil PB-040 mitten im Lauf eine Ausnahme warf und `D.plan` in seinem
+Testzustand stehen ließ — der Aufräumcode lief nie. **Ein Test, der seinen
+Zustand im Erfolgsfall zurücksetzt, aber nicht im Fehlerfall, verwandelt einen
+Fund in vier.** Die neueren Tests dieses Registers machen es deshalb mit
+`try/finally`. Die älteren nicht; das ist eine offene Schuld.
