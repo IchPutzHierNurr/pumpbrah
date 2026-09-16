@@ -442,8 +442,6 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
   border:1px solid var(--line);font-size:11.5px;line-height:1.5;color:var(--text2);
   display:flex;align-items:center;gap:10px}
 .libhint b{color:var(--text)}
-.coach-fix.two{flex-wrap:wrap}
-.coach-fix-acts{display:flex;gap:6px;flex:0 0 100%;margin-top:2px;justify-content:flex-end}
 .libhint button{flex:0 0 auto;border:0;border-radius:9px;padding:7px 12px;cursor:pointer;
   background:var(--neon);color:#000;font-size:11px;font-weight:800;letter-spacing:.03em}
 .wo-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
@@ -1489,23 +1487,6 @@ html,body{
 .coach-verdict b{color:#fff}
 .coach-foot{margin-top:12px;font-size:10.5px;line-height:1.45;color:rgba(255,255,255,.42)}
 
-.coach-fix{display:flex;align-items:flex-start;gap:11px;padding:12px;border-radius:16px;margin-top:9px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10)}
-.coach-fix .pri{
-  width:26px;height:26px;border-radius:9px;flex:0 0 26px;display:flex;align-items:center;justify-content:center;
-  font-family:'Bebas Neue',sans-serif;font-size:16px;color:#0e0b18;
-}
-.coach-fix .bd{flex:1;min-width:0}
-.coach-fix .bd .t{font-weight:800;font-size:13.5px;line-height:1.25}
-.coach-fix .bd .d{font-size:11.5px;color:rgba(255,255,255,.62);margin-top:4px;line-height:1.45}
-.coach-fix .go{
-  padding:10px 12px;border-radius:12px;border:none;cursor:pointer;flex:0 0 auto;white-space:nowrap;
-  background:var(--accent);color:#0e0b18;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:11.5px;
-  transition:transform var(--dur-micro) var(--sp);
-}
-.coach-fix .go.ghost{background:rgba(255,255,255,.10);color:rgba(255,255,255,.8)}
-.coach-fix .go:active{transform:scale(.93)}
-
 /* Matrix Muskel × Trainingstag. Die Spaltenzahl kommt aus --cols, damit bei
    sechs Tagen nicht das Layout bricht — dann wird horizontal gescrollt. */
 .coach-matrix{margin-top:12px;border-radius:18px;overflow-x:auto;border:1px solid rgba(255,255,255,.10);-webkit-overflow-scrolling:touch}
@@ -1537,22 +1518,6 @@ html,body{
 .coach-badge.high{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)}
 
 /* Hinweisbalken über einem Trainingstag */
-.coach-hint{
-  display:flex;gap:9px;align-items:center;margin:0 0 10px;padding:11px 12px;border-radius:15px;
-  background:color-mix(in srgb,var(--orange) 9%,transparent);
-  border:1px solid color-mix(in srgb,var(--orange) 24%,transparent);
-  font-size:12px;line-height:1.45;color:#ffd9a1;
-}
-.coach-hint .ic-wrap{flex:0 0 auto;display:flex;align-items:center}
-.coach-hint .ic{stroke:var(--orange)}
-.coach-hint b{color:var(--orange)}
-.coach-hint .add{
-  margin-left:auto;padding:8px 11px;border-radius:11px;border:none;cursor:pointer;flex:0 0 auto;white-space:nowrap;
-  background:var(--orange);color:#1a1000;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:11px;
-  transition:transform var(--dur-micro) var(--sp);
-}
-.coach-hint .add:active{transform:scale(.93)}
-
 /* Session-Beitrag im Workout */
 .coach-sessrow{display:flex;gap:8px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .coach-sessrow::-webkit-scrollbar{display:none}
@@ -1998,19 +1963,6 @@ html,body{
 .conf-0{color:var(--text3)}
 .conf-1{color:var(--blue)}
 .conf-2{color:var(--green)}
-.ev-link{
-  border:none;background:rgba(255,255,255,.10);color:rgba(255,255,255,.85);cursor:pointer;
-  font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:800;
-  padding:3px 8px;border-radius:8px;margin-left:2px;
-}
-.ev-link:active{transform:scale(.92)}
-.ev-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}
-.ev-tier,.ev-pat{
-  font-size:10px;font-weight:800;letter-spacing:.04em;padding:4px 9px;border-radius:8px;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text2);
-}
-.ev-sec{margin-bottom:14px}
-.ev-sec p{font-size:13px;line-height:1.55;color:var(--text2);margin-top:6px}
 .ev-note{
   padding:11px 13px;border-radius:14px;font-size:12px;line-height:1.5;
   background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--text2);margin-top:10px;
@@ -2449,10 +2401,6 @@ html,body{
 <div id="exn-name" style="font-size:14px;color:var(--text2);margin-bottom:8px"></div>
 <div class="ir"><div class="ig"><label>Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
 <div class="sheet-cta"><button class="btn" onclick="saveExNote()">Notiz speichern</button></div>
-</div></div>
-<div class="mbg" id="m-evidence"><div class="mdl" style="max-height:92vh;overflow:auto">
-<div class="mt"><span id="ev-title">Begründung</span> <button class="mc" onclick="cm('m-evidence')">✕</button></div>
-<div id="ev-body"></div>
 </div></div>
 <div class="mbg" id="m-share"><div class="mdl" style="max-height:92vh;overflow:auto">
 <div class="mt"><span id="share-title">Plan teilen</span> <button class="mc" onclick="cm('m-share')">✕</button></div>
@@ -4590,8 +4538,8 @@ function renderPL(){
   const c=document.getElementById('pl');
   const p=D.plan[curTab];
   if(!c)return;
-  if(!p||!p.exercises.length){c.innerHTML=coachDayHintHTML(curTab)+'<div class="empty">Noch keine Übungen in diesem Tag.<br><br><button class="btn btn-s btn-o" onclick="openAddEx()">+ Erste Übung hinzufügen</button></div>';return}
-  let h=coachDayHintHTML(curTab);
+  if(!p||!p.exercises.length){c.innerHTML='<div class="empty">Noch keine Übungen in diesem Tag.<br><br><button class="btn btn-s btn-o" onclick="openAddEx()">+ Erste Übung hinzufügen</button></div>';return}
+  let h='';
   p.exercises.forEach((ex,i)=>{
     const iC=ex.type==='pre'?'c-pre':ex.type==='mob'?'c-mob':'c-'+ex.muscle;
     const cC=ex.type==='pre'?'pre':ex.type==='mob'?'mob':'';
@@ -6654,82 +6602,6 @@ function planWeeklyVolume(includeSecondary){
 /* Welche Übung würde die Lücke schließen? Bevorzugt ein Bewegungsmuster, das
    im Plan noch gar nicht vorkommt — zwei Varianten derselben Bewegung geben
    weniger neuen Reiz als eine zweite Bewegungsrichtung. */
-/* Vorschlagsreihenfolge — bewusst in dieser Rangfolge:
-     1. Ein Bewegungsmuster, das für diesen Muskel im Plan noch FEHLT.
-        Eine zweite Variante derselben Bewegung bringt weniger neuen Reiz
-        als eine zweite Bewegungsrichtung.
-     2. Erste Wahl vor Ergänzung vor Spezialfall (Tier A/B/C).
-     3. Bei Gleichstand die besser belegte Übung.
-   Der Evidenz-Katalog kommt vor der Bibliothek; nur wenn er nichts hergibt,
-   wird die Bibliothek durchsucht. */
-function coachSuggestExercise(group){
-  /* Der Vorschlag muss zur Volumengruppe passen, nicht nur zur Kategorie:
-     Für „Bizeps" ist eine Trizepsübung keine Antwort, obwohl beide als
-     „arms" gespeichert sind. Der Filter prüft deshalb Muskel UND Muster. */
-  const meta=VOL_GROUP_META[group]||{muscle:group,pats:null};
-  const fits=(m,pat)=>m===meta.muscle&&(!meta.pats||meta.pats.includes(pat));
-  const inPlan=new Set();
-  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{
-    inPlan.add(baseNameKey(ex.name));
-    if(volGroupOf(ex.name,ex.muscle,ex.type)===group)inPlan.add('kind:'+detectMovePattern(ex.name,ex.muscle,ex.type));
-  }));
-  const rank=x=>(x.fresh?0:100)+({A:0,B:10,C:20}[x.item.t]||30)+(2-(x.item.c||0));
-  const fromDb=EVIDENCE_DB
-    .filter(it=>fits(it.m,it.p)&&!inPlan.has(baseNameKey(it.n)))
-    .map(it=>({item:it,kind:it.p,fresh:!inPlan.has('kind:'+it.p),evidence:true}));
-  if(fromDb.length){
-    fromDb.sort((a,b)=>rank(a)-rank(b)||a.item.n.localeCompare(b.item.n,'de'));
-    return fromDb[0];
-  }
-  const candidates=[];
-  allLibraryCategories().forEach(cat=>cat.items.forEach(item=>{
-    const m=item.m||item.muscle;
-    const t=item.t||item.type||'main';
-    if(t!=='main')return;
-    const kind=detectMovePattern(item.name,m,t);
-    if(!fits(m,kind))return;
-    if(inPlan.has(baseNameKey(item.name)))return;
-    candidates.push({item:{n:item.name,m,p:kind,t:'B',s:item.s,rn:item.rn,rx:item.rx,rir:item.rir,cue:item.note,c:0},kind,fresh:!inPlan.has('kind:'+kind),evidence:false});
-  }));
-  if(!candidates.length)return null;
-  candidates.sort((a,b)=>(b.fresh?1:0)-(a.fresh?1:0));
-  return candidates[0];
-}
-const CONF_LABEL=['Erfahrungswert','plausibel','gut belegt'];
-function confBadge(c){
-  const lvl=Math.max(0,Math.min(2,c|0));
-  return`<span class="conf conf-${lvl}" title="${attr(CONF_LABEL[lvl])}">${'●'.repeat(lvl+1)}<i>${esc(CONF_LABEL[lvl])}</i></span>`;
-}
-/* Begründungsblatt zu einer vorgeschlagenen Übung. Es gehört ins UI, weil
-   „vertrau mir" bei Trainingsempfehlungen die schlechteste aller Antworten
-   ist — und weil der Nutzer sehen soll, wo die Datenlage dünn ist. */
-function showEvidence(name){
-  const it=EVIDENCE_DB.find(x=>baseNameKey(x.n)===baseNameKey(name));
-  if(!it){toast('Zu dieser Übung liegt keine Begründung vor');return}
-  document.getElementById('ev-title').textContent=it.n;
-  document.getElementById('ev-body').innerHTML=
-    `<div class="ev-head">${confBadge(it.c)}<span class="ev-tier">${it.t==='A'?'Erste Wahl':it.t==='B'?'Gute Ergänzung':'Spezialfall'}</span>`+
-    `<span class="ev-pat">${esc((MOVE_META[it.p]||MOVE_META.generic).label)}</span></div>`+
-    `<div class="ev-sec"><div class="cap">Warum diese Übung</div><p>${esc(it.w)}</p></div>`+
-    `<div class="ev-sec"><div class="cap">Worauf sich das stützt</div><p>${esc(it.ev)}</p></div>`+
-    (it.cue?`<div class="ev-sec"><div class="cap">Ausführung</div><p>${esc(it.cue)}</p></div>`:'')+
-    (it.uni?`<div class="ev-note">Einseitige Übung — die Satzangabe gilt <b>pro Seite</b>. Für das Wochenvolumen zählt sie doppelt.</div>`:'')+
-    `<div class="ev-note">${it.c===2?'Für genau diesen Vergleich gibt es eine kontrollierte Trainingsstudie mit direkter Messung des Muskelwachstums.':it.c===1?'Die Begründung stützt sich auf indirekte Daten — eine Studie an einem anderen Muskel oder ein Vergleich innerhalb derselben Übung. Plausibel, aber nicht direkt gemessen.':'Hier steht ein Prinzip oder Erfahrungswissen, keine Studie zu genau dieser Frage. Das macht die Übung nicht schlecht — nur die Begründung schwächer.'}</div>`;
-  om('m-evidence');
-}
-/* Auf welchen Tag gehört sie? Bei einem Volumenproblem auf den Tag, der den
-   Muskel schon trainiert (thematisch passend). Bei einem Frequenzproblem
-   ausdrücklich auf einen Tag, der ihn NOCH NICHT trainiert — sonst hebt man
-   das Volumen und lässt die Frequenz, wo sie war. */
-function coachBestDayFor(muscle,wantNewDay){
-  const keys=Object.keys(D.plan||{});
-  if(!keys.length)return null;
-  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&volGroupOf(e.name,e.muscle,e.type)===muscle);
-  const load=k=>(D.plan[k].exercises||[]).filter(e=>e.type==='main').reduce((a,e)=>a+(parseInt(e.sets)||0),0);
-  const pool=wantNewDay?keys.filter(k=>!has(k)):keys.filter(has);
-  const use=pool.length?pool:keys;
-  return use.slice().sort((a,b)=>load(a)-load(b))[0];
-}
 function coachAnalyzePlan(){
   ensureUIState();
   const withSecondary=D.ui.volMode!=='direct';
@@ -6742,281 +6614,7 @@ function coachAnalyzePlan(){
       sets:v.sets,direct:v.direct,indirect:v.indirect,days:v.days,freq:v.freq};
   });
   const totalSets=Math.round(muscles.reduce((a,m)=>a+m.direct,0)*10)/10;
-  const issues=[];
-  muscles.forEach(m=>{
-    if(m.sets<=0){
-      issues.push({sev:1,muscle:m.key,color:'#ff3b5c',
-        title:`${m.name} kommt im Plan nicht vor`,
-        detail:`Kein einziger Arbeitssatz. Wenn das Absicht ist, ignorier den Punkt — sonst fehlt hier eine ganze Muskelgruppe.`,
-        action:{label:'+ Übung',call:`coachAddExercise('${jsStr(m.key)}',false)`}});
-      return;
-    }
-    if(m.state.key==='low'){
-      const gap=Math.round((m.lm.mev-m.sets)*10)/10;
-      const sug=coachSuggestExercise(m.key);
-      issues.push({sev:1,muscle:m.key,color:'#ffb020',
-        title:`${m.name}: ${m.sets} statt ${m.lm.mev} Sätze`,
-        detail:`${gap} ${gap===1?'Satz':'Sätze'} unter MEV. Unter dieser Grenze passiert praktisch kein Wachstum.`+
-          (sug?`<br>→ <b>${esc(sug.item.n||sug.item.name)}</b> ergänzen `+
-            (sug.evidence?`${confBadge(sug.item.c)} <button type="button" class="ev-link" onclick="event.stopPropagation();showEvidence('${jsStr(sug.item.n)}')">warum?</button>`:''):''),
-        action:{label:'+ Übung',call:`coachAddExercise('${jsStr(m.key)}',false)`}});
-      return;
-    }
-    if(m.state.key==='high'){
-      const over=Math.round((m.sets-m.lm.mrv)*10)/10;
-      issues.push({sev:1,muscle:m.key,color:'#ff3b5c',
-        title:`${m.name}: ${m.sets} statt maximal ${m.lm.mrv}`,
-        detail:`${over} über MRV — die Erholung kommt nicht mehr mit.`+
-          (m.indirect>0?` Davon ${m.indirect} indirekt aus anderen Übungen.`:''),
-        action:{label:'− Satz',call:`coachTrimSet('${jsStr(m.key)}')`,ghost:true}});
-      return;
-    }
-    /* Eine Gruppe ohne Untergrenze braucht kein direktes Volumen und damit
-       auch keine Frequenz: „Vordere Schulter nur 0× pro Woche" wäre eine
-       Mahnung, etwas zu tun, das niemand tun muss. */
-    if(m.lm.mev>0&&m.freq<COACH_FREQ_MIN&&dayKeys.length>=2){
-      issues.push({sev:2,muscle:m.key,color:'#ffb020',
-        title:`${m.name} nur ${m.freq}× pro Woche`,
-        detail:`Die Proteinsynthese läuft rund 48 Stunden. Dasselbe Volumen auf zwei Tage verteilt wirkt besser als alles an einem Tag.`,
-        action:{label:'Verteilen',call:`coachSpreadMuscle('${jsStr(m.key)}')`,ghost:true}});
-      return;
-    }
-    /* Auch hier: eine Gruppe ohne Untergrenze bekommt genug vom Drücken.
-       „Billigster Zuwachs im Plan" wäre für sie schlicht falsch. */
-    if(m.lm.mev>0&&m.sets<m.lm.mav){
-      const room=Math.round((m.lm.mav-m.sets)*10)/10;
-      issues.push({sev:3,muscle:m.key,color:'#4ea1ff',
-        title:`${m.name}: Luft nach oben`,
-        detail:`${m.sets} Sätze — über MEV, aber ${room} unter dem Optimum. Kein Muss, aber der billigste Zuwachs im Plan.`,
-        action:{label:'+ Übung',call:`coachAddExercise('${jsStr(m.key)}',false)`,ghost:true}});
-    }
-  });
-  historyIssues().forEach(i=>issues.push(i));
-  issues.sort((a,b)=>a.sev-b.sev);
-  const fine=muscles.filter(m=>m.sets>0&&!issues.some(i=>i.muscle===m.key));
-  return{muscles,issues,fine,totalSets,dayKeys,withSecondary};
-}
-/* --------------------------------------------------------------------------
-   WAS DER PLAN ÜBER SICH SELBST NICHT WEISS
-
-   Der Coach rechnete bisher ausschließlich den PLAN durch: Sätze, Gruppen,
-   Frequenz, Bewegungsmuster. Das ist die halbe Wahrheit. Die andere Hälfte
-   steht in der Historie, und sie war für die Planung nie zugänglich:
-
-   · Eine Übung, die in drei von vier Einheiten übersprungen wird, steht im
-     Plan, findet aber nicht statt. Sie zählt trotzdem ins Volumen, und der
-     Coach meldet die Gruppe als versorgt, obwohl sie es nicht ist.
-   · Eine Übung, die seit sechs Einheiten nicht mehr schwerer wird, ist kein
-     Trainingsreiz mehr, sondern eine Gewohnheit.
-   · Ein Trainingstag, der real regelmäßig deutlich länger dauert als geplant,
-     ist zu voll — unabhängig davon, was die Schätzung sagt.
-
-   Die App hat diese Daten seit dem ersten Tag. Sie hat sie nur als Statistik
-   angezeigt, statt etwas damit zu tun. Ein Befund braucht mindestens drei
-   Einheiten zum selben Trainingstag, sonst ist ein schlechter Tag schon ein
-   Urteil.
-   -------------------------------------------------------------------------- */
-const HIST_MIN_SESSIONS=3;
-const HIST_SKIP_RATIO=.5;
-const HIST_STAGNATION=5;
-function recentSessionsFor(planKey,limit){
-  return (D.history||[]).filter(s=>s.planKey===planKey).slice(-(limit||6));
-}
-function historyIssues(){
-  const out=[];
-  Object.entries(D.plan||{}).forEach(([key,day])=>{
-    const sessions=recentSessionsFor(key,6);
-    if(sessions.length<HIST_MIN_SESSIONS)return;
-    (day.exercises||[]).forEach((ex,idx)=>{
-      if(ex.type!=='main')return;
-      /* Übersprungen heißt: in der Einheit war die Übung geplant, aber es kam
-         kein Satz an. Beides zählt — der ausdrückliche Skip und das stille
-         Weglassen. */
-      const weg=sessions.filter(sess=>{
-        if((sess.skipped||[]).some(n=>sameExercise(n,ex.name)))return true;
-        return !(sess.sets||[]).some(x=>sameExercise(x.ex,ex.name));
-      }).length;
-      if(weg/sessions.length>=HIST_SKIP_RATIO){
-        out.push({sev:2,muscle:volGroupOf(ex.name,ex.muscle,ex.type),color:'#ffb020',
-          title:`${ex.name} findet nicht statt`,
-          detail:`In ${weg} von ${sessions.length} Einheiten übersprungen — im Plan zählt sie trotzdem ins Wochenvolumen. Entweder raus damit oder an eine frühere Stelle im Tag.`,
-          action:{label:'Nach vorn',call:`coachMoveUp('${jsStr(key)}',${idx})`,ghost:true},
-          action2:{label:'Entfernen',call:`coachDropExercise('${jsStr(key)}',${idx})`,ghost:true}});
-        return;
-      }
-      /* Stagnation: seit N Einheiten kein neuer Bestwert. exerciseProgress
-         rechnet über e1RM, fängt also auch „mehr Wiederholungen bei gleichem
-         Gewicht" — echte Progression ohne Scheibenwechsel. */
-      const p=(typeof exerciseProgress==='function')?exerciseProgress(ex.name):null;
-      if(p&&p.sessions>=HIST_STAGNATION&&p.delta!==null&&p.delta<=0){
-        out.push({sev:3,muscle:volGroupOf(ex.name,ex.muscle,ex.type),color:'#4ea1ff',
-          title:`${ex.name} steht seit ${p.sessions} Einheiten`,
-          detail:`Kein neuer Bestwert über e1RM. Ein Variantenwechsel im selben Bewegungsmuster bringt oft mehr als ein weiterer Satz.`,
-          action:{label:'Variante',call:`openSwapFromPlan('${jsStr(key)}',${idx})`,ghost:true}});
-      }
-    });
-    /* Der Tag als Ganzes: dauert er real deutlich länger als geschätzt, ist
-       er zu voll. Gemessen am Median, damit ein langer Tag nichts entscheidet. */
-    /* Gemessen wird gegen das ZEITBUDGET aus dem Onboarding, nicht gegen die
-       Schätzung: Die Schätzung eicht sich an genau diesen Messwerten (siehe
-       durationFactor) und zieht dem Befund damit den Boden weg. Die Frage ist
-       ohnehin eine andere — nicht „schätzt die App richtig", sondern „passt
-       der Tag in die Zeit, die du hast". */
-    const budget=parseInt(D.profile&&D.profile.minutes)||0;
-    const zeiten=sessions.map(x=>parseInt(x.duration)||0).filter(x=>x>=10&&x<=300).sort((a,b)=>a-b);
-    if(budget>0&&zeiten.length>=HIST_MIN_SESSIONS){
-      const med=zeiten.length%2?zeiten[(zeiten.length-1)/2]:(zeiten[zeiten.length/2-1]+zeiten[zeiten.length/2])/2;
-      if(med>budget*1.15&&med-budget>=10){
-        const koppelbar=(day.exercises||[]).filter(e=>e.type==='main'&&!e.ss&&
-          !COMPOUND_PATTERNS.includes(detectMovePattern(e.name,e.muscle,e.type))).length;
-        out.push({sev:2,muscle:null,color:'#ffb020',
-          title:`${planDisplayName(key)} sprengt dein Zeitbudget`,
-          detail:`Du wolltest ${budget} min, gebraucht hast du im Mittel ${Math.round(med)} min.`+
-            (koppelbar>=2?` ${koppelbar} Isolationsübungen an diesem Tag sind noch ungekoppelt — als Supersatz kosten zwei davon zusammen eine Pause statt zwei.`:' Ein Satz weniger bei der Übung mit dem meisten Volumen holt das heraus.'),
-          action:koppelbar>=2?{label:'Koppeln',call:`coachPairDay('${jsStr(key)}')`,ghost:true}
-                             :{label:'Tag ansehen',call:`curTab='${jsStr(key)}';renderPlan();go('dash')`,ghost:true}});
-      }
-    }
-  });
-  return out;
-}
-/* Eine Übung, die dauernd hinten liegen bleibt, gehört nach vorn — dort wird
-   sie gemacht. Das ist der billigere Eingriff als sie zu streichen. */
-function coachMoveUp(dayKey,idx){
-  const list=(D.plan[dayKey]||{}).exercises;
-  if(!list||idx<=0||idx>=list.length)return;
-  const ex=list.splice(idx,1)[0];
-  /* Hinter die letzte Grundübung, nicht an Position eins: eine Isolation vor
-     dem Bankdrücken hilft niemandem. */
-  let ziel=0;
-  list.forEach((e,i)=>{if(COMPOUND_PATTERNS.includes(detectMovePattern(e.name,e.muscle,e.type)))ziel=i+1});
-  list.splice(Math.min(ziel,list.length),0,ex);
-  save();markPlanDirty();coachInvalidate();
-  curTab=dayKey;renderPlan();renderDash();
-  haptic([10,30,10]);
-  toast(`${ex.name} nach vorn verschoben`);
-}
-/* Die Antwort auf „zu lang" ist fast nie „weniger trainieren", sondern
-   „weniger warten". Koppelt alle noch freien Isolationsübungen des Tages
-   paarweise über verschiedene Volumengruppen. */
-function coachPairDay(dayKey){
-  const list=(D.plan[dayKey]||{}).exercises;
-  if(!list){toast('Trainingstag nicht gefunden');return}
-  const frei=list.filter(e=>e.type==='main'&&!e.ss&&
-    !COMPOUND_PATTERNS.includes(detectMovePattern(e.name,e.muscle,e.type)));
-  let paare=0;
-  for(let i=0;i<frei.length;i++){
-    if(frei[i].ss)continue;
-    for(let j=i+1;j<frei.length;j++){
-      if(frei[j].ss||!supersetFits(frei[i],frei[j]))continue;
-      const k=nextSupersetKey(list);
-      frei[i].ss=k;frei[j].ss=k;paare++;
-      break;
-    }
-  }
-  if(!paare){toast('Keine zwei Übungen, die sich koppeln lassen');return}
-  save();markPlanDirty();coachInvalidate();
-  curTab=dayKey;renderPlan();renderDash();
-  haptic([12,40,12]);
-  toast(`${paare} ${paare===1?'Supersatz':'Supersätze'} gekoppelt — ${estimatedDuration(dayKey)} min`);
-}
-function coachDropExercise(dayKey,idx){
-  const list=(D.plan[dayKey]||{}).exercises;
-  if(!list||!list[idx])return;
-  const name=list[idx].name;
-  if(!confirm(`„${name}" aus ${planDisplayName(dayKey)} entfernen?\n\nDeine geloggten Sätze bleiben in der Historie.`))return;
-  if(list[idx].ss){const k=list[idx].ss;const rest=list.filter((e,i)=>i!==idx&&e.ss===k);if(rest.length===1)rest[0].ss=null}
-  list.splice(idx,1);
-  save();markPlanDirty();coachInvalidate();
-  curTab=dayKey;renderPlan();renderDash();
-  toast(`${name} entfernt`);
-}
-
-/* --- Maßnahmen -----------------------------------------------------------
-   Jede greift in D.plan ein, also gilt überall dieselbe Regel: vorher genau
-   sagen, was passiert, und danach markPlanDirty() — sonst wandert die
-   Änderung zwar in die Daten, aber der Nutzer sieht keinen Speicherhinweis. */
-function coachAddExercise(muscle,newDay){
-  const sug=coachSuggestExercise(muscle);
-  if(!sug){toast('Keine passende Übung in der Bibliothek');return}
-  const dayKey=coachBestDayFor(muscle,!!newDay);
-  if(!dayKey){toast('Erst einen Trainingstag anlegen');return}
-  const it=sug.item;
-  const nm=it.n||it.name;
-  if(!confirm(`„${nm}" mit ${it.s||3} Sätzen zu ${planDisplayName(dayKey)} hinzufügen?`))return;
-  D.plan[dayKey].exercises.push({
-    id:Date.now(),name:nm,sets:it.s||3,rmin:it.rn||8,rmax:it.rx||12,
-    rir:it.rir===undefined||it.rir===null?2:it.rir,note:it.cue||it.note||'',type:'main',muscle:it.m||(VOL_GROUP_META[muscle]||{}).muscle||muscle
-  });
-  save();markPlanDirty();
-  curTab=dayKey;
-  renderPlan();renderDash();
-  haptic([12,40,12]);
-  toast(`${nm} → ${planDisplayName(dayKey)} ✓`);
-}
-function coachTrimSet(muscle){
-  /* Den Satz dort wegnehmen, wo am meisten liegt — nicht beim ersten Treffer.
-     Sonst schrumpft die Aufwärmübung und die Hauptübung bleibt bei sechs. */
-  let best=null;
-  Object.entries(D.plan||{}).forEach(([key,day])=>{
-    (day.exercises||[]).forEach((ex,i)=>{
-      if(ex.type!=='main'||volGroupOf(ex.name,ex.muscle,ex.type)!==muscle)return;
-      const sets=parseInt(ex.sets)||0;
-      if(sets<=1)return;
-      if(!best||sets>best.sets)best={key,i,sets,name:ex.name};
-    });
-  });
-  if(!best){toast('Kein Satz zum Streichen gefunden');return}
-  if(!confirm(`„${best.name}" von ${best.sets} auf ${best.sets-1} Sätze reduzieren?`))return;
-  D.plan[best.key].exercises[best.i].sets=best.sets-1;
-  save();markPlanDirty();
-  curTab=best.key;
-  renderPlan();renderDash();
-  haptic(10);
-  toast(`${best.name}: ${best.sets-1} Sätze ✓`);
-}
-function coachSpreadMuscle(muscle){
-  /* Frequenz erhöhen, ohne Volumen zu ändern: eine Übung dieses Muskels von
-     dem Tag, der ihn schon trägt, auf einen Tag ohne ihn verschieben. */
-  const keys=Object.keys(D.plan||{});
-  const has=k=>(D.plan[k].exercises||[]).some(e=>e.type==='main'&&volGroupOf(e.name,e.muscle,e.type)===muscle);
-  const from=keys.filter(has).sort((a,b)=>
-    (D.plan[b].exercises||[]).filter(e=>volGroupOf(e.name,e.muscle,e.type)===muscle).length-
-    (D.plan[a].exercises||[]).filter(e=>volGroupOf(e.name,e.muscle,e.type)===muscle).length)[0];
-  const to=keys.filter(k=>!has(k)).sort((a,b)=>
-    (D.plan[a].exercises||[]).length-(D.plan[b].exercises||[]).length)[0];
-  if(!from||!to){
-    /* Kein freier Tag — dann ist Verteilen nicht möglich, und eine zweite
-       Übung an anderer Stelle ist die ehrlichere Empfehlung. */
-    toast('Alle Tage trainieren diesen Muskel bereits');
-    return;
-  }
-  const list=D.plan[from].exercises;
-  const cand=list.map((e,i)=>({e,i})).filter(x=>x.e.type==='main'&&volGroupOf(x.e.name,x.e.muscle,x.e.type)===muscle)
-    .sort((a,b)=>(parseInt(a.e.sets)||0)-(parseInt(b.e.sets)||0));
-  if(!cand.length){toast('Keine passende Übung zum Verschieben');return}
-  const idx=cand[0].i;
-  const ex=list[idx];
-  if(!confirm(`„${ex.name}" von ${planDisplayName(from)} nach ${planDisplayName(to)} verschieben?\n\nDas Wochenvolumen bleibt gleich, ${muscleName(muscle)} kommt dann an zwei Tagen dran.`))return;
-  list.splice(idx,1);
-  D.plan[to].exercises.push(ex);
-  save();markPlanDirty();
-  curTab=to;
-  renderPlan();renderDash();
-  haptic([12,40,12]);
-  toast(`${ex.name} → ${planDisplayName(to)} ✓`);
-}
-
-/* --- Darstellung --------------------------------------------------------- */
-function coachIssueHTML(issue,rank){
-  const btn=a=>a?`<button type="button" class="go${a.ghost?' ghost':''}" onclick="${a.call}">${esc(a.label)}</button>`:'';
-  /* Zwei Aktionen brauchen eine eigene Zeile — nebeneinander gequetscht
-     unterschreiten sie auf dem iPhone SE die Antippfläche. */
-  const acts=issue.action2
-    ?`<div class="coach-fix-acts">${btn(issue.action)}${btn(issue.action2)}</div>`
-    :btn(issue.action);
-  return`<div class="coach-fix${issue.action2?' two':''}"><div class="pri" style="background:${issue.color}">${esc(rank)}</div>`+
-    `<div class="bd"><div class="t">${esc(issue.title)}</div><div class="d">${issue.detail}</div></div>${acts}</div>`;
+  return{muscles,totalSets,dayKeys,withSecondary};
 }
 /* Kurze, EINDEUTIGE Spaltenüberschriften. Der naive Weg — die ersten sechs
    Zeichen des Plannamens — macht aus "FullBody A" und "FullBody B" zweimal
@@ -7055,33 +6653,39 @@ function coachMatrixHTML(a){
   `</div>`+
   `<div class="coach-legend"><span><i style="background:#ffb020"></i>unter MEV</span><span><i style="background:#2ee06a"></i>im MAV</span><span><i style="background:#4ea1ff"></i>über MAV</span><span><i style="background:#ff3b5c"></i>über MRV</span></div>`;
 }
+/* --------------------------------------------------------------------------
+   WOCHENVOLUMEN IM PLAN — Zahlen, keine Ratschläge
+
+   Hier stand bis September 2026 der „Volumen-Coach": eine Karte, die den Plan
+   durchrechnete, Befunde nach Dringlichkeit sortierte, Übungen aus dem
+   Evidenzkatalog vorschlug und Knöpfe anbot, die den Plan selbsttätig
+   umbauten — Sätze streichen, Übungen ergänzen, Volumen auf andere Tage
+   verteilen.
+
+   Auf Wunsch des Nutzers ist davon nur noch das übrig, was MISST: die
+   Muskel-mal-Tag-Tabelle und die Einordnung gegen MEV, MAV und MRV. Wer die
+   Zahlen liest, zieht seine Schlüsse selbst — das ist bei
+   Populationsrichtwerten mit kleinen Effektgrößen ohnehin die ehrlichere
+   Arbeitsteilung. Die Grenzwerte bleiben vollständig erhalten, in dieser
+   Karte wie im Wochenring, im Radar und in der Auswertung.
+   -------------------------------------------------------------------------- */
 function renderCoachCard(){
   const mount=document.getElementById('coach-area');
   if(!mount)return;
   if(!Object.keys(D.plan||{}).length){mount.innerHTML='';return}
   const a=coachAnalyzePlan();
-  /* Zwischen „muss man ändern" (sev 1–2) und „könnte man" (sev 3) trennen.
-     Beides in einen Satz zu werfen liest sich, als wäre der halbe Plan kaputt,
-     obwohl nur zwei Muskelgruppen Luft nach oben haben. */
-  const hard=a.issues.filter(i=>i.sev<=2);
-  const soft=a.issues.filter(i=>i.sev===3);
-  const verdict=hard.length
-    ?`Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. `+
-      `${hard.length===1?'Ein Punkt liegt':`${hard.length} Punkte liegen`} klar daneben`+
-      `${soft.length?`, bei ${soft.length===1?'einer Muskelgruppe':`${soft.length} Muskelgruppen`} ist noch Luft nach oben`:''}.`
-    :soft.length
-      ?`Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. Nichts ist kaputt — bei ${soft.length===1?'einer Muskelgruppe':`${soft.length} Muskelgruppen`} wäre aber mehr drin.`
-      :`Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. Alle Muskelgruppen liegen im Korridor — nichts zu tun.`;
-  const shown=[...hard.slice(0,3),...soft.slice(0,2)];
-  const restCount=a.issues.length-shown.length;
+  /* Zähler und Nenner über DIESELBE Menge — sonst steht da „11 von 10".
+     Gezählt wird, was im Plan vorkommt; eine Gruppe ohne einen einzigen Satz
+     hat keinen Korridor, in dem sie liegen könnte. */
+  const imPlan=a.muscles.filter(m=>m.sets>0);
+  const drin=imPlan.filter(m=>m.state.key!=='low'&&m.state.key!=='high').length;
+  const gezaehlt=imPlan.length;
   mount.innerHTML=`<div class="coach-card">`+
-    `<div class="coach-h"><div class="av">${icon('chart',16)}</div><div class="t">Volumen-Coach</div><div class="src">MEV · MAV · MRV</div></div>`+
-    `<div class="coach-verdict">${verdict}</div>`+
+    `<div class="coach-h"><div class="av">${icon('chart',16)}</div><div class="t">Wochenvolumen</div><div class="src">MEV · MAV · MRV</div></div>`+
+    `<div class="coach-verdict">Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. `+
+      `${drin} von ${gezaehlt} Muskelgruppen liegen zwischen Minimum und Erholungsgrenze.</div>`+
     coachMatrixHTML(a)+
-    shown.map((i,n)=>coachIssueHTML(i,i.sev===3?'~':String(n+1))).join('')+
-    (restCount>0?`<div class="coach-foot">${restCount} weitere${restCount===1?'r Punkt':' Punkte'} mit geringerer Dringlichkeit — sie tauchen auf, sobald die oberen erledigt sind.</div>`:'')+
-    (a.fine.length?`<div class="coach-fix"><div class="pri" style="background:#2ee06a">✓</div><div class="bd"><div class="t">${esc(a.fine.map(m=>m.name).join(', '))} im Korridor</div><div class="d">${esc(a.fine.map(m=>m.sets).join(' / '))} Sätze. Nichts zu tun.</div></div></div>`:'')+
-    `<div class="coach-foot">Richtwerte nach den Volumen-Landmarks der Renaissance-Periodization-Schule (Dr. Mike Israetel). Das sind Populationsmittel — deine eigenen Grenzen können abweichen, die Historie zeigt es dir mit der Zeit.</div>`+
+    `<div class="coach-foot">Richtwerte nach den Volumen-Landmarks der Renaissance-Periodization-Schule (Dr. Mike Israetel). Das sind Populationsmittelwerte, keine Vorgaben — was für dich gilt, zeigt dein Verlauf.</div>`+
   `</div>`;
 }
 /* Badge an einer einzelnen Planübung: wie steht ihr Muskel in der Woche da? */
@@ -7109,23 +6713,6 @@ function coachCachedAnalysis(){
   return coachCache;
 }
 function coachInvalidate(){coachCache=null}
-/* Hinweisbalken über einem Trainingstag: was fehlt HIER? */
-function coachDayHintHTML(dayKey){
-  if(!D.plan||!D.plan[dayKey])return'';
-  const a=coachCachedAnalysis();
-  const gaps=a.issues.filter(i=>i.sev<=2);
-  if(!gaps.length)return'';
-  /* Nur Muskeln vorschlagen, die an diesem Tag thematisch passen: entweder
-     werden sie hier schon trainiert, oder der Tag ist der am wenigsten
-     beladene. Sonst landet Core-Volumen im Arm-Tag. */
-  const trained=new Set((D.plan[dayKey].exercises||[]).filter(e=>e.type==='main').map(e=>e.muscle));
-  const hit=gaps.find(g=>trained.has(g.muscle))||gaps.find(g=>coachBestDayFor(g.muscle,false)===dayKey);
-  if(!hit)return'';
-  return`<div class="coach-hint"><span class="ic-wrap">${icon('chart',15)}</span>`+
-    `<span>${hit.detail.replace(/<br>→/,' →')}</span>`+
-    (hit.action?`<button type="button" class="add" onclick="${hit.action.call}">${esc(hit.action.label)}</button>`:'')+
-  `</div>`;
-}
 /* Der Coach im laufenden Workout: was trägt DIESE Einheit zur Woche bei? */
 function coachSessionHTML(){
   if(!D.active)return'';
@@ -7148,13 +6735,14 @@ function coachSessionHTML(){
     return{key,name:muscleName(key),session:now[key],total,lm,state:landmarkState(total,lm)};
   }).filter(Boolean);
   if(!rows.length)return'';
-  const gap=rows.filter(r=>r.state.key==='low').sort((a,b)=>(a.lm.mev-a.total)-(b.lm.mev-b.total))[0];
-  const over=rows.find(r=>r.state.key==='high');
-  const line=gap
-    ? `Mit dieser Einheit stehst du bei <b>${esc(gap.name)} ${esc(gap.total)} / ${esc(gap.lm.mev)}</b>. ${Math.round((gap.lm.mev-gap.total)*10)/10} Sätze mehr, und die Woche liegt über MEV.`
-    : over
-      ? `<b>${esc(over.name)}</b> liegt mit ${esc(over.total)} Sätzen über MRV. Hier lieber abbrechen als noch einen Satz anhängen.`
-      : `Alles, was du heute trainierst, liegt im Wochen-Korridor. Sauber.`;
+  /* Die Zeile sagte früher, was zu tun ist („zwei Sätze mehr, dann bist du
+     drin" / „hier lieber abbrechen"). Jetzt beschriftet sie nur noch die
+     Zahlen darunter — die Entscheidung mitten im Workout trifft ohnehin
+     niemand anderes. Ein Urteil über eine halb fertige Einheit wäre zudem
+     wertlos: Wer beim ersten Satz steht, liegt zwangsläufig unter jedem
+     Wochenwert. */
+  const line=`<b>${rows.length} ${rows.length===1?'Muskelgruppe':'Muskelgruppen'}</b> heute im Einsatz. `+
+    `Die Zahlen zeigen den Wochenstand einschließlich dieser Einheit.`;
   return`<div class="coach-card compact">`+
     `<div class="coach-h"><div class="av">${icon('chart',16)}</div><div class="t">Diese Session</div><div class="src">WOCHE INKL. HEUTE</div></div>`+
     `<div class="coach-verdict">${line}</div>`+
