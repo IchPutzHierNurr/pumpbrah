@@ -157,6 +157,7 @@
 | [PB-112](#pb-112) | Geteilter Plan ohne seine Pausenlängen | niedrig | Unvollständige Daten | ✅ |
 | [PB-113](#pb-113) | Zeitdeckel lief bei knappem Budget wirkungslos durch | mittel | Falsches Versprechen | ✅ |
 | [PB-114](#pb-114) | Der Coach kannte die Historie nicht | mittel | Fehlender Weg | ✅ |
+| [PB-115](#pb-115) | Vergessenes Training verworfen, samt aller Sätze | **hoch** | Datenverlust | ✅ |
 | [PB-021](#pb-021) | Firestore ohne Authentifizierung | **kritisch** | Sicherheit | ⚠️ offen |
 | [PB-022](#pb-022) | Read-Modify-Write ohne Transaktion | mittel | Nebenläufigkeit | ✅ |
 | [PB-023](#pb-023) | 1-MB-Dokumentgrenze bei Firestore | mittel | Skalierung | ⚠️ offen |
@@ -4789,6 +4790,68 @@ erscheinen, das Verschieben muss wirken, und mit nur zwei Einheiten darf
 
 ---
 
+### PB-115
+
+**Ein vergessenes Training wurde verworfen, samt aller geloggten Sätze**
+
+| | |
+|---|---|
+| **Schwere** | **hoch** |
+| **Klasse** | Datenverlust |
+| **Gefunden** | Nutzermeldung: *„Wenn ich ein Training starte und tracke, dann aber vergesse, es zu beenden, werden die bereits getrackten Werte nicht übernommen"* |
+| **Status** | ✅ behoben |
+
+**Der Fehler.** Ein Satz landete beim Loggen in `D.active` und wurde sofort
+gespeichert — aber nur dort. In die Historie kam er ausschließlich über den
+Knopf „Beenden". Wer das vergaß, hatte ein offenes Training, und
+`normalizeData()` enthielt diese Zeile:
+
+```js
+if(D.active&&(!D.active.startTime||Date.now()-D.active.startTime>24*3600e3))D.active=null;
+```
+
+Nach 24 Stunden verschwand das offene Training beim nächsten Laden — ohne
+Nachfrage, ohne Hinweis, mit jedem geloggten Satz. Die Zeile war als
+Aufräumen gedacht: ein Training von gestern soll heute nicht mehr offen
+stehen. Richtig gedacht, falsch ausgeführt — aufgeräumt wurde in den Müll
+statt in die Historie.
+
+**Fix.** Ein Training ohne neuen Satz seit **drei Stunden** gilt als beendet
+und wird genau so übernommen, wie „Beenden" es getan hätte. `endWorkout()`
+und die automatische Übernahme bauen die Einheit über dieselbe Funktion
+(`sessionFromActive`), damit beide Wege dasselbe Ergebnis liefern.
+
+| Entscheidung | Grund |
+|---|---|
+| Gemessen am letzten geloggten **Satz** | Übungen umsortieren oder den Plan ansehen ist kein Training. Jeder Satz trägt dafür einen Zeitstempel `t`. |
+| Drei Stunden | Zwischen zwei Sätzen pausiert niemand so lange. Wer mittags unterbricht und nachmittags weitermacht, bleibt darunter. |
+| Datum des Trainingstags | Übernommen wird oft erst am nächsten Morgen — die Einheit gehört trotzdem zum Vortag. |
+| Dauer bis zum letzten Satz | Nicht bis zum Öffnen der App, sonst stünde eine Einheit von 30 Stunden in der Statistik. |
+| Kennung schon beim Start | Zwei Geräte, die dasselbe offene Training übernehmen, erzeugen dieselbe Einheit; der Abgleich führt sie zusammen statt zu verdoppeln. |
+| Grabstein wird geachtet | Ein gelöschtes Training darf über ein altes `D.active` nicht zurückkommen. |
+| Aus der Zeitkalibrierung ausgenommen | Die Dauer endet beim letzten Satz, nicht nach der letzten Pause — sie würde den Faktor aus PB-108 nach unten ziehen. |
+
+Geprüft wird beim Öffnen, beim Zurückkehren in die App und alle fünf
+Minuten, solange sie offen ist. Die App meldet es: *„Training vom 24.9.2026
+automatisch gespeichert — 14 Sätze"*.
+
+**Lektion.** Eine Aufräumregel, die Daten *entfernt*, ist eine Löschung und
+braucht dieselbe Sorgfalt wie jede andere. Die Frage bei jedem
+`= null` auf gespeichertem Zustand: Steht darin etwas, das der Nutzer
+eingegeben hat? Dann gehört es irgendwohin, nicht weg.
+
+**Test.** `PB-115` — eigener Browser-Context, gespeicherte Daten mit offenem
+Training, App frisch geladen. Fall A ist exakt der gemeldete Fehler: alte
+Fassung ohne Kennung und Zeitstempel, 30 Stunden alt, drei Sätze — sie
+müssen in der Historie stehen, geschrieben und gemeldet. Fall B ist die
+Gegenprobe: Letzter Satz vor 30 Minuten, das Training läuft weiter. Fall C
+stellt im laufenden Betrieb die Uhr vor und prüft die Dauer bis zum letzten
+Satz. Fall D: Ein gelöschtes Training kommt nicht zurück. Gegengeprüft auf
+dem alten Code und gegen zwei Mutationen (Grabstein ignoriert, Dauer bis
+jetzt).
+
+---
+
 ### Nachtrag zum Fuzzer — ein gelöschter Name mit überlebendem Aufrufer
 
 Die CI meldete auf **beiden** Engines einen Fehlschlag, wo lokal 86 Prüfungen
@@ -4974,7 +5037,7 @@ Grenze. Rechne einmal aus, wann — dann weißt du, ob es dein Problem ist.
 
 ## Muster über alle Fehler hinweg
 
-Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **71
+Wenn man die behobenen Fehler nach Ursache sortiert, bleiben **72
 wiederkehrende Muster**. Das sind die Fragen, die beim nächsten Feature zuerst
 gestellt werden sollten:
 
@@ -5052,6 +5115,7 @@ gestellt werden sollten:
 | 69 | **Eine Grenze, die nur unter Vorbehalt gilt** | PB-113 | Der Deckel kürzte nur, wo eine zweite Bedingung erlaubte. Bei knappen Fällen gilt diese nie — und die Grenze wird zum Vorschlag. |
 | 70 | **Ein neuer Wert macht einen alten Test falsch** | PB-109 | MEV 0 brach PB-013, weil dessen Zusicherung zu breit formuliert war. Eine Ausnahme gehört in den Test, nicht um ihn herum. |
 | 71 | **Test räumt nur im Erfolgsfall auf** | PB-040 | Wirft er vorher, bleibt sein Testzustand stehen und kippt die nächsten drei. Jeder Test, der D anfasst, gehört in try/finally. |
+| 72 | **Aufräumen in den Müll statt ins Archiv** | PB-115 | Eine Regel, die gespeicherten Zustand auf null setzt, ist eine Löschung. Steht darin etwas, das der Nutzer eingegeben hat? Dann gehört es irgendwohin, nicht weg. |
 
 Bemerkenswert: **Vier Fehler entstanden beim Verbessern anderer Dinge.**
 PB-018 kam als Fix von PB-001 herein, PB-020 ist PB-008 in einer anderen

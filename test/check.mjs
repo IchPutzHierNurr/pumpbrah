@@ -4079,6 +4079,79 @@ const REGRESSIONS = [
     }
   }
   ,
+  {
+    id: 'PB-115', title: 'Ein vergessenes Training wird gespeichert, nicht verworfen',
+    run: async () => {
+      /* Vom Nutzer gemeldet: „Wenn ich ein Training starte und tracke, dann
+         aber vergesse, es zu beenden, werden die bereits getrackten Werte
+         nicht uebernommen." normalizeData() setzte ein offenes Training, das
+         aelter als 24 Stunden war, kommentarlos auf null — jeder geloggte
+         Satz war weg.
+
+         Eigener Context, weil der START selbst geprueft wird: gespeicherte
+         Daten mit offenem Training, App frisch geladen. Fall A ist exakt der
+         gemeldete Fehler (alte Fassung ohne Zeitstempel, 30 Stunden alt —
+         vorher verworfen). Fall B ist die Gegenprobe: ein Training, dessen
+         letzter Satz 30 Minuten zurueckliegt, laeuft weiter. */
+      const basis = await page.evaluate(() => {
+        const d = JSON.parse(JSON.stringify(D));
+        d.history = []; d.active = null;
+        return d;
+      });
+      const h = 3600e3;
+      const offen = (start, zeiten) => {
+        const key = Object.keys(basis.plan)[0];
+        const ex = basis.plan[key].exercises.slice(0, 2).map((e, i) => ({ ...e, skipped: false,
+          logged: (zeiten[i] || []).map(t => ({ w: 60, r: 10, rir: 2, note: '', ...(t ? { t } : {}) })) }));
+        return { planKey: key, startTime: start, exercises: ex, compact: false };
+      };
+      const c = await browser.newContext({ viewport: IPHONE.viewport, isMobile: BROWSER === 'firefox' ? undefined : true, hasTouch: true });
+      const p = await c.newPage();
+      p.on('dialog', d => d.accept());
+      const lade = async (daten) => {
+        await p.goto(APP_URL);
+        await p.evaluate(d => { localStorage.setItem('pb_sync', 'offline'); localStorage.setItem('pb_data', JSON.stringify(d)); }, daten);
+        await p.goto(APP_URL);
+        await p.waitForTimeout(600);
+      };
+      try {
+        const jetzt = Date.now();
+        // A: alte Fassung, keine Kennung, keine Zeitstempel, 30 h alt
+        await lade({ ...basis, active: offen(jetzt - 30 * h, [[0, 0], [0]]) });
+        const a = await p.evaluate(() => {
+          const s = D.history[D.history.length - 1] || null;
+          const gespeichert = JSON.parse(localStorage.getItem('pb_data'));
+          return { aktiv: !!D.active, saetze: s ? s.sets.length : 0, auto: !!(s && s.auto),
+            imSpeicher: gespeichert.history.length, speicherAktiv: !!gespeichert.active,
+            hinweis: document.getElementById('toast').textContent };
+        });
+        // B: letzter Satz vor 30 min — laeuft weiter
+        await lade({ ...basis, active: offen(jetzt - 1 * h, [[jetzt - 0.5 * h]]) });
+        const b = await p.evaluate(() => ({ aktiv: !!D.active, hist: D.history.length }));
+        // C: im laufenden Betrieb, die Uhr drei Stunden weiter
+        const cc = await p.evaluate(() => {
+          const echt = Date.now; Date.now = () => echt() + 3.1 * 3600e3;
+          try { checkIdleWorkout(); } finally { Date.now = echt; }
+          const s = D.history[D.history.length - 1] || null;
+          return { aktiv: !!D.active, hist: D.history.length,
+            /* Dauer bis zum letzten Satz, nicht bis jetzt: sonst stuende hier
+               eine Einheit von dreieinhalb Stunden in der Statistik. */
+            dauer: s ? s.duration : null };
+        });
+        // D: ein geloeschtes Training darf ueber ein altes D.active nicht zurueckkommen
+        await lade({ ...basis, deleted: { history: ['id|Sweg'], weights: [], egym: [], libraryCustom: [] },
+          active: { ...offen(jetzt - 5 * h, [[jetzt - 4 * h]]), id: 'Sweg' } });
+        const d = await p.evaluate(() => ({ aktiv: !!D.active, hist: D.history.length }));
+        return [
+          a.aktiv === false && a.saetze === 3 && a.auto && a.imSpeicher === 1 && a.speicherAktiv === false
+            && /automatisch gespeichert/.test(a.hinweis)
+          && b.aktiv === true && b.hist === 0
+          && cc.aktiv === false && cc.hist === 1 && cc.dauer === 30
+          && d.aktiv === false && d.hist === 0,
+          JSON.stringify({ a, b, c: cc, d }) + ' — erwartet: alt uebernommen (3 Saetze, gemeldet, gespeichert), frisch laeuft weiter, Dauer bis zum letzten Satz, Geloeschtes bleibt geloescht'];
+      } finally { await c.close(); }
+    }
+  }
 ];
 
 for (const t of REGRESSIONS) {

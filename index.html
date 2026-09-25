@@ -2794,7 +2794,13 @@ function normalizeData(){
      kommen zwei Geräte unabhängig auf dieselbe, und aus einer Messung wird
      beim Zusammenführen nicht plötzlich zwei. */
   D.egym.measurements.forEach(m=>{if(m&&!m.id)m.id='m'+dateKey(m.date)});
-  if(D.active&&(!D.active.startTime||Date.now()-D.active.startTime>24*3600e3))D.active=null;
+  /* PB-115: Hier stand „älter als 24 Stunden → D.active=null". Wer ein
+     Training anfing, Sätze loggte und dann vergaß, auf „Beenden" zu tippen,
+     verlor beim nächsten Öffnen jeden einzelnen Satz — ohne Nachfrage, ohne
+     Hinweis. Jetzt wird ein liegengebliebenes Training übernommen statt
+     weggeworfen. Ohne Startzeit ist es unrettbar kaputt und fällt weg. */
+  if(D.active&&!D.active.startTime)D.active=null;
+  finalizeIdleWorkout();
   if(D.active){
     if(!Array.isArray(D.active.exercises)){D.active=null}
     else{
@@ -2805,6 +2811,102 @@ function normalizeData(){
   ensureLibraryState();
   ensureTombstoneState();
   ensureUIState();
+}
+/* --------------------------------------------------------------------------
+   EIN LIEGENGEBLIEBENES TRAINING WIRD GESPEICHERT, NICHT VERWORFEN
+
+   Vom Nutzer gemeldet: Wer ein Training anfängt, Sätze loggt und dann durch
+   Ablenkung vergisst, es zu beenden, verliert alles. Die Sätze lagen zwar in
+   D.active und damit im Speicher — in die Historie kamen sie aber nur über
+   den Knopf „Beenden". Nach 24 Stunden räumte normalizeData() das offene
+   Training kommentarlos weg (PB-115).
+
+   Jetzt gilt: Kommt drei Stunden lang kein neuer Satz, ist das Training
+   vorbei. Es wird genau so in die Historie übernommen, wie „Beenden" es getan
+   hätte — nur mit dem Datum des Trainingstags und der Dauer bis zum letzten
+   Satz, nicht bis zu dem Moment, in dem die App wieder aufging. Drei Stunden,
+   weil zwischen zwei Sätzen niemand so lange pausiert; wer das Training
+   unterbricht und am selben Nachmittag weitermacht, bleibt darunter.
+
+   Gemessen wird am letzten geloggten SATZ, nicht an der letzten Berührung
+   der App: Übungen umsortieren oder den Plan ansehen ist kein Training.
+
+   Die Kennung der Einheit steht schon beim Start fest. Ein zweites Gerät, das
+   dasselbe offene Training übernimmt, erzeugt damit dieselbe Einheit, und der
+   Abgleich führt beide zu einer zusammen statt zu zwei.
+   -------------------------------------------------------------------------- */
+const WORKOUT_IDLE_MS=3*3600e3;
+let autoSavedNotice=null;
+function activeSessionId(a){
+  /* Alte offene Trainings haben noch keine Kennung. Aus der Startzeit
+     abgeleitet kommen zwei Geräte unabhängig auf dieselbe. */
+  return (a&&a.id)||('A'+(parseInt(a&&a.startTime)||0).toString(36));
+}
+function activeLastSetTime(a){
+  let t=parseInt(a&&a.startTime)||0;
+  ((a&&a.exercises)||[]).forEach(ex=>((ex&&ex.logged)||[]).forEach(l=>{
+    const lt=parseInt(l&&l.t)||0;
+    if(lt>t)t=lt;
+  }));
+  return t;
+}
+/* Aus dem offenen Training wird eine Einheit der Historie — dieselbe Form,
+   egal ob über „Beenden" oder über den Leerlauf. Zwei Wege, die dasselbe
+   Ergebnis liefern müssen, gehören in EINE Funktion. */
+function sessionFromActive(a,opts){
+  const o=opts||{};
+  const start=parseInt(a.startTime)||Date.now();
+  const end=Math.max(start,o.endTime||Date.now());
+  const s={id:activeSessionId(a),updatedAt:Date.now(),
+    date:new Date(start).toLocaleDateString('de-DE'),
+    planKey:a.planKey,duration:Math.max(1,Math.floor((end-start)/60000)),sets:[]};
+  (a.exercises||[]).forEach(ex=>{if(!ex.skipped)(ex.logged||[]).forEach((l,i)=>{s.sets.push({ex:ex.name,nr:i+1,w:l.w,r:l.r,rir:l.rir,note:l.note,muscle:ex.muscle,type:ex.type})})});
+  /* Was übersprungen wurde, gehört in die Einheit — nicht als Strafe, sondern
+     als Erklärung (PB-107). */
+  const uebersprungen=(a.exercises||[])
+    .filter(ex=>ex.skipped&&!(ex.logged||[]).length)
+    .map(ex=>String(ex.name||''))
+    .filter(Boolean);
+  if(uebersprungen.length)s.skipped=uebersprungen;
+  if(o.auto)s.auto=true;
+  return s;
+}
+function finalizeIdleWorkout(now){
+  if(!D||!D.active||!Array.isArray(D.active.exercises))return null;
+  const last=activeLastSetTime(D.active);
+  if(!last||(now||Date.now())-last<WORKOUT_IDLE_MS)return null;
+  const sess=sessionFromActive(D.active,{auto:true,endTime:last});
+  D.active=null;
+  if(!sess.sets.length)return null;
+  if(!Array.isArray(D.history))D.history=[];
+  /* Schon übernommen (anderes Gerät) oder inzwischen gelöscht: nichts tun.
+     Ein gelöschtes Training darf nicht über ein altes D.active zurückkommen. */
+  const grab=D.deleted&&Array.isArray(D.deleted.history)?D.deleted.history:[];
+  if(grab.includes(histSessionKey(sess))||D.history.some(h=>h&&h.id===sess.id))return null;
+  D.history.push(sess);
+  D.history.sort((x,y)=>dateKey(x.date).localeCompare(dateKey(y.date)));
+  autoSavedNotice={date:sess.date,sets:sess.sets.length};
+  return sess;
+}
+/* Beim Öffnen, beim Zurückkehren in die App und alle fünf Minuten, solange
+   sie offen ist — ein Handy, das mit laufender App in der Sporttasche liegt,
+   soll das Training trotzdem abschließen. */
+function checkIdleWorkout(){
+  if(!D||!D.active)return;
+  if(!finalizeIdleWorkout())return;
+  save();
+  queueCloudSave(true);
+  try{localStorage.removeItem('pb_timer')}catch{}
+  if(typeof resetTmr==='function')resetTmr();
+  if(typeof releaseWakeLock==='function')releaseWakeLock();
+  renderAll();renderHist();
+  if(document.getElementById('s-wo')&&document.getElementById('s-wo').classList.contains('active'))renderWo();
+  showAutoSavedNotice();
+}
+function showAutoSavedNotice(){
+  if(!autoSavedNotice)return;
+  const n=autoSavedNotice;autoSavedNotice=null;
+  toast(`Training vom ${n.date} automatisch gespeichert — ${n.sets} ${n.sets===1?'Satz':'Sätze'}`);
 }
 function save(){
   normalizeData();
@@ -2962,6 +3064,14 @@ function showApp(){normalizeData();document.getElementById('login-screen').style
   mountAurora();
   checkSharedPlanLink();
   hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachSheetGestures();attachReveals();
+  /* Ein beim Laden übernommenes Training steht schon in D (normalizeData),
+     ist aber noch nicht geschrieben und noch nicht gemeldet. */
+  if(autoSavedNotice){try{localStorage.removeItem('pb_timer')}catch{}save();queueCloudSave(true);showAutoSavedNotice()}
+  if(!idleWatchAttached){
+    idleWatchAttached=true;
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkIdleWorkout()});
+    setInterval(checkIdleWorkout,5*60e3);
+  }
   if(IS_STANDALONE)document.documentElement.classList.add('standalone');
   registerServiceWorker();
 }
@@ -2983,6 +3093,7 @@ function showApp(){normalizeData();document.getElementById('login-screen').style
    Drei Fragen dazu, drei zu einer zusammengelegt: neun Schritte statt acht,
    und der Plan kommt näher an das, was der Nutzer tatsächlich tun kann.
    -------------------------------------------------------------------------- */
+let idleWatchAttached=false;
 let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym',birthday:null,
   minutes:75,limits:[],methods:['superset','shortrest']};
 function obToggleList(field,value,el){
@@ -5214,7 +5325,7 @@ function startWorkout(pk){
   }
   if(!D.plan[pk]){toast('Trainingstag nicht gefunden');return}
   const base=cloneData(D.plan[pk].exercises||[]).map(e=>{const n=normalizeExercise(e);n.logged=[];return n});
-  D.active={planKey:pk,startTime:Date.now(),exercises:applyDeloadToExercises(base),compact:false,deload:deloadActive()};
+  D.active={id:newSessionId(),planKey:pk,startTime:Date.now(),exercises:applyDeloadToExercises(base),compact:false,deload:deloadActive()};
   save();go('wo');renderWo();requestWakeLock();
   toast('Let\'s go! 🔥');haptic([15,50,15]);
 }
@@ -5322,7 +5433,7 @@ function logTargetExercise(){
   if(!ex||!Array.isArray(ex.logged))return null;
   return ex;
 }
-function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last});save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;startTmr();renderWo();toast(`↩ Wiederholt: ${last.w}kg × ${last.r}`);if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx)}
+function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;startTmr();renderWo();toast(`↩ Wiederholt: ${last.w}kg × ${last.r}`);if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx)}
 function skipEx(ei){
   const ex=activeExercisesSafe()[ei];
   if(!ex)return;
@@ -6348,6 +6459,10 @@ function sessionRawMinutes(session){
 function durationFactor(){
   const werte=[];
   [...(D.history||[])].slice(-10).forEach(sess=>{
+    /* Automatisch übernommene Einheiten enden beim letzten Satz, nicht nach
+       der letzten Pause — ihre Dauer ist systematisch zu kurz und würde den
+       Faktor nach unten ziehen (PB-115). */
+    if(sess&&sess.auto)return;
     const gemessen=parseInt(sess&&sess.duration)||0;
     if(gemessen<10||gemessen>300)return;
     const roh=sessionRawMinutes(sess);
@@ -8736,18 +8851,8 @@ function workoutCompareBlock(currentSession,previousSession){
 function endWorkout(){
   if(!D.active)return;
   if(!confirm('Workout beenden?'))return;
-  const dur=Math.floor((Date.now()-D.active.startTime)/60000);
-  const s={id:newSessionId(),updatedAt:Date.now(),date:new Date().toLocaleDateString('de-DE'),planKey:D.active.planKey,duration:dur,sets:[]};
-  D.active.exercises.forEach(ex=>{if(!ex.skipped)ex.logged.forEach((l,i)=>{s.sets.push({ex:ex.name,nr:i+1,w:l.w,r:l.r,rir:l.rir,note:l.note,muscle:ex.muscle,type:ex.type})})});
-  /* Was übersprungen wurde, gehört in die Einheit — nicht als Strafe, sondern
-     als Erklärung. Ohne diese Liste sieht eine gekürzte Einheit in der
-     Historie aus wie eine schwache. Der Coach liest sie später mit: eine
-     Übung, die dauernd wegfällt, gehört nicht in den Plan. */
-  const uebersprungen=D.active.exercises
-    .filter(ex=>ex.skipped&&!(ex.logged||[]).length)
-    .map(ex=>String(ex.name||''))
-    .filter(Boolean);
-  if(uebersprungen.length)s.skipped=uebersprungen;
+  const s=sessionFromActive(D.active);
+  const dur=s.duration;
   if(s.sets.length===0){D.active=null;save();resetTmr();renderWo();toast('Kein Satz geloggt');return}
   const previousSimilar=[...D.history].reverse().find(h=>h.planKey===s.planKey&&h.sets&&h.sets.length);
   const progData=[];
@@ -8881,7 +8986,9 @@ function confirmLog(){
   const b=clamp(parseInt(document.getElementById('log-r').value)||0,999);
   const rir=clamp(parseInt(document.getElementById('log-rir').value)||0,10);
   const note=document.getElementById('log-note').value.trim();
-  const entry=cardio?{w:b,r:Math.round(a),rir,note,mode:'cardio'}:{w:a,r:b,rir,note};
+  /* t: wann der Satz geloggt wurde. Daran misst sich, ob das Training noch
+     läuft oder liegengeblieben ist (PB-115). */
+  const entry=cardio?{w:b,r:Math.round(a),rir,note,mode:'cardio',t:Date.now()}:{w:a,r:b,rir,note,t:Date.now()};
   const hadHistory=getAllSets(ex.name).filter(s=>s.w>0).length>0;
   const isPR=!cardio&&a>0&&b>0&&hadHistory&&checkPR(ex.name,a,b);
   ex.logged.push(entry);

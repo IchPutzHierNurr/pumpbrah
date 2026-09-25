@@ -67,6 +67,11 @@ sechs Sätze bei einem Minimum von acht. Seit sie eigene Grenzen hat (PB-109),
 ist die Lücke sichtbar — und im mitgelieferten Plan geschlossen.
 
 **Im laufenden Workout**
+Jeder Satz ist sofort gespeichert, und **„Beenden" ist keine Pflicht**: Kommt
+drei Stunden lang kein neuer Satz, übernimmt die App das Training von selbst
+in die Historie — mit dem Datum des Trainingstags und der Dauer bis zum
+letzten Satz. Bis September 2026 wurde ein vergessenes Training nach 24
+Stunden kommentarlos verworfen, samt aller Sätze (PB-115) ·
 „Wenig Zeit": kürzt die Einheit auf ein Zeitbudget — Grundübungen zuletzt,
 nie unter zwei Sätze, der Plan bleibt unverändert ·
 Autoregulation: weicht der RIR vom Ziel ab, ändert sich die nächste Vorgabe ·
@@ -185,7 +190,7 @@ Der Fuzzer ist deterministisch: gleicher Seed = gleicher Lauf. Bei einem Fund
 liefert der Report die Aktionsfolge der letzten 12 Schritte und den Seed zum
 Nachstellen.
 
-Aktueller Stand: **113 Prüfungen grün** — 92 Regressionstests, 6 Sync-Tests über
+Aktueller Stand: **114 Prüfungen grün** — 93 Regressionstests, 6 Sync-Tests über
 zwei Geräte, 3 Offline-Tests und Fuzzing über 93 Operationen, in Chromium und
 WebKit.
 
@@ -272,10 +277,10 @@ und sucht sie im Testskript.
 
 | | |
 |---|---|
-| Funktionen in `index.html` | 403 |
-| vom Test erreicht | 241 |
+| Funktionen in `index.html` | 409 |
+| vom Test erreicht | 242 |
 | **an einem Knopf, aber von keinem Test aufgerufen** | **0** — das Skript schlägt fehl, sobald es wieder mehr werden |
-| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 162 |
+| nur intern erreichbar (Renderer, Merge-Teile, Hilfsfunktionen) | 167 |
 | außerhalb des Harnesses | **0** |
 
 Die letzte Zeile stand einmal bei acht. Sieben fielen weg, als die gefälschte
@@ -286,9 +291,9 @@ Fehler der Schwere *hoch* (PB-073).
 
 Vier Grenzen, die keine Zahl sichtbar macht:
 
-* **„Erreicht" ist nicht „geprüft".** Die 241 enthalten Funktionen, die der
+* **„Erreicht" ist nicht „geprüft".** Die 242 enthalten Funktionen, die der
   Fuzzer nur ausführt, ohne ihr Ergebnis zu bewerten. Was zusichert, sind die
-  92 Regressionstests, die 6 Sync-Tests, die 3 Offline-Tests und die 22
+  93 Regressionstests, die 6 Sync-Tests, die 3 Offline-Tests und die 22
   Invarianten — nicht die Abdeckungszahl.
 * **Kein iOS-Simulator.** Der läuft nur auf macOS mit Xcode. Was geht: die
   echten Geräteprofile aus Playwright — Viewport, Pixeldichte, Touch,
