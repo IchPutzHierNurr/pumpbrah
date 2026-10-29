@@ -1,0 +1,1 @@
+Quelle: https://github.com/JuliusBrussee/caveman (Tag v4.0.1, Commit 9b68f7e), MIT. Nur skills/caveman/SKILL.md kopiert; Hooks und Installer nicht.

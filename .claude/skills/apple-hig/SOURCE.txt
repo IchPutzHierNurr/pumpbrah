@@ -1,0 +1,1 @@
+Quelle: https://github.com/ebuntario/apple-hig (v1.0.0, Commit c434b91), MIT. SKILL.md, references/, assets/ kopiert; bin/ und setup/ nicht.
