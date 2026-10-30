@@ -348,6 +348,10 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .mt{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
 .mc{width:34px;height:34px;border-radius:11px;background:var(--bg3);border:1px solid var(--line);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .mc:active{transform:scale(.9)}
+/* Kopf mit zwei Handgriffen (Übung-Fenster): Bibliothek und Schließen, je 44 px hoch. */
+.mt-act{display:flex;align-items:center;gap:8px}
+.mt-act .btn{min-height:44px;margin:0;padding:0 16px}
+.mt-act .mc{width:44px;height:44px}
 
 /* toast */
 .toast{position:fixed;top:62px;left:50%;transform:translateX(-50%) translateY(-24px);background:rgba(20,22,27,.96);border:1px solid var(--line);border-radius:14px;padding:12px 22px;font-size:13px;font-weight:700;color:var(--text);z-index:300;opacity:0;transition:.32s var(--sp);pointer-events:none;white-space:nowrap;max-width:90%;box-shadow:0 16px 44px rgba(0,0,0,.4);backdrop-filter:blur(12px)}
@@ -622,14 +626,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .hist-ex-name{font-size:13px;color:var(--text);font-weight:600}
 .hist-ex-meta{display:flex;align-items:center;gap:8px;color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:12px}
 
-/* stats radar (styled classes if used) */
-.ana-radar{margin:12px 0 14px;padding:18px;border-radius:26px;background:var(--bg2);border:1px solid var(--line)}
-.ana-radar-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.ana-radar-title{font-size:11px;text-transform:uppercase;letter-spacing:.16em;color:var(--text2);font-weight:700}
-.ana-radar-pill{padding:8px 14px;border-radius:999px;background:var(--bg3);border:1px solid var(--line);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px}
-.ana-radar-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.ana-radar-stat{padding:12px 14px;border-radius:16px;background:var(--bg3);font-size:12px;color:var(--text2);display:flex;justify-content:space-between;align-items:center}
-.ana-radar-stat b{color:var(--text);font-size:14px}
 
 /* deload banner */
 .deload-banner{background:linear-gradient(135deg,color-mix(in srgb,var(--orange) 13%,var(--bg2)),var(--bg2));border:1px solid color-mix(in srgb,var(--orange) 30%,transparent);border-radius:var(--radius);padding:16px;margin-bottom:14px;animation:riseIn .4s var(--ease) both}
@@ -728,8 +724,10 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   transform-origin:left bottom;
   will-change:font-size;
 }
+/* Titel und eine graue Randnotiz auf einer Grundlinie (Historie: „Seit September"). */
+.ltitle-line{display:flex;align-items:baseline;gap:12px;min-width:0}
 .ltitle-sub{
-  font-size:13px;color:var(--text2);margin-top:3px;
+  font-size:13px;color:var(--text2);
   opacity:calc(1 - var(--t,0));max-height:calc(20px * (1 - var(--t,0)));overflow:hidden;
 }
 .ltitle-slot{flex-shrink:0;display:flex;align-items:center;gap:8px;padding-bottom:2px}
@@ -808,11 +806,11 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mdl .sheet-cta .btn{margin:0}
 .mdl .sheet-cta .btn+.btn{margin-top:6px}
 /* Der Fokus-Ausschnitt: sichtbar bleiben Zielvorgabe, Felder, RIR, Speichern. */
-.kb-open .mdl-log .log-head,
+.kb-open .mdl-log #log-hint,
 .kb-open .mdl-log .log-note,
-.kb-open .mdl-log .log-tgt .tw,
 .kb-open .mdl .cta-sub{display:none}
-.kb-open .mdl .mt{margin-bottom:10px}
+.kb-open .mdl .mt,
+.kb-open .mdl-log .log-top{margin-bottom:10px}
 /* Die RIR-Kreise bleiben antippbar (40 px), rücken bei offener Tastatur aber
    enger zusammen — sonst schiebt sie die Aktionszeile aus dem Bild. */
 .kb-open .mdl-log .rir-c{width:40px;height:40px;font-size:15px}
@@ -827,11 +825,24 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .cta-sub{display:block;width:100%;margin-top:8px;padding:6px 0;background:none;border:none;cursor:pointer;
   color:var(--text3);font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700}
 .cta-sub:active{color:var(--text)}
-.mdl-log .log-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.mdl-log .log-head>div{flex:1;min-width:0}
-.mdl-log #log-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mdl-log #log-hint{font-size:11px;color:var(--text3);margin-top:2px}
-.mdl-log .log-head .setbtn{flex:0 0 auto;min-width:0;padding:8px 12px;font-size:11.5px}
+/* Kopf: Übungsname, darunter der Satzstand, rechts das Schließen-Kreuz mit 44 px.
+   Ein eigener Titel „Satz loggen" und die Demo-Kachel entfallen; Name und
+   Speichern-Knopf sagen dasselbe. */
+.mdl-log .log-top{display:flex;align-items:center;gap:12px;min-height:44px;margin-bottom:12px}
+.mdl-log .log-top>div{flex:1;min-width:0}
+.mdl-log .mc{width:44px;height:44px;flex:0 0 44px}
+.mdl-log #log-name{font-size:20px;line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mdl-log #log-sub{font-size:13px;line-height:16px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mdl-log #log-hint{color:var(--t3)}
+.mdl-log #log-hint:not(:empty)::before{content:' · '}
+/* Beschriftungszeile über dem Feld: links das Label, beim Gewicht rechts der
+   Link zum Scheibenrechner (44 px hoch, ragt über die Zeile hinaus). */
+.mdl-log .log-lab{display:flex;align-items:center;justify-content:space-between;min-height:32px}
+.mdl-log .log-lab label{margin-bottom:0}
+.mdl-log .log-link{display:flex;align-items:center;height:44px;margin:-6px -8px -6px 0;padding:0 4px 0 12px;
+  background:none;border:none;cursor:pointer;color:var(--text);
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600}
+.mdl-log .log-link:active{color:var(--text2)}
 .mdl-log .log-rir{margin-bottom:10px}
 .mdl-log .log-rir label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px}
 .mdl-log .log-note{margin-bottom:12px}
@@ -843,19 +854,18 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
    ausserhalb von .ig und erbt die dortige Regel nicht. */
 .mdl-log .log-note input{width:100%;margin-top:6px;font-size:16px;padding:12px;border-radius:12px;
   background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
-.mdl-log .log-thumb{width:40px;height:40px;flex:0 0 40px;border-radius:12px;overflow:hidden;cursor:pointer}
-.mdl-log #log-hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* Die Zielvorgabe: Zahl groß, Begründung klein daneben und auf zwei Zeilen
-   begrenzt. Antippen klappt sie ganz auf — man braucht sie selten ganz. */
-.log-tgt{display:flex;align-items:center;gap:9px;margin-bottom:11px;padding:9px 11px;border-radius:14px;
-  background:color-mix(in srgb,var(--accent) 10%,transparent);
-  border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);cursor:pointer}
-.log-tgt .ti{flex:0 0 auto;color:var(--accent);display:flex}
-.log-tgt .tn{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;color:var(--accent);flex:0 0 auto}
-.log-tgt .tu{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text2);flex:0 0 auto}
-.log-tgt .tw{font-size:11px;color:var(--text3);flex:1;min-width:0;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.log-tgt.open .tw{-webkit-line-clamp:6}
+/* Die Zielvorgabe: eine ruhige graue Zeile ohne Akzent und ohne Begründung.
+   „Übernehmen" setzt Gewicht und Wiederholungen darauf. */
+.log-tgt{display:flex;align-items:center;gap:8px;min-height:52px;margin-bottom:12px;padding:0 4px 0 16px;border-radius:14px;
+  background:var(--bg3);box-shadow:var(--edge)}
+.log-tgt .tg-l{font-size:13px;line-height:16px;color:var(--text2)}
+.log-tgt .tg-v{flex:1;min-width:0;display:flex;align-items:baseline;gap:4px;white-space:nowrap}
+.log-tgt .tg-n{font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:1;font-variant-numeric:tabular-nums;color:var(--text2)}
+.log-tgt .tg-u{font-size:13px;line-height:16px;color:var(--t3)}
+.log-tgt .tg-take{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border-radius:999px;
+  background:rgba(255,255,255,.08);box-shadow:var(--edge);border:none;cursor:pointer;color:var(--text);
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600}
+.log-tgt .tg-take:active{transform:scale(.97)}
 
 /* --- Buttons: Tiefe statt Fläche --- */
 .btn{
@@ -864,6 +874,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 }
 .btn-g,.btn-o{box-shadow:var(--edge)}
 .btn:active{transform:scale(.975)}
+/* „Hinzufügen" im Übung-Fenster ist flach, ohne Lichtschein. */
+#a-btn,#a-btn:active{box-shadow:var(--edge-strong)}
 
 /* --- Bottom-Nav als schwebende Glasleiste --- */
 .bnav-inner{
@@ -989,13 +1001,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .wsr.justlogged{animation:setIn .45s var(--sp)}
 @keyframes setIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 
-/* --- Volumen-Radar (Stats) --- */
-.radar-wrap{position:relative;width:100%;max-width:330px;margin:0 auto}
-.radar-poly{opacity:0;transform-box:fill-box;transform-origin:center;animation:radarIn .8s var(--sp) .1s forwards}
-@keyframes radarIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
-.radar-axis{stroke:var(--line);stroke-width:1}
-.radar-label{font-size:10px;fill:var(--text3);font-family:'Space Grotesk',sans-serif;font-weight:700}
-
 /* --- Plan-Editor / Tag-Modal --- */
 /* Sieben Tage, eine Zeile. Mit Umbruch landete der Sonntag auf einem
    375-px-Gerät in Zeile zwei — und dort hinter der klebenden Aktionszeile.
@@ -1065,12 +1070,10 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
      Korridorband zwischen MEV und MAV. */
   --t3:#8b92a5;
   --zone:rgba(46,224,106,.14);
-  /* Restposten der alten Markenfarbe Violett/Magenta. Start, Historie und
-     Zahlen tragen sie nicht mehr, das laufende Training auch nicht;
-     gebraucht wird sie noch von Setup (.set-hero), dem Kalender und der
-     Coach-Karte im Plan. Sie entfällt, sobald diese Flächen auf --mat-hero
-     stehen. */
-  --brand-a:#7e5aff; --brand-b:#ff6fd8; --brand-deep:#2a1348;
+  /* Restposten der alten Markenfarbe Violett/Magenta. Alle großen Karten
+     stehen auf --mat-hero; gebraucht wird sie nur noch vom Kalender in der
+     Historie (heutiger und gewählter Tag). */
+  --brand-a:#7e5aff; --brand-b:#ff6fd8;
 }
 
 /* --- Regel 1: Typografische Hierarchie ---------------------------------- */
@@ -1427,28 +1430,22 @@ div.wg-note{cursor:default}
    Eine eigene Fläche in der Mesh-Familie, aber ruhiger als der Hero: der
    Coach soll gelesen werden, nicht angestarrt.
    ============================================================================ */
+/* Flache Karte im Rezept der großen Karten (--mat-hero). Die kleinere
+   „Diese Session" im Training sitzt auf --bg2. */
 .coach-card{
-  position:relative;overflow:hidden;isolation:isolate;
+  position:relative;overflow:hidden;
   border-radius:26px;padding:16px;margin:12px 0;
-  background:linear-gradient(150deg,#1d1533,#0e0b18);
-  border:1px solid rgba(255,255,255,.10);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),var(--shadow-2);
+  background:var(--mat-hero);
+  box-shadow:var(--edge-strong),var(--shadow-2);
 }
-.coach-card::before{content:'';position:absolute;width:250px;height:250px;border-radius:50%;filter:blur(66px);top:-130px;right:-70px;z-index:0;
-  background:radial-gradient(circle,color-mix(in srgb,var(--brand-a) 42%,transparent),transparent 66%)}
-.coach-card>*{position:relative;z-index:1}
-/* "Diese Session" im Training ist eine flache Karte; Wolke und Verlauf
-   gehören nur der Karte im Plan. */
 .coach-card.compact{
   padding:14px;border-radius:22px;
   background:var(--mat-1),var(--bg2);border-color:var(--line);box-shadow:var(--edge),var(--shadow-1);
 }
-.coach-card.compact::before{display:none}
-.coach-card.compact .coach-h .av{background:rgba(255,255,255,.06)}
 .coach-h{display:flex;align-items:center;gap:9px}
 .coach-h .av{
   width:30px;height:30px;border-radius:10px;flex:0 0 30px;
-  background:linear-gradient(140deg,var(--brand-a),var(--brand-b));
+  background:rgba(255,255,255,.06);
   display:flex;align-items:center;justify-content:center;
 }
 .coach-h .av .ic{stroke:#fff;stroke-width:2.2}
@@ -1456,7 +1453,7 @@ div.wg-note{cursor:default}
 .coach-h .src{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:rgba(255,255,255,.42);font-family:'JetBrains Mono',monospace}
 .coach-verdict{font-size:13px;line-height:1.5;color:rgba(255,255,255,.82);margin:10px 0 2px}
 .coach-verdict b{color:#fff}
-.coach-foot{margin-top:12px;font-size:10.5px;line-height:1.45;color:rgba(255,255,255,.42)}
+.coach-foot{margin-top:8px;font-size:11px;line-height:1.45;color:var(--t3)}
 
 /* Matrix Muskel × Trainingstag. Die Spaltenzahl kommt aus --cols, damit bei
    sechs Tagen nicht das Layout bricht — dann wird horizontal gescrollt. */
@@ -1560,9 +1557,12 @@ div.wg-note{cursor:default}
   animation:heatIn .34s var(--out) both;animation-delay:var(--hd,0ms);
 }
 @keyframes heatIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
-.heat i.l1{background:color-mix(in srgb,var(--accent) 30%,transparent)}
-.heat i.l2{background:color-mix(in srgb,var(--accent) 58%,transparent)}
-.heat i.l3{background:var(--accent)}
+/* Wochen mit Training in drei neutralen Helligkeitsstufen (eine, zwei, drei
+   und mehr Sessions); Lime markiert nur die laufende Woche. */
+.heat i.l1{background:rgba(244,246,251,.34)}
+.heat i.l2{background:rgba(244,246,251,.54)}
+.heat i.l3{background:rgba(244,246,251,.74)}
+.heat i:last-child.l1,.heat i:last-child.l2,.heat i:last-child.l3{background:var(--accent)}
 .heat-lg{display:flex;justify-content:space-between;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.45)}
 .streak-tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .streak-tri div{text-align:center;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}
@@ -1663,14 +1663,6 @@ div.wg-note{cursor:default}
    ============================================================================ */
 .rep{display:flex;gap:11px;padding:13px;border-radius:17px;margin-bottom:9px;
   background:var(--mat-2),rgba(255,255,255,.03);border:1px solid var(--line)}
-.rep-i{
-  width:28px;height:28px;flex:0 0 28px;border-radius:9px;
-  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;
-}
-.rep .t{font-weight:800;font-size:13.5px;line-height:1.25}
-.rep .d{font-size:11.5px;color:var(--text2);margin-top:4px;line-height:1.45}
-.rep.warn-red{border-color:color-mix(in srgb,var(--red) 28%,transparent);background:color-mix(in srgb,var(--red) 7%,transparent)}
-.rep.warn-orange{border-color:color-mix(in srgb,var(--orange) 26%,transparent);background:color-mix(in srgb,var(--orange) 7%,transparent)}
 
 /* --- Übungen nach Trend --- */
 .prow{
@@ -1690,9 +1682,6 @@ div.wg-note{cursor:default}
 }
 .prow .kg small{display:block;font-family:'Space Grotesk',sans-serif;font-size:8.5px;font-weight:800;letter-spacing:.06em;color:var(--text3)}
 
-/* Der Bericht sitzt im Parallax-Container; die inneren Abschnittstitel
-   dürfen dort nicht kleben, sonst überlagern sich zwei sticky-Ebenen. */
-#ana-report .st{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none}
 
 /* ============================================================================
    EINKLAPPBARE ABSCHNITTE
@@ -1715,10 +1704,6 @@ div.wg-note{cursor:default}
   font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;letter-spacing:.02em;
 }
 .trend-more:active{transform:scale(.985);color:var(--text)}
-.rep-acts{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
-.rep-acts button{padding:7px 11px;border-radius:11px;cursor:pointer;font-size:11.5px;font-weight:700;
-  font-family:'Space Grotesk',sans-serif;background:rgba(255,255,255,.07);border:1px solid var(--line);color:var(--text)}
-.rep-acts button:active{transform:scale(.96)}
 .rot-row{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--bg3);cursor:pointer}
 .rot-row:last-child{border-bottom:none}
 .rot-row input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--accent);font-size:16px}
@@ -1766,35 +1751,25 @@ div.wg-note{cursor:default}
    ============================================================================ */
 .set-hero{
   display:flex;align-items:center;gap:14px;padding:16px;margin-bottom:14px;
-  border-radius:var(--r-xl);position:relative;overflow:hidden;isolation:isolate;
-  background:linear-gradient(140deg,var(--brand-deep) 0%,#161033 48%,#0d0b1c 100%);
-  border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow-2);
+  border-radius:var(--r-xl);position:relative;overflow:hidden;
+  background:var(--mat-hero);box-shadow:var(--edge-strong),var(--shadow-2);
 }
-.set-hero::after{content:'';position:absolute;top:-60%;right:-12%;width:190px;height:190px;border-radius:50%;
-  background:radial-gradient(circle,color-mix(in srgb,var(--accent) 45%,transparent),transparent 70%);
-  filter:blur(26px);opacity:.35;pointer-events:none}
-.set-hero>*{position:relative}
 .sh-av{
   width:62px;height:62px;border-radius:50%;flex:0 0 auto;cursor:pointer;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  background:rgba(255,255,255,.08);
   display:flex;align-items:center;justify-content:center;
-  font-family:'Bebas Neue',sans-serif;font-size:28px;color:#0b0a12;
+  font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--text);
   background-size:cover;background-position:center;
-  box-shadow:0 8px 22px var(--accent-glow);
+  box-shadow:var(--edge);
 }
 .sh-av.has-image{color:transparent}
 .sh-av:active{transform:scale(.96)}
 .sh-bd{min-width:0}
 .sh-name{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;letter-spacing:1.5px}
 .sh-status{font-size:12px;color:var(--text2);margin-top:3px}
-.sh-code{display:inline-block;margin-top:7px;padding:3px 11px;border-radius:999px;
-  background:rgba(255,255,255,.08);border:1px solid var(--line);
-  font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);font-weight:600}
 
 .set-card{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--r-lg);
   padding:2px 14px;margin-bottom:14px}
-.set-card.danger{border-color:color-mix(in srgb,var(--red) 32%,transparent);
-  background:color-mix(in srgb,var(--red) 6%,transparent)}
 .sr{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--bg3)}
 .sr.sr-last{border-bottom:none}
 .sr-bd{flex:1;min-width:0}
@@ -1810,9 +1785,7 @@ div.wg-note{cursor:default}
   background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);
   font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700}
 .setbtn:active{transform:scale(.97)}
-.setbtn.danger{flex:0 0 auto;color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent);
-  background:color-mix(in srgb,var(--red) 10%,transparent)}
-.set-foot{text-align:center;font-size:11px;color:var(--text3);margin:4px 0 8px}
+.setbtn.danger{flex:0 0 auto;color:var(--red)}
 
 /* Schalter: eigener Baustein statt drei absolut positionierter divs mit
    Inline-Styles. Der Knopf hört auf :checked, nicht auf JavaScript — damit
@@ -2051,10 +2024,9 @@ div.wg-note{cursor:default}
 </div>
 <div class="screen" id="s-hist">
 <div class="ltitle">
-<div class="ltitle-row"><div style="min-width:0">
-<div class="ltitle-eyebrow">ARCHIV</div>
+<div class="ltitle-row"><div class="ltitle-line">
 <div class="ltitle-h">Historie</div>
-<div class="ltitle-sub" id="h-cnt">0 Sessions</div>
+<div class="ltitle-sub" id="h-cnt"></div>
 </div></div>
 </div>
 <div id="h-streak" class="parallax"></div>
@@ -2081,6 +2053,8 @@ div.wg-note{cursor:default}
 </div><div class="ltitle-slot"><div class="pill" id="ana-total">0 Sätze</div></div></div>
 </div>
 <div id="ana-report" class="parallax"></div>
+<div class="st st-tog" onclick="toggleSection('balance')"><span>Balance</span><span class="chev" id="chev-balance">▾</span><div class="ln"></div></div>
+<div id="ana-muscles"></div>
 <div id="egym-section" style="display:none">
 <div class="st st-tog" onclick="toggleSection('egym')"><span>EGYM BioAge</span><span class="chev" id="chev-egym">▾</span><div class="ln"></div></div>
 <div id="egym-body">
@@ -2095,8 +2069,6 @@ div.wg-note{cursor:default}
 </div>
 <div class="st st-tog" onclick="toggleSection('trend')"><span>Übungen nach Trend</span><span class="chev" id="chev-trend">▾</span><div class="ln"></div></div>
 <div id="ana-progress"></div>
-<div class="st st-tog" onclick="toggleSection('balance')"><span>Balance</span><span class="chev" id="chev-balance">▾</span><div class="ln"></div></div>
-<div id="ana-muscles"></div>
 <div class="st st-tog" onclick="toggleSection('koerper')"><span>Körperdaten</span><span class="chev" id="chev-koerper">▾</span><div class="ln"></div></div>
 <div id="koerper-body">
 <div id="fitness-age-card"></div>
@@ -2124,27 +2096,23 @@ div.wg-note{cursor:default}
 </div>
 <div class="screen" id="s-settings">
 <div class="ltitle">
-<div class="ltitle-row"><div style="min-width:0">
-<div class="ltitle-eyebrow">EINSTELLUNGEN</div>
-<div class="ltitle-h">Setup</div>
-</div></div>
+<div class="ltitle-row"><div style="min-width:0"><div class="ltitle-h">Profil</div></div></div>
 </div>
 <div class="set-hero">
 <div class="sh-av" id="prof-avatar" onclick="document.getElementById('profile-pic-input')&&document.getElementById('profile-pic-input').click()">?</div>
 <div class="sh-bd">
 <div class="sh-name" id="prof-name">—</div>
 <div class="sh-status" id="prof-status">Eingeloggt · Cloud Sync aktiv</div>
-<div class="sh-code" id="prof-code">—</div>
 </div>
 </div>
 <div class="st">Training <div class="ln"></div></div>
 <div class="set-card">
 <div class="sr">
-<div class="sr-bd"><b>Satzpause · Grundübung</b><span>Bank, Rudern, Beinpresse, Kreuzheben — alles mit Muskelgruppe Brust, Rücken oder Beine</span></div>
+<div class="sr-bd"><b>Satzpause · Grundübung</b><span>Brust, Rücken, Beine</span></div>
 <div class="sr-num"><input type="number" inputmode="numeric" id="set-c" value="120" onchange="saveSetting('compound',this.value)"><small>Sek</small></div>
 </div>
 <div class="sr">
-<div class="sr-bd"><b>Satzpause · Isolation</b><span>Schultern, Arme, Core — kürzere Pause, weil weniger Systemermüdung</span></div>
+<div class="sr-bd"><b>Satzpause · Isolation</b><span>Schultern, Arme, Core</span></div>
 <div class="sr-num"><input type="number" inputmode="numeric" id="set-i" value="120" onchange="saveSetting('isolation',this.value)"><small>Sek</small></div>
 </div>
 <div class="sr sr-last">
@@ -2164,7 +2132,7 @@ div.wg-note{cursor:default}
 </div>
 <div class="st">Daten <div class="ln"></div></div>
 <div class="set-card">
-<div class="sr">
+<div class="sr" id="sync-row">
 <div class="sr-bd"><b>Sync-Code</b><span>Dein Code ist zugleich dein Konto. Wer ihn kennt, sieht deine Daten.</span></div>
 <code class="sr-code" id="show-sync"></code>
 </div>
@@ -2180,13 +2148,12 @@ div.wg-note{cursor:default}
 </div>
 </div>
 <div class="st">Gefahrenzone <div class="ln"></div></div>
-<div class="set-card danger">
+<div class="set-card">
 <div class="sr sr-last">
 <div class="sr-bd"><b>Alle Daten löschen</b><span>Plan, Historie, Messungen — lokal und in der Cloud. Nicht rückgängig zu machen.</span></div>
 <button class="setbtn danger" onclick="if(confirm('ALLE Daten unwiderruflich löschen?'))resetAll()">Löschen</button>
 </div>
 </div>
-<div class="set-foot">PUMPBRAH · eine HTML-Datei, kein Build, offline lauffähig.</div>
 </div>
 </div>
 <div class="mbg" id="m-egym"><div class="mdl">
@@ -2260,16 +2227,14 @@ div.wg-note{cursor:default}
 <button type="button" class="cta-sub" onclick="cm('m-plates')">Zurück zum Satz</button></div>
 </div></div>
 <div class="mbg" id="m-log"><div class="mdl mdl-log">
-<div class="mt">SATZ LOGGEN <button class="mc" onclick="cm('m-log')">✕</button></div>
-<div class="log-head">
-<span class="exdemo-thumb log-thumb" id="log-demo"></span>
-<div><div id="log-name"></div><div id="log-hint"></div></div>
-<button type="button" class="setbtn" onclick="openPlates(document.getElementById('log-w').value,true)">Scheiben</button>
+<div class="log-top">
+<div><div id="log-name"></div><div id="log-sub"><span id="log-set"></span><span id="log-hint"></span></div></div>
+<button class="mc" aria-label="Schließen" onclick="cm('m-log')">✕</button>
 </div>
 <div id="log-target"></div>
 <div class="ir">
-<div class="ig"><label>Gewicht (kg)</label><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-w',-2.5)">−</button><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-w',2.5)">+</button></div></div>
-<div class="ig"><label>Wiederholungen</label><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-r',-1)">−</button><input type="number" inputmode="numeric" id="log-r" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-r',1)">+</button></div></div>
+<div class="ig"><div class="log-lab"><label>Gewicht (kg)</label><button type="button" class="log-link" onclick="openPlates(document.getElementById('log-w').value,true)">Scheiben<svg class="ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></button></div><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-w',-2.5)">−</button><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-w',2.5)">+</button></div></div>
+<div class="ig"><div class="log-lab"><label>Wiederholungen</label></div><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-r',-1)">−</button><input type="number" inputmode="numeric" id="log-r" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-r',1)">+</button></div></div>
 </div>
 <div class="log-rir"><label>RIR — Wiederholungen im Tank</label>
 <div class="rir-circles" id="log-rir-circles">
@@ -2293,9 +2258,7 @@ div.wg-note{cursor:default}
 </div>
 </div></div>
 <div class="mbg" id="m-add"><div class="mdl">
-<div class="mt">ÜBUNG <button class="mc" onclick="cm('m-add')">✕</button></div>
-<button class="btn btn-g" style="margin-bottom:12px" onclick="cm('m-add');openLibrary()">📚 AUS BIBLIOTHEK WÄHLEN</button>
-<div class="sep" style="margin:0 0 12px"></div>
+<div class="mt">ÜBUNG <span class="mt-act"><button type="button" class="btn btn-s btn-g ib" onclick="cm('m-add');openLibrary()"><span data-ic="book"></span>Bibliothek</button><button class="mc" aria-label="Schließen" onclick="cm('m-add')">✕</button></span></div>
 <div class="ir"><div class="ig"><label>Übungsname</label><input type="text" id="a-name" placeholder="z.B. Bankdrücken" oninput="refreshLibHint()"></div></div>
 <div id="a-libhint" class="libhint" style="display:none"></div>
 <div class="ir">
@@ -2995,7 +2958,7 @@ function retrySync(){
   queueCloudSave(true);
 }
 function profileStatusText(){
-  if(!useFirebase)return'Offline-Modus · nur auf diesem Gerät';
+  if(!useFirebase)return'Nur auf diesem Gerät';
   const um=lastSyncOk?new Date(lastSyncOk).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'';
   return'Eingeloggt · Cloud-Sync aktiv'+(um?' · gesichert '+um:'');
 }
@@ -3456,7 +3419,8 @@ const ICON_PATHS={
   trend:'<path d="M4 17l5-5 3.5 3.5L20 8M20 8h-4.5M20 8v4.5"/>',
   battery:'<path d="M3.5 8.5h13v7h-13zM19 11v2M6.5 11.5v1"/>',
   flame:'<path d="M12 3.2c2.6 3.1 4 5.4 4 7a4 4 0 0 1-8 0c0-1.6 1.4-3.9 4-7ZM12 21a5.4 5.4 0 0 0 5.4-5.4M12 21a5.4 5.4 0 0 1-5.4-5.4"/>',
-  warn:'<path d="M12 3.6 21.5 20H2.5zM12 10v4.6M12 17.4v.1"/>'
+  warn:'<path d="M12 3.6 21.5 20H2.5zM12 10v4.6M12 17.4v.1"/>',
+  down:'<path d="M12 5v13M6.5 12.5 12 18l5.5-5.5"/>'
 };
 function icon(key,size){
   const d=ICON_PATHS[key]||ICON_PATHS.arms;
@@ -3784,7 +3748,7 @@ function attachSheetGestures(){
    Nur Elemente, die beim Rendern UNTER dem Falz liegen, werden versteckt und
    eingeblendet. Alles, was sofort sichtbar ist, bekommt direkt `.in` — sonst
    flackert der halbe Bildschirm bei jedem Re-Render einmal auf.            */
-const REVEAL_TARGETS='.card,.mesh-hero,.gtiles,.kpi-card,.prog,.ana-muscle,.ana-radar,.wa-card,.hist-calendar,.hist-session,.deload-banner,.coach-card';
+const REVEAL_TARGETS='.card,.mesh-hero,.gtiles,.kpi-card,.prog,.ana-muscle,.wa-card,.hist-calendar,.hist-session,.deload-banner,.coach-card';
 let revealObserver=null;
 function attachReveals(root){
   const scope=root||document;
@@ -4471,7 +4435,7 @@ function svgChart(data,opts={}){
   let tipEl=null;
   const hide=()=>{if(tipEl)tipEl.classList.remove('on')};
   const show=(hit)=>{
-    const host=hit.closest('.prog,.mini-hist-graph,.dash-kpi,.card,.radar-wrap');
+    const host=hit.closest('.prog,.mini-hist-graph,.dash-kpi,.card');
     if(!host)return;
     if(!tipEl||tipEl.parentElement!==host){
       if(tipEl)tipEl.remove();
@@ -5821,7 +5785,9 @@ function renderHist(){
   if(!cnt||!title||!grid||!list)return;
   const months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   const hist=D.history||[];
-  cnt.textContent=hist.length+(hist.length===1?' Session':' Sessions');
+  /* Wie weit die Liste zurückreicht; die Sessionzahl steht in der Serien-Karte. */
+  const oldest=hist.map(s=>parseGermanDate(s.date)).filter(Boolean).sort((a,b)=>a-b)[0];
+  cnt.textContent=oldest?'Seit '+months[oldest.getMonth()]+(oldest.getFullYear()!==new Date().getFullYear()?' '+oldest.getFullYear():''):'';
   title.textContent=months[calMonth]+' '+calYear;
   renderHistStreak();
   const trainDates={};
@@ -6165,7 +6131,7 @@ function renderThemeControls(){
      bereits. Doppelte Überschriften sind die häufigste Art, wie ein Screen
      unruhig wird. */
   return`<div class="set-card"><div class="sr sr-last" style="display:block">`+
-    `<div class="sr-bd"><b>Akzentfarbe</b><span>Färbt Knöpfe, Ringe und Hervorhebungen. Ein heller Modus ist bewusst nicht vorgesehen — die Flächen dieser App sind für Dunkel gebaut.</span></div>`+
+    `<div class="sr-bd"><b>Akzentfarbe</b><span>Färbt Knöpfe, Ringe und Hervorhebungen.</span></div>`+
     `<div class="theme-chip-row">${Object.entries({volt:'Volt',whoop:'Whoop',apple:'Apple',ember:'Ember',cyber:'Cyber'}).map(([k,label])=>`<button class="theme-chip ${D.ui.accent===k?'active':''}" onclick="setAccentTheme('${k}')"><span class="sw" style="background:${presets[k].accent}"></span>${label}</button>`).join('')}</div>`+
     `</div></div>`;
 }
@@ -6753,25 +6719,19 @@ function coachMatrixHTML(a){
    Zahlen liest, zieht seine Schlüsse selbst — das ist bei
    Populationsrichtwerten mit kleinen Effektgrößen ohnehin die ehrlichere
    Arbeitsteilung. Die Grenzwerte bleiben vollständig erhalten, in dieser
-   Karte wie im Wochenring, im Radar und in der Auswertung.
+   Karte wie im Wochenring und in der Auswertung.
    -------------------------------------------------------------------------- */
 function renderCoachCard(){
   const mount=document.getElementById('coach-area');
   if(!mount)return;
   if(!Object.keys(D.plan||{}).length){mount.innerHTML='';return}
   const a=coachAnalyzePlan();
-  /* Zähler und Nenner über DIESELBE Menge — sonst steht da „11 von 10".
-     Gezählt wird, was im Plan vorkommt; eine Gruppe ohne einen einzigen Satz
-     hat keinen Korridor, in dem sie liegen könnte. */
-  const imPlan=a.muscles.filter(m=>m.sets>0);
-  const drin=imPlan.filter(m=>m.state.key!=='low'&&m.state.key!=='high').length;
-  const gezaehlt=imPlan.length;
+  /* Kein Satz über der Tabelle und kein Absatz mit Quellenangabe darunter:
+     die Tabelle und ihre Legende sagen es. Eine Zeile erklärt „ind.". */
   mount.innerHTML=`<div class="coach-card">`+
-    `<div class="coach-h"><div class="av">${icon('chart',16)}</div><div class="t">Wochenvolumen</div><div class="src">MEV · MAV · MRV</div></div>`+
-    `<div class="coach-verdict">Dein Plan bringt <b>${a.totalSets} direkte Arbeitssätze</b> pro Woche. `+
-      `${drin} von ${gezaehlt} Muskelgruppen liegen zwischen Minimum und Erholungsgrenze.</div>`+
+    `<div class="coach-h"><div class="t">Wochenvolumen</div><div class="src">MEV · MAV · MRV</div></div>`+
     coachMatrixHTML(a)+
-    `<div class="coach-foot">Richtwerte nach den Volumen-Landmarks der Renaissance-Periodization-Schule (Dr. Mike Israetel). Das sind Populationsmittelwerte, keine Vorgaben — was für dich gilt, zeigt dein Verlauf.</div>`+
+    `<div class="coach-foot">Ind. (indirekt): Sätze, bei denen die Gruppe mitarbeitet. Sie zählen je 0,5.</div>`+
   `</div>`;
 }
 /* Badge an einer einzelnen Planübung: wie steht ihr Muskel in der Woche da? */
@@ -8020,7 +7980,7 @@ function weeklyMuscleBarsHTML(){
       `<span class="mv-mark" style="left:66.667%"></span></div></div>`;
   }).join('');
   /* Der Schalter „Inkl. indirekt / Nur direkt" steht hier, weil er genau diese
-     Liste (und die Radar-Karte darüber) umstellt. */
+     Liste umstellt. */
   return`<div class="card"><div class="cap" style="margin-bottom:12px">Sätze je Muskel · 7 Tage</div>`+
     segmentedControl('vol-seg',[{key:'total',label:'Inkl. indirekt'},{key:'direct',label:'Nur direkt'}],withSec?'total':'direct','setVolumeMode')+
     `<div style="font-size:12px;color:var(--text2);margin:8px 2px 14px;line-height:1.45">${withSec
@@ -8111,7 +8071,7 @@ function renderAnaReport(){
   if(!mount)return;
   const hist=D.history||[];
   if(!hist.length){
-    mount.innerHTML=`<div class="empty">Noch keine Trainingsdaten.<br><br>Nach dem ersten Workout steht hier dein Wochenbericht — was gut lief, was Aufmerksamkeit braucht, und die Zahlen dazu.</div>`;
+    mount.innerHTML=`<div class="empty">Noch keine Trainingsdaten.<br><br>Nach dem ersten Workout steht hier dein Wochenbericht mit den Zahlen der Woche.</div>`;
     return;
   }
   const weeks=weeklyHistorySeries(6);
@@ -8128,9 +8088,7 @@ function renderAnaReport(){
   const st=landmarkState(weeklyLoadPoints(),lm);
   const rir=work.length?(work.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/work.length):0;
   const minutes=cur.reduce((a,s)=>a+(parseInt(s.duration)||0),0);
-  const{streak}=trainingStreak();
   const prog=progressAll();
-  const ups=prog.filter(p=>p.dir==='up');
   const stale=prog.filter(p=>p.stale>=4);
   const vol=getWeeklyVolume(D.ui&&D.ui.volMode!=='direct');
   const low=Object.keys(MUSCLE_LANDMARKS).map(k=>({k,sets:(vol[k]&&vol[k].sets)||0,lm:MUSCLE_LANDMARKS[k]}))
@@ -8151,34 +8109,6 @@ function renderAnaReport(){
       : low.length
         ? `Volumen und Frequenz stimmen. Was fehlt, ist <b>${esc(muscleName(low[0].k))}</b>.`
         : `Alles im Korridor. Volumen, Frequenz und Verteilung passen zusammen.`;
-  const good=[];
-  if(ups.length)good.push({ico:'▲',col:'var(--green)',t:`${ups.length} ${ups.length===1?'Übung stärker':'Übungen stärker'}`,
-    d:ups.slice(0,4).map(p=>`${esc(p.name)} ${p.delta>0?'+':''}${p.delta} ${esc(p.unit)}`).join(', ')+'.'});
-  if(streak>=2)good.push({ico:'✓',col:'var(--green)',t:`${streak} Wochen ohne Ausfall`,
-    d:'Konsistenz ist die Größe, die über Monate am meisten entscheidet.'});
-  if(!good.length)good.push({ico:'✓',col:'var(--text3)',t:'Noch keine Vergleichswerte',
-    d:'Ab der zweiten Woche mit denselben Übungen steht hier, was besser geworden ist.'});
-  const bad=[];
-  /* Der Befund allein hat nie jemandem geholfen: „stagniert seit vier
-     Einheiten" ist richtig und folgenlos. Daneben gehören die drei Dinge,
-     die man dagegen tun kann — als Knopf, nicht als Ratschlag. */
-  stale.slice(0,2).forEach(p=>bad.push({ico:'▼',col:'var(--red)',cls:'warn-red',
-    t:`${esc(p.name)} stagniert`,
-    d:`${p.stale} Einheiten ohne neuen Bestwert. Das ist selten ein Erholungsproblem — eher Übungsauswahl oder Ausführung.`,
-    acts:planLocationOf(p.name)?[
-      {label:'Übung tauschen',call:`swapStaleExercise('${jsStr(p.name)}')`},
-      {label:'Wdh-Bereich hoch',call:`shiftRepRange('${jsStr(p.name)}',2)`},
-      {label:'Sätze −1',call:`easeStaleExercise('${jsStr(p.name)}')`}
-    ]:[]}));
-  low.slice(0,2).forEach(m=>bad.push({ico:'!',col:'var(--orange)',cls:'warn-orange',
-    t:`${esc(muscleName(m.k))} unter MEV`,
-    d:`${m.sets} von ${m.lm.mev} Sätzen. Der Volumen-Coach im Plan schlägt eine passende Übung vor.`}));
-  if(rir&&rir<1)bad.push({ico:'!',col:'var(--orange)',cls:'warn-orange',t:'Ø RIR unter 1',
-    d:'Du trainierst dauerhaft am Muskelversagen. Das kostet mehr Erholung, als es an Reiz bringt.'});
-  const row=x=>`<div class="rep ${x.cls||''}"><div class="rep-i" style="color:${x.col};background:color-mix(in srgb,${x.col} 16%,transparent)">${x.ico}</div>`+
-    `<div style="flex:1;min-width:0"><div class="t">${x.t}</div><div class="d">${x.d}</div>`+
-    (x.acts&&x.acts.length?`<div class="rep-acts">${x.acts.map(a=>`<button type="button" onclick="${a.call}">${esc(a.label)}</button>`).join('')}</div>`:'')+
-    `</div></div>`;
   mount.innerHTML=`<div class="mesh-hero">`+
     `<div class="cap">Diese Woche</div>`+
     `<div class="mesh-row"><div class="mesh-num">${esc(grade)}</div>`+
@@ -8194,10 +8124,7 @@ function renderAnaReport(){
       `<div class="gd">${!work.length?'noch keine Sätze':rir<1.5?'nah am Versagen':rir<3?'sauber gesteuert':'viel Luft nach oben'}</div></div>`+
       `<div class="gtile"><div class="gl">Zeit</div><div class="gv">${(minutes/60).toFixed(1)}<small>h</small></div>`+
       `<div class="gd">${cur.length?'Ø '+Math.round(minutes/cur.length)+' min':'—'}</div></div>`+
-    `</div>`+
-    `<div class="st">Was gut lief <div class="ln"></div></div>${good.map(row).join('')}`+
-    `<div class="st">Was Aufmerksamkeit braucht <div class="ln"></div></div>`+
-    (bad.length?bad.map(row).join(''):`<div class="rep"><div class="rep-i" style="color:var(--green);background:color-mix(in srgb,var(--green) 16%,transparent)">✓</div><div><div class="t">Nichts Auffälliges</div><div class="d">Kein Muskel unter MEV, keine Übung stagniert, RIR im vernünftigen Bereich.</div></div></div>`);
+    `</div>`;
   runCountUps(mount);
 }
 function renderAna(){
@@ -8227,7 +8154,7 @@ function renderAna(){
   if(mc){
     const rows=Object.entries(muscles).filter(([k,m])=>m.sets.length);
     if(!rows.length){mc.innerHTML='<div class="empty">Noch keine Trainingsdaten. Log dein erstes Workout.</div>'}
-    else mc.innerHTML=muscleRadarCard()+weeklyMuscleBarsHTML()+`<div class="cap" style="margin:16px 2px 10px">Details je Muskelgruppe</div>`+rows.map(([key,m])=>{
+    else mc.innerHTML=weeklyMuscleBarsHTML()+`<div class="cap" style="margin:16px 2px 10px">Details je Muskelgruppe</div>`+rows.map(([key,m])=>{
       const byEx={};
       m.sets.forEach(s=>{if(!byEx[s.ex])byEx[s.ex]=[];byEx[s.ex].push(s)});
       return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><span class="ic-wrap">${icon(key,20)}</span><div class="ana-muscle-name">${esc(m.name)}</div><div class="ana-muscle-cnt">${m.ex.size===1?'1 Übung':m.ex.size+' Übungen'} · ${m.sets.length===1?'1 Satz':m.sets.length+' Sätze'}</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=strengthSets(sets).filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length).toFixed(1):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExDemo('${jsStr(ex)}','${jsStr(key)}','main')" style="font-weight:700;font-size:13px;cursor:pointer">${esc(ex)}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${esc(max)}kg</span></div><div style="font-size:11px;color:var(--text2);margin:4px 0">${sets.length===1?'1 Satz':sets.length+' Sätze'} · Ø RIR ${esc(avg)}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true,unit:' kg'}):'<div style="font-size:11px;color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
@@ -8238,31 +8165,6 @@ function renderAna(){
   applyAllSections();
   runBarGrows(document.getElementById('s-ana'));
   runCountUps(document.getElementById('s-ana'));
-}
-/* Radar über die Wochenvolumen relativ zum jeweiligen MAV. 1.0 = optimal
-   ausgelastet. Ein Blick zeigt, welche Muskelgruppe hinterherhinkt —
-   das sieht man in sechs einzelnen Balken schlechter als in einer Fläche. */
-function muscleRadarCard(){
-  const vol=getWeeklyVolume();
-  const keys=Object.keys(MUSCLE_LANDMARKS);
-  const pts=keys.map(k=>({
-    key:k,label:muscleName(k),
-    sets:(vol[k]&&vol[k].sets)||0,
-    ratio:Math.min(1.35,((vol[k]&&vol[k].sets)||0)/Math.max(1,MUSCLE_LANDMARKS[k].mav))
-  }));
-  if(!pts.some(p=>p.sets>0))return'';
-  const cx=150,cy=132,R=92,n=keys.length;
-  const ang=i=>(-90+i*(360/n))*Math.PI/180;
-  const at=(i,r)=>`${(cx+Math.cos(ang(i))*R*r).toFixed(1)},${(cy+Math.sin(ang(i))*R*r).toFixed(1)}`;
-  const rings=[0.33,0.66,1].map(r=>`<polygon points="${keys.map((_,i)=>at(i,r)).join(' ')}" fill="none" class="radar-axis" ${r===1?'':'opacity=".55"'}/>`).join('');
-  const axes=keys.map((_,i)=>`<line x1="${cx}" y1="${cy}" x2="${at(i,1).split(',')[0]}" y2="${at(i,1).split(',')[1]}" class="radar-axis"/>`).join('');
-  const poly=`<polygon class="radar-poly" points="${pts.map((p,i)=>at(i,Math.max(0.04,p.ratio/1.35))).join(' ')}" fill="var(--accent)" fill-opacity=".22" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
-  const dots=pts.map((p,i)=>{const[x,y]=at(i,Math.max(0.04,p.ratio/1.35)).split(',');return`<circle cx="${x}" cy="${y}" r="4" fill="var(--bg2)" stroke="var(--accent)" stroke-width="2" class="chart-dot pop" style="animation-delay:${(0.4+i*0.07).toFixed(2)}s"/><circle class="hit" cx="${x}" cy="${y}" r="14" data-tip="${attr(p.label+': '+p.sets+' Sätze · MAV '+MUSCLE_LANDMARKS[p.key].mav)}"/>`}).join('');
-  const labels=pts.map((p,i)=>{const[x,y]=at(i,1.2).split(',');return`<text x="${x}" y="${y}" class="radar-label" text-anchor="middle" dominant-baseline="middle">${esc(p.label)}</text>`}).join('');
-  const weakest=[...pts].sort((a,b)=>a.ratio-b.ratio)[0];
-  return`<div class="ana-radar"><div class="ana-radar-top"><div class="ana-radar-title">Volumen-Balance · 7 Tage</div><div class="ana-radar-pill">Ziel = MAV</div></div>`+
-    `<div class="radar-wrap"><svg viewBox="0 0 300 270" class="chart-svg">${rings}${axes}${poly}${dots}${labels}</svg></div>`+
-    `<div class="ana-radar-grid"><div class="ana-radar-stat">Schwächster Bereich <b>${esc(weakest.label)}</b></div><div class="ana-radar-stat">Sätze dort <b>${esc(weakest.sets)}/${esc(MUSCLE_LANDMARKS[weakest.key].mav)}</b></div></div></div>`;
 }
 function saveProfileImage(ev){
   const file=ev&&ev.target&&ev.target.files&&ev.target.files[0];
@@ -8464,7 +8366,10 @@ function buildWeekGauge(totalSets,rohSaetze){
     avatarEl.style.backgroundImage='';
     avatarEl.textContent=syncCode.charAt(0).toUpperCase();
   }
-  document.getElementById('prof-code').textContent=syncCode;
+  /* Ohne Cloud gibt es keinen Code: die Zeile mit „offline" entfällt, der
+     Zustand steht einmal unter dem Namen. */
+  const syncRow=document.getElementById('sync-row');
+  if(syncRow)syncRow.style.display=syncCode==='offline'?'none':'';
   document.getElementById('prof-status').textContent=profileStatusText();
   if(D.health.sick){
     document.getElementById('sick-label').textContent='Aktiv seit '+new Date(D.health.sickSince).toLocaleDateString('de-DE')+' — Workouts pausiert';
@@ -8870,7 +8775,8 @@ function openLog(ei){
   logTgt={exIdx:ei};
   const ex=D.active.exercises[ei];
   const cardio=isCardioExercise(ex);
-  document.getElementById('log-name').textContent=ex.name+' — Satz '+(ex.logged.length+1)+'/'+ex.sets;
+  document.getElementById('log-name').textContent=ex.name;
+  document.getElementById('log-set').textContent='Satz '+(ex.logged.length+1)+' von '+ex.sets;
   const uNote=D.notes[ex.name];
   const lastH=getLastW(ex.name);
   const pr=getExPR(ex.name);
@@ -8880,22 +8786,19 @@ function openLog(ei){
   if(!cardio&&pr&&pr.w>0)hint+=` • PR: ${pr.w}kg`;
   if(!cardio&&rm)hint+=` • 1RM: ${rm.rm}kg`;
   document.getElementById('log-hint').textContent=hint||'';
-  /* Zielvorgabe als EINE Zeile über den Eingabefeldern. Vorher standen Ziel,
-     Cue, Historie und die Übungsdemo jeweils in eigenen Blöcken — zusammen
-     168 von 580 Pixeln, und auf einem iPhone SE lag der Speichern-Knopf
-     dadurch unter der Kante. Der Inhalt bleibt, die Zeilen werden eins. */
+  /* Zielvorgabe als EINE ruhige Zeile über den Eingabefeldern: nur die Zahl,
+     ohne die Begründung (die steht im Training bei der Übung). „Übernehmen"
+     erscheint, wenn es ein Gewicht zu übernehmen gibt. Ohne Zahl und ohne
+     Einheit (Deload ohne Referenz) bleibt die Zeile weg. */
   const tgtBox=document.getElementById('log-target');
   const tgt=nextSetTarget(ex);
   if(tgtBox){
-    tgtBox.innerHTML=tgt?`<div class="log-tgt" onclick="this.classList.toggle('open')">`+
-      `<span class="ti">${tgt.icon}</span>`+
-      (tgt.num?`<span class="tn">${esc(tgt.num)}</span><span class="tu">${esc(tgt.unit)}</span>`
-              :`<span class="tu">${esc(tgt.unit||'')}</span>`)+
-      `<span class="tw">${esc(tgt.why||'')}</span></div>`:'';
+    tgtBox.innerHTML=tgt&&(tgt.num||tgt.unit)?`<div class="log-tgt"><span class="tg-l">Ziel</span><span class="tg-v">`+
+      (tgt.num?`<span class="tg-n">${esc(tgt.num)}</span>`+(tgt.r?`<span class="tg-u">kg ×</span><span class="tg-n">${esc(tgt.r)}</span>`:`<span class="tg-u">${esc(tgt.unit)}</span>`)
+              :`<span class="tg-u">${esc(tgt.unit||'')}</span>`)+`</span>`+
+      (tgt.w?`<button type="button" class="tg-take" onpointerdown="event.preventDefault()" onclick="takeTarget()">${icon('down',16)}Übernehmen</button>`:'')+
+      `</div>`:'';
   }
-  const demoBox=document.getElementById('log-demo');
-  if(demoBox)demoBox.innerHTML=exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true});
-  if(demoBox)demoBox.onclick=()=>showExDemo(ex.name,ex.muscle,ex.type);
   const weightLabel=document.querySelector('#m-log label');
   const repeatLabel=document.querySelectorAll('#m-log label')[1];
   if(weightLabel)weightLabel.textContent=cardio?'Minuten':'Gewicht (kg)';
@@ -8918,6 +8821,16 @@ function openLog(ei){
   document.getElementById('log-note').value='';
   om('m-log');
   setTimeout(()=>document.getElementById('log-w').focus(),200);
+}
+/* „Übernehmen" in der Zielzeile: Gewicht (und, wenn die Vorgabe sie nennt,
+   Wiederholungen) auf die Vorgabe setzen. Gerechnet wird wie beim Öffnen
+   über nextSetTarget, damit Zeile und Felder dieselbe Zahl meinen. */
+function takeTarget(){
+  const ex=logTargetExercise();
+  const t=ex&&nextSetTarget(ex);
+  if(!t||!t.w)return;
+  document.getElementById('log-w').value=t.w;
+  if(t.r)document.getElementById('log-r').value=t.r;
 }
 function confirmLog(){
   const ex=logTargetExercise();
@@ -9652,7 +9565,7 @@ function nextSetTarget(ex){
     if(last&&last.w>0){
       const grain=last.w>=60?2.5:1;
       const target=Math.round((last.w*0.65)/grain)*grain;
-      return{icon:icon('battery',17),num:String(target),unit:'kg · RIR 4',why:`Deload statt ${esc(last.w)} kg — bewusst nicht ausbelasten.`,
+      return{icon:icon('battery',17),num:String(target),w:String(target),unit:'kg · RIR 4',why:`Deload statt ${esc(last.w)} kg — bewusst nicht ausbelasten.`,
         text:`Deload: <b>${esc(target)}kg</b> statt ${esc(last.w)}kg, locker bei RIR 4. Nicht ausbelasten.`};
     }
     return{icon:icon('battery',17),num:'',unit:'',why:'Deload-Woche: deutlich leichter, RIR 4.',
@@ -9670,7 +9583,7 @@ function nextSetTarget(ex){
   if(r>=rmax){
     const step=w>=60?2.5:w>=20?2:1;
     const nw=(w+step).toFixed(1).replace(/\.0$/,'');
-    return{icon:icon('trend',17),num:String(nw),unit:`kg × ${esc(rmin)}`,why:`${esc(w)} kg × ${esc(r)} war die obere Grenze — Gewicht hoch.`,
+    return{icon:icon('trend',17),num:String(nw),w:String(nw),r:String(rmin),unit:`kg × ${esc(rmin)}`,why:`${esc(w)} kg × ${esc(r)} war die obere Grenze — Gewicht hoch.`,
       text:`Letztes Mal <b>${esc(w)}kg × ${esc(r)}</b> — obere Grenze erreicht. Jetzt <b>${esc(nw)}kg</b> bei ${esc(rmin)} Wdh.`};
   }
   /* --- Autoregulation ------------------------------------------------------
@@ -9687,19 +9600,19 @@ function nextSetTarget(ex){
     /* Zu schwer: Wiederholungen halten, Gewicht eine Stufe zurück. */
     const step=w>=60?2.5:w>=20?2:1;
     const nw=Math.max(step,+(w-step).toFixed(1));
-    return{icon:icon('warn',17),num:String(String(nw).replace(/\.0$/,'')),unit:`kg × ${esc(r||rmin)}`,
+    return{icon:icon('warn',17),num:String(String(nw).replace(/\.0$/,'')),w:String(nw).replace(/\.0$/,''),r:String(r||rmin),unit:`kg × ${esc(r||rmin)}`,
       why:`Letzter Satz RIR ${esc(gotRir)} statt ${esc(targetRir)} — der ging schon bis ans Limit.`,
       text:`Letzter Satz kam mit <b>RIR ${esc(gotRir)}</b> statt ${esc(targetRir)}. Heute <b>${esc(nw)}kg × ${esc(r||rmin)}</b> — erst die Ausführung zurückholen, dann wieder rauf.`};
   }
   if(dev>=2&&r<rmax){
     /* Deutlich zu leicht: zwei Wiederholungen statt einer, aber nie über rmax. */
     const tr2=Math.min(rmax,r+2);
-    return{icon:icon('trend',17),num:String(w),unit:`kg × ${esc(tr2)}`,
+    return{icon:icon('trend',17),num:String(w),w:String(w),r:String(tr2),unit:`kg × ${esc(tr2)}`,
       why:`Letzter Satz RIR ${esc(gotRir)} statt ${esc(targetRir)} — da liegt mehr drin.`,
       text:`Letzter Satz war mit <b>RIR ${esc(gotRir)}</b> zu leicht. Heute <b>${esc(w)}kg × ${esc(tr2)}</b> statt nur einer Wiederholung mehr.`};
   }
   const tr=Math.min(rmax,r+1);
-  return{icon:icon('target',17),num:String(w),unit:`kg × ${esc(tr)}`,
+  return{icon:icon('target',17),num:String(w),w:String(w),r:String(tr),unit:`kg × ${esc(tr)}`,
     why:`Letztes Mal ${esc(w)} kg × ${esc(r)}${gotRir!==null?` bei RIR ${esc(gotRir)}`:''} — eine Wiederholung mehr.`,
     text:`Ziel: <b>${esc(w)}kg × ${esc(tr)}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${gotRir!==null?` @ RIR ${esc(gotRir)}`:''}.`};
 }
