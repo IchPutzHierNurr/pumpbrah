@@ -410,23 +410,32 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .mini-hist-row .mh-d{color:var(--text3);font-size:10px;min-width:56px}
 .mini-hist-row .mh-v{font-family:'JetBrains Mono',monospace;color:var(--text);font-size:11px}
 
-/* workout summary */
-.wo-summary{text-align:center;padding:16px 0}
-.wo-sum-big{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--accent);line-height:1}
-.wo-sum-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
-.wo-sum-sub{margin:-10px 0 4px;font-size:13px;color:var(--text2)}
-.wo-sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0}
-.wo-sum-card{background:var(--bg3);border:1px solid var(--line);border-radius:14px;padding:13px;text-align:center}
-.wo-sum-card.vol{grid-column:1/-1}
-.wo-sum-card .sv{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent)}
-.wo-sum-card .sv small{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
-.wo-sum-card .sl{font-size:10px;color:var(--text2);text-transform:uppercase;margin-top:2px;letter-spacing:.5px}
-.wo-sum-cmp{margin-top:8px;font-size:13px;line-height:1.4;color:var(--text2)}
-.wo-sum-cmp b{color:var(--text)}
-.wo-sum-cmp.note{margin-top:4px;font-size:12px;color:var(--t3)}
-.wo-sum-prog{margin:12px 0}
-.wo-sp-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line2)}
-.wo-sp-row:last-child{border:none}
+/* workout summary: eine große Zahl (das Volumen), vier kleine Werte, dann nur,
+   was sich bewegt hat. „Fertig“ sitzt fest unten (.sheet-cta), das ✕ misst 44 px. */
+#m-wosummary .mc{width:44px;height:44px}
+#m-wosummary .sheet-cta .btn{min-height:52px}
+.wo-sum-sub{margin:-10px 0 16px;font-size:13px;line-height:17px;color:var(--text2)}
+.wo-sum-hero{padding:16px;border-radius:28px;background:var(--mat-hero);box-shadow:var(--edge-strong),var(--shadow-2)}
+.wo-sum-cap{display:block;font-size:10px;font-weight:700;line-height:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.wo-sum-num{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;margin-top:8px}
+.wo-sum-num b{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:106px;line-height:.82;font-variant-numeric:tabular-nums}
+.wo-sum-num span{font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;color:var(--text2)}
+@media (max-width:359px){.wo-sum-num b{font-size:88px}}
+.wo-sum-cmp{margin-top:12px;font-size:14px;line-height:20px}
+.wo-sum-cmp b{font-weight:700}
+.wo-sum-cmp.note{margin-top:4px;font-size:12px;line-height:16px;color:var(--t3)}
+.wo-sum-stats{display:grid;grid-template-columns:repeat(4,auto);justify-content:space-between;gap:16px 8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.wo-sum-stats b{display:block;margin-top:4px;font:600 16px/20px 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.wo-sum-stats small{font-size:12px;font-weight:500;color:var(--text2)}
+.wo-sum-sec{margin:24px 0 8px 4px;font-size:13px;line-height:17px;font-weight:500;color:var(--text2)}
+.wo-sum-prog{padding:0 16px;border-radius:20px;background:var(--mat-1),var(--bg2);box-shadow:var(--edge),var(--shadow-1)}
+.wo-sp-row{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:center;min-height:56px;padding:8px 0;border-top:1px solid var(--line)}
+.wo-sp-row:first-child{border-top:0}
+.wo-sp-row b{font-size:15px;line-height:20px;font-weight:600}
+.wo-sp-row span{grid-column:1;font:500 12px/16px 'JetBrains Mono',monospace;color:var(--text2)}
+.wo-sp-row .d{grid-column:2;grid-row:1/span 2;font:600 13px 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wo-sp-row .d i{margin-right:8px;font-size:11px;font-style:normal;color:var(--text2)}
+.wo-sum-still{margin:12px 0 0 4px;font-size:13px;line-height:17px;color:var(--text2)}
 
 .libhint{margin:-6px 0 12px;padding:10px 12px;border-radius:12px;background:var(--bg3);
   border:1px solid var(--line);font-size:11.5px;line-height:1.5;color:var(--text2);
@@ -1419,7 +1428,8 @@ div.wg-note{cursor:default}
 .wo-dock{display:none;pointer-events:auto;width:100%;max-width:480px;margin:0 auto;padding:24px 13px 12px;background:linear-gradient(180deg,rgba(11,12,17,0) 0,rgba(11,12,17,.94) 16px,#0b0c11 24px)}
 .wo-log{width:100%;height:56px;padding:0 20px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;background:var(--accent);color:#0a0b0e;font-family:'Space Grotesk',sans-serif;box-shadow:var(--edge-strong),0 6px 16px rgba(0,0,0,.4);transition:transform var(--dur-micro) var(--sp)}
 .wo-log:active{transform:scale(.97)}
-.wo-log span{font-size:16px;font-weight:700}
+.wo-log span{display:flex;gap:.25em;min-width:0;font-size:16px;font-weight:700;white-space:nowrap}
+.wo-log span i{min-width:0;font-style:normal;overflow:hidden;text-overflow:ellipsis}
 .wo-log b{font:700 15px 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
 .wo-log.fin{height:52px;justify-content:center}
 /* Eine Übung, die man von Hand aufgeklappt hat: eigener, ruhiger Knopf (Lime gehört dem festen Knopf). */
@@ -1457,6 +1467,7 @@ div.wg-note{cursor:default}
 }
 .wo-slim:active{transform:scale(.985)}
 .wo-slim .i{width:34px;height:34px;flex:0 0 34px;border-radius:12px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2)}
+.wo-slim .o{flex:0 0 24px;font:500 12px 'JetBrains Mono',monospace;color:var(--t3)}
 .wo-slim .n{flex:1;min-width:0;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wo-slim .r{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap}
 .wo-slim .cv{color:var(--text3);font-size:16px;flex:0 0 auto}
@@ -1464,6 +1475,27 @@ div.wg-note{cursor:default}
 .wo-slim.done .i{color:var(--green)}
 .wo-slim.done .n{text-decoration:line-through}
 .wo-slim.skipped{opacity:.4}
+
+/* --- Supersatz: eine Karte für alle Partner --- */
+.wo-g-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin-bottom:8px}
+.wo-g-l{font-size:13px;font-weight:600;color:var(--text2)}
+.wo-g-r{display:flex;align-items:center;gap:12px;font:600 13px 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+.wo-g-item{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:44px;margin:0 0 12px;padding:0;border:0;border-radius:14px;background:none;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.wo-g-item:last-child{margin-bottom:0}
+.wo-g-item:not(:last-child)::after{content:'';position:absolute;left:15px;top:38px;width:2px;height:18px;border-radius:999px;background:rgba(255,255,255,.22)}
+.wo-g-node{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:700 11px 'JetBrains Mono',monospace;box-shadow:inset 0 0 0 1px rgba(255,255,255,.22)}
+.wo-g-item.done .wo-g-node{background:rgba(255,255,255,.14);box-shadow:none}
+.wo-g-item.sel .wo-g-node{box-shadow:inset 0 0 0 2px rgba(255,255,255,.45)}
+.wo-g-item.act .wo-g-node{box-shadow:inset 0 0 0 2px var(--text)}
+.wo-g-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.wo-g-main b{font-size:16px;line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wo-g-main span{font:500 12px/16px 'JetBrains Mono',monospace;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wo-g-item.act .wo-g-main span{font:500 13px/16px 'Space Grotesk',sans-serif;color:var(--text)}
+.wo-g-dots{display:flex;align-items:center;gap:8px}
+.wo-g-dots i{display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.36);transform:scale(.5)}
+.wo-g-dots i.ok{background:rgba(255,255,255,.18);transform:none}
+.wo-g-dots i.now{background:transparent;box-shadow:inset 0 0 0 2px var(--text);transform:none}
+@media (max-width:359px){.wo-g-dots{gap:4px}}
 
 /* ============================================================================
    VOLUMEN-COACH
@@ -2369,9 +2401,9 @@ div.wg-note{cursor:default}
 <div id="exh-content"></div>
 </div></div>
 <div class="mbg" id="m-wosummary"><div class="mdl">
-<div class="mt">Workout gespeichert <button class="mc" onclick="cm('m-wosummary')">✕</button></div>
+<div class="mt">Workout gespeichert <button class="mc" aria-label="Schließen" onclick="cm('m-wosummary')">✕</button></div>
 <div id="wo-sum-content"></div>
-<button class="btn" onclick="cm('m-wosummary');go('dash')">Fertig</button>
+<div class="sheet-cta"><button class="btn" onclick="cm('m-wosummary')">Fertig</button></div>
 </div></div>
 <div class="mbg" id="m-exnote"><div class="mdl">
 <div class="mt">NOTIZ <button class="mc" onclick="cm('m-exnote')">✕</button></div>
@@ -3589,6 +3621,10 @@ function cm(id){
   if(id==='m-lib')addToWorkoutMode=false;
   if(id==='m-alt'){pendingSwap=null}
   if(id==='m-woswitch')pendingSwitchKey=null;
+  /* Zusammenfassung: ✕, Wischen, Tipp daneben, Zurück-Geste und „Fertig“
+     enden alle hier, und alle landen auf Start. Läuft nichts mehr, gibt es
+     keinen leeren Workout-Screen, auf dem man hängen bleibt. */
+  if(id==='m-wosummary'&&!D.active)go('dash');
 }
 /* Sheets stapeln sich in der Reihenfolge, in der sie geöffnet werden — nicht
    in der, in der sie zufällig im Dokument stehen. Der Scheibenrechner steht
@@ -8838,8 +8874,8 @@ function workoutCompareLine(c){
   if(!c)return '';
   if(!c.shared)return `<div class="wo-sum-cmp">Kein Vergleich möglich: keine Übung aus der Einheit vom ${esc(c.date)} kam heute noch einmal vor.</div>`;
   const d=Math.round(c.volume);
-  const line=d>0?`▲ <b>${d} kg</b> mehr als bei der letzten Einheit`
-    :d<0?`▼ <b>${-d} kg</b> weniger als bei der letzten Einheit`
+  const line=d>0?`▲ <b>${d.toLocaleString('de-DE')} kg</b> mehr als bei der letzten Einheit`
+    :d<0?`▼ <b>${(-d).toLocaleString('de-DE')} kg</b> weniger als bei der letzten Einheit`
     :'Genauso viel wie bei der letzten Einheit';
   return `<div class="wo-sum-cmp">${line}</div>`+
     (c.teilweise?`<div class="wo-sum-cmp note">Verglichen: ${c.shared===1?'die eine Übung, die in beiden vorkam':`die ${c.shared} Übungen, die in beiden vorkamen`}</div>`:'');
@@ -8849,11 +8885,11 @@ function endWorkout(){
   if(!confirm('Workout speichern?'))return;
   const s=sessionFromActive(D.active);
   const dur=s.duration;
-  if(s.sets.length===0){D.active=null;save();resetTmr();renderWo();toast('Kein Satz geloggt');return}
+  if(s.sets.length===0){D.active=null;save();resetTmr();updateNavAktiv();go('dash');toast('Kein Satz geloggt');return}
   const previousSimilar=[...D.history].reverse().find(h=>h.planKey===s.planKey&&h.sets&&h.sets.length);
   const progData=[];
   const exNames=[...new Set(s.sets.map(x=>x.ex))];
-  exNames.forEach(name=>{const current=strengthSets(s.sets).filter(x=>x.ex===name);if(!current.length)return;const curMax=Math.max(...current.map(x=>parseFloat(x.w)||0));const prevSets=strengthSets(getAllSets(name)).filter(x=>x.w>0);if(prevSets.length>0){const prevMax=Math.max(...prevSets.map(x=>parseFloat(x.w)||0));const diff=curMax-prevMax;const pct=prevMax>0?((diff/prevMax)*100):0;progData.push({name,curMax,prevMax,diff,pct})}});
+  exNames.forEach(name=>{const current=strengthSets(s.sets).filter(x=>x.ex===name);if(!current.length)return;const curMax=Math.max(...current.map(x=>parseFloat(x.w)||0));const prevSets=strengthSets(getAllSets(name)).filter(x=>x.w>0);if(prevSets.length>0){const prevMax=Math.max(...prevSets.map(x=>parseFloat(x.w)||0));progData.push({name,curMax,prevMax,diff:curMax-prevMax})}});
   D.history.push(s);
   D.active=null;
   save();
@@ -8864,19 +8900,31 @@ function endWorkout(){
   const totalW=sessionVolume(s);
   const strength=strengthSets(s.sets);
   const cardioMin=cardioMinutes(s.sets);
-  const avgRir=strength.length?(strength.reduce((a,x)=>a+x.rir,0)/strength.length).toFixed(1):'—';
+  const avgRir=strength.length?(strength.reduce((a,x)=>a+x.rir,0)/strength.length).toFixed(1).replace('.',','):'—';
   const cmp=workoutCompare(s,previousSimilar);
   /* Der Satzunterschied steht klein neben der Satzzahl, der Volumenunterschied
      als Zeile unter dem Volumen. */
   const setsDiff=cmp&&cmp.shared?` <small>${cmp.sets>0?'+'+cmp.sets:cmp.sets<0?'−'+(-cmp.sets):'±0'}</small>`:'';
+  const kg=n=>String(Math.round(n*100)/100).replace('.',',');
+  const stat=(label,val)=>`<div><span class="wo-sum-cap">${label}</span><b>${val}</b></div>`;
   let sh=`<div class="wo-sum-sub">${esc(planDisplayName(s.planKey))}, ${esc(s.date)}</div>`;
-  sh+=`<div class="wo-summary"><div class="wo-sum-big">${dur}'</div><div class="wo-sum-label">Minuten</div></div>`;
-  sh+=`<div class="wo-sum-grid"><div class="wo-sum-card vol"><div class="sv">${Math.round(totalW)}</div><div class="sl">Kg Volumen</div>${workoutCompareLine(cmp)}</div><div class="wo-sum-card"><div class="sv">${s.sets.length}${setsDiff}</div><div class="sl">Sätze</div></div><div class="wo-sum-card"><div class="sv">${exNames.length}</div><div class="sl">Übungen</div></div><div class="wo-sum-card"><div class="sv">${avgRir}</div><div class="sl">Ø RIR</div></div>${cardioMin?`<div class="wo-sum-card"><div class="sv">${cardioMin}</div><div class="sl">Min Cardio</div></div>`:''}</div>`;
-  if(progData.length>0){sh+=`<div class="st">PROGRESSION <div class="ln"></div></div><div class="wo-sum-prog">`;progData.forEach(p=>{const cl=p.diff>0?'trend-up':p.diff<0?'trend-down':'trend-flat';const sign=p.diff>0?'+':'';sh+=`<div class="wo-sp-row"><div>${esc(p.name)}</div><div class="${cl}" style="font-family:'JetBrains Mono',monospace">${sign}${p.diff.toFixed(1)}kg (${sign}${p.pct.toFixed(0)}%)</div></div>`});sh+=`</div>`}
+  sh+=`<div class="wo-sum-hero"><span class="wo-sum-cap">Volumen</span><div class="wo-sum-num"><b>${Math.round(totalW).toLocaleString('de-DE')}</b><span>kg</span></div>${workoutCompareLine(cmp)}`+
+    `<div class="wo-sum-stats">${stat('Dauer',`${dur}<small> min</small>`)}${stat('Sätze',`${s.sets.length}${setsDiff}`)}${stat('Übungen',exNames.length)}${stat('Ø RIR',avgRir)}${cardioMin?stat('Cardio',`${cardioMin}<small> min</small>`):''}</div></div>`;
+  /* Nur, was sich bewegt hat. Verglichen wird mit dem schwersten Gewicht, das
+     in dieser Übung bisher geloggt war; der Rest steht als ein Satz da. */
+  const moved=progData.filter(p=>Math.abs(p.diff)>=.005);
+  const still=progData.length-moved.length;
+  if(moved.length){
+    sh+=`<div class="wo-sum-sec">Was sich bewegt hat</div><div class="wo-sum-prog">`+moved.map(p=>
+      `<div class="wo-sp-row"><b>${esc(p.name)}</b><span>${kg(p.curMax)} kg, vorher ${kg(p.prevMax)} kg</span>`+
+      `<div class="d"><i>${p.diff>0?'▲':'▼'}</i>${p.diff>0?'+':'−'}${kg(Math.abs(p.diff))} kg</div></div>`).join('')+`</div>`;
+  }
+  if(still)sh+=`<p class="wo-sum-still">${still===1?'Eine Übung':still+' Übungen'} unverändert.</p>`;
   document.getElementById('wo-sum-content').innerHTML=sh;
   om('m-wosummary');
   releaseWakeLock();
   try{localStorage.removeItem('pb_timer')}catch{}
+  updateNavAktiv();
   renderWo();
 }
 function isCardioExercise(ex){
@@ -9010,7 +9058,10 @@ function confirmLog(){
   const partners=D.active?supersetPartners(D.active.exercises,ex):[];
   const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&!p.skipped);
   timerTgt=pending.length?SUPERSET_GAP:restSecondsFor(ex.name,ex.muscle,ex.type);
-  if(pending.length)toast(`Supersatz — weiter mit ${pending[0].name}`);
+  /* Die Supersatz-Karte folgt der Runde: eine angetippte Partnerzeile ist mit
+     dem Satz erledigt. Wer als Nächstes dran ist, sagt die Pausenkarte. */
+  const inCard=groupMembers(D.active.exercises,activeIndex(D.active.exercises)).includes(logTgt.exIdx);
+  if(inCard)D.active.openEx=null;
   if(timerInt){clearInterval(timerInt);timerInt=null}
   timerStartedAt=0;timerPausedRemaining=0;
   startTmr();
@@ -9023,7 +9074,7 @@ function confirmLog(){
   }else{
     toast(`✓ ${a}kg × ${b} @ RIR ${rir}`);haptic(12);
   }
-  if(ex.logged.length>=ex.sets){
+  if(ex.logged.length>=ex.sets&&!inCard){
     /* PB-092: Mit dem letzten Satz gilt die Übung als erledigt, im
        Fokus-Layout klappt sie damit zu einer Zeile zusammen — und die
        Satz-Chips verschwinden. Genau in dem Moment will man aber am
@@ -9143,7 +9194,12 @@ function renderFocusBar(){
   const restPct=tState==='done'?1:Math.max(0,Math.min(1,tRem/restTotal));
   const R=40,CIRC=2*Math.PI*R;
   const ringCol=tState==='done'?'var(--accent)':tState==='run'?'var(--text)':'rgba(255,255,255,.55)';
-  const label=tState==='run'?'Pause läuft':tState==='done'?'Los':paused?'Pausiert':'Pause starten';
+  /* Zwischen zwei Partnern eines Supersatzes ist es kein Ausruhen, sondern der
+     Umbau: die Karte nennt die Übung, zu der es weitergeht. */
+  const liste=activeExercisesSafe();
+  const ai=activeIndex(liste);
+  const umbau=ai>=0&&groupMembers(liste,ai).length&&liste.some(e=>e!==liste[ai]&&e.ss===liste[ai].ss&&!e.skipped&&(e.logged||[]).length>(liste[ai].logged||[]).length);
+  const label=tState==='run'?(umbau?'Weiter mit '+esc(liste[ai].name):'Pause läuft'):tState==='done'?'Los':paused?'Pausiert':'Pause starten';
   /* Ist die Pause vorbei, räumt ein Tipp auf den Ring die Karte weg — er startet nicht still die volle Pause von vorn. */
   const ringAct=tState==='run'?'Pause anhalten':paused?'Pause fortsetzen':tState==='done'?'Pause beenden':'Pause starten';
   const zahl=tState==='done'?'+'+fmtT(Math.max(0,getTimerElapsed()-timerTgt)):fmtT(tRem);
@@ -9195,7 +9251,7 @@ function renderWoDock(){
   if(!D.active||!screen||!screen.classList.contains('active')){dock.style.display='none';return}
   dock.style.display='block';
   const liste=activeExercisesSafe();
-  const ei=liste.findIndex(e=>!e.skipped&&(e.logged||[]).length<e.sets);
+  const ei=activeIndex(liste);
   if(ei<0){
     btn.className='wo-log fin';
     btn.onclick=()=>endWorkout();
@@ -9207,7 +9263,9 @@ function renderWoDock(){
   const ziel=tgt&&tgt.num?`${tgt.num} kg${tgt.r?' × '+tgt.r:''}`:'';
   btn.className='wo-log';
   btn.onclick=()=>{unlockAudio();openLog(ei)};
-  btn.innerHTML=`<span>Satz ${ex.logged.length+1} loggen</span>${ziel?`<b>${esc(ziel)}</b>`:''}`;
+  /* Im Supersatz nennt der Knopf die Übung, die dran ist, nicht die Satznummer. */
+  const was=groupMembers(liste,ei).length?`<i>${esc(ex.name)}</i> loggen`:`Satz ${ex.logged.length+1} loggen`;
+  btn.innerHTML=`<span>${was}</span>${ziel?`<b>${esc(ziel)}</b>`:''}`;
 }
 function renderWo(){
   applyVisualTheme();
@@ -9231,8 +9289,13 @@ function renderWo(){
   renderFocusBar();
   renderWoHead();
   let h='';
-  let activeExIdx=-1;
-  for(let i=0;i<D.active.exercises.length;i++){const e=D.active.exercises[i];if(!e.skipped&&e.logged.length<e.sets){activeExIdx=i;break}}
+  const list=D.active.exercises;
+  const activeExIdx=activeIndex(list);
+  /* Steht die Übung, die jetzt dran ist, in einem Supersatz, bilden sie und
+     ihre Partner EINE Karte. Sie sitzt dort, wo der erste von ihnen steht. */
+  const grp=groupMembers(list,activeExIdx);
+  const anchor=grp.length?grp[0]:activeExIdx;
+  const ords=exOrdinals(list);
   /* `compact` heißt jetzt „alles aufklappen": im Fokus-Layout ist eingeklappt
      der Normalfall, ausgeklappt die Ausnahme. Der Feldname bleibt, weil er in
      gespeicherten Sessions steht — nur die Bedeutung des Schalters dreht sich. */
@@ -9242,27 +9305,30 @@ function renderWo(){
      „Danach" heißen — sonst steht die Überschrift über der erledigten
      Übung und behauptet das Gegenteil. */
   let zoneShown={before:false,after:false,none:false};
-  D.active.exercises.forEach((ex,ei)=>{
+  list.forEach((ex,ei)=>{
+    if(grp.includes(ei)){
+      if(ei===anchor)h+=woGroupCard(list,grp,activeExIdx,ords)+coachSessionHTML();
+      return;
+    }
     const done=ex.logged.length>=ex.sets;
     const skipped=ex.skipped;
     const isActive=ei===activeExIdx;
     const open=isActive||expandAll||D.active.openEx===ei;
     const cardio=isCardioExercise(ex);
     const safe=jsStr(ex.name);
-    const hist=getAllSets(ex.name).filter(s=>s.w>0||s.r>0);
-    const lastSets=hist.slice(-6);
-    const series=lastSets.map(s=>cardio?(s.r||0):(s.w||0));
     if(activeExIdx<0){
       if(!zoneShown.none){h+=`<div class="st">Übungen <div class="ln"></div></div>`;zoneShown.none=true}
-    }else if(ei<activeExIdx){
+    }else if(ei<anchor){
       if(!zoneShown.before){h+=`<div class="st">Erledigt <div class="ln"></div></div>`;zoneShown.before=true}
-    }else if(ei>activeExIdx){
+    }else if(ei>anchor){
       if(!zoneShown.after){h+=`<div class="st">Danach <div class="ln"></div></div>`;zoneShown.after=true}
     }
-    /* --- eingeklappte Zeile: eine Zeile pro Übung, sonst nichts --- */
+    /* --- eingeklappte Zeile: eine Zeile pro Übung, sonst nichts. Vorn steht
+       die Nummer, im Supersatz der Buchstabe; erledigt und übersprungen
+       tragen statt dessen ihr Zeichen. --- */
     if(!open){
       h+=`<div id="wo-ex-${ei}" class="wo-slim${done?' done':''}${skipped?' skipped':''}" onclick="toggleWoRow(${ei})">`+
-        `${done?'<div class="i">✓</div>':skipped?'<div class="i">⤼</div>':''}`+
+        `${done?'<div class="i">✓</div>':skipped?'<div class="i">⤼</div>':`<div class="o">${ords[ei]}</div>`}`+
         `<div class="n">${esc(ex.name)}</div>`+
         `<div class="r">${esc(ex.sets)}×${esc(reps(ex))}${done&&ex.logged.length?` · ${esc(ex.logged[ex.logged.length-1].w)} kg`:''}</div>`+
         `<div class="cv">›</div></div>`;
@@ -9278,58 +9344,96 @@ function renderWo(){
         `<div class="wo-action-row">${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}`+
         `<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${ei})">⋯</button>`+
         `${!isActive?`<button type="button" class="wo-icon-btn" title="Zuklappen" onclick="toggleWoRow(${ei})">▾</button>`:''}</div>`+
-      `</div>`;
-    if(D.notes[ex.name])h+=`<div class="wo-note">📝 ${esc(D.notes[ex.name])}</div>`;
-    if(!skipped&&!done){
-      const tgt=nextSetTarget(ex);
-      if(tgt){
-        h+=tgt.num
-          ?`<div class="wo-target"><div class="wo-tl">Ziel Satz ${ex.logged.length+1}</div><div class="wo-big"><b>${esc(tgt.num)}</b><span>${tgt.unit}</span></div>`+
-            `<button type="button" class="wo-why" onclick="this.classList.toggle('open')"><span>${tgt.why}</span>${icon('chev',16)}</button></div>`
-          :`<div class="target-hint"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`;
-      }
-      h+=renderWarmup(ex);
-    }
-    if(!skipped){
-      /* Geloggte Sätze als Chips. Die Klasse .wsr bleibt: an ihr hängt die
-         Halte-Geste zum Bearbeiten eines Satzes (PB-026). */
-      const chips=[];
-      for(let si=0;si<ex.sets;si++){
-        const s=ex.logged[si];
-        if(s){
-          const pr=justPRKey===ei+':'+si;
-          chips.push(`<button type="button" class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}${pr?' pr':''}" onclick="openSetEditor(${ei},${si})" aria-label="Satz ${si+1} korrigieren">`+
-            `${pr?'<i class="wsr-pr" aria-hidden="true">PR</i>':''}<span class="n">${si+1}</span>`+
-            `<b>${esc(cardio?formatLoggedSetLine(ex,s)+(s.w?`, Stufe ${s.w}`:''):`${s.w} × ${s.r}`)}</b><span class="r">RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}<em class="wsr-pen" aria-hidden="true">✎</em></button>`);
-        }
-      }
-      if(chips.length)h+=`<div class="wo-chips">${chips.join('')}</div>`;
-      /* Die aktive Übung loggt der feste Knopf unten; eine von Hand
-         aufgeklappte andere bekommt ihren eigenen, ruhigen. */
-      if(!done&&!isActive)h+=`<button type="button" class="wo-log-in" onclick="unlockAudio();openLog(${ei})">Satz ${ex.logged.length+1} loggen</button>`;
-    }else{
-      h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:8px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
-    }
-    h+=`<div class="wo-tools">`+
-      `<button type="button" class="wo-alt-btn" onclick="openAlternative(${ei})">${icon('swap',18)}Alternative</button>`+
-      `<div class="wo-step" role="group" aria-label="Sätze">`+
-        `<button type="button" aria-label="Einen Satz weniger" onclick="adjustActiveSets(${ei},-1)">${icon('minus',20)}</button>`+
-        `<span>Sätze <b>${esc(ex.sets)}</b></span>`+
-        `<button type="button" aria-label="Einen Satz mehr" onclick="adjustActiveSets(${ei},1)">${icon('plus',20)}</button>`+
-      `</div>`+
-    `</div>`;
-    if(lastSets.length&&!skipped){
-      h+=`<details class="wo-hist"><summary><span>Letzte ${lastSets.length} Sätze</span>${icon('chev',16)}</summary>`+
-        `<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'var(--text2)'):''}</div>`+
-        lastSets.map(s=>`<div class="mini-hist-row"><span class="mh-d">${esc(s.date||'')}</span><span class="mh-v">${esc(formatLoggedSetLine(ex,s))}${cardio&&s.w?` • Stufe ${esc(s.w)}`:''}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${esc(s.rir)}</span></div>`).join('')+
-        `</div></details>`;
-    }
-    h+='</div>';
+      `</div>`+woExBody(ex,ei,isActive,false)+'</div>';
     if(isActive)h+=coachSessionHTML();
   });
   if(activeExIdx<0)h+=coachSessionHTML();
   c.innerHTML=h;
   renderWoDock();
+}
+/* Alles unter dem Kopf einer aufgeklappten Übung: Notiz, Ziel, Aufwärmen,
+   Satz-Chips, Werkzeuge, Verlauf. Die einzelne Karte und die Supersatz-Karte
+   bauen es gleich; `round` schreibt dort „Ziel Runde“ statt „Ziel Satz“. */
+function woExBody(ex,ei,isActive,round){
+  const done=ex.logged.length>=ex.sets;
+  const skipped=ex.skipped;
+  const cardio=isCardioExercise(ex);
+  const lastSets=getAllSets(ex.name).filter(s=>s.w>0||s.r>0).slice(-6);
+  const series=lastSets.map(s=>cardio?(s.r||0):(s.w||0));
+  let h='';
+  if(D.notes[ex.name])h+=`<div class="wo-note">📝 ${esc(D.notes[ex.name])}</div>`;
+  if(!skipped&&!done){
+    const tgt=nextSetTarget(ex);
+    if(tgt){
+      h+=tgt.num
+        ?`<div class="wo-target"><div class="wo-tl">Ziel ${round?'Runde':'Satz'} ${ex.logged.length+1}</div><div class="wo-big"><b>${esc(tgt.num)}</b><span>${tgt.unit}</span></div>`+
+          `<button type="button" class="wo-why" onclick="this.classList.toggle('open')"><span>${tgt.why}</span>${icon('chev',16)}</button></div>`
+        :`<div class="target-hint"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`;
+    }
+    h+=renderWarmup(ex);
+  }
+  if(!skipped){
+    /* Geloggte Sätze als Chips. Die Klasse .wsr bleibt: an ihr hängt die
+       Halte-Geste zum Bearbeiten eines Satzes (PB-026). */
+    const chips=[];
+    for(let si=0;si<ex.sets;si++){
+      const s=ex.logged[si];
+      if(s){
+        const pr=justPRKey===ei+':'+si;
+        chips.push(`<button type="button" class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}${pr?' pr':''}" onclick="openSetEditor(${ei},${si})" aria-label="Satz ${si+1} korrigieren">`+
+          `${pr?'<i class="wsr-pr" aria-hidden="true">PR</i>':''}<span class="n">${si+1}</span>`+
+          `<b>${esc(cardio?formatLoggedSetLine(ex,s)+(s.w?`, Stufe ${s.w}`:''):`${s.w} × ${s.r}`)}</b><span class="r">RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}<em class="wsr-pen" aria-hidden="true">✎</em></button>`);
+      }
+    }
+    if(chips.length)h+=`<div class="wo-chips">${chips.join('')}</div>`;
+    /* Die aktive Übung loggt der feste Knopf unten; eine von Hand
+       aufgeklappte andere bekommt ihren eigenen, ruhigen. */
+    if(!done&&!isActive)h+=`<button type="button" class="wo-log-in" onclick="unlockAudio();openLog(${ei})">Satz ${ex.logged.length+1} loggen</button>`;
+  }else{
+    h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:8px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
+  }
+  h+=`<div class="wo-tools">`+
+    `<button type="button" class="wo-alt-btn" onclick="openAlternative(${ei})">${icon('swap',18)}Alternative</button>`+
+    `<div class="wo-step" role="group" aria-label="Sätze">`+
+      `<button type="button" aria-label="Einen Satz weniger" onclick="adjustActiveSets(${ei},-1)">${icon('minus',20)}</button>`+
+      `<span>Sätze <b>${esc(ex.sets)}</b></span>`+
+      `<button type="button" aria-label="Einen Satz mehr" onclick="adjustActiveSets(${ei},1)">${icon('plus',20)}</button>`+
+    `</div>`+
+  `</div>`;
+  if(lastSets.length&&!skipped){
+    h+=`<details class="wo-hist"><summary><span>Letzte ${lastSets.length} Sätze</span>${icon('chev',16)}</summary>`+
+      `<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'var(--text2)'):''}</div>`+
+      lastSets.map(s=>`<div class="mini-hist-row"><span class="mh-d">${esc(s.date||'')}</span><span class="mh-v">${esc(formatLoggedSetLine(ex,s))}${cardio&&s.w?` • Stufe ${esc(s.w)}`:''}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${esc(s.rir)}</span></div>`).join('')+
+      `</div></details>`;
+  }
+  return h;
+}
+/* Die Supersatz-Karte: Kopf mit der Runde, eine Zeile je Partner (Buchstabe,
+   Name, ein Kreis je Runde), darunter alles zu der Übung, die gerade gezeigt
+   wird. Gezeigt wird die, die dran ist, oder der Partner, dessen Zeile man
+   angetippt hat (Sätze ansehen und korrigieren, ⋯-Menü). Nach jedem Satz
+   rückt die Karte zur nächsten Übung der Runde. */
+function woGroupCard(list,grp,act,ords){
+  const shown=grp.includes(D.active.openEx)?D.active.openEx:act;
+  const rounds=Math.max(...grp.map(i=>parseInt(list[i].sets)||0));
+  const rows=grp.map(i=>{
+    const e=list[i];
+    const n=e.logged.length;
+    const last=n?e.logged[n-1]:null;
+    const sub=i===act?'Jetzt dran'
+      :last?`Letzter Satz ${isCardioExercise(e)?esc(last.r)+' min':esc(last.w)+' kg × '+esc(last.r)}`
+      :`${esc(e.sets)} × ${esc(reps(e))}`;
+    const dots=Array.from({length:parseInt(e.sets)||0},(_,si)=>
+      e.logged[si]?`<i class="ok">${icon('check',14)}</i>`:i===act&&si===n?'<i class="now"></i>':'<i></i>').join('');
+    return `<button type="button" class="wo-g-item${i===act?' act':i===shown?' sel':''}${n>=e.sets?' done':''}" aria-pressed="${i===shown}" onclick="toggleWoRow(${i})">`+
+      `<span class="wo-g-node">${ords[i]}</span>`+
+      `<span class="wo-g-main"><b>${esc(e.name)}</b><span>${sub}</span></span>`+
+      `<span class="wo-g-dots" aria-hidden="true">${dots}</span></button>`;
+  }).join('');
+  return `<div id="wo-ex-${act}" class="wo-act">`+
+    `<div class="wo-g-head"><span class="wo-g-l">Supersatz</span><span class="wo-g-r">Runde ${list[act].logged.length+1} von ${rounds}`+
+    `<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${shown})">⋯</button></span></div>`+
+    `<div class="wo-g-list">${rows}</div>`+woExBody(list[shown],shown,shown===act,true)+`</div>`;
 }
 /* Eine eingeklappte Zeile auf-/zuklappen. Nur EINE Zeile kann offen sein —
    sonst ist man nach drei Tippern wieder bei der alten Endlosliste. */
@@ -9351,6 +9455,41 @@ function activeExercisesSafe(){
   if(!Array.isArray(D.active.exercises))D.active.exercises=[];
   return D.active.exercises;
 }
+/* Die Übung, die jetzt dran ist. Gewöhnlich die erste mit offenen Sätzen.
+   Steht sie in einem Supersatz, richtet sich die Wahl nach der Runde: unter
+   den offenen Partnern kommt der mit den wenigsten geloggten Sätzen dran, bei
+   Gleichstand der erste der Liste. Es gibt dafür kein eigenes Feld — die
+   Reihenfolge folgt allein aus den geloggten Sätzen. */
+function activeIndex(list){
+  const n=e=>(e.logged||[]).length;
+  const open=e=>!e.skipped&&n(e)<e.sets;
+  const first=list.findIndex(open);
+  if(first<0||!list[first].ss)return first;
+  let best=first;
+  list.forEach((e,i)=>{if(e.ss===list[first].ss&&open(e)&&n(e)<n(list[best]))best=i});
+  return best;
+}
+/* Die Übungen, die mit `list[ei]` einen Supersatz bilden (ihn selbst
+   eingeschlossen, Übersprungene nicht), in Listenreihenfolge. Leer, wenn die
+   Übung nicht zu zweit oder mehr steht. */
+function groupMembers(list,ei){
+  const ex=list[ei];
+  if(!ex||!ex.ss||ex.skipped)return[];
+  const m=[];
+  list.forEach((e,i)=>{if(e.ss===ex.ss&&!e.skipped)m.push(i)});
+  return m.length>1?m:[];
+}
+/* Nummer oder Buchstabe je Übung: Supersätze tragen A1, A2, B1 …, alle
+   anderen 1, 2, 3 … Übersprungene zählen mit, damit nichts springt. */
+function exOrdinals(list){
+  const letter={},count={};
+  let n=0;
+  return list.map(e=>{
+    if(!e.ss||list.filter(o=>o.ss===e.ss).length<2)return String(++n);
+    if(!letter[e.ss]){letter[e.ss]=String.fromCharCode(65+Object.keys(letter).length%26);count[e.ss]=0}
+    return letter[e.ss]+(++count[e.ss]);
+  });
+}
 function loggedSetCount(){return activeExercisesSafe().reduce((a,e)=>a+((e.logged||[]).length),0)}
 function toggleWorkoutCompact(){
   if(!D.active)return;
@@ -9358,13 +9497,11 @@ function toggleWorkoutCompact(){
   save();renderWo();haptic(8);
 }
 function jumpToActiveExercise(){
-  const list=activeExercisesSafe();
-  for(let i=0;i<list.length;i++){
-    if(!list[i].skipped&&list[i].logged.length<list[i].sets){
-      const el=document.getElementById('wo-ex-'+i);
-      if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
-      return;
-    }
+  const i=activeIndex(activeExercisesSafe());
+  if(i>=0){
+    const el=document.getElementById('wo-ex-'+i);
+    if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
   }
   toast('Alle Übungen erledigt 🎉');
 }
