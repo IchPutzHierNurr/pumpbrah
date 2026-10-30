@@ -341,11 +341,16 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .chart-dot{stroke-width:2;fill:var(--bg2)}
 /* Der jüngste Punkt ist gefüllt — er ist der Stand, nicht Teil des Verlaufs. */
 .chart-dot.last{fill:currentColor}
-.chart-label{font-family:'JetBrains Mono',monospace;font-size:9px;fill:var(--text3)}
-/* Der aktuelle Wert steht am Ende der Linie — er ist die Zahl, die man
-   sucht, und sie soll nicht erst aus der Achse abgelesen werden müssen. */
-.chart-last{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:.5px}
-.chart-val-label{font-family:'JetBrains Mono',monospace;font-size:8px;fill:var(--text2)}
+.chart-label{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--t3)}
+/* Der Wert des markierten Punkts (Bestwert oder aktueller Stand) steht über
+   ihm — er ist die Zahl, die man sucht, und soll nicht erst aus der Achse
+   abgelesen werden müssen. Space Grotesk statt Bebas: die Einheit „kg" bleibt
+   klein geschrieben. */
+.chart-last{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+/* Die Kernzeile unter dem Kartentitel: nur Anfang, Ende und Spanne. */
+.chart-sum{margin:-8px 0 8px;font-size:12px;line-height:1.4;color:var(--text2);font-variant-numeric:tabular-nums}
+.chart-key{display:inline-flex;align-items:center;gap:6px}
+.chart-key i{width:10px;height:10px;border-radius:50%;background:var(--accent)}
 .chart-median{stroke:var(--text3);stroke-dasharray:3,5;stroke-width:1;opacity:.7}
 
 /* modals */
@@ -1200,11 +1205,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mesh-side .u{font-size:15px;font-weight:800;color:rgba(255,255,255,.78);letter-spacing:.03em}
 .mesh-side .o{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:rgba(255,255,255,.56);margin-top:3px;line-height:1.35}
 .mesh-scale{display:flex;justify-content:space-between;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.5)}
-.mesh-note{
-  margin-top:12px;padding:10px 12px;border-radius:14px;font-size:12px;line-height:1.45;
-  color:rgba(255,255,255,.78);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);
-}
-.mesh-note b{color:#fff}
 
 /* --- Glaskacheln: 2x2 (Zahlen) ------------------------------------------ */
 .gtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -1234,19 +1234,28 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .next-card-shot .row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-top:4px}
 .next-card-shot .big{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;font-weight:400;letter-spacing:.01em;color:var(--text)}
 .next-card-shot .small{margin-left:auto;font-size:13px;font-weight:500;line-height:1.3;color:var(--text2);text-align:right}
-.next-card-shot .play{
+.next-card-shot .play,.leer-block .play{
   display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:56px;margin-top:12px;
   border:0;border-radius:999px;cursor:pointer;background:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);
   color:#0a0b0e;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;
   transition:transform var(--dur-micro) var(--sp);
 }
-.next-card-shot .play svg{width:20px;height:20px}
-.next-card-shot .play:active{transform:scale(.97)}
+.next-card-shot .play svg,.leer-block .play svg{width:20px;height:20px}
+.next-card-shot .play:active,.leer-block .play:active{transform:scale(.97)}
+/* Leere Seite (Zahlen, Historie): solange kein Training gespeichert ist, steht
+   dort ein Block mit dem Weg zum ersten — statt gestrichelter Kästen ohne Knopf. */
+.leer-block{margin-top:16px;padding:24px 16px;border-radius:28px;background:var(--mat-hero);box-shadow:var(--edge-strong),var(--shadow-2)}
+.leer-ic{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);color:var(--text2)}
+.leer-ic svg{width:22px;height:22px}
+.leer-t{margin-top:16px;font-family:'Bebas Neue',sans-serif;font-size:28px;font-weight:400;line-height:1.05;letter-spacing:.02em;color:var(--text)}
+.leer-p{margin-top:8px;font-size:14px;line-height:1.45;color:var(--text2)}
+.leer-block .play{margin-top:24px}
+.leer-m{margin-top:12px;text-align:center;font-size:12px;line-height:1.3;color:var(--text2);font-variant-numeric:tabular-nums}
 
-#d-week-card .mesh-hero{padding:16px}
-#d-week-card .mesh-side{display:flex;flex-direction:column;gap:2px;padding-bottom:4px}
-#d-week-card .mesh-side .u{font-size:17px;font-weight:600;letter-spacing:0;line-height:1.25;color:var(--text)}
-#d-week-card .mesh-side .o{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500;margin:0;color:var(--text2)}
+#d-week-card .mesh-hero,#ana-report .mesh-hero{padding:16px}
+#d-week-card .mesh-side,#ana-report .mesh-side{display:flex;flex-direction:column;gap:2px;padding-bottom:4px}
+#d-week-card .mesh-side .u,#ana-report .mesh-side .u{font-size:17px;font-weight:600;letter-spacing:0;line-height:1.25;color:var(--text)}
+#d-week-card .mesh-side .o,#ana-report .mesh-side .o{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500;margin:0;color:var(--text2)}
 #d-week-card .mesh-hero.is-leer .mesh-num,#d-week-card .mesh-hero.is-leer .wg-v{color:var(--t3)}
 .hero-info{
   position:absolute;top:4px;right:4px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;
@@ -1783,14 +1792,14 @@ div.wg-note{cursor:default}
 .prow:active{transform:scale(.985)}
 .prow.stale{border-color:color-mix(in srgb,var(--red) 30%,transparent);background:color-mix(in srgb,var(--red) 6%,transparent)}
 .prow .bd{flex:1;min-width:0}
-.prow .bd b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prow .bd span{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3)}
+.prow .bd b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .bd span{display:block;margin-top:2px;font-size:12px;line-height:1.3;color:var(--text2);font-variant-numeric:tabular-nums}
 .prow .tspark{flex:0 0 62px;width:62px;height:26px}
 .prow .kg{
   font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;
-  min-width:58px;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums;
+  min-width:52px;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums;
 }
-.prow .kg small{display:block;font-family:'Space Grotesk',sans-serif;font-size:8.5px;font-weight:800;letter-spacing:.06em;color:var(--text3)}
+.prow .kg small{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:500;color:var(--t3);margin-left:2px}
 
 
 /* ============================================================================
@@ -3562,6 +3571,7 @@ const ICON_PATHS={
   more:'<path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="2.6"/>',
   note:'<path d="M5 4h9l5 5v11H5zM14 4v5h5M8.5 13h7M8.5 16.5h4.5"/>',
   chart:'<path d="M4 20h16M7 16v-4M12 16V6M17 16v-7"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/>',
   play:'<path d="M8 5.5 18 12 8 18.5z"/>',
   swap:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
   target:'<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/>',
@@ -4537,20 +4547,82 @@ function pathLength(pts){let l=0;for(let i=1;i<pts.length;i++){l+=Math.hypot(pts
       Stand ist. Er ist jetzt gefüllt und trägt seinen Wert.
    -------------------------------------------------------------------------- */
 let chartSeq=0;
+/* Eine SVG-Einheit ist ein CSS-Pixel: das Diagramm wird so breit gezeichnet,
+   wie die Karte innen ist (Seitenrand 2 × 15, Kartenpolster 2 × 17,5), und
+   nicht in 320 Einheiten, die dann auf die Kartenbreite skaliert werden. Nur
+   so ist die Schrift im Diagramm wirklich 11 px groß. */
+function chartWidth(){return Math.round(Math.min(window.innerWidth||393,480)-65)}
+/* Achsenwerte in glatten Schritten (1, 2, 2,5 oder 5 mal Zehnerpotenz): drei
+   bis fünf Linien, und die Daten füllen mindestens die halbe Achse. Von
+   mehreren passenden Schritten gewinnt der größte, das sind die wenigsten
+   Linien (55 · 60 · 65 statt 57,5 · 60 · 62,5). Ohne passenden Schritt, zum
+   Beispiel bei lauter gleichen Werten, gibt es null. */
+function niceAxis(min,max){
+  const span=max-min;
+  if(!(span>0))return null;
+  let best=null;
+  for(let e=-3;e<=6;e++){
+    [1,2,2.5,5].forEach(m=>{
+      const step=m*Math.pow(10,e);
+      const lo=+(Math.floor(min/step+1e-9)*step).toFixed(6),hi=+(Math.ceil(max/step-1e-9)*step).toFixed(6);
+      const n=Math.round((hi-lo)/step);
+      if(n<2||n>4||span/(hi-lo)<.5)return;
+      if(!best||step>best.step)best={step,lo,hi,n,dec:Math.max(0,-Math.floor(Math.log10(step))+(m===2.5?1:0))};
+    });
+  }
+  return best;
+}
+/* Das Datum unter einem Punkt: „04.10." aus „4.10.2026" oder „04.10.2026". */
+function kurzDatum(s){
+  const d=parseGermanDate(s);
+  return d?String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.':String(s||'');
+}
+/* Eine Zahl im Diagramm, mit Komma. Ohne Angabe so viele Stellen wie nötig. */
+function chartNum(v,dec){
+  v=+v;
+  if(dec===undefined)dec=Number.isInteger(v)?0:Math.abs(v*10-Math.round(v*10))<1e-6?1:2;
+  return de(v.toFixed(dec));
+}
+/* Die Kernzeile unter dem Kartentitel: nur Anfang, Ende und Spanne, ohne
+   Wertung. dates sind die deutschen Datumsangaben des ersten und letzten
+   Eintrags. */
+function chartSumLine(first,last,unit,dec,d0,d1){
+  const a=parseGermanDate(d0),b=parseGermanDate(d1);
+  const tage=a&&b?Math.round((b-a)/864e5):0;
+  const spanne=tage>0?` in ${tage<14?tage+(tage===1?' Tag':' Tagen'):Math.round(tage/7)+' Wochen'}`:'';
+  return`<div class="chart-sum">${chartNum(first,dec)} → ${chartNum(last,dec)}${unit?'\u00a0'+esc(unit):''}${spanne}</div>`;
+}
 function svgChart(data,opts={}){
   if(!data||data.length<2)return'<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Zu wenig Daten</div>';
-  const W=opts.w||320,H=opts.h||120;
+  const W=opts.w||chartWidth(),H=opts.h||120;
   const showGrid=opts.showGrid!==false;
-  const pad={t:14,r:opts.lastValue===false?10:34,b:opts.xLabels?24:10,l:showGrid?34:10};
-  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
+  const unit=opts.unit?String(opts.unit).trim():'';
   const vals=data.map(d=>d.v);
   const rawMin=Math.min(...vals),rawMax=Math.max(...vals);
-  /* Etwas Luft über und unter der Kurve: eine Linie, die den Rahmen
-     berührt, sieht abgeschnitten aus. */
+  /* Glatte Achse, wenn es Linien gibt und der Aufrufer die Grenzen nicht
+     vorgibt; sonst etwas Luft über und unter der Kurve: eine Linie, die den
+     Rahmen berührt, sieht abgeschnitten aus. */
+  const flach=Math.max(1,Math.abs(rawMax)*.05);
+  const nice=showGrid&&opts.yMin===undefined&&opts.yMax===undefined
+    ?niceAxis(rawMin,rawMax)||(rawMin===rawMax?niceAxis(rawMin-flach,rawMax+flach):null):null;
   const pad0=(rawMax-rawMin)*0.12||Math.max(0.5,Math.abs(rawMax)*0.02);
-  const mn=opts.yMin!==undefined?opts.yMin:rawMin-pad0;
-  const mx=opts.yMax!==undefined?opts.yMax:rawMax+pad0;
+  const mn=nice?nice.lo:opts.yMin!==undefined?opts.yMin:rawMin-pad0;
+  const mx=nice?nice.hi:opts.yMax!==undefined?opts.yMax:rawMax+pad0;
   const range=mx-mn||1;
+  const axDec=nice?nice.dec:range<2?2:range<10?1:0;
+  const ticks=[];
+  if(showGrid){
+    const steps=nice?nice.n:3;
+    for(let i=0;i<=steps;i++){
+      const val=mx-((i/steps)*range);
+      ticks.push({i,steps,val,txt:chartNum(val,axDec)+(i===0&&unit?'\u00a0'+unit:'')});
+    }
+  }
+  /* Platz links für den breitesten Achsenwert (Monospace, 11 px: 6,6 je Zeichen). */
+  const lw=ticks.reduce((m,t)=>Math.max(m,t.txt.length),0);
+  const zeigeWert=opts.lastValue!==false&&opts.showDots!==false;
+  const pad={t:zeigeWert?26:14,r:zeigeWert||opts.xLabels?24:10,b:opts.xLabels?24:10,l:showGrid?Math.ceil(lw*6.6)+10:10};
+  const cw=W-pad.l-pad.r,ch=H-pad.t-pad.b;
   const color=opts.color||'var(--accent)';
   const dotColor=opts.dotColor||color;
   const uid='cg'+(++chartSeq);
@@ -4558,33 +4630,31 @@ function svgChart(data,opts={}){
   const y=v=>pad.t+ch-(((v-mn)/range)*ch);
   const pts=data.map((d,i)=>({x:x(i),y:y(d.v)}));
   const pathD=pts.map((p,i)=>((i===0?'M':'L')+p.x.toFixed(1)+','+p.y.toFixed(1))).join(' ');
-  const axDec=range<2?2:range<10?1:0;
-  let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  /* Für die Sprachausgabe ein Satz, der die Werte nennt, ohne Wertung. */
+  const fmt=v=>chartNum(v,opts.dec);
+  const datum=l=>/^\d\d\.\d\d\.?$/.test(l||'');
+  const von=data[0].label,bis=data[data.length-1].label;
+  const beschr=`${opts.label||'Verlauf'}: ${data.length} ${opts.noun||'Werte'}, `+
+    `${datum(von)&&datum(bis)?`${von} bis ${bis}, `:''}`+
+    `von ${fmt(vals[0])} auf ${fmt(vals[vals.length-1])}${unit?' '+unit:''}, niedrigster Wert ${fmt(rawMin)}, höchster ${fmt(rawMax)}`;
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${attr(beschr)}">`;
   svg+=`<defs><linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1">`+
        `<stop offset="0%" stop-color="${color}" stop-opacity=".38"/>`+
        `<stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>`;
-  if(showGrid){
-    const steps=3;
-    for(let i=0;i<=steps;i++){
-      const yy=pad.t+(ch/steps)*i;
-      const val=mx-((i/steps)*range);
-      svg+=`<line x1="${pad.l}" y1="${yy.toFixed(1)}" x2="${W-pad.r}" y2="${yy.toFixed(1)}" class="chart-grid" stroke="var(--line)" stroke-width="1"/>`;
-      svg+=`<text x="${pad.l-6}" y="${(yy+3).toFixed(1)}" class="chart-label" text-anchor="end">${val.toFixed(axDec)}</text>`;
-    }
-  }
+  ticks.forEach(t=>{
+    const yy=pad.t+(ch/t.steps)*t.i;
+    svg+=`<line x1="${pad.l}" y1="${yy.toFixed(1)}" x2="${W-pad.r}" y2="${yy.toFixed(1)}" class="chart-grid" stroke="var(--line)" stroke-width="1"/>`;
+    svg+=`<text x="${pad.l-6}" y="${(yy+4).toFixed(1)}" class="chart-label" text-anchor="end">${t.txt}</text>`;
+  });
   if(opts.xLabels){
-    /* So viele Beschriftungen, wie nebeneinander lesbar sind — nicht mehr. */
+    /* Die Datumsangaben stehen mindestens 44 px auseinander, die letzte immer:
+       gezählt wird von ihr aus rückwärts, so kann keine an ihr kleben. */
     const per=44;
-    const maxLabels=Math.max(2,Math.floor(cw/per));
-    const step=Math.max(1,Math.ceil((data.length-1)/(maxLabels-1)));
-    data.forEach((d,i)=>{
-      if(!d.label)return;
-      const last=i===data.length-1;
-      if(i%step!==0&&!last)return;
-      if(last&&(data.length-1)%step!==0&&(data.length-1-Math.floor((data.length-1)/step)*step)<step/2)return;
-      const anchor=i===0?'start':last?'end':'middle';
-      svg+=`<text x="${x(i).toFixed(1)}" y="${H-4}" class="chart-label" text-anchor="${anchor}">${esc(d.label)}</text>`;
-    });
+    const step=Math.max(1,Math.ceil(per/(cw/(data.length-1))));
+    for(let i=data.length-1;i>=0;i-=step){
+      if(!data[i].label)continue;
+      svg+=`<text x="${x(i).toFixed(1)}" y="${H-4}" class="chart-label" text-anchor="middle">${esc(data[i].label)}</text>`;
+    }
   }
   if(opts.showArea!==false){
     svg+=`<path d="${pathD} L${pts[pts.length-1].x.toFixed(1)},${(pad.t+ch).toFixed(1)} L${pts[0].x.toFixed(1)},${(pad.t+ch).toFixed(1)} Z" fill="url(#${uid})" class="chart-area fade"/>`;
@@ -4592,24 +4662,27 @@ function svgChart(data,opts={}){
   if(opts.median!==undefined){
     const my=y(opts.median);
     svg+=`<line x1="${pad.l}" y1="${my.toFixed(1)}" x2="${W-pad.r}" y2="${my.toFixed(1)}" stroke="var(--text3)" class="chart-median"/>`;
-    svg+=`<text x="${pad.l+3}" y="${(my-5).toFixed(1)}" class="chart-label" style="fill:var(--text3)">⌀ ${Number(opts.median).toFixed(axDec)}</text>`;
+    svg+=`<text x="${pad.l+3}" y="${(my-5).toFixed(1)}" class="chart-label" style="fill:var(--text3)">⌀ ${chartNum(opts.median,axDec)}</text>`;
   }
   const len=pathLength(pts);
   svg+=`<path d="${pathD}" class="chart-line draw" stroke="${color}" style="--len:${len}"/>`;
   if(opts.showDots!==false){
+    /* Gefüllt ist der markierte Punkt: der jüngste, oder bei opts.mark ein
+       anderer (der Bestwert). Er ist der Stand, alles andere Verlauf. */
+    const mark=opts.mark!==undefined?opts.mark:pts.length-1;
     pts.forEach((p,i)=>{
-      const last=i===pts.length-1;
+      const last=i===mark;
       const dc=dotColor;
       const delay=(0.35+(i/Math.max(1,pts.length-1))*0.75).toFixed(2);
-      /* Der jüngste Punkt ist gefüllt: er ist der Stand, alles davor Verlauf. */
       svg+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${last?4.5:3.5}" `+
         `stroke="${dc}" class="chart-dot pop${last?' last':''}" style="color:${dc};animation-delay:${delay}s"/>`;
-      const tip=`${data[i].v}${opts.unit||''}${data[i].label?' · '+data[i].label:''}`;
+      const tip=`${fmt(data[i].v)}${unit?' '+unit:''}${data[i].label?' · '+data[i].label:''}`;
       svg+=`<circle class="hit" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="13" data-tip="${attr(tip)}"/>`;
     });
-    if(opts.lastValue!==false){
-      const lp=pts[pts.length-1],lv=data[data.length-1].v;
-      svg+=`<text x="${Math.min(W-3,lp.x+9).toFixed(1)}" y="${(lp.y+3.5).toFixed(1)}" class="chart-last" style="fill:${color}">${esc(lv)}</text>`;
+    if(zeigeWert){
+      const mp=pts[mark],txt=fmt(data[mark].v)+(unit?'\u00a0'+unit:'');
+      const half=txt.length*3.6;
+      svg+=`<text x="${Math.max(half+2,Math.min(W-half-2,mp.x)).toFixed(1)}" y="${(mp.y-15).toFixed(1)}" class="chart-last" text-anchor="middle" style="fill:${color}">${esc(txt)}</text>`;
     }
   }
   svg+=`</svg>`;
@@ -4642,6 +4715,17 @@ function svgChart(data,opts={}){
     if(hit)show(hit);else hide();
   },{passive:true});
 })();
+/* Je Einheit (Datum) ein Wert: score bewertet jeden Satz, der höchste je
+   Datum zählt. Nach Datum sortiert, denn die Historie liegt nicht garantiert
+   in Reihenfolge. */
+function perSessionSeries(sets,score){
+  const by={};
+  sets.forEach(s=>{
+    const d=s.date||'',v=score(s);
+    if(!by[d]||v>by[d].v)by[d]={v,date:d};
+  });
+  return Object.values(by).sort((a,b)=>(parseGermanDate(a.date)||0)-(parseGermanDate(b.date)||0));
+}
 function getLastW(name){for(let i=D.history.length-1;i>=0;i--){const f=D.history[i].sets.filter(s=>s.ex===name&&s.w>0);if(f.length){const l=f[f.length-1];return{w:l.w,r:l.r,rir:l.rir}}}return null}
 /* Zeichengenau war hier falsch: „Bankdrücken" und „Bankdrücken (Bench
    Press)" sind dieselbe Übung, und wer sie einmal anders geschrieben hat,
@@ -4706,7 +4790,12 @@ function getWeeklyVolume(includeSecondary){
   Object.values(vol).forEach(v=>{v.sets=Math.round(v.sets*10)/10;v.indirect=Math.round(v.indirect*10)/10});
   return vol;
 }
-function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Gute Besserung vorbei — back to grind! 💪')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank gemeldet — gute Besserung! 🤒')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?de1(sets.reduce((a,s)=>a+s.rir,0)/sets.length):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;const chartData=sets.map(s=>({v:s.w,label:''}));h+=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span>Median: ${median}kg</span></div>${svgChart(chartData,{h:130,color:'var(--blue)',median:median,showGrid:true,unit:' kg'})}</div>`;const rmSeries=sets.filter(s=>s.w>0&&s.r>0&&s.r<=15).map(s=>({v:calc1RM(s.w,s.r),label:s.date||''}));if(rmSeries.length>=3){const firstRm=rmSeries[0].v,lastRm=rmSeries[rmSeries.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${svgChart(rmSeries,{h:120,color:'var(--orange)',showGrid:true,unit:' kg'})}<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(s.w)}kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
+function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Gute Besserung vorbei — back to grind! 💪')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank gemeldet — gute Besserung! 🤒')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?de1(sets.reduce((a,s)=>a+s.rir,0)/sets.length):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;/* Je Einheit ein Punkt: der schwerste Arbeitssatz. Jeder Satz einzeln ergäbe
+   vier gleiche Punkte je Einheit und eine Treppe statt einer Linie. Das Datum
+   steht unter dem Punkt, der Bestwert ist der gefüllte. */
+const topSets=perSessionSeries(sets,s=>s.w);
+if(topSets.length>=2){const best=Math.max(...topSets.map(e=>e.v));const bi=topSets.findIndex(e=>e.v===best);h+=`<div class="prog"><div class="prog-h">Schwerster Arbeitssatz je Einheit <span class="chart-key"><i></i>Bestwert</span></div>${chartSumLine(topSets[0].v,topSets[topSets.length-1].v,'kg',undefined,topSets[0].date,topSets[topSets.length-1].date)}${svgChart(topSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{h:150,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:bi,label:'Schwerster Arbeitssatz '+name,noun:'Einheiten'})}</div>`;}
+const rmSets=perSessionSeries(sets.filter(s=>s.w>0&&s.r>0&&s.r<=15),s=>calc1RM(s.w,s.r));if(rmSets.length>=2){const firstRm=rmSets[0].v,lastRm=rmSets[rmSets.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const bestRm=Math.max(...rmSets.map(e=>e.v));h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${chartSumLine(firstRm,lastRm,'kg',undefined,rmSets[0].date,rmSets[rmSets.length-1].date)}${svgChart(rmSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{h:140,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:rmSets.findIndex(e=>e.v===bestRm),label:'Geschätzter 1RM '+name,noun:'Einheiten'})}<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(s.w)}kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
 let planDirty=false;
 function renderPlanSaveState(){
   const btn=document.getElementById('plan-save-btn');
@@ -5201,7 +5290,7 @@ function renderExDemo(){
     `<div class="exdemo-cue">${esc(meta.cue)}</div>`+
 
     (userNote?`<div class="exdemo-cue" style="border-left-color:var(--purple)">📝 ${esc(userNote)}</div>`:'')+
-    (series.length>=2?`<div class="prog" style="margin-top:12px"><div class="prog-h">Dein Verlauf <span>${series.length} Sätze</span></div>${svgChart(series,{h:110,color:'var(--accent)',showGrid:true,unit:' kg'})}</div>`:'')+
+    (series.length>=2?`<div class="prog" style="margin-top:12px"><div class="prog-h">Dein Verlauf <span>${series.length} Sätze</span></div>${svgChart(series,{h:110,color:'var(--accent)',showGrid:true,unit:' kg',label:'Dein Verlauf',noun:'Sätze'})}</div>`:'')+
     `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');openExNote('${jsStr(name)}')">${icon('note',15)}Notiz</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');showExHist('${jsStr(name)}')">${icon('chart',15)}Verlauf</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="openExWebSearch()">${icon('book',15)}Web</button></div>`;
 }
 /* Die RIR-Kreise (Satz-Fenster und Plan-Editor) sind eine Auswahlgruppe
@@ -5339,6 +5428,9 @@ function calcFitnessAge(){const realAge=getRealAge();if(!realAge)return null;let
 function renderFitnessAge(){
   const mount=document.getElementById('fitness-age-card');
   if(!mount)return;
+  /* Das Fitnessalter rechnet auch Training und Konsistenz: vor dem ersten
+     Training käme „±0 Jahre" heraus, eine Zahl ohne Aussage. */
+  if(!(D.history||[]).length){mount.innerHTML='';return}
   const result=calcFitnessAge();
   if(!result){
     mount.innerHTML=`<div class="bio-hero"><div class="eyebrow2">Fitnessalter</div>`+
@@ -6057,6 +6149,9 @@ function renderHist(){
   cnt.textContent=oldest?'Seit '+months[oldest.getMonth()]+(oldest.getFullYear()!==new Date().getFullYear()?' '+oldest.getFullYear():''):'';
   title.textContent=months[calMonth]+' '+calYear;
   renderHistStreak();
+  /* Ohne Training zeigt nur der Block oben den Weg; der leere Kalender entfällt. */
+  const calWrap=document.getElementById('h-cal-wrap');
+  if(calWrap)calWrap.style.display=hist.length?'':'none';
   const trainDates={};
   hist.forEach((s,i)=>{
     const d=parseGermanDate(s.date);
@@ -6223,7 +6318,7 @@ function renderHistStreak(){
   if(!mount)return;
   const hist=D.history||[];
   if(!hist.length){
-    mount.innerHTML=`<div class="empty">Noch keine Session aufgezeichnet.<br><br>Sobald du dein erstes Workout beendest, entsteht hier deine Serie.</div>`;
+    mount.innerHTML=leerBlockHTML('cal','Nach deinem ersten Workout steht hier jede Einheit mit Datum, Dauer und Sätzen.');
     return;
   }
   const{streak,best,weeks}=trainingStreak();
@@ -6298,10 +6393,14 @@ function renderBio(){
   if(ws.length<2)ca.innerHTML='';
   else{
     const vals=ws.map(w=>parseFloat(w.kg)||0);
-    const med=vals.slice().sort((a,b)=>a-b)[Math.floor(vals.length/2)];
-    const chartData=ws.map(w=>({v:parseFloat(w.kg)||0,label:String(w.date||'').substring(0,5)}));
-    ca.innerHTML=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span style="color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px">${ws.length} Einträge</span></div>`+
-      svgChart(chartData,{h:150,color:'var(--accent)',median:med,showGrid:true,xLabels:true,unit:' kg'})+`</div>`;
+    /* Der Durchschnitt steht in der Kopfzeile, nicht als Linie im Diagramm:
+       dort hieß er „⌀", war aber der obere Median und lag bei sechs Einträgen
+       0,2 kg neben dem echten Mittelwert. */
+    const mittel=vals.reduce((a,v)=>a+v,0)/vals.length;
+    const chartData=ws.map(w=>({v:parseFloat(w.kg)||0,label:kurzDatum(w.date)}));
+    ca.innerHTML=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span>Ø ${chartNum(mittel,1)}\u00a0kg</span></div>`+
+      chartSumLine(vals[0],vals[vals.length-1],'kg',1,ws[0].date,ws[ws.length-1].date)+
+      svgChart(chartData,{h:156,color:'var(--text)',showGrid:true,showArea:false,xLabels:true,unit:' kg',dec:1,label:'Gewichtsverlauf',noun:'Einträge'})+`</div>`;
   }
   const ea=document.getElementById('bio-entries-area');
   if(!ea)return;
@@ -8146,7 +8245,7 @@ function renderEgym(){
         const first=pts[0].v,last=pts[pts.length-1].v;
         const delta=Math.round((last-first)*10)/10;
         ch+=`<div class="prog" style="margin-bottom:8px"><div class="prog-h">${cs.l}<span>${last}${delta?` <small style="color:var(--text3)">(${delta>0?'+':''}${delta})</small>`:''}</span></div>`+
-          svgChart(pts,{h:100,color:cs.c,median:med,showGrid:true,xLabels:pts.length<=10})+`</div>`;
+          svgChart(pts,{h:100,color:cs.c,median:med,showGrid:true,xLabels:pts.length<=10,label:cs.l,noun:'Messungen'})+`</div>`;
       }
     });
     ca.innerHTML=ch;
@@ -8208,10 +8307,13 @@ function exerciseProgress(name){
   const series=keys.map(k=>bodyweight?byDate[k].reps:byDate[k].e);
   const last=series[series.length-1];
   const recent=series.slice(-3),before=series.slice(-6,-3);
-  let delta=null,dir='flat';
+  let delta=null,pct=null,dir='flat';
   if(before.length){
     const a=Math.max(...recent),b=Math.max(...before);
     delta=Math.round((a-b)*10)/10;
+    /* Die Veränderung in Prozent vom bisherigen Bestwert: 11,7 kg bei den
+       Face Pulls und 0,6 kg bei den Seitheben sind sonst nicht vergleichbar. */
+    pct=b>0?(a-b)/b*100:null;
     dir=delta>0.5?'up':delta<-0.5?'down':'flat';
   }
   /* Stagnation: mehrere Einheiten ohne neuen Bestwert. Das ist die Zahl, die
@@ -8219,23 +8321,29 @@ function exerciseProgress(name){
   const peak=Math.max(...series);
   let stale=0;
   for(let i=series.length-1;i>=0;i--){if(series[i]>=peak)break;stale++}
-  return{name,sessions:keys.length,series,last,delta,dir,stale,bodyweight,
+  return{name,sessions:keys.length,series,last,delta,pct,dir,stale,bodyweight,
     lastW:byDate[keys[keys.length-1]].w,unit:bodyweight?'Wdh':'kg'};
 }
 function progressAll(){
   const names=[...new Set((D.history||[]).flatMap(s=>(s.sets||[])
     .filter(x=>(!x.type||x.type==='main')&&!isCardioSet(x)).map(x=>x.ex)))].filter(Boolean);
   return names.map(exerciseProgress).filter(p=>p&&p.sessions>=2)
-    .sort((a,b)=>(b.delta===null?-1e9:b.delta)-(a.delta===null?-1e9:a.delta));
+    .sort((a,b)=>(b.pct===null?-1e9:b.pct)-(a.pct===null?-1e9:a.pct));
 }
 /* Sparkline für eine Übungszeile. Keine Achsen, keine Zahlen — sie soll die
-   Richtung zeigen, den Wert liest man rechts daneben. */
-function trendSpark(series,color){
+   Richtung zeigen, den Wert liest man rechts daneben. Alle Linien haben
+   denselben Maßstab: Prozent vom ersten Punkt, ±15 % füllen die Höhe. Eine
+   flache Übung ist deshalb eine flache Linie, und die gestrichelte Linie
+   markiert den Start. Der letzte Punkt ist gefüllt. */
+function trendSpark(series){
   const pts=series.slice(-8);
-  if(pts.length<2)return '<svg viewBox="0 0 62 26" class="tspark"></svg>';
-  const min=Math.min(...pts),max=Math.max(...pts),span=(max-min)||1;
-  const d=pts.map((v,i)=>`${(i/(pts.length-1)*62).toFixed(1)} ${(22-((v-min)/span)*18).toFixed(1)}`).join(' L ');
-  return`<svg viewBox="0 0 62 26" class="tspark" aria-hidden="true"><path d="M ${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  if(pts.length<2)return '<svg viewBox="0 0 62 26" class="tspark" aria-hidden="true"></svg>';
+  const start=pts[0]||1;
+  const y=v=>13-Math.max(-.15,Math.min(.15,(v-start)/start))/.15*9;
+  const d=pts.map((v,i)=>`${(i/(pts.length-1)*56).toFixed(1)} ${y(v).toFixed(1)}`).join(' L ');
+  return`<svg viewBox="0 0 62 26" class="tspark" aria-hidden="true"><path d="M 0 ${y(start).toFixed(1)} H 56" fill="none" stroke="var(--t3)" stroke-width="1" stroke-dasharray="2 3"/>`+
+    `<path d="M ${d}" fill="none" stroke="var(--text2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`+
+    `<circle cx="56" cy="${y(pts[pts.length-1]).toFixed(1)}" r="3" fill="var(--text)"/></svg>`;
 }
 function renderAnaProgress(){
   const mount=document.getElementById('ana-progress');
@@ -8244,22 +8352,26 @@ function renderAnaProgress(){
   if(!all.length){mount.innerHTML='<div class="empty">Noch zu wenig Daten.<br><br>Ab der zweiten Einheit mit derselben Übung entsteht hier ein Verlauf.</div>';return}
   /* Die Liste wächst mit jeder Übung, die je geloggt wurde. Sichtbar sind
      die fünf mit der stärksten Bewegung — nach oben wie nach unten, denn
-     die Liste ist nach Delta sortiert und beide Enden sind interessant.
+     die Liste ist nach Prozent sortiert und beide Enden sind interessant.
      Der Rest liegt einen Tipp entfernt. */
   ensureUIState();
   const SHOWN=5;
   const showAll=!!D.ui.trendAll||all.length<=SHOWN;
   const list=showAll?all:all.slice(0,SHOWN);
   mount.innerHTML=list.map(p=>{
-    const col=p.dir==='up'?'var(--green)':p.dir==='down'?'var(--red)':'var(--text3)';
     const warn=p.stale>=4;
-    const sign=p.delta===null?'':p.delta>0?'+':'';
+    /* Die Zahl rechts ist die Veränderung in Prozent; die Zeile darunter nennt,
+       woraus sie entsteht: das beste e1RM (bei Körpergewichtsübungen die
+       Wiederholungen) der letzten Einheit. */
+    const prozent=p.pct===null?null:Math.round(p.pct);
+    const zahl=prozent===null?'—':(prozent>0?'+':prozent<0?'−':'')+Math.abs(prozent);
+    const stand=p.bodyweight?`zuletzt ${esc(p.last)} Wdh`:`e1RM ${esc(de1(p.last))} kg`;
     return`<div class="prow${warn?' stale':''}" onclick="showExHist('${jsStr(p.name)}')">`+
       `<div class="bd"><b>${esc(p.name)}</b>`+
-      `<span>${p.sessions} Einheiten · zuletzt ${esc(p.bodyweight?p.last:p.lastW)} ${esc(p.unit)}`+
-      `${warn?` · stagniert seit ${p.stale}`:''}</span></div>`+
-      trendSpark(p.series,col)+
-      `<div class="kg" style="color:${col}">${p.delta===null?'—':sign+p.delta}<small>${esc(p.unit.toUpperCase())}</small></div>`+
+      `<span>${p.sessions} Einheiten, ${stand}`+
+      `${warn?`, stagniert seit ${p.stale}`:''}</span></div>`+
+      trendSpark(p.series)+
+      `<div class="kg">${zahl}${prozent===null?'':'<small>%</small>'}</div>`+
     `</div>`;
   }).join('')
   +(all.length>SHOWN?`<button class="trend-more" onclick="toggleTrendAll()">${showAll?'Weniger zeigen':`Alle ${all.length} Übungen zeigen`}</button>`:'');
@@ -8293,7 +8405,7 @@ function weeklyMuscleBarsHTML(){
     const note=st.key==='low'?` · ${st.label}`:st.key==='high'?` · ${st.label}`:'';
     return`<div class="mv-row"><div class="mv-top"><b>${esc(muscleName(key))}</b>`+
       `<span style="color:${st.key==='mid'?'var(--text3)':st.color}">${esc(sets)} / ${esc(st.key==='low'?rp.mev:st.key==='high'?rp.mrv:rp.mav)}${esc(note)}</span></div>`+
-      `<div class="mv-bar"><div class="mv-fill ${cls}" data-grow="${fill.toFixed(1)}%"></div>`+
+      `<div class="mv-bar" ${meterAttrs(muscleName(key),sets,rp,st)}><div class="mv-fill ${cls}" data-grow="${fill.toFixed(1)}%"></div>`+
       `<span class="mv-mark" style="left:33.333%"></span>`+
       `<span class="mv-mark" style="left:66.667%"></span></div></div>`;
   }).join('');
@@ -8389,7 +8501,7 @@ function renderAnaReport(){
   if(!mount)return;
   const hist=D.history||[];
   if(!hist.length){
-    mount.innerHTML=`<div class="empty">Noch keine Trainingsdaten.<br><br>Nach dem ersten Workout steht hier dein Wochenbericht mit den Zahlen der Woche.</div>`;
+    mount.innerHTML=leerBlockHTML('chart','Nach deinem ersten Workout siehst du hier dein Wochenvolumen, deinen Gewichtsverlauf und den Verlauf jeder Übung.');
     return;
   }
   const weeks=weeklyHistorySeries(6);
@@ -8406,8 +8518,6 @@ function renderAnaReport(){
   const st=landmarkState(weeklyLoadPoints(),lm);
   const rir=work.length?(work.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/work.length):0;
   const minutes=cur.reduce((a,s)=>a+(parseInt(s.duration)||0),0);
-  const prog=progressAll();
-  const stale=prog.filter(p=>p.stale>=4);
   const vol=getWeeklyVolume(D.ui&&D.ui.volMode!=='direct');
   const low=Object.keys(MUSCLE_LANDMARKS).map(k=>({k,sets:(vol[k]&&vol[k].sets)||0,lm:MUSCLE_LANDMARKS[k]}))
     .filter(m=>m.sets<m.lm.mev).sort((a,b)=>(a.sets-a.lm.mev)-(b.sets-b.lm.mev));
@@ -8420,28 +8530,26 @@ function renderAnaReport(){
   if(cur.length>=planDays)score+=2; else if(cur.length>=planDays-1)score+=1;
   if(!low.length)score+=1;
   const grade=['D','C','C+','B','A−','A'][Math.max(0,Math.min(5,score))];
-  const headline=st.key==='low'
-    ? `Zu wenig Volumen für Wachstum — ${lm.mev-sets} Sätze fehlen bis MEV.`
-    : stale.length
-      ? `Volumen und Frequenz stimmen. Was hakt, ist <b>${esc(stale[0].name)}</b> — ${stale[0].stale} Einheiten ohne neuen Bestwert.`
-      : low.length
-        ? `Volumen und Frequenz stimmen. Was fehlt, ist <b>${esc(muscleName(low[0].k))}</b>.`
-        : `Alles im Korridor. Volumen, Frequenz und Verteilung passen zusammen.`;
+  /* Große Karte und Kachel sagen dasselbe: wie viele Gruppen im Korridor
+     liegen, gezählt wie auf Start. Eine Summe über alle Gruppen („Ziel 148")
+     ist kein Ziel, das jemand erreichen soll. */
+  const gruppen=weeklyGroupStatus();
+  const drin=gruppen.filter(x=>x.st.key!=='low'&&x.st.key!=='high').length;
+  const einheiten=`${cur.length} ${cur.length===1?'Einheit':'Einheiten'}`;
   mount.innerHTML=`<div class="mesh-hero">`+
-    `<div class="cap">Diese Woche</div>`+
     `<div class="mesh-row"><div class="mesh-num">${esc(grade)}</div>`+
-    `<div class="mesh-side"><div class="u">TRAININGSWOCHE</div>`+
-    `<div class="o">${cur.length} ${cur.length===1?'Einheit':'Einheiten'} · ${de1(tonCur/1000)} t · Ø RIR ${rir?de1(rir):'—'}</div></div></div>`+
-    `<div class="mesh-note">${headline}</div></div>`+
+    `<div class="mesh-side"><div class="o">Trainingswoche</div>`+
+    (gruppen.length?`<div class="u">${drin} von ${gruppen.length} Gruppen</div><div class="o">im Korridor</div>`:`<div class="u">${einheiten}</div>`)+
+    `</div></div></div>`+
     `<div class="gtiles">`+
       `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup" data-count="${(tonCur/1000).toFixed(1)}" data-count-dec="1" data-count-comma="1">0</span><small>t</small></div>`+
       `<div class="gd" style="color:${tonTrend===null?'var(--text3)':tonTrend<0?'var(--red)':'var(--green)'}">${tonTrend===null?'keine Vorwoche':(tonTrend>0?'+':'')+tonTrend+' % zur Vorwoche'}</div></div>`+
       `<div class="gtile"><div class="gl">Arbeitssätze</div><div class="gv"><span class="countup" data-count="${sets}">0</span></div>`+
-      `<div class="gd" style="color:${st.color}">${esc(st.label)} · Ziel ${lm.mav}</div></div>`+
+      `<div class="gd">${gruppen.length?`${drin} von ${gruppen.length} Gruppen im Korridor`:'—'}</div></div>`+
       `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${rir?de1(rir):'—'}</div>`+
       `<div class="gd">${!work.length?'noch keine Sätze':rir<1.5?'nah am Versagen':rir<3?'sauber gesteuert':'viel Luft nach oben'}</div></div>`+
       `<div class="gtile"><div class="gl">Zeit</div><div class="gv">${de1(minutes/60)}<small>h</small></div>`+
-      `<div class="gd">${cur.length?'Ø '+Math.round(minutes/cur.length)+' min':'—'}</div></div>`+
+      `<div class="gd">${cur.length?`${einheiten}, Ø ${Math.round(minutes/cur.length)} min`:'—'}</div></div>`+
     `</div>`;
   runCountUps(mount);
 }
@@ -8457,7 +8565,12 @@ function renderAna(){
      Elemente erzeugt die Seite nirgends; die Zeilen waren mit `if(el)`
      abgesichert und liefen deshalb seit jeher lautlos ins Leere. Entfernt
      samt ihrer Berechnung. PB-088 sorgt dafür, dass so etwas auffällt. */
-  const totalEl=document.getElementById('ana-total');if(totalEl)totalEl.textContent=totalSets+(totalSets===1?' Satz total':' Sätze total');
+  const totalEl=document.getElementById('ana-total');if(totalEl){totalEl.textContent=totalSets+(totalSets===1?' Satz total':' Sätze total');totalEl.style.display=totalSets?'':'none'}
+  /* Ohne gespeichertes Training steht auf der Seite nur der Block mit dem
+     Startknopf: Balance und Trend wären leere Kästen. */
+  const leer=!(D.history||[]).length;
+  ['balance','trend'].forEach(k=>{const c=document.getElementById('chev-'+k);if(c&&c.parentElement)c.parentElement.style.display=leer?'none':''});
+  ['ana-muscles','ana-progress'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=leer?'none':''});
   const muscles={chest:{name:'Brust',sets:[],ex:new Set()},back:{name:'Rücken',sets:[],ex:new Set()},legs:{name:'Beine',sets:[],ex:new Set()},shoulders:{name:'Schultern',sets:[],ex:new Set()},arms:{name:'Arme',sets:[],ex:new Set()},core:{name:'Core',sets:[],ex:new Set()}};
   const exMuscleMap={};
   Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{exMuscleMap[ex.name]=ex.muscle}));
@@ -8475,7 +8588,7 @@ function renderAna(){
     else mc.innerHTML=weeklyMuscleBarsHTML()+`<div class="cap" style="margin:16px 2px 10px">Details je Muskelgruppe</div>`+rows.map(([key,m])=>{
       const byEx={};
       m.sets.forEach(s=>{if(!byEx[s.ex])byEx[s.ex]=[];byEx[s.ex].push(s)});
-      return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><span class="ic-wrap">${icon(key,20)}</span><div class="ana-muscle-name">${esc(m.name)}</div><div class="ana-muscle-cnt">${m.ex.size===1?'1 Übung':m.ex.size+' Übungen'} · ${m.sets.length===1?'1 Satz':m.sets.length+' Sätze'}</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=strengthSets(sets).filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?de1(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExDemo('${jsStr(ex)}','${jsStr(key)}','main')" style="font-weight:700;font-size:13px;cursor:pointer">${esc(ex)}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${esc(max)}kg</span></div><div style="font-size:11px;color:var(--text2);margin:4px 0">${sets.length===1?'1 Satz':sets.length+' Sätze'} · Ø RIR ${esc(avg)}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true,unit:' kg'}):'<div style="font-size:11px;color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
+      return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><span class="ic-wrap">${icon(key,20)}</span><div class="ana-muscle-name">${esc(m.name)}</div><div class="ana-muscle-cnt">${m.ex.size===1?'1 Übung':m.ex.size+' Übungen'} · ${m.sets.length===1?'1 Satz':m.sets.length+' Sätze'}</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=strengthSets(sets).filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?de1(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExDemo('${jsStr(ex)}','${jsStr(key)}','main')" style="font-weight:700;font-size:13px;cursor:pointer">${esc(ex)}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${esc(max)}kg</span></div><div style="font-size:11px;color:var(--text2);margin:4px 0">${sets.length===1?'1 Satz':sets.length+' Sätze'} · Ø RIR ${esc(avg)}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true,unit:' kg',label:'Verlauf '+ex,noun:'Sätze'}):'<div style="font-size:11px;color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
     }).join('');
   }
   renderAnaReport();
@@ -8537,6 +8650,14 @@ function landmarkState(sets,lm){
   if(sets<=lm.mav)return{key:'mid',label:'im MAV',caps:'IM MAV',color:'#2ee06a'};
   if(sets<=lm.mrv)return{key:'ok',label:'über MAV',caps:'ÜBER MAV',color:'#4ea1ff'};
   return{key:'high',label:'über MRV',caps:'ÜBER MRV',color:'#ff3b5c'};
+}
+/* Ein Muskelbalken für die Sprachausgabe: Name, Sätze und der Zustand in
+   Worten („8 Sätze, im Korridor"), denn „unter MEV" steht sonst nur in Farbe
+   und Länge. Der Korridor reicht wie auf Start vom MEV bis zum MRV. */
+function meterAttrs(name,sets,lm,st){
+  const wort=st.key==='mid'?'im Korridor':st.key==='ok'?'im Korridor, über MAV':st.label;
+  const text=`${de(sets)} ${sets===1?'Satz':'Sätze'}, ${wort} (MEV ${lm.mev}, MAV ${lm.mav}, MRV ${lm.mrv})`;
+  return`role="meter" aria-label="${attr(name)}" aria-valuemin="0" aria-valuemax="${lm.mrv}" aria-valuenow="${Math.min(sets,lm.mrv)}" aria-valuetext="${attr(text)}"`;
 }
 /* Eine Skala für jeden Muskelbalken (Start und Zahlen): Minimum bei einem
    Drittel, bester Bereich bei zwei Dritteln, Obergrenze am Ende. Die Kerben
@@ -8628,7 +8749,7 @@ function buildWeekGauge(totalSets,rohSaetze){
   const balken=groups.map(x=>{
     const zeigeMin=x.st.key==='low'&&!leer;
     return `<div class="wg-row"><span class="wg-n">${esc(WG_NAMEN[x.g]||volGroupShort(x.g))}</span>`+
-      `<span class="wg-bar"><i class="wg-fill ${x.st.key}" data-grow="${barPos(x.sets,x.lm).toFixed(1)}%" data-grow-key="wg-${esc(x.g)}"></i>`+
+      `<span class="wg-bar" ${meterAttrs(muscleName(x.g),x.sets,x.lm,x.st)}><i class="wg-fill ${x.st.key}" data-grow="${barPos(x.sets,x.lm).toFixed(1)}%" data-grow-key="wg-${esc(x.g)}"></i>`+
       `<i class="wg-mk a"></i><i class="wg-mk b"></i></span>`+
       `<span class="wg-v">${de(x.sets)}${zeigeMin?`<small>/${x.lm.mev}</small>`:''}</span></div>`;
   }).join('');
@@ -8888,6 +9009,35 @@ function renderDeloadActive(){
   el.innerHTML=`<div class="deload-banner" style="border-color:color-mix(in srgb,var(--blue) 32%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 12%,var(--bg2)),var(--bg2))"><div class="dl-head"><span class="dl-ico">🪫</span><span class="dl-title" style="color:var(--blue)">Deload läuft</span></div><div class="dl-reason" style="--dot:var(--blue)">Noch ${esc(left)} ${left===1?'Tag':'Tage'} · Sätze auf ~60 %, RIR-Vorgabe 4</div><div class="dl-tip">Workouts, die du jetzt startest, sind automatisch reduziert. Gewichte bewusst leicht lassen — der Sinn ist Erholung, nicht Sparflamme mit vollem Gewicht.</div><div class="dl-actions"><button class="btn btn-s btn-g" style="margin:0" onclick="endDeload()">Deload beenden</button></div></div>`;
   return true;
 }
+/* Der nächste Trainingstag im Plan, von heute an gerechnet; ohne passenden
+   Wochentag der erste Tag. Start, Zahlen und Historie führen alle hierhin. */
+function nextPlanDay(){
+  const dayMap={0:'So',1:'Mo',2:'Di',3:'Mi',4:'Do',5:'Fr',6:'Sa'};
+  const now=new Date();
+  const planKeys=Object.keys(D.plan||{});
+  for(let i=0;i<7;i++){
+    const dShort=dayMap[(now.getDay()+i)%7];
+    const match=planKeys.find(k=>D.plan[k].day===dShort||String(D.plan[k].day).includes(dShort));
+    if(match)return{key:match,offset:i};
+  }
+  return planKeys.length?{key:planKeys[0],offset:0}:null;
+}
+/* Der Block für leere Seiten (Zahlen, Historie), solange kein Training
+   gespeichert ist: was hier erscheinen wird und der Weg zum ersten, mit dem
+   nächsten Tag im Plan. Ohne Plan bleibt der Text ohne Knopf. */
+function leerBlockHTML(iconKey,text){
+  const nk=nextPlanDay();
+  const p=nk&&D.plan[nk.key];
+  let knopf='';
+  if(p){
+    const n=(p.exercises||[]).length;
+    const min=estimatedDuration(nk.key);
+    const meta=[TAGE[p.day]||p.day||'',`${n} ${n===1?'Übung':'Übungen'}`,min?`ca. ${min} min`:''].filter(Boolean).join(', ');
+    knopf=`<button type="button" class="play" onclick="startWorkout('${jsStr(nk.key)}');go('wo')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 18 12 8 18.5z" fill="currentColor"/></svg>${esc(planDisplayName(nk.key))} starten</button>`+
+      `<p class="leer-m">${esc(meta)}</p>`;
+  }
+  return`<div class="leer-block"><div class="leer-ic">${icon(iconKey,22)}</div><h2 class="leer-t">Noch kein Workout</h2><p class="leer-p">${esc(text)}</p>${knopf}</div>`;
+}
 function renderDash(){
   ensureHomeUIState();
   const week=weeklyHistorySeries(6);
@@ -8928,17 +9078,8 @@ function renderDash(){
     `<div class="kpi-c"><div class="kpi-l">Tonnage</div><div class="kpi-v"><span class="countup" data-count="${(tonCur/1000).toFixed(1)}" data-count-dec="1" data-count-comma="1" data-count-key="kpi-ton">0</span><small class="u">t</small></div><div class="kpi-s${tonPrev?'':' dim'}">${tonSub}</div></div>`+
     `<div class="kpi-c"><div class="kpi-l">Ø RIR</div><div class="kpi-v">${rirCur?de(rirCur.toFixed(1)):'—'}</div><div class="kpi-s${weekStrength.length?'':' dim'}">${weekStrength.length?`${intensity}\u00a0% bei RIR\u00a0≤\u00a02`:'noch keine Sätze'}</div></div>`+
     `</div>`;
-  const dayMap={0:'So',1:'Mo',2:'Di',3:'Mi',4:'Do',5:'Fr',6:'Sa'};
-  const now=new Date();
-  const planKeys=Object.keys(D.plan||{});
-  let nk=null;
-  for(let i=0;i<7;i++){
-    const dShort=dayMap[(now.getDay()+i)%7];
-    const match=planKeys.find(k=>D.plan[k].day===dShort||String(D.plan[k].day).includes(dShort));
-    if(match){nk={key:match,offset:i};break}
-  }
+  const nk=nextPlanDay();
   const nc=document.getElementById('d-next-card');
-  if(!nk&&planKeys.length)nk={key:planKeys[0],offset:0};
   if(!nk){
     nc.innerHTML='<div class="empty">Kein nächstes Workout gefunden.</div>';
   }else{
