@@ -395,7 +395,6 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .st-info{flex:1;min-width:0}
 .st-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
 .st-elapsed{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3)}
-.wo-active-ex{border:2px solid var(--accent)!important;box-shadow:0 0 20px var(--accent-glow)}
 .sess-detail.open{max-height:600px!important}
 
 /* mini history + sparkline */
@@ -411,36 +410,26 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .wo-summary{text-align:center;padding:16px 0}
 .wo-sum-big{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--accent);line-height:1}
 .wo-sum-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
-.wo-sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:16px 0}
+.wo-sum-sub{margin:-10px 0 4px;font-size:13px;color:var(--text2)}
+.wo-sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:16px 0}
 .wo-sum-card{background:var(--bg3);border:1px solid var(--line);border-radius:14px;padding:13px;text-align:center}
+.wo-sum-card.vol{grid-column:1/-1}
 .wo-sum-card .sv{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent)}
+.wo-sum-card .sv small{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2)}
 .wo-sum-card .sl{font-size:10px;color:var(--text2);text-transform:uppercase;margin-top:2px;letter-spacing:.5px}
-.wo-sum-quote{font-style:normal;color:var(--text2);font-size:14px;margin-top:16px;padding:16px;background:var(--bg3);border-radius:16px;border-left:3px solid var(--accent);line-height:1.55}
+.wo-sum-cmp{margin-top:8px;font-size:13px;line-height:1.4;color:var(--text2)}
+.wo-sum-cmp b{color:var(--text)}
+.wo-sum-cmp.note{margin-top:4px;font-size:12px;color:var(--t3)}
 .wo-sum-prog{margin:12px 0}
 .wo-sp-row{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line2)}
 .wo-sp-row:last-child{border:none}
 
-/* workout compare */
-.wo-compare{margin:14px 0 10px;padding:15px;background:var(--bg3);border:1px solid var(--line);border-radius:18px}
-.wo-compare-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
-.wo-compare-title{font-size:12px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:var(--text2)}
-.wo-compare-meta{font-size:12px;color:var(--text3)}
-.wo-compare-note{margin-top:10px;font-size:11.5px;line-height:1.55;color:var(--text3);
-  padding:9px 11px;border-radius:10px;background:var(--bg3);border:1px solid var(--line)}
 .libhint{margin:-6px 0 12px;padding:10px 12px;border-radius:12px;background:var(--bg3);
   border:1px solid var(--line);font-size:11.5px;line-height:1.5;color:var(--text2);
   display:flex;align-items:center;gap:10px}
 .libhint b{color:var(--text)}
 .libhint button{flex:0 0 auto;border:0;border-radius:9px;padding:7px 12px;cursor:pointer;
   background:var(--neon);color:#000;font-size:11px;font-weight:800;letter-spacing:.03em}
-.wo-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.wo-compare-stat{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:11px 13px}
-.wo-compare-stat .label{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--text3)}
-.wo-compare-stat .value{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1.05;margin-top:6px}
-.wo-compare-stat .delta{font-size:12px;font-weight:700;margin-top:4px}
-.wo-compare-stat .delta.up{color:var(--green)}
-.wo-compare-stat .delta.down{color:var(--red)}
-.wo-compare-stat .delta.flat{color:var(--text2)}
 
 /* workout action row + alternative picker */
 .wo-action-row{display:flex;align-items:center;gap:6px;flex-shrink:0}
@@ -448,7 +437,7 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .wo-icon-btn:active{transform:scale(.9)}
 .wo-alt-btn{height:38px;border-radius:11px;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);background:color-mix(in srgb,var(--accent) 10%,var(--bg3));color:var(--accent);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;padding:0 12px;cursor:pointer;transition:.15s}
 .wo-alt-btn:active{transform:scale(.95)}
-button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:manipulation}
+button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch-action:manipulation}
 .alt-item{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:var(--bg3);color:var(--text);border-radius:15px;padding:13px;margin-bottom:8px;text-align:left;cursor:pointer;transition:.15s}
 .alt-item:active{transform:scale(.98);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
 .alt-ico{width:40px;height:40px;border-radius:12px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto}
@@ -456,8 +445,15 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 /* Meta-Zeile als Flex-Container: die Badges sind inline-block mit eigener
    Höhe und haben vorher in den Fließtext hineingeragt. */
 .alt-meta{font-size:11px;color:var(--text2);margin-top:4px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;line-height:1.5}
-.alt-meta .exdemo-tag{margin:0!important;padding:3px 8px;font-size:9px}
 .alt-note{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4}
+/* Tausch-Liste: eine Zeile je Übung mit Name, Sätzen × Wdh. und dem Tippbereich. */
+.alt-row{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;padding:8px 0;border:0;border-top:1px solid var(--line);background:none;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.alt-row:first-of-type{border-top:0}
+.alt-row:active{opacity:.6}
+.alt-row-t{flex:1;min-width:0}
+.alt-row .alt-name{display:block;font-size:15px;font-weight:600;line-height:20px}
+.alt-row .alt-meta{display:block;margin-top:2px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:16px}
+.alt-go{flex:0 0 auto;min-width:64px;text-align:right;font-size:14px;font-weight:700}
 
 /* library */
 .lib-cat{margin-bottom:14px}
@@ -987,13 +983,9 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
 
 /* --- Satz-Fortschrittspunkte + aktive Übung --- */
 .setdots{display:flex;gap:5px;align-items:center}
-.setdot{width:9px;height:9px;border-radius:50%;background:var(--bg4);transition:.3s var(--sp)}
-.setdot.on{background:var(--accent);box-shadow:0 0 9px var(--accent-glow);transform:scale(1.15)}
-.setdot.now{background:transparent;border:2px solid var(--accent);animation:dotPulse 1.5s infinite}
-@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:.35}}
-.wo-active-ex{position:relative}
-.wo-active-ex::before{content:'';position:absolute;inset:-1px;border-radius:calc(var(--radius) + 1px);background:linear-gradient(120deg,transparent 30%,var(--accent-glow),transparent 70%);background-size:250% 100%;animation:edgeSweep 3.4s linear infinite;pointer-events:none;opacity:.5}
-@keyframes edgeSweep{to{background-position:250% 0}}
+.setdot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.36);transition:.3s var(--sp)}
+.setdot.on{background:var(--text);transform:scale(1.15)}
+.setdot.now{background:transparent;border:2px solid var(--text)}
 .wsr.justlogged{animation:setIn .45s var(--sp)}
 @keyframes setIn{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 
@@ -1074,9 +1066,9 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item{touch-action:m
   --t3:#8b92a5;
   --zone:rgba(46,224,106,.14);
   /* Restposten der alten Markenfarbe Violett/Magenta. Start, Historie und
-     Zahlen tragen sie nicht mehr; gebraucht wird sie noch von Workout
-     (.wo-act, .wo-progress, .focus-bar), Setup (.set-hero), dem Kalender
-     und der Coach-Karte. Sie entfällt, sobald diese Flächen auf --mat-hero
+     Zahlen tragen sie nicht mehr, das laufende Training auch nicht;
+     gebraucht wird sie noch von Setup (.set-hero), dem Kalender und der
+     Coach-Karte im Plan. Sie entfällt, sobald diese Flächen auf --mat-hero
      stehen. */
   --brand-a:#7e5aff; --brand-b:#ff6fd8; --brand-deep:#2a1348;
 }
@@ -1310,8 +1302,8 @@ div.wg-note{cursor:default}
    ============================================================================ */
 .focus-bar{
   display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:20px;
-  background:linear-gradient(150deg,#1d1533,#0e0b18);
-  border:1px solid rgba(255,255,255,.09);box-shadow:var(--edge);
+  background:var(--mat-1),var(--bg2);
+  border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
 }
 .fb-ring{position:relative;width:56px;height:56px;flex:0 0 56px}
 .fb-ring svg{width:56px;height:56px;display:block}
@@ -1334,20 +1326,15 @@ div.wg-note{cursor:default}
 
 .wo-progress{display:flex;align-items:center;gap:10px;margin:12px 2px}
 .wo-progress .tr{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
-.wo-progress .tr i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--brand-b),var(--accent));transition:width var(--dur-ring) var(--out)}
+.wo-progress .tr i{display:block;height:100%;width:0;border-radius:99px;background:var(--text2);transition:width var(--dur-ring) var(--out)}
 .wo-progress .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)}
 
-/* --- die aktive Übung: dritte Mesh-Fläche, die lauteste --- */
+/* --- die aktive Übung: die erhöhte Fläche, flach wie die Hero-Karte --- */
 .wo-act{
-  position:relative;overflow:hidden;isolation:isolate;
   border-radius:28px;padding:16px;margin-bottom:12px;
-  background:linear-gradient(140deg,var(--brand-deep) 0%,#171034 48%,#0e0b1c 100%);
-  border:1px solid rgba(255,255,255,.12);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 26px 60px rgba(0,0,0,.55);
+  background:var(--mat-hero);
+  box-shadow:var(--edge-strong),var(--shadow-2);
 }
-.wo-act::before{content:'';position:absolute;width:280px;height:280px;border-radius:50%;filter:blur(70px);top:-140px;right:-90px;z-index:0;
-  background:radial-gradient(circle,color-mix(in srgb,var(--brand-b) 42%,transparent),transparent 66%)}
-.wo-act>*{position:relative;z-index:1}
 .wo-open{
   border-radius:24px;padding:14px;margin-bottom:10px;
   background:var(--mat-1),var(--bg2);border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
@@ -1359,6 +1346,9 @@ div.wg-note{cursor:default}
 .wo-act-name .m{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wo-act .wo-act-name .m{color:rgba(255,255,255,.62)}
 .wo-act-name .setdots{margin-top:7px}
+/* Die Marke trägt in den Karten keine Muskelfarbe: Farbe steht nur für Zustände. */
+.wo-act .exmark,.wo-open .exmark{background:none}
+.wo-act .exmark svg,.wo-open .exmark svg{stroke:var(--text2)}
 
 /* Zielangabe: die Heldenzahl dieses Screens. */
 .wo-target{
@@ -1389,17 +1379,15 @@ div.wg-note{cursor:default}
 .wo-chips .wsr span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2)}
 .wo-act .wo-chips .wsr span{color:rgba(255,255,255,.58)}
 .wo-chips .wsr em{font-style:normal;font-size:10px;opacity:.7}
-.wo-chips .wsr.empty{opacity:.4;cursor:default}
-.wo-chips .wsr.empty b{font-family:'JetBrains Mono',monospace;font-size:11px}
 .wo-chips .wsr.justlogged{animation:chipPop .5s var(--sp)}
 @keyframes chipPop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 
 .wo-cta{display:flex;gap:9px;margin-top:14px}
 .wo-cta .go{
   flex:1;padding:16px;border-radius:18px;border:none;cursor:pointer;
-  background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 78%,#000));
+  background:var(--accent);
   color:#0e0b18;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:15px;letter-spacing:.02em;
-  box-shadow:0 12px 28px var(--accent-glow);transition:transform var(--dur-micro) var(--sp);
+  box-shadow:var(--edge-strong);transition:transform var(--dur-micro) var(--sp);
 }
 .wo-cta .sk{
   padding:16px 18px;border-radius:18px;cursor:pointer;
@@ -1410,8 +1398,8 @@ div.wg-note{cursor:default}
 .wo-cta .go:active,.wo-cta .sk:active{transform:scale(.97)}
 
 .wo-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
-.wo-note{margin-top:10px;font-size:11.5px;color:var(--purple);padding:7px 10px;background:color-mix(in srgb,var(--purple) 12%,transparent);border-radius:10px}
-.wo-act .wo-note{color:#d7cbff;background:rgba(255,255,255,.08)}
+#wo-end{background:var(--red);box-shadow:var(--edge-strong)}
+.wo-note{margin-top:10px;font-size:11.5px;color:var(--text2);padding:7px 10px;background:rgba(255,255,255,.06);border-radius:10px}
 .wo-hist{margin-top:10px}
 .wo-hist summary{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--text3);cursor:pointer;padding:6px 0;list-style:none}
 .wo-hist summary::-webkit-details-marker{display:none}
@@ -1420,13 +1408,12 @@ div.wg-note{cursor:default}
 
 /* --- eingeklappte Zeile --- */
 .wo-slim{
-  display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:18px;margin-bottom:8px;cursor:pointer;
+  display:flex;align-items:center;gap:11px;min-height:56px;padding:12px 16px;border-radius:18px;margin-bottom:8px;cursor:pointer;
   background:rgba(255,255,255,.04);border:1px solid var(--line);
   transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease);
 }
 .wo-slim:active{transform:scale(.985)}
 .wo-slim .i{width:34px;height:34px;flex:0 0 34px;border-radius:12px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2)}
-.wo-slim .i .ic{stroke:var(--text3)}
 .wo-slim .n{flex:1;min-width:0;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wo-slim .r{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap}
 .wo-slim .cv{color:var(--text3);font-size:16px;flex:0 0 auto}
@@ -1450,7 +1437,14 @@ div.wg-note{cursor:default}
 .coach-card::before{content:'';position:absolute;width:250px;height:250px;border-radius:50%;filter:blur(66px);top:-130px;right:-70px;z-index:0;
   background:radial-gradient(circle,color-mix(in srgb,var(--brand-a) 42%,transparent),transparent 66%)}
 .coach-card>*{position:relative;z-index:1}
-.coach-card.compact{padding:14px;border-radius:22px}
+/* "Diese Session" im Training ist eine flache Karte; Wolke und Verlauf
+   gehören nur der Karte im Plan. */
+.coach-card.compact{
+  padding:14px;border-radius:22px;
+  background:var(--mat-1),var(--bg2);border-color:var(--line);box-shadow:var(--edge),var(--shadow-1);
+}
+.coach-card.compact::before{display:none}
+.coach-card.compact .coach-h .av{background:rgba(255,255,255,.06)}
 .coach-h{display:flex;align-items:center;gap:9px}
 .coach-h .av{
   width:30px;height:30px;border-radius:10px;flex:0 0 30px;
@@ -2251,7 +2245,7 @@ div.wg-note{cursor:default}
 <div class="mt">WENIG ZEIT <button class="mc" onclick="cm('m-timebudget')">✕</button></div>
 <div id="tb-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
 <div class="ir"><div class="ig"><label>Verfügbare Minuten</label><input type="number" inputmode="numeric" id="tb-min" step="5"></div></div>
-<div style="font-size:11.5px;color:var(--text3);line-height:1.5;margin:8px 0 12px">Gekürzt wird nach Priorität: zuerst Sätze bei Muskeln, die über dem Minimum liegen, dann Isolation bis auf zwei Sätze. Grundübungen zuletzt. Der Plan bleibt unverändert — nur die heutige Einheit wird kleiner.</div>
+<div style="font-size:13px;color:var(--text2);line-height:1.4;margin:12px 0">Der Plan bleibt unverändert.</div>
 <div class="sheet-cta"><button class="btn" onclick="applyTimeBudget()">Einheit anpassen</button></div>
 </div></div>
 <div class="mbg" id="m-plates"><div class="mdl">
@@ -2346,9 +2340,9 @@ div.wg-note{cursor:default}
 <div id="exh-content"></div>
 </div></div>
 <div class="mbg" id="m-wosummary"><div class="mdl">
-<div class="mt">WORKOUT COMPLETE 🏆 <button class="mc" onclick="cm('m-wosummary')">✕</button></div>
+<div class="mt">Workout gespeichert <button class="mc" onclick="cm('m-wosummary')">✕</button></div>
 <div id="wo-sum-content"></div>
-<button class="btn" onclick="cm('m-wosummary');go('dash')">👊 FERTIG</button>
+<button class="btn" onclick="cm('m-wosummary');go('dash')">Fertig</button>
 </div></div>
 <div class="mbg" id="m-exnote"><div class="mdl">
 <div class="mt">NOTIZ <button class="mc" onclick="cm('m-exnote')">✕</button></div>
@@ -8774,38 +8768,40 @@ function sessionExerciseKeys(session){
 }
 function comparableStats(session,keys){
   const sets=strengthSets((session&&session.sets)||[]).filter(x=>keys.has(libKey(x.ex)));
-  const w=sets.map(x=>parseFloat(x.w)||0);
-  return{
-    sets:sets.length,
-    volume:sets.reduce((a,x)=>a+setVolume(x),0),
-    max:w.length?Math.max(...w):0,
-    avg:w.length?w.reduce((a,b)=>a+b,0)/w.length:0
-  };
+  return{sets:sets.length,volume:sets.reduce((a,x)=>a+setVolume(x),0)};
 }
-function workoutCompareBlock(currentSession,previousSession){
-  if(!previousSession)return '';
+/* Vergleich mit der letzten Einheit desselben Tags: Unterschied bei Volumen
+   und Sätzen, gerechnet nur über Übungen, die in beiden vorkamen. `teilweise`
+   sagt, dass dabei etwas außen vor blieb — dann darf die Zeile nicht so
+   tun, als wäre die ganze Einheit gemeint. */
+function workoutCompare(currentSession,previousSession){
+  if(!previousSession)return null;
   const curKeys=sessionExerciseKeys(currentSession);
   const prevKeys=sessionExerciseKeys(previousSession);
   const shared=new Set([...curKeys].filter(k=>prevKeys.has(k)));
-  const fehlend=[...prevKeys].filter(k=>!curKeys.has(k)).length;
-  const neu=[...curKeys].filter(k=>!prevKeys.has(k)).length;
   /* Keine gemeinsame Übung: dann gibt es nichts zu vergleichen, und eine
      erfundene Zahl wäre schlechter als keine. */
-  if(!shared.size){
-    return `<div class="wo-compare"><div class="wo-compare-head"><div class="wo-compare-title">Kein Vergleich möglich</div>`+
-      `<div class="wo-compare-meta">Keine Übung aus ${esc(previousSession.date)} kam heute noch einmal vor.</div></div></div>`;
-  }
+  if(!shared.size)return{shared:0,date:previousSession.date};
   const cur=comparableStats(currentSession,shared);
   const prev=comparableStats(previousSession,shared);
-  const chart=svgChart([{v:prev.volume,label:'Letztes'},{v:cur.volume,label:'Heute'}],{h:88,color:'var(--accent)',showGrid:true,showArea:true,showDots:true,xLabels:true});
-  const delta=(now,before,unit,decimals=0)=>{const diff=now-before;const cls=diff>0?'up':diff<0?'down':'flat';const sign=diff>0?'+':'';return `<div class="delta ${cls}">${sign}${diff.toFixed(decimals)} ${unit}</div>`;};
-  const teile=[];
-  if(fehlend)teile.push(`${fehlend} heute ausgelassen`);
-  if(neu)teile.push(`${neu} neu dabei`);
-  const hinweis=teile.length
-    ? `<div class="wo-compare-note">Verglichen werden die <b>${shared.size} Übungen</b>, die in beiden Einheiten vorkamen — ${teile.join(', ')} und deshalb außen vor. Eine ausgelassene Übung ist kein Leistungsabfall.</div>`
-    : '';
-  return `<div class="wo-compare"><div class="wo-compare-head"><div class="wo-compare-title">Vergleich zum letzten Training</div><div class="wo-compare-meta">${esc(previousSession.date)} vs. ${esc(currentSession.date)}</div></div>${chart}<div class="wo-compare-grid"><div class="wo-compare-stat"><div class="label">Volumen</div><div class="value">${Math.round(cur.volume)}</div>${delta(cur.volume,prev.volume,'kg',0)}</div><div class="wo-compare-stat"><div class="label">Max Gewicht</div><div class="value">${cur.max.toFixed(cur.max%1?1:0)}</div>${delta(cur.max,prev.max,'kg',cur.max%1||prev.max%1?1:0)}</div><div class="wo-compare-stat"><div class="label">Sätze</div><div class="value">${cur.sets}</div>${delta(cur.sets,prev.sets,'Sets',0)}</div><div class="wo-compare-stat"><div class="label">Ø Gewicht</div><div class="value">${cur.avg?cur.avg.toFixed(1):'0.0'}</div>${delta(cur.avg,prev.avg,'kg',1)}</div></div>${hinweis}</div>`;
+  return{
+    shared:shared.size,
+    teilweise:shared.size<curKeys.size||shared.size<prevKeys.size,
+    volume:cur.volume-prev.volume,
+    sets:cur.sets-prev.sets
+  };
+}
+/* Die eine Zeile unter dem Volumen. Eine ausgelassene Übung ist kein
+   Leistungsabfall (PB-107): der Unterschied zählt nur die gemeinsamen. */
+function workoutCompareLine(c){
+  if(!c)return '';
+  if(!c.shared)return `<div class="wo-sum-cmp">Kein Vergleich möglich: keine Übung aus der Einheit vom ${esc(c.date)} kam heute noch einmal vor.</div>`;
+  const d=Math.round(c.volume);
+  const line=d>0?`▲ <b>${d} kg</b> mehr als bei der letzten Einheit`
+    :d<0?`▼ <b>${-d} kg</b> weniger als bei der letzten Einheit`
+    :'Genauso viel wie bei der letzten Einheit';
+  return `<div class="wo-sum-cmp">${line}</div>`+
+    (c.teilweise?`<div class="wo-sum-cmp note">Verglichen: ${c.shared===1?'die eine Übung, die in beiden vorkam':`die ${c.shared} Übungen, die in beiden vorkamen`}</div>`:'');
 }
 function endWorkout(){
   if(!D.active)return;
@@ -8828,27 +8824,19 @@ function endWorkout(){
   const strength=strengthSets(s.sets);
   const cardioMin=cardioMinutes(s.sets);
   const avgRir=strength.length?(strength.reduce((a,x)=>a+x.rir,0)/strength.length).toFixed(1):'—';
-  const ups=progData.filter(p=>p.diff>0);
-  const downs=progData.filter(p=>p.diff<0);
-  let quote='';
-  if(ups.length>2)quote='Massive Progression! Du frisst Gewichte zum Frühstück. 🔥';
-  else if(ups.length>0)quote='Stärker als letztes Mal. So baut man Muskeln. 💪';
-  else if(downs.length>1)quote='Nicht jeder Tag ist ein PR-Tag. Erholung checken, Ernährung checken, und nächstes Mal angreifen. 🧠';
-  else if(downs.length>0)quote='Ein kleiner Rückgang — kein Stress. Das gehört dazu. Fokus auf Konsistenz. ⚡';
-  else quote='Solides Workout! Konstanz ist King. Weiter so. 👊';
-  let sh=`<div class="wo-summary"><div class="wo-sum-big">${dur}'</div><div class="wo-sum-label">Minuten</div></div>`;
-  sh+=`<div class="wo-sum-grid"><div class="wo-sum-card"><div class="sv countup" data-count="${s.sets.length}">0</div><div class="sl">Sätze</div></div><div class="wo-sum-card"><div class="sv countup" data-count="${Math.round(totalW)}" data-count-dur="900">0</div><div class="sl">Kg Volumen</div></div><div class="wo-sum-card"><div class="sv countup" data-count="${exNames.length}">0</div><div class="sl">Übungen</div></div><div class="wo-sum-card"><div class="sv">${avgRir}</div><div class="sl">Ø RIR</div></div>${cardioMin?`<div class="wo-sum-card"><div class="sv countup" data-count="${cardioMin}">0</div><div class="sl">Min Cardio</div></div>`:''}</div>`;
-  sh+=workoutCompareBlock(s,previousSimilar);
-  if(progData.length>0){sh+=`<div class="st">PROGRESSION <div class="ln"></div></div><div class="wo-sum-prog">`;progData.forEach(p=>{const cl=p.diff>0?'trend-up':p.diff<0?'trend-down':'trend-flat';const icon=p.diff>0?'📈':p.diff<0?'📉':'➡️';const sign=p.diff>0?'+':'';sh+=`<div class="wo-sp-row"><div>${icon} ${esc(p.name)}</div><div class="${cl}" style="font-family:'JetBrains Mono',monospace">${sign}${p.diff.toFixed(1)}kg (${sign}${p.pct.toFixed(0)}%)</div></div>`});sh+=`</div>`}
-  sh+=`<div class="wo-sum-quote">${quote}</div>`;
+  const cmp=workoutCompare(s,previousSimilar);
+  /* Der Satzunterschied steht klein neben der Satzzahl, der Volumenunterschied
+     als Zeile unter dem Volumen. */
+  const setsDiff=cmp&&cmp.shared?` <small>${cmp.sets>0?'+'+cmp.sets:cmp.sets<0?'−'+(-cmp.sets):'±0'}</small>`:'';
+  let sh=`<div class="wo-sum-sub">${esc(planDisplayName(s.planKey))}, ${esc(s.date)}</div>`;
+  sh+=`<div class="wo-summary"><div class="wo-sum-big">${dur}'</div><div class="wo-sum-label">Minuten</div></div>`;
+  sh+=`<div class="wo-sum-grid"><div class="wo-sum-card vol"><div class="sv">${Math.round(totalW)}</div><div class="sl">Kg Volumen</div>${workoutCompareLine(cmp)}</div><div class="wo-sum-card"><div class="sv">${s.sets.length}${setsDiff}</div><div class="sl">Sätze</div></div><div class="wo-sum-card"><div class="sv">${exNames.length}</div><div class="sl">Übungen</div></div><div class="wo-sum-card"><div class="sv">${avgRir}</div><div class="sl">Ø RIR</div></div>${cardioMin?`<div class="wo-sum-card"><div class="sv">${cardioMin}</div><div class="sl">Min Cardio</div></div>`:''}</div>`;
+  if(progData.length>0){sh+=`<div class="st">PROGRESSION <div class="ln"></div></div><div class="wo-sum-prog">`;progData.forEach(p=>{const cl=p.diff>0?'trend-up':p.diff<0?'trend-down':'trend-flat';const sign=p.diff>0?'+':'';sh+=`<div class="wo-sp-row"><div>${esc(p.name)}</div><div class="${cl}" style="font-family:'JetBrains Mono',monospace">${sign}${p.diff.toFixed(1)}kg (${sign}${p.pct.toFixed(0)}%)</div></div>`});sh+=`</div>`}
   document.getElementById('wo-sum-content').innerHTML=sh;
   om('m-wosummary');
-  runCountUps(document.getElementById('wo-sum-content'));
   releaseWakeLock();
   try{localStorage.removeItem('pb_timer')}catch{}
   renderWo();
-  if(ups.length)celebratePR('PROGRESSION',`${ups.length} Übung${ups.length>1?'en':''} stärker als zuletzt`);
-  toast('Workout gespeichert! 💪');
 }
 function isCardioExercise(ex){
   if(!ex)return false;
@@ -9171,7 +9159,7 @@ function renderWo(){
     /* --- eingeklappte Zeile: eine Zeile pro Übung, sonst nichts --- */
     if(!open){
       h+=`<div id="wo-ex-${ei}" class="wo-slim${done?' done':''}${skipped?' skipped':''}" onclick="toggleWoRow(${ei})">`+
-        `<div class="i">${done?'✓':skipped?'⤼':icon('target',15)}</div>`+
+        `${done?'<div class="i">✓</div>':skipped?'<div class="i">⤼</div>':''}`+
         `<div class="n">${esc(ex.name)}</div>`+
         `<div class="r">${esc(ex.sets)}×${esc(reps(ex))}${done&&ex.logged.length?` · ${esc(ex.logged[ex.logged.length-1].w)} kg`:''}</div>`+
         `<div class="cv">›</div></div>`;
@@ -9206,9 +9194,8 @@ function renderWo(){
         const s=ex.logged[si];
         if(s)chips.push(`<button type="button" class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}" onclick="openSetEditor(${ei},${si})" aria-label="Satz ${si+1} korrigieren">`+
           `<b>${esc(s.w)}</b><span>${esc(formatLoggedSetLine(ex,s).replace(/^\s*[\d.,]+\s*kg\s*/,''))} · RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}<em class="wsr-pen" aria-hidden="true">✎</em></button>`);
-        else chips.push(`<div class="wsr empty"><b>S${si+1}</b><span>—</span></div>`);
       }
-      h+=`<div class="wo-chips">${chips.join('')}</div>`;
+      if(chips.length)h+=`<div class="wo-chips">${chips.join('')}</div>`;
       if(!done)h+=`<div class="wo-cta"><button type="button" class="go" onclick="openLog(${ei})">SATZ ${ex.logged.length+1} LOGGEN</button><button type="button" class="sk" onclick="skipEx(${ei})">SKIP</button></div>`;
     }else{
       h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:8px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
@@ -9716,7 +9703,7 @@ function nextSetTarget(ex){
     why:`Letztes Mal ${esc(w)} kg × ${esc(r)}${gotRir!==null?` bei RIR ${esc(gotRir)}`:''} — eine Wiederholung mehr.`,
     text:`Ziel: <b>${esc(w)}kg × ${esc(tr)}</b> — letztes Mal ${esc(w)}kg × ${esc(r)}${gotRir!==null?` @ RIR ${esc(gotRir)}`:''}.`};
 }
-function normalizeAltItem(item,source){
+function normalizeAltItem(item){
   return{
     id:Date.now()+Math.random()*1000|0,
     name:item.name,
@@ -9726,8 +9713,7 @@ function normalizeAltItem(item,source){
     rir:item.rir===undefined?2:item.rir,
     type:item.t||item.type||'main',
     muscle:item.m||item.muscle||'chest',
-    note:item.note||'',
-    source
+    note:item.note||''
   };
 }
 function ensureLibraryState(){
@@ -9998,8 +9984,8 @@ function getAlternativeExercises(current,scope,query){
   const curKind=detectMovePattern(current.name,current.muscle,current.type);
   const q=String(query||'').toLowerCase().trim();
   const curBase=baseNameKey(current.name);
-  const add=(item,source)=>{
-    const ex=normalizeAltItem(item,source);
+  const add=(item)=>{
+    const ex=normalizeAltItem(item);
     if(baseNameKey(ex.name)===curBase)return;
     ex.kind=detectMovePattern(ex.name,ex.muscle,ex.type);
     ex.sameKind=ex.kind===curKind;
@@ -10013,20 +9999,17 @@ function getAlternativeExercises(current,scope,query){
        "Bankdrücken" liest sich im Studio besser als die Klammerversion. */
     if(!existing||ex.name.length<existing.name.length)byName.set(key,ex);
   };
-  allLibraryCategories().forEach(cat=>cat.items.forEach(item=>add(item,cat.cat)));
-  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(item=>add(item,'Trainingsplan')));
+  allLibraryCategories().forEach(cat=>cat.items.forEach(add));
+  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(add));
   const rank=(x)=>(x.sameKind?0:1)*2+(x.sameMuscle?0:1)+(x.type===current.type?0:.5);
   return [...byName.values()].sort((a,b)=>rank(a)-rank(b)||a.name.localeCompare(b.name,'de'));
 }
 function renderAlternativeButton(ex,idx){
   const range=ex.rmin===ex.rmax?ex.rmin:`${ex.rmin}–${ex.rmax}`;
-  const badge=ex.sameKind?'<span class="exdemo-tag hl" style="margin-left:6px">gleiches Muster</span>':ex.sameMuscle?'<span class="exdemo-tag" style="margin-left:6px">gleiche Muskelgruppe</span>':'';
-  return `<button type="button" class="alt-item" data-alt-index="${idx}">`+
-    `<span class="exdemo-thumb">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</span>`+
-    `<span style="flex:1"><div class="alt-name">${esc(ex.name)}</div>`+
-    `<div class="alt-meta">${esc(ex.sets)}×${esc(range)}${ex.rir!==null?` · RIR ${esc(ex.rir)}`:''} · ${esc(ex.source)}${badge}</div>`+
-    `${ex.note?`<div class="alt-note">${esc(ex.note)}</div>`:''}</span>`+
-    `<span style="color:var(--accent);font-weight:800">Tauschen</span></button>`;
+  return `<button type="button" class="alt-row" data-alt-index="${idx}">`+
+    `<span class="alt-row-t"><span class="alt-name">${esc(ex.name)}</span>`+
+    `<span class="alt-meta">${esc(ex.sets)} × ${esc(range)}${ex.rir!==null?` · RIR ${esc(ex.rir)}`:''}</span></span>`+
+    `<span class="alt-go">Tauschen</span></button>`;
 }
 function renderAlternativeList(){
   const current=activeExercisesSafe()[altState.ei];
