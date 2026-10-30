@@ -436,10 +436,10 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
   background:var(--neon);color:#000;font-size:11px;font-weight:800;letter-spacing:.03em}
 
 /* workout action row + alternative picker */
-.wo-action-row{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.wo-icon-btn{min-width:38px;height:38px;border-radius:11px;border:1px solid var(--line);background:var(--bg3);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:.15s}
+.wo-action-row{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.wo-icon-btn{min-width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--bg3);color:var(--text);display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:14px;cursor:pointer;transition:.15s}
 .wo-icon-btn:active{transform:scale(.9)}
-.wo-alt-btn{height:38px;border-radius:11px;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);background:color-mix(in srgb,var(--accent) 10%,var(--bg3));color:var(--accent);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;padding:0 12px;cursor:pointer;transition:.15s}
+.wo-alt-btn{height:44px;border-radius:14px;border:1px solid var(--line);background:var(--bg3);color:var(--text);font-family:inherit;font-size:14px;font-weight:600;padding:0 16px 0 12px;cursor:pointer;transition:.15s}
 .wo-alt-btn:active{transform:scale(.95)}
 button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch-action:manipulation}
 .alt-item{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:var(--bg3);color:var(--text);border-radius:15px;padding:13px;margin-bottom:8px;text-align:left;cursor:pointer;transition:.15s}
@@ -900,9 +900,11 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .reveal.in{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
 
 /* --- Auf iPad/Desktop: Inhalt zentriert, aber nicht ausgefranst --- */
-@media (min-width:820px){
+/* Nur Tablet und Desktop: ein iPhone im Querformat (852 × 393) ist breit, aber niedrig. */
+@media (min-width:820px) and (min-height:700px){
   .app{max-width:560px}
   .bnav-inner{max-width:560px;border-radius:22px;margin-bottom:10px;border:1px solid var(--line)}
+  .wo-dock{max-width:560px}
   .bnav{padding:0 12px}
 }
 /* Querformat auf dem iPhone: die Notch liegt seitlich. */
@@ -1023,28 +1025,24 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .optrow .optt{font-weight:800;font-size:14px}
 .optrow .optd{font-size:11.5px;color:var(--text2);margin-top:3px;line-height:1.45}
 
-/* --- Workout-Kommandoleiste --- */
-.wo-cmdbar{display:flex;gap:7px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.wo-cmdbar::-webkit-scrollbar{display:none}
-.wo-cmd{flex:0 0 auto;padding:10px 14px;border-radius:13px;border:1px solid var(--line);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:.15s}
-.wo-cmd:active{transform:scale(.94);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
-.wo-cmd.accent{background:color-mix(in srgb,var(--accent) 12%,var(--bg2));border-color:color-mix(in srgb,var(--accent) 32%,transparent);color:var(--accent)}
-
 /* --- Aufwärmrampe --- */
-.warmup{margin:8px 0 2px;padding:11px 13px;border-radius:var(--r-sm);background:var(--mat-2),var(--bg3);border:1px solid color-mix(in srgb,var(--orange) 20%,var(--line));box-shadow:var(--edge)}
-.warmup-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--orange);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.warmup-h .ic{stroke-width:2}
-.warmup-note{font-size:9.5px;font-weight:700;letter-spacing:.04em;color:var(--text3);background:var(--bg4);padding:3px 8px;border-radius:999px;text-transform:none}
-.warmup-steps{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
-.warmup-step{flex:1;min-width:62px;text-align:center;padding:8px 6px;border-radius:11px;background:var(--bg2);border:1px solid var(--line)}
-.warmup-step b{display:block;font-family:'Bebas Neue',sans-serif;font-size:21px;line-height:1;color:var(--text)}
-.warmup-step span{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+/* Eine 44-px-Zeile; ein Tipp klappt die Saetze auf. */
+.warmup{margin-top:12px;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:var(--edge)}
+.warmup summary{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px 0 16px;list-style:none;cursor:pointer}
+.warmup summary::-webkit-details-marker{display:none}
+.warmup summary span{font-size:13px;color:var(--text2)}
+.warmup summary b{flex:1;min-width:0;font:600 13px 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:var(--text)}
+.warmup summary .ic{flex:none;color:var(--t3);transition:transform var(--dur-el) var(--out)}
+.warmup[open] summary .ic{transform:rotate(90deg)}
+.warmup-steps{display:flex;gap:8px;padding:0 16px 12px;flex-wrap:wrap}
+.warmup-step{font:500 12px 'JetBrains Mono',monospace;color:var(--text2);white-space:nowrap}
+.warmup-step b{font-weight:600;color:var(--text)}
 
 /* --- Ziel-/Beat-Last-Time-Hinweis --- */
-.target-hint{display:flex;align-items:center;gap:9px;margin:8px 0 2px;padding:10px 12px;border-radius:13px;background:color-mix(in srgb,var(--accent) 8%,var(--bg3));border:1px solid color-mix(in srgb,var(--accent) 22%,transparent)}
-.target-hint .th-ico{display:flex;align-items:center;color:var(--accent);flex:0 0 auto}
+.target-hint{display:flex;align-items:center;gap:9px;margin:8px 0 2px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.target-hint .th-ico{display:flex;align-items:center;color:var(--text2);flex:0 0 auto}
 .target-hint .th-t{font-size:12px;color:var(--text2);line-height:1.4}
-.target-hint .th-t b{color:var(--accent);font-family:'JetBrains Mono',monospace}
+.target-hint .th-t b{color:var(--text);font-family:'JetBrains Mono',monospace}
 
 /* --- Suche im Alternativen-Dialog --- */
 .alt-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
@@ -1304,33 +1302,58 @@ div.wg-note{cursor:default}
    Nächstes heben soll, hat ein UI-Problem, kein Trainingsproblem.
    ============================================================================ */
 .focus-bar{
-  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:20px;
+  display:flex;align-items:center;gap:16px;padding:calc(12px - var(--t,0) * 4px) 16px calc(12px - var(--t,0) * 4px) 12px;border-radius:20px;
   background:var(--mat-1),var(--bg2);
   border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
 }
-.fb-ring{position:relative;width:56px;height:56px;flex:0 0 56px}
-.fb-ring svg{width:56px;height:56px;display:block}
+/* Pause vorbei: die Karte tönt in Lime, der Ring ist voll. Ein Zustand, kein Schmuck. */
+.focus-bar.end{background:linear-gradient(0deg,color-mix(in srgb,var(--accent) 18%,transparent),color-mix(in srgb,var(--accent) 18%,transparent)),var(--mat-1),var(--bg2)}
+/* Der Ring ist der Knopf für Pausieren und Weiter. Beim Scrollen schrumpft er
+   mit der Kopfzeile (--t), damit die klebende Pause nicht ein Drittel des
+   Bildschirms belegt. */
+.fb-ring{position:relative;flex:0 0 auto;width:calc(88px - var(--t,0) * 28px);height:calc(88px - var(--t,0) * 28px);padding:0;border:0;border-radius:50%;background:none;color:var(--text);cursor:pointer}
+.fb-ring>svg{width:100%;height:100%;display:block}
+.fb-ring .pr{transition:stroke-dashoffset .25s linear}
 .fb-rt{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:calc(28px - var(--t,0) * 8px);font-weight:700;letter-spacing:-.06em;
+  font-variant-numeric:tabular-nums;color:var(--text);
 }
-.fb-rt.done{color:var(--green)}
-.fb-mid{flex:1;min-width:0}
-.fb-mid .t{font-weight:800;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fb-mid .s{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fb-rp{position:absolute;left:0;right:0;top:66%;display:flex;justify-content:center;color:var(--t3);opacity:calc(1 - var(--t,0) * 2)}
+.fb-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.fb-t{font-size:13px;line-height:17px;color:var(--text2)}
+.focus-bar.end .fb-t{font-size:20px;line-height:24px;font-weight:700;color:var(--text)}
+.focus-bar.end .fb-rt{font-size:calc(20px - var(--t,0) * 4px);letter-spacing:-.04em}
+.focus-bar.end .fb-s{margin-top:-8px}
+.fb-s{font-size:13px;line-height:17px;color:var(--text2)}
+.fb-btns{display:flex;gap:8px}
 .fb-btn{
-  min-width:44px;height:44px;padding:0 9px;border-radius:14px;flex:0 0 auto;
+  min-width:48px;height:48px;padding:0 12px;border-radius:14px;flex:0 0 auto;
   border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--text);
-  font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:inherit;font-size:14px;font-weight:600;white-space:nowrap;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
   transition:transform var(--dur-micro) var(--sp);
 }
-.fb-btn.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+.fb-btn.mono{font-family:'JetBrains Mono',monospace;font-weight:700}
 .fb-btn:active{transform:scale(.92)}
+@media (max-width:359px){.fb-btn .lbl{display:none}}
 
-.wo-progress{display:flex;align-items:center;gap:10px;margin:12px 2px}
-.wo-progress .tr{flex:1;height:6px;border-radius:99px;background:rgba(255,255,255,.10);overflow:hidden}
-.wo-progress .tr i{display:block;height:100%;width:0;border-radius:99px;background:var(--text2);transition:width var(--dur-ring) var(--out)}
-.wo-progress .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)}
+/* Kopf des laufenden Trainings: Name der Einheit, Satzstand, feine Linie. */
+#wo-sticky-top::after{display:none}
+#wo-sticky-top .ltitle-row{align-items:flex-start}
+.wo-more{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);box-shadow:var(--edge);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
+.wo-more:active{transform:scale(.94)}
+.wo-prog{height:3px;margin-top:12px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
+.wo-prog i{display:block;height:100%;width:0;border-radius:999px;background:var(--text2);transition:width var(--dur-ring) var(--out)}
+#wo-timer-bar{margin-top:12px}
+#wo-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Menü des Trainings: Fenster von unten, Einträge 56 px. */
+.menu-row{display:flex;align-items:center;gap:16px;width:100%;min-height:56px;padding:0 4px;border:0;border-top:1px solid var(--line);background:none;color:var(--text);font-family:inherit;font-size:16px;font-weight:500;text-align:left;cursor:pointer}
+.menu-row:first-child{border-top:0}
+.menu-row:active{opacity:.6}
+.menu-row .ic{flex:none;color:var(--text2)}
+.menu-row.last{margin-top:8px;font-weight:700;border-top:1px solid rgba(255,255,255,.14)}
+.menu-row.last .ic{color:var(--text)}
 
 /* --- die aktive Übung: die erhöhte Fläche, flach wie die Hero-Karte --- */
 .wo-act{
@@ -1346,68 +1369,85 @@ div.wg-note{cursor:default}
 .wo-act-top{display:flex;gap:12px;align-items:center}
 .wo-act-name{flex:1;min-width:0}
 .wo-act-name .n{font-size:16.5px;font-weight:800;line-height:1.15}
-.wo-act-name .m{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wo-act .wo-act-name .m{color:rgba(255,255,255,.62)}
+.wo-act-name .m{font-size:13px;line-height:17px;color:var(--text2);margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .wo-act-name .setdots{margin-top:7px}
 /* Die Marke trägt in den Karten keine Muskelfarbe: Farbe steht nur für Zustände. */
 .wo-act .exmark,.wo-open .exmark{background:none}
 .wo-act .exmark svg,.wo-open .exmark svg{stroke:var(--text2)}
 
-/* Zielangabe: die Heldenzahl dieses Screens. */
-.wo-target{
-  margin-top:14px;padding:12px 14px;border-radius:16px;display:flex;align-items:baseline;gap:9px;
-  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);
-}
-.wo-open .wo-target{background:rgba(255,255,255,.04);border-color:var(--line)}
-.wo-target .big{font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:.85;font-variant-numeric:tabular-nums}
-.wo-target .u{font-size:13px;font-weight:700;color:var(--text2)}
-.wo-act .wo-target .u{color:rgba(255,255,255,.68)}
-.wo-target .why{margin-left:auto;font-size:11px;color:var(--text2);text-align:right;line-height:1.35;max-width:145px}
-.wo-act .wo-target .why{color:rgba(255,255,255,.62)}
+/* Zielangabe: die Heldenzahl dieses Screens, 72 px. */
+.wo-target{margin-top:12px;padding:12px 16px;border-radius:14px;background:rgba(0,0,0,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.wo-open .wo-target{background:rgba(255,255,255,.04);box-shadow:none}
+.wo-tl{font-size:10px;font-weight:700;line-height:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.wo-big{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+.wo-big b{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:72px;line-height:.85;font-variant-numeric:tabular-nums}
+.wo-big span{font-family:'JetBrains Mono',monospace;font-size:20px;line-height:24px;font-weight:600;word-spacing:-.2em;white-space:nowrap;color:var(--text2)}
+/* Die Trefferfläche ist 44 px hoch (::after), die sichtbare Zeile 16 px. */
+.wo-why{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:8px;padding:0;border:0;background:none;color:var(--text2);font-family:inherit;font-size:12px;line-height:16px;text-align:left;cursor:pointer}
+.wo-why::after{content:'';position:absolute;inset:-14px -8px}
+.wo-why span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wo-why.open span{white-space:normal}
+.wo-why .ic{flex:none;color:var(--t3);transition:transform var(--dur-el) var(--out)}
+.wo-why.open .ic{transform:rotate(90deg)}
 
-/* Geloggte Sätze als Chips statt als Tabellenzeilen. */
-.wo-chips{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap}
+/* Geloggte Sätze als Chips statt als Tabellenzeilen: zwei Spalten, 44 px hoch. */
+.wo-chips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .wo-chips .wsr{
-  display:flex;align-items:baseline;gap:5px;padding:8px 11px;border-radius:13px;
+  position:relative;display:flex;align-items:center;gap:8px;min-width:0;min-height:44px;padding:0 12px;border-radius:14px;
   background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
-  cursor:pointer;transition:transform var(--dur-micro) var(--sp);
+  cursor:pointer;transition:transform var(--dur-micro) var(--sp),box-shadow .3s var(--ease);
   /* Der Chip ist seit PB-081 ein <button>. Ohne diesen Block erbt er die
      Schrift des Browsers statt der App — der Reset ist keine Kosmetik. */
   font:inherit;color:inherit;text-align:left;margin:0;
 }
 .wo-chips .wsr .wsr-pen{font-size:11px;opacity:.5;margin-left:1px}
+@media (max-width:359px){.wo-chips{grid-template-columns:1fr}}
 .wo-open .wo-chips .wsr{background:rgba(255,255,255,.04);border-color:var(--line)}
 .wo-chips .wsr:active{transform:scale(.94)}
-.wo-chips .wsr b{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
-.wo-chips .wsr span{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text2)}
-.wo-act .wo-chips .wsr span{color:rgba(255,255,255,.58)}
-.wo-chips .wsr em{font-style:normal;font-size:10px;opacity:.7}
-.wo-chips .wsr.justlogged{animation:chipPop .5s var(--sp)}
+.wo-chips .wsr .n{flex:none;width:12px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--t3)}
+.wo-chips .wsr b{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wo-chips .wsr .r{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2);white-space:nowrap}
+.wo-chips .wsr em{font-style:normal;font-size:11px;opacity:.7}
+.wo-chips .wsr.justlogged{animation:chipPop .32s var(--sp)}
 @keyframes chipPop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
+/* Bestwert: 1,2 s ein Akzentring mit der Marke „PR“ (der Chip trägt die
+   Klasse nur so lange, siehe confirmLog). */
+.wo-chips .wsr.pr{box-shadow:0 0 0 2px var(--accent)}
+.wo-chips .wsr .wsr-pr{position:absolute;top:-9px;right:12px;padding:0 6px;background:var(--bg3);font-family:inherit;font-size:10px;font-style:normal;font-weight:700;line-height:16px;letter-spacing:.14em;color:var(--accent);opacity:1}
 
-.wo-cta{display:flex;gap:9px;margin-top:14px}
-.wo-cta .go{
-  flex:1;padding:16px;border-radius:18px;border:none;cursor:pointer;
-  background:var(--accent);
-  color:#0e0b18;font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:15px;letter-spacing:.02em;
-  box-shadow:var(--edge-strong);transition:transform var(--dur-micro) var(--sp);
-}
-.wo-cta .sk{
-  padding:16px 18px;border-radius:18px;cursor:pointer;
-  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);
-  color:var(--text2);font-family:'Space Grotesk',sans-serif;font-weight:800;font-size:14px;
-  transition:transform var(--dur-micro) var(--sp);
-}
-.wo-cta .go:active,.wo-cta .sk:active{transform:scale(.97)}
+/* Satz loggen: fest über der unteren Leiste, deckender Grund, 24 px Verlauf als Oberkante. */
+.wo-dock{display:none;pointer-events:auto;width:100%;max-width:480px;margin:0 auto;padding:24px 13px 12px;background:linear-gradient(180deg,rgba(11,12,17,0) 0,rgba(11,12,17,.94) 16px,#0b0c11 24px)}
+.wo-log{width:100%;height:56px;padding:0 20px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;background:var(--accent);color:#0a0b0e;font-family:'Space Grotesk',sans-serif;box-shadow:var(--edge-strong),0 6px 16px rgba(0,0,0,.4);transition:transform var(--dur-micro) var(--sp)}
+.wo-log:active{transform:scale(.97)}
+.wo-log span{font-size:16px;font-weight:700}
+.wo-log b{font:700 15px 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wo-log.fin{height:52px;justify-content:center}
+/* Eine Übung, die man von Hand aufgeklappt hat: eigener, ruhiger Knopf (Lime gehört dem festen Knopf). */
+.wo-log-in{width:100%;min-height:48px;margin-top:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
+.wo-log-in:active{transform:scale(.97)}
+#s-wo{padding-bottom:calc(188px + env(safe-area-inset-bottom,0px))}
 
-.wo-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
-#wo-end{background:var(--red);box-shadow:var(--edge-strong)}
+/* Kurze Meldung mit Knopf („Rückgängig“): bricht um, sitzt über dem festen Knopf. */
+.toast-act{display:none;pointer-events:auto;align-items:center;justify-content:space-between;gap:8px;width:calc(100% - 26px);max-width:454px;min-height:52px;margin:0 auto -8px;padding:4px 4px 4px 16px;border-radius:14px;background:#262a33;box-shadow:var(--edge-strong),var(--shadow-2);font-size:14px;line-height:20px;color:var(--text);position:relative;z-index:1}
+.toast-act.show{display:flex;animation:fadeIn .2s ease}
+.toast-act .ta-b{flex:0 0 auto;min-width:44px;height:44px;padding:0 16px;border:0;border-radius:10px;background:rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.toast-act .ta-b:active{transform:scale(.95)}
+
+/* Werkzeuge: Alternative (neutral) und der Satz-Zähler „Sätze − 4 +“, je 44 px. */
+.wo-tools{display:flex;align-items:center;gap:8px;margin-top:12px}
+.wo-alt-btn{display:flex;align-items:center;gap:8px}
+.wo-step{margin-left:auto;display:flex;align-items:center;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--bg3);overflow:hidden}
+.wo-step button{flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:0;background:none;color:var(--text);font-family:inherit;cursor:pointer}
+.wo-step button:active{background:rgba(255,255,255,.08)}
+.wo-step span{min-width:64px;padding:0 4px;text-align:center;font-size:13px;line-height:42px;color:var(--text2);border-left:1px solid var(--line);border-right:1px solid var(--line)}
+.wo-step b{margin-left:2px;font:700 14px 'JetBrains Mono',monospace;color:var(--text)}
+@media (max-width:359px){.wo-tools{flex-wrap:wrap}.wo-step{margin-left:0}}
 .wo-note{margin-top:10px;font-size:11.5px;color:var(--text2);padding:7px 10px;background:rgba(255,255,255,.06);border-radius:10px}
-.wo-hist{margin-top:10px}
-.wo-hist summary{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--text3);cursor:pointer;padding:6px 0;list-style:none}
+.wo-hist{margin-top:4px}
+.wo-hist summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 4px;font-size:13px;line-height:17px;color:var(--text2);cursor:pointer;list-style:none}
 .wo-hist summary::-webkit-details-marker{display:none}
-.wo-hist summary::before{content:'▸ ';transition:.2s}
-.wo-hist[open] summary::before{content:'▾ '}
+.wo-hist summary .ic{flex:none;color:var(--t3);transition:transform var(--dur-el) var(--out)}
+.wo-hist[open] summary .ic{transform:rotate(90deg)}
 
 /* --- eingeklappte Zeile --- */
 .wo-slim{
@@ -1430,17 +1470,12 @@ div.wg-note{cursor:default}
    Eine eigene Fläche in der Mesh-Familie, aber ruhiger als der Hero: der
    Coach soll gelesen werden, nicht angestarrt.
    ============================================================================ */
-/* Flache Karte im Rezept der großen Karten (--mat-hero). Die kleinere
-   „Diese Session" im Training sitzt auf --bg2. */
+/* Flache Karte im Rezept der großen Karten (--mat-hero). */
 .coach-card{
   position:relative;overflow:hidden;
   border-radius:26px;padding:16px;margin:12px 0;
   background:var(--mat-hero);
   box-shadow:var(--edge-strong),var(--shadow-2);
-}
-.coach-card.compact{
-  padding:14px;border-radius:22px;
-  background:var(--mat-1),var(--bg2);border-color:var(--line);box-shadow:var(--edge),var(--shadow-1);
 }
 .coach-h{display:flex;align-items:center;gap:9px}
 .coach-h .av{
@@ -1451,8 +1486,6 @@ div.wg-note{cursor:default}
 .coach-h .av .ic{stroke:#fff;stroke-width:2.2}
 .coach-h .t{font-weight:800;font-size:14px}
 .coach-h .src{margin-left:auto;font-size:9.5px;font-weight:800;letter-spacing:.1em;color:rgba(255,255,255,.42);font-family:'JetBrains Mono',monospace}
-.coach-verdict{font-size:13px;line-height:1.5;color:rgba(255,255,255,.82);margin:10px 0 2px}
-.coach-verdict b{color:#fff}
 .coach-foot{margin-top:8px;font-size:11px;line-height:1.45;color:var(--t3)}
 
 /* Matrix Muskel × Trainingstag. Die Spaltenzahl kommt aus --cols, damit bei
@@ -1486,16 +1519,15 @@ div.wg-note{cursor:default}
 .coach-badge.high{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)}
 
 /* Hinweisbalken über einem Trainingstag */
-/* Session-Beitrag im Workout */
-.coach-sessrow{display:flex;gap:8px;margin-top:10px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-.coach-sessrow::-webkit-scrollbar{display:none}
-.coach-sessrow .cs{
-  flex:0 0 auto;min-width:84px;text-align:center;padding:9px 10px;border-radius:14px;
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);
-}
-.coach-sessrow .cs-n{font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45)}
-.coach-sessrow .cs-v{font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1.05;margin-top:3px;font-variant-numeric:tabular-nums}
-.coach-sessrow .cs-s{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:rgba(255,255,255,.5)}
+/* Session-Beitrag im Workout: eine 44-px-Zeile unter der aktiven Übung. */
+.wo-sess{display:flex;align-items:center;gap:8px;min-height:44px;margin:4px 0 8px}
+.wo-sess-l{flex:none;margin-right:4px;font:500 11px/16px 'JetBrains Mono',monospace;color:var(--t3)}
+.wo-sess-p{display:flex;gap:8px;min-width:0;overflow-x:auto;scrollbar-width:none}
+.wo-sess-p::-webkit-scrollbar{display:none}
+.wo-sess-p span{flex:none;height:44px;padding:0 12px;border-radius:999px;display:flex;align-items:center;gap:8px;white-space:nowrap;background:var(--mat-1),var(--bg2);box-shadow:var(--edge)}
+.wo-sess-p b{font-size:13px;font-weight:600;color:var(--text)}
+.wo-sess-p i{font:600 13px 'JetBrains Mono',monospace;font-style:normal;font-variant-numeric:tabular-nums}
+.wo-sess-p em{font:500 11px 'JetBrains Mono',monospace;font-style:normal;color:var(--t3)}
 
 /* ============================================================================
    PLAN TEILEN UND IMPORTIEREN
@@ -1901,7 +1933,7 @@ div.wg-note{cursor:default}
 .ev-note b{color:var(--text)}
 
 /* --- Regel 6: Druckzustände --------------------------------------------- */
-.card,.gtile,.exr,.dtab,.optrow,.wo-cmd{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
+.card,.gtile,.exr,.dtab,.optrow{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
 .btn,.btn-s{transition:transform var(--dur-micro) var(--sp),box-shadow .2s var(--ease),filter .2s}
 .gtile:active{transform:scale(.965)}
 
@@ -1931,11 +1963,42 @@ div.wg-note{cursor:default}
 @media (min-width:700px){
   .app{max-width:520px}
   .bnav-inner{max-width:520px;border-radius:26px 26px 0 0;border:1px solid var(--line);border-bottom:none}
+  .wo-dock{max-width:520px}
 }
 @media (max-width:430px){
   .screen{padding-left:13px;padding-right:13px}
   .week-ring-value{font-size:84px}
   .card,.prog,.hist-session,.hist-calendar{border-radius:20px}
+}
+/* Querformat auf dem iPhone (kurze Höhe): schmale untere Leiste mit Symbol neben
+   der Beschriftung, die Pause in einer Zeile mit dem ⋯, der feste Knopf 48 px.
+   Steht nach den Breitenregeln, damit sie hier nicht wieder greifen. */
+@media (orientation:landscape) and (max-height:500px){
+  .bnav-inner{margin-bottom:0;padding:0 8px env(safe-area-inset-bottom,0px)}
+  .ni{flex-direction:row;justify-content:center;gap:6px;height:44px;padding:0}
+  .ni svg{width:20px;height:20px}
+  .ni .nl{font-size:11px}
+  .wo-dock{padding:16px 13px 8px}
+  .wo-log,.wo-log.fin{height:48px}
+  #s-wo{padding-bottom:calc(144px + env(safe-area-inset-bottom,0px))}
+  #wo-sticky-top{display:flex;align-items:center;gap:8px;padding-top:max(env(safe-area-inset-top),6px);padding-bottom:6px}
+  #wo-sticky-top .ltitle-row{order:2;flex:none}
+  #wo-sticky-top .wo-head-t,#wo-sticky-top .wo-prog{display:none}
+  #wo-timer-bar{order:1;flex:1;min-width:0;margin-top:0}
+  .focus-bar{min-height:56px;padding:0 0 0 4px;gap:12px;border:0;border-radius:14px;background:none;box-shadow:none}
+  .focus-bar.end{padding:0 8px 0 4px}
+  .fb-ring{display:flex;align-items:center;gap:12px;width:auto;height:44px;border-radius:14px}
+  .fb-ring>svg{width:40px;height:40px;flex:none}
+  .fb-ring circle{stroke-width:9}
+  .fb-rt{position:static;display:block;font-size:20px;letter-spacing:-.04em}
+  .fb-rp{display:none}
+  .fb-col{flex-direction:row;align-items:center;gap:12px}
+  .fb-t,.focus-bar.end .fb-t{font-size:13px;line-height:17px;font-weight:400}
+  .focus-bar.end .fb-t{color:var(--text)}
+  .fb-s{display:none}
+  .fb-btns{margin-left:auto}
+  .fb-btn{height:44px;min-width:44px}
+  .fb-btn .lbl{display:none}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.05ms!important}
@@ -1965,6 +2028,8 @@ div.wg-note{cursor:default}
 </div>
 <div id="main-app" style="display:none">
 <nav class="bnav">
+<div class="toast-act" id="toast-act" role="status" aria-live="polite"></div>
+<div class="wo-dock" id="wo-dock"><button type="button" class="wo-log" id="wo-log"></button></div>
 <div class="bnav-inner">
 <div class="ni on" data-tab="dash" onclick="go('dash')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Home</span></div>
 <div class="ni" id="nav-aktiv" data-tab="wo" onclick="go('wo')" style="display:none"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="nl">Aktiv</span></div>
@@ -2015,10 +2080,11 @@ div.wg-note{cursor:default}
 <div class="screen" id="s-wo">
 <div id="wo-sticky-top" class="ltitle" style="z-index:45">
 <div class="ltitle-row">
-<div style="min-width:0"><div class="ltitle-eyebrow">AKTIVE SESSION</div><div class="ltitle-h">Workout</div></div>
-<div class="ltitle-slot"><button class="btn btn-s btn-r" id="wo-end" style="display:none;margin:0" onclick="endWorkout()">BEENDEN</button></div>
+<div class="wo-head-t" style="min-width:0"><div class="ltitle-h" id="wo-title">Workout</div><div class="ltitle-sub" id="wo-sub"></div></div>
+<div class="ltitle-slot"><button type="button" class="wo-more" id="wo-more" aria-label="Weitere Aktionen" style="display:none" onclick="openWorkoutMenu()"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="2.6"/></svg></button></div>
 </div>
-<div id="wo-timer-bar" style="display:none;border-top:1px solid var(--line);padding-top:8px;margin-top:8px"></div>
+<div class="wo-prog" id="wo-prog" style="display:none"><i id="wo-prog-i"></i></div>
+<div id="wo-timer-bar" style="display:none"></div>
 </div>
 <div id="wo-c"><div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div></div>
 </div>
@@ -2369,6 +2435,9 @@ div.wg-note{cursor:default}
 <div style="font-size:11px;color:var(--text3);margin-top:8px" id="pd-hint">Mehrfachauswahl möglich. Der nächste Tag wird auf dem Dashboard vorgeschlagen.</div>
 <div class="sheet-cta"><button class="btn" id="pd-save" onclick="savePlanDay()">✓ SPEICHERN</button>
 <button class="btn btn-g" onclick="cm('m-planday')">Abbrechen</button></div>
+</div></div>
+<div class="mbg" id="m-womenu"><div class="mdl">
+<div id="womenu-list"></div>
 </div></div>
 <div class="mbg" id="m-woswitch"><div class="mdl">
 <div class="mt">TRAININGSTAG WECHSELN <button class="mc" onclick="cm('m-woswitch')">✕</button></div>
@@ -3420,7 +3489,15 @@ const ICON_PATHS={
   battery:'<path d="M3.5 8.5h13v7h-13zM19 11v2M6.5 11.5v1"/>',
   flame:'<path d="M12 3.2c2.6 3.1 4 5.4 4 7a4 4 0 0 1-8 0c0-1.6 1.4-3.9 4-7ZM12 21a5.4 5.4 0 0 0 5.4-5.4M12 21a5.4 5.4 0 0 1-5.4-5.4"/>',
   warn:'<path d="M12 3.6 21.5 20H2.5zM12 10v4.6M12 17.4v.1"/>',
-  down:'<path d="M12 5v13M6.5 12.5 12 18l5.5-5.5"/>'
+  down:'<path d="M12 5v13M6.5 12.5 12 18l5.5-5.5"/>',
+  minus:'<path d="M5 12h14"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  expand:'<path d="m7 7 5 5 5-5M7 13l5 5 5-5"/>',
+  collapse:'<path d="m7 11 5-5 5 5M7 17l5-5 5 5"/>',
+  check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  skip:'<path d="M6 5.5 14 12l-8 6.5zM18 5v14"/>',
+  chev:'<path d="m9 6 6 6-6 6"/>',
+  pause:'<path d="M9 6v12M15 6v12"/>'
 };
 function icon(key,size){
   const d=ICON_PATHS[key]||ICON_PATHS.arms;
@@ -3470,6 +3547,29 @@ function getTimerTotal(){
   return Math.max(1,timerSpan);
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+/* Kurze Meldung mit einem Knopf („Rückgängig“). Sie sitzt über dem festen
+   Satz-Knopf, bricht um und bleibt 8 Sekunden stehen — solange man sie
+   berührt, auch länger. */
+let toastActTimer=null;
+function hideToastAct(){
+  clearTimeout(toastActTimer);
+  const el=document.getElementById('toast-act');
+  if(el)el.classList.remove('show');
+}
+function toastAction(msg,label,fn){
+  const el=document.getElementById('toast-act');
+  if(!el)return;
+  const arm=()=>{clearTimeout(toastActTimer);toastActTimer=setTimeout(hideToastAct,8000)};
+  el.innerHTML='<span class="ta-t"></span><button type="button" class="ta-b"></button>';
+  el.firstChild.textContent=msg;
+  const b=el.lastChild;
+  b.textContent=label;
+  b.onclick=()=>{hideToastAct();fn()};
+  el.onpointerdown=()=>clearTimeout(toastActTimer);
+  el.onpointerup=el.onpointercancel=arm;
+  el.classList.add('show');
+  arm();
+}
 function cm(id){
   /* PB-102: Der Bearbeiten-Modus der EGYM-Messung hing an einer Variablen,
      die das Schließen des Sheets überlebte — egal auf welchem Weg man es
@@ -3523,6 +3623,7 @@ function go(id){
     const tf=document.getElementById('wo-timer-bar');
     if(tf)tf.style.display=(id==='wo'&&D.active)?'':'none';
     updateNavAktiv();
+    renderWoDock();
     window.scrollTo(0,0);
     if(id==='dash'){renderDash();renderPlan()}
     if(id==='wo')renderWo();
@@ -5034,6 +5135,7 @@ const WEEKDAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
 let planDayMode='add',planDayOriginal=null,planDaySelected=[];
 function planKeyFromName(name){return String(name||'').trim().replace(/\s+/g,'_')}
 function planDisplayName(key){return String(key||'').replace(/_/g,' ')}
+const TAGE={So:'Sonntag',Mo:'Montag',Di:'Dienstag',Mi:'Mittwoch',Do:'Donnerstag',Fr:'Freitag',Sa:'Samstag'};
 function parseDayString(s){
   const t=String(s||'');
   return WEEKDAYS.filter(d=>new RegExp('(^|[^a-zäöüA-ZÄÖÜ])'+d+'([^a-zäöüA-ZÄÖÜ]|$)','i').test(t));
@@ -5374,10 +5476,16 @@ function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null
 function skipEx(ei){
   const ex=activeExercisesSafe()[ei];
   if(!ex)return;
-  /* Vorher wurden geloggte Sätze beim Skippen kommentarlos gelöscht. */
-  if((ex.logged||[]).length&&!confirm(`„${ex.name}“ hat ${ex.logged.length} geloggte Sätze. Beim Überspringen zählen sie nicht in die Session. Trotzdem überspringen?`))return;
+  /* Überspringen löscht nichts: geloggte Sätze bleiben in der Übung, sie
+     zählen nur nicht in die Session. Statt einer Rückfrage gibt es deshalb
+     „Rückgängig“ — die Übung wird über ihr Objekt gefunden, weil sie sich in
+     den acht Sekunden verschoben haben kann. */
   ex.skipped=true;
-  save();renderWo();toast('Übung übersprungen ⏭');
+  save();renderWo();
+  toastAction(`${ex.name} übersprungen`,'Rückgängig',()=>{
+    const i=activeExercisesSafe().indexOf(ex);
+    if(i>=0)unskipEx(i);
+  });
 }
 /* ==========================================================================
    §11 — PAUSENTIMER
@@ -5406,11 +5514,30 @@ function restoreTimer(){
     }
   }catch{}
 }
-function beep(){
+/* Ein gemeinsamer AudioContext. Ein Kontext, der nicht in einer Berührung
+   entsteht, startet auf dem iPhone im Zustand „suspended“ — der Ton am Ende
+   der Pause blieb dann stumm, weil beep() früher bei jedem Aufruf einen neuen
+   anlegte, mitten im Timer-Intervall. Jetzt entsteht er beim ersten Tippen
+   (Satz loggen, Pause antippen) und wird dort entsperrt. */
+let audioCtx=null;
+function unlockAudio(){
   try{
     const Ctx=window.AudioContext||window.webkitAudioContext;
     if(!Ctx)return;
-    const ctx=new Ctx();
+    if(!audioCtx)audioCtx=new Ctx();
+    if(audioCtx.state==='suspended'){
+      const p=audioCtx.resume();
+      if(p&&p.catch)p.catch(()=>{});
+    }
+  }catch{}
+}
+/* Gibt zurück, ob etwas zu hören war. Bleibt der Kontext gesperrt, ist das
+   Signal rein optisch: Die Karte steht auf „Los“, bis man sie antippt. */
+function beep(){
+  try{
+    unlockAudio();
+    const ctx=audioCtx;
+    if(!ctx||ctx.state!=='running')return false;
     const play=(freq,at,dur)=>{
       const osc=ctx.createOscillator(),gain=ctx.createGain();
       osc.type='sine';osc.frequency.value=freq;
@@ -5421,29 +5548,48 @@ function beep(){
       osc.start(ctx.currentTime+at);osc.stop(ctx.currentTime+at+dur+.02);
     };
     play(880,0,.14);play(1180,.16,.22);
-    setTimeout(()=>{try{ctx.close()}catch{}},900);
-  }catch{}
+    return true;
+  }catch{return false}
 }
+/* Zahl und Ring der Pause je Tick nachziehen. Läuft die Pause, leert sich der
+   Ring mit der Restzeit; ist sie vorbei, zählt die Zahl die Überzeit hoch.
+   Gerechnet wird aus dem Zeitstempel, nicht aus der Zahl der Ticks — nach
+   einem gesperrten Bildschirm stimmt die Überzeit deshalb trotzdem. */
+function tickTimerBar(){
+  const d=document.getElementById('td');
+  if(!d)return;
+  const rem=getTimerRemaining();
+  if(timerInt){
+    d.textContent=fmtT(rem);
+    const ring=document.getElementById('td-ring');
+    if(ring)ring.style.strokeDashoffset=(parseFloat(ring.getAttribute('stroke-dasharray'))*(1-Math.min(1,rem/getTimerTotal()))).toFixed(1);
+  }else if(timerStartedAt>0&&rem<=0){
+    d.textContent='+'+fmtT(Math.max(0,getTimerElapsed()-timerTgt));
+  }
+}
+let overInt=null;
+function stopOvertime(){if(overInt){clearInterval(overInt);overInt=null}}
 function startTmrInterval(){
   if(timerInt)clearInterval(timerInt);
+  stopOvertime();
   timerInt=setInterval(()=>{
     const rem=getTimerRemaining();
-    const d=document.getElementById('td');
-    if(d)d.textContent=fmtT(rem);
-    if(rem<=0){
-      clearInterval(timerInt);timerInt=null;timerPausedRemaining=0;
-      haptic([200,100,200]);beep();
-      persistTimer();
-      /* PB-087: Hier stand ein Zugriff auf ein Element, das es nicht gibt.
-         Die Leiste zeichnet sich jetzt selbst neu — sonst behauptet sie
-         weiter, die Pause laufe. */
-      renderFocusBar();
-      toast('⏰ Pause vorbei!');
-    }
+    if(rem>0){tickTimerBar();return}
+    clearInterval(timerInt);timerInt=null;timerPausedRemaining=0;
+    haptic([200,100,200]);beep();
+    persistTimer();
+    /* PB-087: Hier stand ein Zugriff auf ein Element, das es nicht gibt.
+       Die Leiste zeichnet sich jetzt selbst neu — sonst behauptet sie
+       weiter, die Pause laufe. */
+    renderFocusBar();
+    toast('⏰ Pause vorbei!');
+    overInt=setInterval(tickTimerBar,500);
   },250);
   persistTimer();
 }
 function startTmr(){
+  unlockAudio();
+  stopOvertime();
   if(timerInt){
     /* Pausieren: Restzeit einfrieren statt sie zu verlieren. */
     timerPausedRemaining=getTimerRemaining();
@@ -5460,6 +5606,7 @@ function startTmr(){
 }
 function resetTmr(){
   if(timerInt){clearInterval(timerInt);timerInt=null}
+  stopOvertime();
   timerStartedAt=0;timerTgt=0;timerPausedRemaining=0;timerSpan=0;
   persistTimer();
   const d=document.getElementById('td');if(d)d.textContent='0:00';
@@ -5487,8 +5634,7 @@ document.addEventListener('visibilitychange',()=>{
     if(D.active)requestWakeLock();
     /* Nach Rückkehr aus dem Hintergrund kann der Interval gedrosselt worden
        sein — Anzeige einmal hart nachziehen. */
-    const d=document.getElementById('td');
-    if(d&&timerInt)d.textContent=fmtT(getTimerRemaining());
+    tickTimerBar();
   }else releaseWakeLock();
 });
 /* PR-Feier: kurz, laut, dann wieder weg. */
@@ -6781,21 +6927,12 @@ function coachSessionHTML(){
     return{key,name:muscleName(key),session:now[key],total,lm,state:landmarkState(total,lm)};
   }).filter(Boolean);
   if(!rows.length)return'';
-  /* Die Zeile sagte früher, was zu tun ist („zwei Sätze mehr, dann bist du
-     drin" / „hier lieber abbrechen"). Jetzt beschriftet sie nur noch die
-     Zahlen darunter — die Entscheidung mitten im Workout trifft ohnehin
-     niemand anderes. Ein Urteil über eine halb fertige Einheit wäre zudem
-     wertlos: Wer beim ersten Satz steht, liegt zwangsläufig unter jedem
-     Wochenwert. */
-  const line=`<b>${rows.length} ${rows.length===1?'Muskelgruppe':'Muskelgruppen'}</b> heute im Einsatz. `+
-    `Die Zahlen zeigen den Wochenstand einschließlich dieser Einheit.`;
-  return`<div class="coach-card compact">`+
-    `<div class="coach-h"><div class="av">${icon('chart',16)}</div><div class="t">Diese Session</div><div class="src">WOCHE INKL. HEUTE</div></div>`+
-    `<div class="coach-verdict">${line}</div>`+
-    `<div class="coach-sessrow">${rows.map(r=>`<div class="cs"><div class="cs-n">${esc(r.name)}</div>`+
-      `<div class="cs-v" style="color:${r.state.color}">${esc(r.total)}</div>`+
-      `<div class="cs-s">+${esc(r.session)} heute</div></div>`).join('')}</div>`+
-  `</div>`;
+  /* Eine Zeile mit den Zahlen, ohne Urteil: Was zu tun ist, entscheidet
+     mitten im Workout ohnehin niemand anderes — und wer beim ersten Satz
+     steht, liegt zwangsläufig unter jedem Wochenwert. */
+  return`<div class="wo-sess"><span class="wo-sess-l">Woche</span><div class="wo-sess-p">`+
+    rows.map(r=>`<span><b>${esc(r.name)}</b><i style="color:${r.state.color}">${esc(r.total)}</i><em>+${esc(r.session)} heute</em></span>`).join('')+
+  `</div></div>`;
 }
 /* ==========================================================================
    QR-CODE
@@ -8637,7 +8774,6 @@ function renderDash(){
     /* Drei Ganzkörpertage heißen alle „FullBody" — der Zusatz A, B oder C
        gehört mit in den Titel, sonst sind die drei auf Start ununterscheidbar. */
     const titel=planDisplayName(nk.key).toUpperCase();
-    const TAGE={So:'Sonntag',Mo:'Montag',Di:'Dienstag',Mi:'Mittwoch',Do:'Donnerstag',Fr:'Freitag',Sa:'Samstag'};
     const tagZeile=[nk.offset===0?'Heute':nk.offset===1?'Morgen':'',TAGE[p.day]||p.day||''].filter(Boolean).join(', ');
     nc.innerHTML=`<div class="next-card-shot"><div class="nx-top"><span>Nächstes Workout</span><span>${esc(tagZeile)}</span></div>`+
       `<div class="row"><div class="big">${esc(titel||'WORKOUT')}</div><div class="small">${esc(umfang)}</div></div>`+
@@ -8710,7 +8846,7 @@ function workoutCompareLine(c){
 }
 function endWorkout(){
   if(!D.active)return;
-  if(!confirm('Workout beenden?'))return;
+  if(!confirm('Workout speichern?'))return;
   const s=sessionFromActive(D.active);
   const dur=s.duration;
   if(s.sets.length===0){D.active=null;save();resetTmr();renderWo();toast('Kein Satz geloggt');return}
@@ -8833,6 +8969,7 @@ function takeTarget(){
   if(t.r)document.getElementById('log-r').value=t.r;
 }
 function confirmLog(){
+  unlockAudio();
   const ex=logTargetExercise();
   if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}
   const cardio=isCardioExercise(ex);
@@ -8853,6 +8990,18 @@ function confirmLog(){
   const isPR=!cardio&&a>0&&b>0&&hadHistory&&checkPR(ex.name,a,b);
   ex.logged.push(entry);
   justLoggedKey=logTgt.exIdx+':'+(ex.logged.length-1);
+  /* confirmLog zeichnet das Workout mehrfach neu; der erste Render darf den
+     Schlüssel nicht verbrauchen, sonst läuft das Aufpoppen nie. Er lebt
+     deshalb 700 ms. Ein Bestwert trägt zusätzlich 1,2 s die Marke „PR“. */
+  clearTimeout(justLoggedTimer);
+  justLoggedTimer=setTimeout(()=>{justLoggedKey=null},700);
+  clearTimeout(justPRTimer);
+  justPRKey=isPR?justLoggedKey:null;
+  if(isPR)justPRTimer=setTimeout(()=>{
+    justPRKey=null;
+    document.querySelectorAll('#wo-c .wsr.pr').forEach(el=>el.classList.remove('pr'));
+    document.querySelectorAll('#wo-c .wsr-pr').forEach(el=>el.remove());
+  },1200);
   save();
   cm('m-log');
   /* Im Supersatz folgt kein Ausruhen, sondern der Partner: kurze Umbauzeit
@@ -8982,43 +9131,94 @@ function renderFocusBar(){
   if(!tf)return;
   if(!D.active){tf.style.display='none';return}
   tf.style.display='';
-  const el=Math.floor((Date.now()-D.active.startTime)/60000);
-  const tRem=getTimerRemaining();
+  /* Beim Pausieren steht die Restzeit in timerPausedRemaining, nicht mehr in
+     timerTgt — sonst zeigte die angehaltene Pause wieder die volle Länge. */
+  const paused=!timerInt&&timerPausedRemaining>0;
+  const tRem=paused?timerPausedRemaining:getTimerRemaining();
   const tState=timerInt?'run':(timerStartedAt>0&&tRem<=0?'done':'');
-  const liste=activeExercisesSafe();
-  const setsPlanned=liste.reduce((a,e)=>a+(e.skipped?0:(parseInt(e.sets)||0)),0);
-  const setsDone=loggedSetCount();
-  /* Der Ring füllt sich rückwärts — er zeigt, wie viel Pause NOCH übrig ist,
-     nicht wie viel schon herum ist. Das ist die Frage, die man sich zwischen
-     zwei Sätzen tatsächlich stellt. */
+  /* Der Ring leert sich mit der Restzeit — er zeigt, wie viel Pause NOCH übrig
+     ist, nicht wie viel schon herum ist. Das ist die Frage, die man sich
+     zwischen zwei Sätzen tatsächlich stellt. Am Ende steht er voll. */
   const restTotal=Math.max(1,getTimerTotal());
-  const restPct=Math.max(0,Math.min(1,tRem/restTotal));
-  const R=26,CIRC=2*Math.PI*R;
-  const ringCol=tState==='done'?'var(--green)':tState==='run'?'var(--accent)':'rgba(255,255,255,.28)';
-  tf.innerHTML=`<div class="focus-bar">`+
-    `<div class="fb-ring"><svg viewBox="0 0 62 62" aria-hidden="true">`+
-      `<circle cx="31" cy="31" r="${R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="5"/>`+
-      `<circle cx="31" cy="31" r="${R}" fill="none" stroke="${ringCol}" stroke-width="5" stroke-linecap="round" `+
-      `stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${(CIRC*(1-restPct)).toFixed(1)}" transform="rotate(-90 31 31)"/>`+
-    `</svg><div class="fb-rt ${tState}" id="td">${fmtT(tRem)}</div></div>`+
-    `<div class="fb-mid"><div class="t">${tState==='run'?'Pause läuft':tState==='done'?'Pause vorbei — los':esc(planDisplayName(D.active.planKey))}</div>`+
-    `<div class="s">${el} min · ${setsDone} von ${setsPlanned} Sätzen</div></div>`+
-    `<button type="button" class="fb-btn" title="Timer" onclick="startTmr()">${timerInt?'⏸':'▶'}</button>`+
-    `<button type="button" class="fb-btn" title="Pause überspringen" onclick="resetTmr()">⏭</button>`+
-    `<button type="button" class="fb-btn mono" title="30 Sekunden mehr" onclick="adjTmr(30)">+30</button>`+
+  const restPct=tState==='done'?1:Math.max(0,Math.min(1,tRem/restTotal));
+  const R=40,CIRC=2*Math.PI*R;
+  const ringCol=tState==='done'?'var(--accent)':tState==='run'?'var(--text)':'rgba(255,255,255,.55)';
+  const label=tState==='run'?'Pause läuft':tState==='done'?'Los':paused?'Pausiert':'Pause starten';
+  /* Ist die Pause vorbei, räumt ein Tipp auf den Ring die Karte weg — er startet nicht still die volle Pause von vorn. */
+  const ringAct=tState==='run'?'Pause anhalten':paused?'Pause fortsetzen':tState==='done'?'Pause beenden':'Pause starten';
+  const zahl=tState==='done'?'+'+fmtT(Math.max(0,getTimerElapsed()-timerTgt)):fmtT(tRem);
+  tf.innerHTML=`<div class="focus-bar${tState==='done'?' end':''}">`+
+    `<button type="button" class="fb-ring" onclick="${tState==='done'?'resetTmr()':'startTmr()'}" aria-label="${ringAct}"><svg viewBox="0 0 88 88" aria-hidden="true">`+
+      `<circle cx="44" cy="44" r="${R}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="5"/>`+
+      `<circle class="pr" id="td-ring" cx="44" cy="44" r="${R}" fill="none" stroke="${ringCol}" stroke-width="5" stroke-linecap="round" `+
+      `stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${(CIRC*(1-restPct)).toFixed(1)}" transform="rotate(-90 44 44)"/>`+
+    `</svg><span class="fb-rt ${tState}" id="td">${zahl}</span>`+
+    (tState==='done'?'':`<span class="fb-rp" aria-hidden="true">${icon(tState==='run'?'pause':'play',12)}</span>`)+`</button>`+
+    `<div class="fb-col"><div class="fb-t">${label}</div>${tState==='done'?'<div class="fb-s">Pause vorbei</div>':''}`+
+    `<div class="fb-btns">`+
+      `<button type="button" class="fb-btn" aria-label="Pause überspringen" onclick="resetTmr()">${icon('skip',16)}<span class="lbl">Überspringen</span></button>`+
+      `<button type="button" class="fb-btn mono" aria-label="30 Sekunden mehr" onclick="adjTmr(30)">+30 s</button>`+
+    `</div></div>`+
   `</div>`;
+}
+/* Kopf des laufenden Trainings: Name der Einheit, Wochentag und Satzstand,
+   darunter eine feine Linie nach Sätzen. */
+function renderWoHead(){
+  const t=document.getElementById('wo-title');
+  if(!t)return;
+  const sub=document.getElementById('wo-sub');
+  const more=document.getElementById('wo-more');
+  const prog=document.getElementById('wo-prog');
+  if(!D.active){
+    t.textContent='Workout';sub.textContent='';
+    more.style.display='none';prog.style.display='none';
+    return;
+  }
+  const liste=activeExercisesSafe().filter(e=>!e.skipped);
+  const geplant=liste.reduce((a,e)=>a+(parseInt(e.sets)||0),0);
+  const fertig=liste.reduce((a,e)=>a+(e.logged||[]).length,0);
+  const plan=D.plan&&D.plan[D.active.planKey];
+  const tag=plan&&plan.day?(TAGE[plan.day]||plan.day):'';
+  t.textContent=planDisplayName(D.active.planKey);
+  sub.textContent=[tag,`${fertig} von ${geplant} Sätzen`].filter(Boolean).join(', ');
+  more.style.display='';prog.style.display='';
+  document.getElementById('wo-prog-i').style.width=(geplant?Math.min(100,Math.round(fertig/geplant*100)):0)+'%';
+}
+/* Der feste Knopf über der unteren Leiste: loggt den nächsten Satz der aktiven
+   Übung, und wenn alles erledigt ist, speichert er das Workout. Er gehört nur
+   auf den Workout-Screen. */
+function renderWoDock(){
+  const dock=document.getElementById('wo-dock');
+  const btn=document.getElementById('wo-log');
+  if(!dock||!btn)return;
+  const screen=document.getElementById('s-wo');
+  if(!D.active||!screen||!screen.classList.contains('active')){dock.style.display='none';return}
+  dock.style.display='block';
+  const liste=activeExercisesSafe();
+  const ei=liste.findIndex(e=>!e.skipped&&(e.logged||[]).length<e.sets);
+  if(ei<0){
+    btn.className='wo-log fin';
+    btn.onclick=()=>endWorkout();
+    btn.innerHTML='<span>Workout speichern</span>';
+    return;
+  }
+  const ex=liste[ei];
+  const tgt=nextSetTarget(ex);
+  const ziel=tgt&&tgt.num?`${tgt.num} kg${tgt.r?' × '+tgt.r:''}`:'';
+  btn.className='wo-log';
+  btn.onclick=()=>{unlockAudio();openLog(ei)};
+  btn.innerHTML=`<span>Satz ${ex.logged.length+1} loggen</span>${ziel?`<b>${esc(ziel)}</b>`:''}`;
 }
 function renderWo(){
   applyVisualTheme();
   const c=document.getElementById('wo-c');
-  const eb=document.getElementById('wo-end');
   const tf=document.getElementById('wo-timer-bar');
   if(!D.active){
-    eb.style.display='none';tf.style.display='none';
+    tf.style.display='none';
+    renderWoHead();renderWoDock();
     c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;
     return;
   }
-  eb.style.display='';
   if(!Array.isArray(D.active.exercises))D.active.exercises=[];
   D.active.exercises.forEach(ex=>{
     if(!Array.isArray(ex.logged))ex.logged=[];
@@ -9028,19 +9228,9 @@ function renderWo(){
     if(!ex.type)ex.type='main';
     if(!ex.muscle)ex.muscle='chest';
   });
-  const total=D.active.exercises.length;
-  const doneCount=D.active.exercises.filter(e=>e.skipped||e.logged.length>=e.sets).length;
   renderFocusBar();
-  let h=`<div class="wo-cmdbar">`+
-    `<button class="wo-cmd accent ib" onclick="openWorkoutSwitch()">${icon('swap',14)}Tag wechseln</button>`+
-    `<button class="wo-cmd ib" onclick="addExerciseToWorkout()">${icon('plus',14)}Übung</button>`+
-    `<button class="wo-cmd ib" onclick="jumpToActiveExercise()">${icon('target',14)}Zur Übung</button>`+
-    `<button class="wo-cmd ib" onclick="openTimeBudget()">${icon('battery',14)}Wenig Zeit</button>`+
-    `<button class="wo-cmd ib" onclick="toggleWorkoutCompact()">${icon('more',14)}${D.active.compact?'Nur Fokus':'Alle aufklappen'}</button>`+
-  `</div>`+
-  `<div class="wo-progress"><div class="tr"><i data-grow="${total?Math.round(doneCount/total*100):0}%"></i></div>`+
-  `<div class="n">${doneCount}/${total} Übungen</div></div>`+
-  coachSessionHTML();
+  renderWoHead();
+  let h='';
   let activeExIdx=-1;
   for(let i=0;i<D.active.exercises.length;i++){const e=D.active.exercises[i];if(!e.skipped&&e.logged.length<e.sets){activeExIdx=i;break}}
   /* `compact` heißt jetzt „alles aufklappen": im Fokus-Layout ist eingeklappt
@@ -9083,7 +9273,7 @@ function renderWo(){
       `<div class="wo-act-top">`+
         `<div class="exdemo-thumb" onclick="showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="wo-act-name"><div class="n">${esc(ex.name)}${skipped?' <span style="opacity:.7;font-size:12px;font-weight:600">(übersprungen)</span>':''}</div>`+
-        `<div class="m">${esc(muscleName(ex.muscle))} · ${esc(ex.sets)} Sätze · ${esc(reps(ex))} Wdh${ex.rir!==null?` @ RIR ${esc(ex.rir)}`:''}${cardio?' · Cardio':''}</div>`+
+        `<div class="m">${esc(muscleName(ex.muscle))}, ${esc(reps(ex))} Wdh.${ex.rir!==null?` mit RIR ${esc(ex.rir)}`:''}${cardio?', Cardio':''}</div>`+
         `<div class="setdots">${Array.from({length:ex.sets},(_,si)=>`<span class="setdot${ex.logged[si]?' on':si===ex.logged.length&&isActive?' now':''}"></span>`).join('')}</div></div>`+
         `<div class="wo-action-row">${done?'<span style="color:var(--green);font-size:18px">✓</span>':''}`+
         `<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${ei})">⋯</button>`+
@@ -9094,7 +9284,8 @@ function renderWo(){
       const tgt=nextSetTarget(ex);
       if(tgt){
         h+=tgt.num
-          ?`<div class="wo-target"><div class="big">${esc(tgt.num)}</div><div class="u">${tgt.unit}</div><div class="why">${tgt.why}</div></div>`
+          ?`<div class="wo-target"><div class="wo-tl">Ziel Satz ${ex.logged.length+1}</div><div class="wo-big"><b>${esc(tgt.num)}</b><span>${tgt.unit}</span></div>`+
+            `<button type="button" class="wo-why" onclick="this.classList.toggle('open')"><span>${tgt.why}</span>${icon('chev',16)}</button></div>`
           :`<div class="target-hint"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`;
       }
       h+=renderWarmup(ex);
@@ -9105,32 +9296,40 @@ function renderWo(){
       const chips=[];
       for(let si=0;si<ex.sets;si++){
         const s=ex.logged[si];
-        if(s)chips.push(`<button type="button" class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}" onclick="openSetEditor(${ei},${si})" aria-label="Satz ${si+1} korrigieren">`+
-          `<b>${esc(s.w)}</b><span>${esc(formatLoggedSetLine(ex,s).replace(/^\s*[\d.,]+\s*kg\s*/,''))} · RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}<em class="wsr-pen" aria-hidden="true">✎</em></button>`);
+        if(s){
+          const pr=justPRKey===ei+':'+si;
+          chips.push(`<button type="button" class="wsr${justLoggedKey===ei+':'+si?' justlogged':''}${pr?' pr':''}" onclick="openSetEditor(${ei},${si})" aria-label="Satz ${si+1} korrigieren">`+
+            `${pr?'<i class="wsr-pr" aria-hidden="true">PR</i>':''}<span class="n">${si+1}</span>`+
+            `<b>${esc(cardio?formatLoggedSetLine(ex,s)+(s.w?`, Stufe ${s.w}`:''):`${s.w} × ${s.r}`)}</b><span class="r">RIR ${esc(s.rir)}</span>${s.note?`<em title="${attr(s.note)}">📝</em>`:''}<em class="wsr-pen" aria-hidden="true">✎</em></button>`);
+        }
       }
       if(chips.length)h+=`<div class="wo-chips">${chips.join('')}</div>`;
-      if(!done)h+=`<div class="wo-cta"><button type="button" class="go" onclick="openLog(${ei})">SATZ ${ex.logged.length+1} LOGGEN</button><button type="button" class="sk" onclick="skipEx(${ei})">SKIP</button></div>`;
+      /* Die aktive Übung loggt der feste Knopf unten; eine von Hand
+         aufgeklappte andere bekommt ihren eigenen, ruhigen. */
+      if(!done&&!isActive)h+=`<button type="button" class="wo-log-in" onclick="unlockAudio();openLog(${ei})">Satz ${ex.logged.length+1} loggen</button>`;
     }else{
       h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:8px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
     }
     h+=`<div class="wo-tools">`+
-      `<button type="button" class="wo-alt-btn ib" onclick="openAlternative(${ei})">${icon('swap',14)}Alternative</button>`+
-      `${ei>0?`<button type="button" class="wo-icon-btn" title="nach oben" onclick="moveActiveExercise(${ei},-1)">↑</button>`:''}`+
-      `${ei<total-1?`<button type="button" class="wo-icon-btn" title="nach unten" onclick="moveActiveExercise(${ei},1)">↓</button>`:''}`+
-      `<button type="button" class="wo-icon-btn" title="Sätze anpassen" onclick="adjustActiveSets(${ei},-1)">−Satz</button>`+
-      `<button type="button" class="wo-icon-btn" title="Sätze anpassen" onclick="adjustActiveSets(${ei},1)">+Satz</button>`+
+      `<button type="button" class="wo-alt-btn" onclick="openAlternative(${ei})">${icon('swap',18)}Alternative</button>`+
+      `<div class="wo-step" role="group" aria-label="Sätze">`+
+        `<button type="button" aria-label="Einen Satz weniger" onclick="adjustActiveSets(${ei},-1)">${icon('minus',20)}</button>`+
+        `<span>Sätze <b>${esc(ex.sets)}</b></span>`+
+        `<button type="button" aria-label="Einen Satz mehr" onclick="adjustActiveSets(${ei},1)">${icon('plus',20)}</button>`+
+      `</div>`+
     `</div>`;
     if(lastSets.length&&!skipped){
-      h+=`<details class="wo-hist"><summary>Letzte ${lastSets.length} Sätze</summary>`+
-        `<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'var(--accent)'):''}</div>`+
+      h+=`<details class="wo-hist"><summary><span>Letzte ${lastSets.length} Sätze</span>${icon('chev',16)}</summary>`+
+        `<div class="mini-hist"><div class="mini-hist-graph">${series.length>=2?miniSpark(series,'var(--text2)'):''}</div>`+
         lastSets.map(s=>`<div class="mini-hist-row"><span class="mh-d">${esc(s.date||'')}</span><span class="mh-v">${esc(formatLoggedSetLine(ex,s))}${cardio&&s.w?` • Stufe ${esc(s.w)}`:''}</span><span class="ri ${rc(s.rir)}" style="font-size:9px;padding:1px 4px">R${esc(s.rir)}</span></div>`).join('')+
         `</div></details>`;
     }
     h+='</div>';
+    if(isActive)h+=coachSessionHTML();
   });
+  if(activeExIdx<0)h+=coachSessionHTML();
   c.innerHTML=h;
-  runBarGrows(c);
-  justLoggedKey=null;
+  renderWoDock();
 }
 /* Eine eingeklappte Zeile auf-/zuklappen. Nur EINE Zeile kann offen sein —
    sonst ist man nach drei Tippern wieder bei der alten Endlosliste. */
@@ -9146,7 +9345,7 @@ function toggleWoRow(ei){
    löschte kommentarlos alle geloggten Sätze, und Übungen ließen sich weder
    ergänzen noch umsortieren. Das hier ist die Reparatur.
    ========================================================================== */
-let justLoggedKey=null;
+let justLoggedKey=null,justPRKey=null,justLoggedTimer=null,justPRTimer=null;
 function activeExercisesSafe(){
   if(!D.active)return[];
   if(!Array.isArray(D.active.exercises))D.active.exercises=[];
@@ -9183,13 +9382,26 @@ function adjustActiveSets(ei,delta){
   if(next<ex.logged.length){toast('Es sind schon '+ex.logged.length+' Sätze geloggt');return}
   ex.sets=next;
   save();renderWo();haptic(8);
-  toast(`${esc(ex.name)}: ${next} Sätze`);
 }
 function unskipEx(ei){
   const ex=activeExercisesSafe()[ei];
   if(!ex)return;
   ex.skipped=false;
   save();renderWo();toast('Wieder aktiv 💪');
+}
+/* Das ⋯ oben rechts: die selteneren Griffe als Fenster von unten, dort, wo der
+   Daumen ist. „Workout speichern“ steht zuletzt unter einer Trennlinie. */
+function openWorkoutMenu(){
+  if(!D.active){toast('Kein aktives Workout');return}
+  const row=(fn,ic,text,cls)=>`<button type="button" class="menu-row${cls?' '+cls:''}" onclick="cm('m-womenu');${fn}">${icon(ic,20)}<span>${text}</span></button>`;
+  document.getElementById('womenu-list').innerHTML=
+    row('addExerciseToWorkout()','plus','Übung hinzufügen')+
+    row('openWorkoutSwitch()','swap','Tag wechseln')+
+    row('openTimeBudget()','clock','Wenig Zeit')+
+    row('jumpToActiveExercise()','target','Zur Übung springen')+
+    row('toggleWorkoutCompact()',D.active.compact?'collapse':'expand',D.active.compact?'Nur Fokus':'Alle aufklappen')+
+    row('endWorkout()','check','Workout speichern','last');
+  om('m-womenu');
 }
 /* Ein Kontextmenü statt sechs Buttons pro Zeile — auf dem Handy ist
    Bildschirmbreite die knappste Ressource. */
@@ -9204,6 +9416,8 @@ function openExerciseMenu(ei){
     `<button class="alt-item" onclick="cm('m-alt');openAlternative(${ei})"><span class="alt-ico">${icon('swap',20)}</span><span style="flex:1"><div class="alt-name">Übung tauschen</div><div class="alt-meta">Alternative für ${esc(muscleName(ex.muscle))}</div></span></button>`+
     `<button class="alt-item" onclick="cm('m-alt');openExNote('${safe}')"><span class="alt-ico">${icon('note',20)}</span><span style="flex:1"><div class="alt-name">Notiz bearbeiten</div><div class="alt-meta">Wird bei jeder Session angezeigt</div></span></button>`+
     `<button class="alt-item" onclick="cm('m-alt');showExHist('${safe}')"><span class="alt-ico">${icon('chart',20)}</span><span style="flex:1"><div class="alt-name">Verlauf</div><div class="alt-meta">Alle bisherigen Sätze</div></span></button>`+
+    (ei>0?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},-1)"><span class="alt-ico">↑</span><span style="flex:1"><div class="alt-name">Nach oben schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
+    (ei<activeExercisesSafe().length-1?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},1)"><span class="alt-ico">↓</span><span style="flex:1"><div class="alt-name">Nach unten schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
     (ex.skipped
       ?`<button class="alt-item" onclick="cm('m-alt');unskipEx(${ei})"><span class="alt-ico">↩</span><span style="flex:1"><div class="alt-name">Doch machen</div><div class="alt-meta">Übersprungen rückgängig</div></span></button>`
       :`<button class="alt-item" onclick="cm('m-alt');skipEx(${ei})"><span class="alt-ico">⏭</span><span style="flex:1"><div class="alt-name">Übung überspringen</div><div class="alt-meta">Zählt nicht in die Session</div></span></button>`)+
@@ -9342,9 +9556,8 @@ function renderWarmup(ex){
   const target=last&&last.w>0?last.w:0;
   const plan=warmupPlan(target,ex.muscle,detectMovePattern(ex.name,ex.muscle,ex.type));
   if(!plan||!plan.length)return '';
-  return `<div class="warmup"><div class="warmup-h">${icon('flame',14)}Aufwärmrampe auf ${esc(target)} kg`+
-    `<span class="warmup-note">zählt nicht ins Volumen</span></div>`+
-    `<div class="warmup-steps">${plan.map(s=>`<div class="warmup-step"><b>${esc(s.kg)}</b><span>kg × ${esc(s.reps)}</span></div>`).join('')}</div></div>`;
+  return `<details class="warmup"><summary><span>Aufwärmen</span><b>${plan.map(x=>esc(x.kg)).join(' · ')} kg</b>${icon('chev',16)}</summary>`+
+    `<div class="warmup-steps">${plan.map(x=>`<span class="warmup-step"><b>${esc(x.kg)}</b> kg × ${esc(x.reps)}</span>`).join('')}</div></details>`;
 }
 
 /* ==========================================================================
