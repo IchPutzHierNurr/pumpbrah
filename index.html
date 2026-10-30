@@ -63,6 +63,10 @@
   --orange:#ffb020;
   --blue:#4ea1ff;
   --purple:#8b7bff;
+  /* RIR: eine neutrale Rampe von dunkel (5 im Tank) nach hell (0), ohne Farbton.
+     Grün, Bernstein und Rot gehören den Volumen-Grenzen; Farbe allein trägt
+     hier ohnehin nichts, die Ziffer steht im Kreis. */
+  --rir-5:#2b2f3a;--rir-4:#50566a;--rir-3:#7a8094;--rir-2:#a3a8b8;--rir-1:#cdd0da;--rir-0:#f4f6fb;
   --radius:22px;
   /* motion */
   --sp:cubic-bezier(.34,1.56,.64,1);
@@ -280,12 +284,21 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
    reicht dafür nicht. */
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .ig input:focus,.ig select:focus,textarea:focus{border-color:color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent)}
-.stepper{display:flex;align-items:center;gap:0;width:100%}
-.stepper input{flex:1;border-radius:0;border-left:none;border-right:none;text-align:center}
-.stepper-btn{width:46px;height:46px;background:var(--bg4);border:1.5px solid var(--line);color:var(--accent);font-size:21px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.1s;touch-action:manipulation;-webkit-user-select:none;user-select:none}
-.stepper-btn:active{background:var(--accent);color:#0a0b0e}
-.stepper-btn.left{border-radius:13px 0 0 13px}
-.stepper-btn.right{border-radius:0 13px 13px 0;background:color-mix(in srgb,var(--accent) 18%,var(--bg4))}
+/* Zahlfeld mit Tasten (Satz-Fenster): die getippte Zahl ist die große Zahl —
+   Bebas 34 px in einem 52 px hohen Feld, darunter zwei Tasten mit 48 px. Der
+   Fokus liegt als ein runder Lime-Rahmen um Zahl und Tasten, nicht als eckiger
+   Hof um das Feld. */
+.stepper{display:flex;flex-direction:column;gap:8px;width:100%}
+.stepper:focus-within{outline:2px solid var(--accent);outline-offset:4px;border-radius:14px}
+.stepper-val{position:relative}
+.stepper input{height:52px;padding:0 12px;border:none;border-radius:14px;background:rgba(0,0,0,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.stepper input:focus{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.stepper-unit{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:13px;line-height:16px;font-weight:500;color:var(--t3);pointer-events:none}
+.stepper-pm{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stepper-btn{height:48px;border:none;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:var(--edge);color:var(--text);cursor:pointer;display:grid;place-items:center;
+  transition:transform .12s var(--sp),background .1s;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.stepper-btn:active{background:var(--bg5);transform:scale(.97)}
 
 /* rest timer ring */
 .tc{width:150px;height:150px;border-radius:50%;border:3px solid var(--bg4);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;position:relative;background:var(--bg2)}
@@ -302,10 +315,13 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .wsn.dn{background:var(--nd);color:var(--accent)}
 .wsv{flex:1;font-family:'JetBrains Mono',monospace}
 .ri{font-size:10px;padding:2px 7px;border-radius:6px;font-weight:700;font-family:'JetBrains Mono',monospace}
-.r0{background:color-mix(in srgb,var(--red) 16%,transparent);color:var(--red)}
-.r1{background:color-mix(in srgb,var(--orange) 16%,transparent);color:var(--orange)}
-.r2{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
-.r3{background:color-mix(in srgb,var(--blue) 14%,transparent);color:var(--blue)}
+/* RIR-Rampe: Chips (.r0–.r5) und Kreise (.rir-0–.rir-5) teilen sich dieselben Farben. */
+.rir-5,.r5{background:var(--rir-5);color:var(--text)}
+.rir-4,.r4{background:var(--rir-4);color:var(--text)}
+.rir-3,.r3{background:var(--rir-3);color:var(--bg)}
+.rir-2,.r2{background:var(--rir-2);color:var(--bg)}
+.rir-1,.r1{background:var(--rir-1);color:var(--bg)}
+.rir-0,.r0{background:var(--rir-0);color:var(--bg)}
 
 /* history rows */
 .hr{display:flex;align-items:center;padding:9px 11px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;margin-bottom:4px;gap:9px;font-size:12px}
@@ -498,11 +514,14 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .ana-muscle.open .ana-detail{display:block;animation:screenIn .22s ease}
 
 /* RIR picker circles */
-.rir-circles{display:flex;gap:7px;justify-content:center;margin:8px 0}
-.rir-c{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;cursor:pointer;transition:.15s var(--sp);border:2.5px solid transparent;color:#0a0b0e}
+.rir-circles{display:flex;justify-content:space-between;margin:8px 0}
+.rir-lab{font-size:13px;line-height:16px;font-weight:400;color:var(--text2);text-transform:none;letter-spacing:0}
+.rir-c{flex:0 0 44px;width:44px;height:44px;padding:0;border:none;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+  font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1;font-variant-numeric:tabular-nums;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);transition:transform .15s var(--sp),box-shadow .15s}
 .rir-c:active{transform:scale(.9)}
-.rir-c.sel{border-color:#fff;transform:scale(1.14);box-shadow:0 4px 16px rgba(0,0,0,.35)}
-.rir-5{background:#2ee06a}.rir-4{background:#86efac}.rir-3{background:#fde047}.rir-2{background:#fbbf24}.rir-1{background:#fb7534}.rir-0{background:#ef4444;color:#fff}
+/* Der gewählte Kreis trägt den Lime-Ring, sonst nichts. */
+.rir-c.sel{box-shadow:0 0 0 3px var(--bg2),0 0 0 5px var(--accent)}
 
 /* bio entries */
 .bio-input-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:12px}
@@ -814,17 +833,15 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mdl{scroll-padding-bottom:96px}
 .mdl .sheet-cta .btn{margin:0}
 .mdl .sheet-cta .btn+.btn{margin-top:6px}
-/* Der Fokus-Ausschnitt: sichtbar bleiben Zielvorgabe, Felder, RIR, Speichern. */
+/* Bei offener Tastatur weichen Hinweis und Aktionszeile; das fokussierte Zahlfeld
+   scrollt mit seinen Tasten ins Bild (attachKeyboardAvoidance), „Satz speichern"
+   bleibt kleben. */
 .kb-open .mdl-log #log-hint,
-.kb-open .mdl-log .log-note,
+.kb-open .mdl-log .log-sec,
 .kb-open .mdl .cta-sub{display:none}
 .kb-open .mdl .mt,
 .kb-open .mdl-log .log-top{margin-bottom:10px}
-/* Die RIR-Kreise bleiben antippbar (40 px), rücken bei offener Tastatur aber
-   enger zusammen — sonst schiebt sie die Aktionszeile aus dem Bild. */
-.kb-open .mdl-log .rir-c{width:40px;height:40px;font-size:15px}
 .kb-open .mdl-log .log-rir{margin-bottom:4px}
-.kb-open .mdl-log .log-rir label{margin-bottom:3px}
 /* Beim Hineinscrollen eines fokussierten Feldes Platz für die Aktionszeile
    lassen, sonst schiebt der Browser es exakt darunter. */
 .mdl{scroll-padding-bottom:104px}
@@ -846,23 +863,43 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mdl-log #log-hint:not(:empty)::before{content:' · '}
 /* Beschriftungszeile über dem Feld: links das Label, beim Gewicht rechts der
    Link zum Scheibenrechner (44 px hoch, ragt über die Zeile hinaus). */
+.mdl-log .log-cols{align-items:flex-start;gap:12px;margin-bottom:14px}
+.mdl-log .log-cols .ig{min-width:0}
 .mdl-log .log-lab{display:flex;align-items:center;justify-content:space-between;min-height:32px}
-.mdl-log .log-lab label{margin-bottom:0}
+.mdl-log .log-lab label{margin-bottom:0;font-size:13px;line-height:16px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text2)}
 .mdl-log .log-link{display:flex;align-items:center;height:44px;margin:-6px -8px -6px 0;padding:0 4px 0 12px;
   background:none;border:none;cursor:pointer;color:var(--text);
   font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600}
 .mdl-log .log-link:active{color:var(--text2)}
-.mdl-log .log-rir{margin-bottom:10px}
-.mdl-log .log-rir label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px}
+.mdl-log .log-rir{margin-bottom:6px}
+.mdl-log .log-rir-lab{margin-bottom:8px}
+.mdl-log .rir-circles{margin:0}
+/* Fehlt etwas, sagt die Zeile unter dem Feld, was (Rot nur als Textfarbe). */
+.ig-err{margin-top:12px;font-size:13px;line-height:16px;color:var(--red)}
+/* Die Notiz klappt auf, wenn man sie braucht (Taste „+ Notiz" unter dem
+   Speichern-Knopf). 16 px, sonst zoomt iOS beim Fokussieren hinein (PB-026).
+   Das Feld steht ausserhalb von .ig und erbt die dortige Regel nicht. */
 .mdl-log .log-note{margin-bottom:12px}
-.mdl-log .log-note summary{font-size:12px;color:var(--text3);cursor:pointer;padding:6px 0;list-style:none}
-.mdl-log .log-note summary::-webkit-details-marker{display:none}
-.mdl-log .log-note summary::before{content:'+ ';color:var(--accent);font-weight:800}
-.mdl-log .log-note[open] summary::before{content:'− '}
-/* 16 px, sonst zoomt iOS beim Fokussieren hinein (PB-026). Das Feld steht
-   ausserhalb von .ig und erbt die dortige Regel nicht. */
-.mdl-log .log-note input{width:100%;margin-top:6px;font-size:16px;padding:12px;border-radius:12px;
+.mdl-log .log-note input{width:100%;font-size:16px;padding:12px;border-radius:12px;
   background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text)}
+/* „Satz speichern": die einzige Lime-Fläche im Fenster. Ohne Wiederholungen
+   (bei Cardio: ohne Minuten) steht der Knopf grau da, bleibt aber antippbar:
+   ein Tipp springt ins Feld und sagt, was fehlt (confirmLog). */
+.mdl-log .sheet-cta .btn{min-height:56px;padding:0 14px;border-radius:14px;background:var(--accent);
+  font-size:16px;font-weight:700;letter-spacing:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(0,0,0,.4)}
+.mdl-log .sheet-cta .btn:active{filter:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 10px rgba(0,0,0,.4)}
+.mdl-log .sheet-cta .btn[aria-disabled="true"],
+.mdl-log .sheet-cta .btn[aria-disabled="true"]:active{background:var(--bg4);color:var(--t3);box-shadow:var(--edge)}
+/* Darunter eine Zeile mit zwei Textknöpfen, je 44 px hoch: „+ Notiz" und
+   „Wie Satz 2 · 62,5 × 7". Bei Satz 1 gibt es den zweiten nicht. */
+.mdl-log .log-sec{display:flex;margin-top:4px}
+.mdl-log .log-sec button{flex:1 1 auto;min-width:0;height:44px;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:none;border:none;cursor:pointer;color:var(--text2);white-space:nowrap;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500}
+.mdl-log .log-sec button:active{color:var(--text)}
+.mdl-log .log-sec button[hidden]{display:none}
+.mdl-log .log-sec [aria-expanded="true"] .v{display:none}
+.mdl-log .log-sec .m{font-family:'JetBrains Mono',monospace;font-size:12px;font-variant-numeric:tabular-nums;color:var(--t3)}
 /* Die Zielvorgabe: eine ruhige graue Zeile ohne Akzent und ohne Begründung.
    „Übernehmen" setzt Gewicht und Wiederholungen darauf. */
 .log-tgt{display:flex;align-items:center;gap:8px;min-height:52px;margin-bottom:12px;padding:0 4px 0 16px;border-radius:14px;
@@ -875,6 +912,12 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   background:rgba(255,255,255,.08);box-shadow:var(--edge);border:none;cursor:pointer;color:var(--text);
   font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600}
 .log-tgt .tg-take:active{transform:scale(.97)}
+/* Auf dem iPhone SE (320 px) etwas weniger Luft, damit das Fenster ohne
+   Scrollen passt und die klebende Leiste keine RIR-Kreise verdeckt. */
+@media (max-width:359px){
+  .mdl-log{padding-top:18px;padding-bottom:max(env(safe-area-inset-bottom),12px)}
+  .mdl-log .log-top,.log-tgt{margin-bottom:8px}
+}
 
 /* --- Buttons: Tiefe statt Fläche --- */
 .btn{
@@ -1018,7 +1061,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
    Ein Wochentag, den man wegscrollen muss, ist ein Wochentag, den niemand
    findet. Die Chips teilen sich stattdessen die Breite. */
 .chipgrid{display:flex;gap:6px;margin-top:6px}
-.daychip{flex:1 1 0;min-width:0;padding:10px 2px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
+.daychip{flex:1 1 0;min-width:0;min-height:44px;padding:0 2px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
 .daychip:active{transform:scale(.94)}
 .daychip.on{background:color-mix(in srgb,var(--accent) 17%,var(--bg3));border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
 .dtab-wrap{display:flex;align-items:center;gap:8px;margin-bottom:14px}
@@ -2330,29 +2373,34 @@ div.wg-note{cursor:default}
 <button class="mc" aria-label="Schließen" onclick="cm('m-log')">✕</button>
 </div>
 <div id="log-target"></div>
-<div class="ir">
-<div class="ig"><div class="log-lab"><label>Gewicht (kg)</label><button type="button" class="log-link" onclick="openPlates(document.getElementById('log-w').value,true)">Scheiben<svg class="ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></button></div><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-w',-2.5)">−</button><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-w',2.5)">+</button></div></div>
-<div class="ig"><div class="log-lab"><label>Wiederholungen</label></div><div class="stepper"><button class="stepper-btn left" onpointerdown="event.preventDefault();stepHold('log-r',-1)">−</button><input type="number" inputmode="numeric" id="log-r" placeholder="0"><button class="stepper-btn right" onpointerdown="event.preventDefault();stepHold('log-r',1)">+</button></div></div>
+<div class="ir log-cols">
+<div class="ig"><div class="log-lab"><label for="log-w" id="log-w-lab">Gewicht</label><button type="button" class="log-link" onclick="openPlates(document.getElementById('log-w').value,true)">Scheiben<svg class="ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></button></div>
+<div class="stepper"><div class="stepper-val"><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0" aria-describedby="log-w-err" oninput="syncLogSave()" onfocus="this.select()"><span class="stepper-unit" id="log-w-unit">kg</span></div>
+<div class="stepper-pm"><button type="button" class="stepper-btn" id="log-w-minus" aria-label="Gewicht verringern" onpointerdown="event.preventDefault();stepHold('log-w',-2.5)" onclick="if(event.detail===0)stepVal('log-w',-2.5)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" class="stepper-btn" id="log-w-plus" aria-label="Gewicht erhöhen" onpointerdown="event.preventDefault();stepHold('log-w',2.5)" onclick="if(event.detail===0)stepVal('log-w',2.5)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+<div class="ig-err" id="log-w-err" hidden></div></div>
+<div class="ig"><div class="log-lab"><label for="log-r" id="log-r-lab">Wiederholungen</label></div>
+<div class="stepper"><div class="stepper-val"><input type="number" inputmode="numeric" id="log-r" placeholder="0" aria-describedby="log-r-err" oninput="syncLogSave()" onfocus="this.select()"></div>
+<div class="stepper-pm"><button type="button" class="stepper-btn" id="log-r-minus" aria-label="Wiederholungen verringern" onpointerdown="event.preventDefault();stepHold('log-r',-1)" onclick="if(event.detail===0)stepVal('log-r',-1)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" class="stepper-btn" id="log-r-plus" aria-label="Wiederholungen erhöhen" onpointerdown="event.preventDefault();stepHold('log-r',1)" onclick="if(event.detail===0)stepVal('log-r',1)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+<div class="ig-err" id="log-r-err" hidden></div></div>
 </div>
-<div class="log-rir"><label>RIR — Wiederholungen im Tank</label>
-<div class="rir-circles" id="log-rir-circles">
-<div class="rir-c rir-5" data-v="5" onclick="pickRir(this,5)">5</div>
-<div class="rir-c rir-4" data-v="4" onclick="pickRir(this,4)">4</div>
-<div class="rir-c rir-3" data-v="3" onclick="pickRir(this,3)">3</div>
-<div class="rir-c rir-2 sel" data-v="2" onclick="pickRir(this,2)">2</div>
-<div class="rir-c rir-1" data-v="1" onclick="pickRir(this,1)">1</div>
-<div class="rir-c rir-0" data-v="0" onclick="pickRir(this,0)">0</div>
+<div class="log-rir"><div class="rir-lab log-rir-lab" id="log-rir-lab">RIR 2 – noch 2 Wiederholungen im Tank</div>
+<div class="rir-circles" id="log-rir-circles" role="radiogroup" aria-label="Wiederholungen im Tank" data-lab="log-rir-lab" onkeydown="rirKey(event)">
+<button type="button" class="rir-c rir-5" role="radio" aria-checked="false" aria-label="RIR 5" data-v="5" tabindex="-1" onclick="pickRir(5)">5</button>
+<button type="button" class="rir-c rir-4" role="radio" aria-checked="false" aria-label="RIR 4" data-v="4" tabindex="-1" onclick="pickRir(4)">4</button>
+<button type="button" class="rir-c rir-3" role="radio" aria-checked="false" aria-label="RIR 3" data-v="3" tabindex="-1" onclick="pickRir(3)">3</button>
+<button type="button" class="rir-c rir-2" role="radio" aria-checked="true" aria-label="RIR 2" data-v="2" tabindex="0" onclick="pickRir(2)">2</button>
+<button type="button" class="rir-c rir-1" role="radio" aria-checked="false" aria-label="RIR 1" data-v="1" tabindex="-1" onclick="pickRir(1)">1</button>
+<button type="button" class="rir-c rir-0" role="radio" aria-checked="false" aria-label="RIR 0" data-v="0" tabindex="-1" onclick="pickRir(0)">0</button>
 </div></div>
 <input type="hidden" id="log-rir" value="2">
 <!-- Die Notiz kostete eine ganze Zeile und wird bei den wenigsten Sätzen
-     gebraucht. Sie klappt jetzt auf, wenn man sie braucht — das sind die
-     rund 60 Pixel, die den Dialog auf dem iPhone SE über die Kante schoben. -->
-<details class="log-note"><summary>Notiz hinzufügen</summary>
-<input type="text" id="log-note" placeholder="z.B. Griff enger, Pause kurz">
-</details>
+     gebraucht. Sie klappt auf, wenn man „+ Notiz" antippt. -->
+<div class="log-note" id="log-note-box" hidden>
+<input type="text" id="log-note" placeholder="z.B. Griff enger, Pause kurz" aria-label="Notiz zum Satz">
+</div>
 <div class="sheet-cta">
-<button class="btn" onclick="confirmLog()">✓ Satz speichern</button>
-<button type="button" class="cta-sub" onclick="redoLast()">↩ Letzten Satz wiederholen</button>
+<button class="btn" id="log-save" aria-disabled="false" onclick="confirmLog()">✓ Satz speichern</button>
+<div class="log-sec"><button type="button" id="log-note-btn" aria-expanded="false" aria-controls="log-note-box" onclick="toggleLogNote()"><svg class="ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="v" d="M12 5v14"/><path d="M5 12h14"/></svg>Notiz</button><button type="button" id="log-redo" hidden onclick="redoLast()"></button></div>
 </div>
 </div></div>
 <div class="mbg" id="m-add"><div class="mdl">
@@ -2364,21 +2412,19 @@ div.wg-note{cursor:default}
 <div class="ig"><label>Wdh Min</label><input type="number" id="a-rmin" value="8"></div>
 <div class="ig"><label>Wdh Max</label><input type="number" id="a-rmax" value="12"></div>
 </div>
-<div class="ir">
-<div class="ig"><label>RIR</label>
-<div class="rir-circles" id="a-rir-circles" style="justify-content:flex-start;gap:4px;margin:0">
-<div class="rir-c rir-5" style="width:32px;height:32px;font-size:13px" data-v="5" onclick="pickRirAdd(this,5)">5</div>
-<div class="rir-c rir-4" style="width:32px;height:32px;font-size:13px" data-v="4" onclick="pickRirAdd(this,4)">4</div>
-<div class="rir-c rir-3" style="width:32px;height:32px;font-size:13px" data-v="3" onclick="pickRirAdd(this,3)">3</div>
-<div class="rir-c rir-2 sel" style="width:32px;height:32px;font-size:13px" data-v="2" onclick="pickRirAdd(this,2)">2</div>
-<div class="rir-c rir-1" style="width:32px;height:32px;font-size:13px" data-v="1" onclick="pickRirAdd(this,1)">1</div>
-<div class="rir-c rir-0" style="width:32px;height:32px;font-size:13px" data-v="0" onclick="pickRirAdd(this,0)">0</div>
+<div class="ir"><div class="ig"><div class="rir-lab" id="a-rir-lab">RIR 2 – noch 2 Wiederholungen im Tank</div>
+<div class="rir-circles" id="a-rir-circles" role="radiogroup" aria-label="Wiederholungen im Tank" data-lab="a-rir-lab" onkeydown="rirKey(event)">
+<button type="button" class="rir-c rir-5" role="radio" aria-checked="false" aria-label="RIR 5" data-v="5" tabindex="-1" onclick="pickRirAdd(5)">5</button>
+<button type="button" class="rir-c rir-4" role="radio" aria-checked="false" aria-label="RIR 4" data-v="4" tabindex="-1" onclick="pickRirAdd(4)">4</button>
+<button type="button" class="rir-c rir-3" role="radio" aria-checked="false" aria-label="RIR 3" data-v="3" tabindex="-1" onclick="pickRirAdd(3)">3</button>
+<button type="button" class="rir-c rir-2" role="radio" aria-checked="true" aria-label="RIR 2" data-v="2" tabindex="0" onclick="pickRirAdd(2)">2</button>
+<button type="button" class="rir-c rir-1" role="radio" aria-checked="false" aria-label="RIR 1" data-v="1" tabindex="-1" onclick="pickRirAdd(1)">1</button>
+<button type="button" class="rir-c rir-0" role="radio" aria-checked="false" aria-label="RIR 0" data-v="0" tabindex="-1" onclick="pickRirAdd(0)">0</button>
 </div>
 <input type="hidden" id="a-rir" value="2">
-</div>
-<div class="ig"><label>Typ</label><select id="a-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
-</div>
-<div class="ir"><div class="ig"><label>Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
+</div></div>
+<div class="ir"><div class="ig"><label>Typ</label><select id="a-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
+<div class="ig"><label>Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
 <div class="ir"><div class="ig"><label>Notiz</label><input type="text" id="a-note" placeholder="Ausführungshinweis"></div></div>
 <div style="font-size:12px;color:var(--text2);margin-bottom:8px" id="a-target"></div>
 <div class="sheet-cta"><button class="btn" id="a-btn" onclick="confirmAddEx()">+ HINZUFÜGEN</button></div>
@@ -3529,6 +3575,7 @@ const ICON_PATHS={
   check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
   skip:'<path d="M6 5.5 14 12l-8 6.5zM18 5v14"/>',
   chev:'<path d="m9 6 6 6-6 6"/>',
+  undo:'<path d="M9 5 4 10l5 5M4 10h9.5a5.5 5.5 0 0 1 0 11H11"/>',
   pause:'<path d="M9 6v12M15 6v12"/>'
 };
 function icon(key,size){
@@ -3676,7 +3723,7 @@ function go(id){
 function updateNavAktiv(){const nav=document.getElementById('nav-aktiv');if(nav)nav.style.display=D.active?'':'none'}
 function renderAll(){updateNavAktiv();renderDash();renderPlan();renderWo()}
 function reps(e){return e.rmin===e.rmax?e.rmin:e.rmin+'–'+e.rmax}
-function rc(r){return r<=0?'r0':r===1?'r1':r<=2?'r2':'r3'}
+function rc(r){const n=parseInt(r);return 'r'+(Number.isFinite(n)?Math.min(5,Math.max(0,n)):5)}
 function fmtT(s){const m=Math.floor(s/60),ss=s%60;return m+':'+(ss<10?'0':'')+ss}
 /* ==========================================================================
    §4 — SICHERHEITS- UND KOMFORT-PRIMITIVEN
@@ -4819,13 +4866,13 @@ function applyLibHint(){
   document.getElementById('a-rmin').value=item.rn;
   document.getElementById('a-rmax').value=item.rx;
   if(item.note)document.getElementById('a-note').value=item.note;
-  setAddRir(item.rir===undefined?2:item.rir);
+  pickRirAdd(item.rir===undefined?2:item.rir);
   refreshLibHint();
   haptic(8);
   toast('Werte aus der Bibliothek übernommen');
 }
-function openAddEx(){editRef=null;editTab=curTab;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;setAddRir(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';refreshLibHint();om('m-add')}
-function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;setAddRir(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';refreshLibHint();om('m-add')}
+function openAddEx(){editRef=null;editTab=curTab;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';refreshLibHint();om('m-add')}
+function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;pickRirAdd(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';refreshLibHint();om('m-add')}
 function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
   if(editRef){
     /* PB-086: Hier stand ein gemerkter INDEX. Der Cloud-Listener ersetzt in
@@ -5104,7 +5151,7 @@ const EXLIB=[
     {name:"Faszienrolle Oberschenkel (Foam Roll Quads)",s:1,rn:60,rx:90,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, langsam"},
     {name:"Dehnen Beinbeuger (Hamstring Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, Rücken gerade"}]}
 ];function filterLib(q){renderLib(q)}
-function stepVal(id,delta){const el=document.getElementById(id);const v=parseFloat(el.value)||0;el.value=Math.max(0,+(v+delta).toFixed(1))}
+function stepVal(id,delta){const el=document.getElementById(id);const v=parseFloat(el.value)||0;el.value=Math.max(0,+(v+delta).toFixed(1));el.dispatchEvent(new Event('input',{bubbles:true}))}
 let stepTimer=null,stepDelay=null;
 function stepHold(id,delta){stepVal(id,delta);stepDelay=setTimeout(()=>{stepTimer=setInterval(()=>stepVal(id,delta),100)},350);const stop=(e)=>{if(e)e.preventDefault();clearTimeout(stepDelay);clearInterval(stepTimer);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop)};document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop)}
 /* ==========================================================================
@@ -5155,10 +5202,29 @@ function renderExDemo(){
     (series.length>=2?`<div class="prog" style="margin-top:12px"><div class="prog-h">Dein Verlauf <span>${series.length} Sätze</span></div>${svgChart(series,{h:110,color:'var(--accent)',showGrid:true,unit:' kg'})}</div>`:'')+
     `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');openExNote('${jsStr(name)}')">${icon('note',15)}Notiz</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');showExHist('${jsStr(name)}')">${icon('chart',15)}Verlauf</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="openExWebSearch()">${icon('book',15)}Web</button></div>`;
 }
-function pickRir(el,v){document.querySelectorAll('#log-rir-circles .rir-c').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('log-rir').value=v}
-function setLogRir(v){document.getElementById('log-rir').value=v;document.querySelectorAll('#log-rir-circles .rir-c').forEach(c=>c.classList.toggle('sel',parseInt(c.dataset.v)===v))}
-function pickRirAdd(el,v){document.querySelectorAll('#a-rir-circles .rir-c').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');document.getElementById('a-rir').value=v}
-function setAddRir(v){document.getElementById('a-rir').value=v;document.querySelectorAll('#a-rir-circles .rir-c').forEach(c=>c.classList.toggle('sel',parseInt(c.dataset.v)===v))}
+/* Die RIR-Kreise (Satz-Fenster und Plan-Editor) sind eine Auswahlgruppe
+   (role=radiogroup): der gewählte hat aria-checked und den Tab-Stopp, die
+   Pfeiltasten wechseln, und die Zeile darüber nennt den Wert in Worten. */
+function rirText(v){return 'RIR '+v+' – '+(v===0?'keine Wiederholung mehr im Tank':v===1?'noch 1 Wiederholung im Tank':'noch '+v+' Wiederholungen im Tank')}
+function markRir(groupId,v){
+  const g=document.getElementById(groupId);
+  if(!g)return;
+  const cs=[...g.querySelectorAll('.rir-c')];
+  const hit=cs.find(c=>parseInt(c.dataset.v)===v);
+  cs.forEach(c=>{c.classList.toggle('sel',c===hit);c.setAttribute('aria-checked',c===hit?'true':'false');c.tabIndex=c===(hit||cs[0])?0:-1});
+  const lab=document.getElementById(g.dataset.lab);
+  if(lab)lab.textContent=hit?rirText(v):'RIR';
+}
+function rirKey(e){
+  const dir={ArrowLeft:-1,ArrowUp:-1,ArrowRight:1,ArrowDown:1}[e.key];
+  if(!dir)return;
+  e.preventDefault();
+  const cs=[...e.currentTarget.querySelectorAll('.rir-c')];
+  const next=cs[(cs.indexOf(document.activeElement)+dir+cs.length)%cs.length];
+  next.focus();next.click();
+}
+function pickRir(v){document.getElementById('log-rir').value=v;markRir('log-rir-circles',v)}
+function pickRirAdd(v){document.getElementById('a-rir').value=v;markRir('a-rir-circles',v)}
 /* ==========================================================================
    §10 — TRAININGSPLAN-VERWALTUNG
    Vorher: drei verschachtelte prompt()-Dialoge. Auf iOS blockieren die den
@@ -8983,10 +9049,13 @@ function openLog(ei){
       (tgt.w?`<button type="button" class="tg-take" onpointerdown="event.preventDefault()" onclick="takeTarget()">${icon('down',16)}Übernehmen</button>`:'')+
       `</div>`:'';
   }
-  const weightLabel=document.querySelector('#m-log label');
-  const repeatLabel=document.querySelectorAll('#m-log label')[1];
-  if(weightLabel)weightLabel.textContent=cardio?'Minuten':'Gewicht (kg)';
-  if(repeatLabel)repeatLabel.textContent=cardio?'Intensität / Stufe (optional)':'Wiederholungen';
+  document.getElementById('log-w-lab').textContent=cardio?'Minuten':'Gewicht';
+  document.getElementById('log-w-unit').textContent=cardio?'min':'kg';
+  document.getElementById('log-r-lab').textContent=cardio?'Intensität / Stufe (optional)':'Wiederholungen';
+  [['w',cardio?'Minuten':'Gewicht'],['r',cardio?'Stufe':'Wiederholungen']].forEach(([k,was])=>{
+    document.getElementById(`log-${k}-minus`).setAttribute('aria-label',was+' verringern');
+    document.getElementById(`log-${k}-plus`).setAttribute('aria-label',was+' erhöhen');
+  });
   const weightInput=document.getElementById('log-w');
   const repInput=document.getElementById('log-r');
   weightInput.placeholder=cardio?'min':'0';
@@ -8994,17 +9063,61 @@ function openLog(ei){
   weightInput.step=cardio?'1':'0.5';
   const lastS=ex.logged.length>0?ex.logged[ex.logged.length-1]:null;
   if(cardio){
-    if(lastS){weightInput.value=lastS.r||'';repInput.value=lastS.w||'';setLogRir(lastS.rir)}
-    else if(lastH){weightInput.value=lastH.r||'';repInput.value=lastH.w||'';setLogRir(lastH.rir)}
-    else{weightInput.value='';repInput.value='';setLogRir(ex.rir||2)}
+    if(lastS){weightInput.value=lastS.r||'';repInput.value=lastS.w||'';pickRir(lastS.rir)}
+    else if(lastH){weightInput.value=lastH.r||'';repInput.value=lastH.w||'';pickRir(lastH.rir)}
+    else{weightInput.value='';repInput.value='';pickRir(ex.rir||2)}
   }else{
-    if(lastS){weightInput.value=lastS.w;repInput.value=lastS.r;setLogRir(lastS.rir)}
-    else if(lastH){weightInput.value=lastH.w;repInput.value=lastH.r;setLogRir(lastH.rir)}
-    else{weightInput.value='';repInput.value='';setLogRir(ex.rir||2)}
+    if(lastS){weightInput.value=lastS.w;repInput.value=lastS.r;pickRir(lastS.rir)}
+    else if(lastH){weightInput.value=lastH.w;repInput.value=lastH.r;pickRir(lastH.rir)}
+    else{weightInput.value='';repInput.value='';pickRir(ex.rir||2)}
   }
   document.getElementById('log-note').value='';
+  document.getElementById('log-note-box').hidden=true;
+  document.getElementById('log-note-btn').setAttribute('aria-expanded','false');
+  /* „Wie Satz 2 · 62,5 × 7" gibt es erst, wenn schon ein Satz geloggt ist (und
+     er Wiederholungen hat: ein alter 0 × 0-Satz wird nicht noch einmal kopiert). */
+  const redo=document.getElementById('log-redo');
+  const canRedo=!!lastS&&(parseInt(lastS.r)||0)>=1;
+  redo.hidden=!canRedo;
+  if(canRedo)redo.innerHTML=`${icon('undo',16)}Wie Satz ${ex.logged.length}<span class="m">${cardio?esc(lastS.r)+' min':esc(String(lastS.w).replace('.',','))+' × '+esc(lastS.r)}</span>`;
+  syncLogSave();
+  /* Kein Autofokus: das Fenster öffnet ohne Tastatur. Sie kommt erst, wenn
+     man ins Feld tippt (die Zahl ist dann markiert), sonst schrumpft das
+     Fenster bei jedem Satz um ein Drittel. */
   om('m-log');
-  setTimeout(()=>document.getElementById('log-w').focus(),200);
+}
+/* „+ Notiz" klappt das Feld auf und setzt den Cursor hinein; ein zweiter Tipp
+   klappt es wieder zu, der Text bleibt erhalten. */
+function toggleLogNote(){
+  const box=document.getElementById('log-note-box');
+  const open=box.hidden;
+  box.hidden=!open;
+  document.getElementById('log-note-btn').setAttribute('aria-expanded',open?'true':'false');
+  if(open)document.getElementById('log-note').focus();
+}
+/* Was zählt als Satz: Wiederholungen (bei Cardio: Minuten) mindestens 1.
+   Gewicht 0 bleibt erlaubt (Körpergewicht). */
+function logAmount(cardio){
+  return cardio?parseFloat(document.getElementById('log-w').value)||0:parseInt(document.getElementById('log-r').value)||0;
+}
+/* „Satz speichern" ist grau, solange der Satz nicht zählt. Gesperrt ist er nur
+   zum Anschauen, nicht für den Finger: ein Tipp darauf sagt, was fehlt
+   (confirmLog). Jede Änderung der Felder nimmt die Meldung wieder weg. */
+function syncLogSave(){
+  const ex=logTargetExercise();
+  const cardio=!!ex&&isCardioExercise(ex);
+  document.getElementById('log-save').setAttribute('aria-disabled',logAmount(cardio)>=1?'false':'true');
+  ['log-w','log-r'].forEach(id=>{
+    document.getElementById(id+'-err').hidden=true;
+    document.getElementById(id).removeAttribute('aria-invalid');
+  });
+}
+function showLogErr(id,text){
+  const err=document.getElementById(id+'-err');
+  err.textContent=text;err.hidden=false;
+  const el=document.getElementById(id);
+  el.setAttribute('aria-invalid','true');
+  el.focus();
 }
 /* „Übernehmen" in der Zielzeile: Gewicht (und, wenn die Vorgabe sie nennt,
    Wiederholungen) auf die Vorgabe setzen. Gerechnet wird wie beim Öffnen
@@ -9015,6 +9128,7 @@ function takeTarget(){
   if(!t||!t.w)return;
   document.getElementById('log-w').value=t.w;
   if(t.r)document.getElementById('log-r').value=t.r;
+  syncLogSave();
 }
 function confirmLog(){
   unlockAudio();
@@ -9031,6 +9145,11 @@ function confirmLog(){
   const b=clamp(parseInt(document.getElementById('log-r').value)||0,999);
   const rir=clamp(parseInt(document.getElementById('log-rir').value)||0,10);
   const note=document.getElementById('log-note').value.trim();
+  /* Ohne Wiederholungen (bei Cardio: ohne Minuten) gibt es keinen Satz: er
+     würde als „Satz 3/4" zählen, die Pause starten und ins Volumen eingehen.
+     Die graue Darstellung des Knopfes (syncLogSave) ist nur der Hinweis davor,
+     geprüft wird hier. */
+  if((cardio?a:b)<1){showLogErr(cardio?'log-w':'log-r',cardio?'Minuten eintragen':'Wiederholungen eintragen');return}
   /* t: wann der Satz geloggt wurde. Daran misst sich, ob das Training noch
      läuft oder liegengeblieben ist (PB-115). */
   const entry=cardio?{w:b,r:Math.round(a),rir,note,mode:'cardio',t:Date.now()}:{w:a,r:b,rir,note,t:Date.now()};
@@ -10103,7 +10222,7 @@ function pickLibraryItem(encodedName){
   document.getElementById('a-sets').value=item.s;
   document.getElementById('a-rmin').value=item.rn;
   document.getElementById('a-rmax').value=item.rx;
-  setAddRir(item.rir||0);
+  pickRirAdd(item.rir||0);
   document.getElementById('a-type').value=item.t;
   document.getElementById('a-mus').value=item.m;
   document.getElementById('a-note').value=item.note||'';
