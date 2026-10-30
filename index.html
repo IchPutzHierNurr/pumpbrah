@@ -385,7 +385,6 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .wa-row:last-child{border:none}
 .wa-row .wl{color:var(--text2)}
 .wa-row .wv{font-weight:700;font-family:'JetBrains Mono',monospace}
-.trend-up{color:var(--green)}.trend-down{color:var(--red)}.trend-flat{color:var(--orange)}
 
 /* login / onboarding */
 .login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:28px 22px;text-align:center;
@@ -534,9 +533,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .be-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:12px;padding:6px;flex:0 0 auto;
   display:flex;align-items:center;border-radius:10px}
 .be-del:active{background:color-mix(in srgb,var(--red) 14%,transparent)}
-/* Der Korrigieren-Knopf sitzt neben dem Löschen-Knopf der Session. Er ist
-   bewusst neutral eingefärbt: Korrigieren ist der harmlose der beiden Wege,
-   und die auffällige Farbe gehört dem, der Daten vernichtet. */
+/* Kleiner Korrigieren-Knopf (Stift) in der Liste der EGYM-Messungen. Er ist
+   bewusst neutral eingefärbt: Korrigieren ist der harmlose Weg. */
 .hs-edit{background:none;border:none;color:var(--text3);cursor:pointer;padding:6px;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;border-radius:9px;line-height:0}
 .hs-edit:active{background:rgba(255,255,255,.08);color:var(--text)}
@@ -643,8 +641,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .hist-day.selected{background:color-mix(in srgb,var(--accent) 16%,var(--bg3));border-color:color-mix(in srgb,var(--accent) 40%,transparent);color:var(--text)}
 .hist-dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
 .hist-count{font-size:9px;color:var(--text3)}
-.hist-session{border-radius:26px;padding:18px 20px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--line)}
-.hist-session-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
 .hist-date{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.06em;color:var(--text)}
 .hist-sub{color:var(--text3);font-size:12px;margin-top:4px}
 .hist-tag{padding:7px 14px;border-radius:999px;background:color-mix(in srgb,var(--accent) 14%,var(--bg3));color:var(--accent);font-weight:700;font-size:12px;white-space:nowrap}
@@ -1120,10 +1116,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
      Korridorband zwischen MEV und MAV. */
   --t3:#8b92a5;
   --zone:rgba(46,224,106,.14);
-  /* Restposten der alten Markenfarbe Violett/Magenta. Alle großen Karten
-     stehen auf --mat-hero; gebraucht wird sie nur noch vom Kalender in der
-     Historie (heutiger und gewählter Tag). */
-  --brand-a:#7e5aff; --brand-b:#ff6fd8;
 }
 
 /* --- Regel 1: Typografische Hierarchie ---------------------------------- */
@@ -1195,6 +1187,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   box-shadow:var(--edge-strong),var(--shadow-2);
 }
 .mesh-hero .cap{color:rgba(255,255,255,.58)}
+/* 8 px Luft zwischen Etikett und großer Zahl (die Ziffer hat line-height .78). */
+.mesh-hero>.cap{margin-bottom:11px}
 .mesh-row{display:flex;align-items:flex-end;gap:11px}
 .mesh-num{
   font-family:'Bebas Neue',sans-serif;
@@ -1711,56 +1705,65 @@ div.wg-note{cursor:default}
 .calgrid .cell:active{transform:scale(.9)}
 .calgrid .cell.has{background:color-mix(in srgb,var(--accent) 13%,transparent);font-weight:800}
 .calgrid .cell.has.big{background:color-mix(in srgb,var(--accent) 28%,transparent)}
-.calgrid .cell.today{outline:1.5px solid var(--brand-b);outline-offset:-1.5px}
-.calgrid .cell.sel{background:linear-gradient(140deg,var(--brand-a),var(--brand-b));font-weight:800;color:#fff}
+.calgrid .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
+.calgrid .cell.sel,.calgrid .cell.has.big.sel{background:var(--accent);font-weight:800;color:#0a0b0e}
 .calgrid .cell .dv{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text3);margin-top:1px}
-.calgrid .cell.sel .dv{color:rgba(255,255,255,.82)}
+.calgrid .cell.sel .dv{color:rgba(10,11,14,.72)}
 .cal-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .cal-sum div{text-align:center;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line2)}
 .cal-sum b{display:block;font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
 .cal-sum span{display:block;font-size:9px;font-weight:800;letter-spacing:.12em;color:var(--text3);margin-top:2px}
 
-/* --- Session-Karte mit Vergleich --- */
-.hist-session{
-  border-radius:22px;padding:14px;margin-bottom:10px;
-  background:var(--mat-1),var(--bg2);border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
+/* --- Sessions: eine Zeile je Einheit, nach Monat gruppiert ---
+   Die Zeile zeigt, was beim Überfliegen zählt: Tag, Name, Kennzahlen und die
+   Veränderung. Ein Tipp klappt die Übungen auf, immer nur eine. Veränderung
+   und Bestwert sind neutral; Rot, Grün und Bernstein gehören den Volumen-Grenzen. */
+.hs-mon{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:24px 0 8px;padding:0 4px}
+.hs-mon:first-child{margin-top:12px}
+.hs-mon h2{margin:0;font-family:'Bebas Neue',sans-serif;font-size:44px;line-height:1;font-weight:400;letter-spacing:.01em;color:var(--text)}
+.hs-mon h2 small{margin-left:8px;font-size:22px;color:var(--t3)}
+.hs-mon span{font-size:13px;font-weight:500;line-height:1.3;color:var(--text2);font-variant-numeric:tabular-nums}
+.hs-group{border-radius:20px;overflow:hidden;background:var(--mat-1),var(--bg2);box-shadow:var(--edge),var(--shadow-1)}
+.hs-item{border-top:1px solid var(--line);scroll-margin:96px 0 112px}
+.hs-item:first-child{border-top:0}
+.hs-row{
+  display:grid;grid-template-columns:36px minmax(0,1fr) auto 20px;grid-template-areas:"d n dl c" "d m m c";
+  column-gap:12px;row-gap:4px;align-items:center;width:100%;min-height:64px;padding:12px 12px 12px 16px;
+  border:0;background:none;color:var(--text);font-family:inherit;text-align:left;cursor:pointer;
 }
-.hs-h{display:flex;align-items:center;gap:11px}
-.hs-d{
-  width:46px;flex:0 0 46px;text-align:center;border-radius:14px;padding:6px 0;
-  background:rgba(255,255,255,.06);border:1px solid var(--line);
+.hs-row:active{background:rgba(255,255,255,.04)}
+.hs-row[aria-expanded="true"]{background:rgba(255,255,255,.035);box-shadow:inset 0 -1px 0 var(--line)}
+.hs-d{grid-area:d;text-align:center;font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;font-variant-numeric:tabular-nums;color:var(--text2)}
+.hs-n{grid-area:n;min-width:0;font-size:16px;font-weight:600;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-dl{grid-area:dl;display:flex;align-items:center;gap:4px;font-family:'Bebas Neue',sans-serif;font-size:20px;line-height:20px;font-variant-numeric:tabular-nums;color:var(--text)}
+.hs-dl svg{width:10px;height:10px;fill:var(--text2)}
+.hs-m{grid-area:m;display:flex;flex-wrap:wrap;gap:0 12px;font-size:11px;line-height:16px;color:var(--t3);font-variant-numeric:tabular-nums}
+.hs-m b{font-size:12px;font-weight:500;color:var(--text)}
+.hs-c{grid-area:c;display:flex;justify-content:flex-end;color:var(--t3)}
+.hs-c svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform var(--dur-el) var(--ease)}
+.hs-row[aria-expanded="true"] .hs-c{color:var(--text2)}
+.hs-row[aria-expanded="true"] .hs-c svg{transform:rotate(180deg)}
+.hs-body{padding:0 16px 8px;background:rgba(255,255,255,.035)}
+.hs-body[hidden]{display:none}
+.hs-cmp{padding:4px 0 8px;font-size:12px;line-height:16px;color:var(--text2)}
+.hex{
+  display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0;border:0;border-top:1px solid var(--line);
+  background:none;color:var(--text);font-family:inherit;font-size:14px;line-height:1.25;text-align:left;cursor:pointer;
 }
-.hs-d .dd{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;font-variant-numeric:tabular-nums}
-.hs-d .mm{font-size:8.5px;font-weight:800;letter-spacing:.1em;color:var(--text3)}
-.hs-b{flex:1;min-width:0}
-.hs-b .n{font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hs-b .m{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hs-b .vs{font-size:10px;color:var(--text3);margin-top:2px}
-.hs-delta{font-family:'Bebas Neue',sans-serif;font-size:24px;line-height:1;text-align:right;flex:0 0 auto;font-variant-numeric:tabular-nums}
-.hs-delta small{display:block;font-family:'Space Grotesk',sans-serif;font-size:8.5px;font-weight:800;letter-spacing:.1em;color:var(--text3)}
-.hs-delta.up{color:var(--green)}
-.hs-delta.down{color:var(--red)}
-.hs-delta.flat{color:var(--text3)}
-.hs-del{
-  width:30px;height:30px;flex:0 0 30px;border-radius:50%;cursor:pointer;
-  background:transparent;border:none;color:var(--text3);font-size:19px;line-height:1;
-  transition:.15s;
+.hex .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hex .w{flex:0 0 auto;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.hex .w b{font-weight:600;color:var(--text)}
+.hex .pr{flex:0 0 36px;display:flex;justify-content:flex-end}
+.hex .pr i{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:8px;background:var(--bg4);font-size:11px;font-style:normal;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.hs-act{display:flex;align-items:center;justify-content:space-between;padding:12px 0 4px;border-top:1px solid var(--line)}
+.hs-fix,.hs-rm{
+  display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:0;border-radius:999px;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:600;line-height:1;transition:transform var(--dur-micro) var(--sp);
 }
-.hs-del:active{transform:scale(.85);color:var(--red)}
-.hs-prs{display:flex;gap:6px;margin-top:11px;flex-wrap:wrap}
-.hs-prs .pr{
-  font-size:10px;font-weight:800;padding:4px 8px;border-radius:8px;
-  background:color-mix(in srgb,var(--orange) 14%,transparent);color:var(--orange);
-  border:1px solid color-mix(in srgb,var(--orange) 28%,transparent);
-}
-.hs-ex{margin-top:10px}
-.hex{display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-top:1px solid var(--line2);cursor:pointer;font-size:12.5px}
-.hex .n{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hex .w{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap;flex:0 0 auto}
-.hex .w b{font-weight:700}
-.hex .w b.up{color:var(--green)}
-.hex .w b.down{color:var(--red)}
-.hex .w b.flat{color:var(--text2)}
+.hs-fix svg,.hs-rm svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hs-fix{background:var(--bg4);box-shadow:var(--edge);color:var(--text)}
+.hs-rm{margin-right:-8px;padding:0 8px;background:none;color:var(--red)}
+.hs-fix:active,.hs-rm:active{transform:scale(.97)}
 
 /* ============================================================================
    STATS
@@ -2043,7 +2046,7 @@ div.wg-note{cursor:default}
 @media (max-width:430px){
   .screen{padding-left:13px;padding-right:13px}
   .week-ring-value{font-size:84px}
-  .card,.prog,.hist-session,.hist-calendar{border-radius:20px}
+  .card,.prog,.hist-calendar{border-radius:20px}
 }
 /* Querformat auf dem iPhone (kurze Höhe): schmale untere Leiste mit Symbol neben
    der Beschriftung, die Pause in einer Zeile mit dem ⋯, der feste Knopf 48 px.
@@ -2183,7 +2186,6 @@ div.wg-note{cursor:default}
 <div id="cal-sum" class="cal-sum"></div>
 </div>
 </details>
-<div class="st" id="h-list-title">ALLE SESSIONS <div class="ln"></div></div>
 <div id="hl"></div>
 </div>
 <div class="screen" id="s-ana">
@@ -3742,6 +3744,10 @@ function haptic(pattern){
   if(prefersReducedMotion())return;
   try{if(navigator.vibrate)navigator.vibrate(pattern)}catch{}
 }
+/* Zahlen in der Anzeige mit Komma: de() für gegebene Zahlen, de1() mit genau
+   einer Nachkommastelle (Tonnen, RIR, Schnitte). */
+function de(n){return String(n).replace('.',',')}
+function de1(n){return de((+n).toFixed(1))}
 /* Zahlen zählen hoch statt zu springen — kostet nichts, fühlt sich teuer an. */
 function animateCount(el,to,opts={}){
   if(!el)return;
@@ -3932,7 +3938,7 @@ function attachSheetGestures(){
    Nur Elemente, die beim Rendern UNTER dem Falz liegen, werden versteckt und
    eingeblendet. Alles, was sofort sichtbar ist, bekommt direkt `.in` — sonst
    flackert der halbe Bildschirm bei jedem Re-Render einmal auf.            */
-const REVEAL_TARGETS='.card,.mesh-hero,.gtiles,.kpi-card,.prog,.ana-muscle,.wa-card,.hist-calendar,.hist-session,.deload-banner,.coach-card';
+const REVEAL_TARGETS='.card,.mesh-hero,.gtiles,.kpi-card,.prog,.ana-muscle,.wa-card,.hist-calendar,.hs-group,.deload-banner,.coach-card';
 let revealObserver=null;
 function attachReveals(root){
   const scope=root||document;
@@ -4593,11 +4599,7 @@ function svgChart(data,opts={}){
   if(opts.showDots!==false){
     pts.forEach((p,i)=>{
       const last=i===pts.length-1;
-      let dc=dotColor;
-      if(opts.colorDots){
-        const pct=(data[i].v-mn)/range;
-        dc=pct>=0.8?'#2ee06a':pct>=0.5?'#4ea1ff':pct>=0.3?'#ffb020':'#ff3b5c';
-      }
+      const dc=dotColor;
       const delay=(0.35+(i/Math.max(1,pts.length-1))*0.75).toFixed(2);
       /* Der jüngste Punkt ist gefüllt: er ist der Stand, alles davor Verlauf. */
       svg+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${last?4.5:3.5}" `+
@@ -4704,7 +4706,7 @@ function getWeeklyVolume(includeSecondary){
   Object.values(vol).forEach(v=>{v.sets=Math.round(v.sets*10)/10;v.indirect=Math.round(v.indirect*10)/10});
   return vol;
 }
-function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Gute Besserung vorbei — back to grind! 💪')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank gemeldet — gute Besserung! 🤒')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?(sets.reduce((a,s)=>a+s.rir,0)/sets.length).toFixed(1):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tClass=trend==='up'?'trend-up':trend==='down'?'trend-down':'trend-flat';const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv" style="color:var(--orange)">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv ${tClass}">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;const chartData=sets.map(s=>({v:s.w,label:''}));h+=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span>Median: ${median}kg</span></div>${svgChart(chartData,{h:130,color:'var(--blue)',median:median,colorDots:true,showGrid:true,unit:' kg'})}</div>`;const rmSeries=sets.filter(s=>s.w>0&&s.r>0&&s.r<=15).map(s=>({v:calc1RM(s.w,s.r),label:s.date||''}));if(rmSeries.length>=3){const firstRm=rmSeries[0].v,lastRm=rmSeries[rmSeries.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const cls=delta>1?'trend-up':delta<-1?'trend-down':'trend-flat';h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span class="${cls}">${delta>0?'+':''}${delta.toFixed(1)}% seit Beginn</span></div>${svgChart(rmSeries,{h:120,color:'var(--orange)',showGrid:true,unit:' kg'})}<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(s.w)}kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
+function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Gute Besserung vorbei — back to grind! 💪')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank gemeldet — gute Besserung! 🤒')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?de1(sets.reduce((a,s)=>a+s.rir,0)/sets.length):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;const chartData=sets.map(s=>({v:s.w,label:''}));h+=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span>Median: ${median}kg</span></div>${svgChart(chartData,{h:130,color:'var(--blue)',median:median,showGrid:true,unit:' kg'})}</div>`;const rmSeries=sets.filter(s=>s.w>0&&s.r>0&&s.r<=15).map(s=>({v:calc1RM(s.w,s.r),label:s.date||''}));if(rmSeries.length>=3){const firstRm=rmSeries[0].v,lastRm=rmSeries[rmSeries.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${svgChart(rmSeries,{h:120,color:'var(--orange)',showGrid:true,unit:' kg'})}<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(s.w)}kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
 let planDirty=false;
 function renderPlanSaveState(){
   const btn=document.getElementById('plan-save-btn');
@@ -5787,7 +5789,24 @@ function histDateKey(day,month,year){
   return String(day).padStart(2,'0')+'.'+String(month+1).padStart(2,'0')+'.'+year;
 }
 function selectCalDay(d){calSelDay=calSelDay===d?null:d;renderHist()}
-function delSess(i){if(!confirm('Session löschen?'))return;addTombstone('history',histSessionKey(D.history[i]));D.history.splice(i,1);save();renderHist();renderDash();renderAna();toast('Session gelöscht')}
+/* Löschen fragt nicht nach, es lässt sich zurücknehmen — wie das Überspringen
+   einer Übung. Der Grabstein der alten Kennung bleibt stehen: Ist er schon in
+   der Cloud, nimmt ihn kein Abgleich mehr zurück, und die Session wäre mit ihm
+   sofort wieder weg. Zurück kommt sie deshalb unter neuer Kennung. */
+function delSess(i){
+  const s=D.history[i];
+  if(!s)return;
+  addTombstone('history',histSessionKey(s));
+  D.history.splice(i,1);
+  histOpenKey=null;
+  save();renderHist();renderDash();renderAna();
+  toastAction('Session gelöscht','Rückgängig',()=>{
+    s.id=newSessionId();
+    s.updatedAt=Date.now();
+    D.history.push(s);
+    save();renderHist();renderDash();renderAna();
+  });
+}
 /* PB-082: Eine beendete Session war unantastbar. Wer sich bei einem einzigen
    Satz vertippte — 100 statt 10 kg — hatte genau eine Möglichkeit, das
    loszuwerden: die ganze Einheit löschen. Damit war die Korrektur teurer als
@@ -6001,7 +6020,7 @@ function sessionPRs(session){
     });
     if(prev>0&&w>prev)out.push({ex,w,prev});
   });
-  return out.sort((a,b)=>(b.w-b.prev)-(a.w-a.prev)).slice(0,3);
+  return out;
 }
 /* Die letzte Session desselben Trainingstags — die einzige sinnvolle
    Vergleichsgröße. Ein Beintag gegen einen Pushtag zu stellen erzeugt
@@ -6066,39 +6085,85 @@ function renderHist(){
     if(isToday)cls.push('today');
     if(isSel)cls.push('sel');
     gh+=`<button type="button" class="${cls.join(' ')}" onclick="selectCalDay(${d})">`+
-      `<span class="dn">${d}</span>${idx?`<span class="dv">${t>=1?t.toFixed(t>=10?0:1)+'t':'·'}</span>`:''}</button>`;
+      `<span class="dn">${d}</span>${idx?`<span class="dv">${t>=1?(t>=10?Math.round(t):de1(t))+'t':'·'}</span>`:''}</button>`;
   }
   grid.innerHTML=gh;
   const sum=document.getElementById('cal-sum');
   if(sum)sum.innerHTML=`<div><b>${monthSessions}</b><span>SESSIONS</span></div>`+
-    `<div><b>${(monthVol/1000).toFixed(monthVol/1000>=10?0:1)}</b><span>TONNEN</span></div>`+
+    `<div><b>${monthVol/1000>=10?Math.round(monthVol/1000):de1(monthVol/1000)}</b><span>TONNEN</span></div>`+
     `<div><b>${monthSessions?Math.round(monthMin/monthSessions):0}</b><span>Ø MINUTEN</span></div>`;
   const meta=document.getElementById('cal-meta');
   if(meta)meta.textContent=`${months[calMonth]} ${calYear} · ${monthSessions} ${monthSessions===1?'Session':'Sessions'}`;
-  const listTitle=document.getElementById('h-list-title');
-  if(listTitle)listTitle.innerHTML=(calSelDay!==null?`${calSelDay}. ${months[calMonth]}`:'Alle Sessions')+' <div class="ln"></div>';
-  let sessions=hist.map((s,i)=>({...s,__i:i})).filter(s=>{
+  const sessions=hist.map((s,i)=>({...s,__i:i})).filter(s=>{
     const d=parseGermanDate(s.date);
     if(!d)return false;
     if(calSelDay!==null)return d.getFullYear()===calYear&&d.getMonth()===calMonth&&d.getDate()===calSelDay;
-    return d.getFullYear()===calYear&&d.getMonth()===calMonth;
+    return true;
   }).sort((a,b)=>(parseGermanDate(b.date)||0)-(parseGermanDate(a.date)||0));
-  if(!sessions.length){list.innerHTML='<div class="empty">Keine Sessions in dieser Auswahl.<br><br>Wähle einen anderen Monat oder tippe den markierten Tag erneut an.</div>';return}
-  list.innerHTML=sessions.map(s=>histSessionHTML(s)).join('');
+  if(!sessions.length){
+    /* Ohne Sessions sagt schon die Serien-Karte, was fehlt. */
+    list.innerHTML=calSelDay!==null?'<div class="empty">Keine Sessions an diesem Tag.<br><br>Tippe den markierten Tag erneut an, dann siehst du wieder alle.</div>':'';
+    return;
+  }
+  /* Alle Monate stehen untereinander, je mit Kopf; ein gewählter Tag bildet
+     eine Gruppe für sich. Der Kalender dient nur noch zum Springen. */
+  const groups=[];
+  sessions.forEach(s=>{
+    const d=parseGermanDate(s.date);
+    const key=calSelDay!==null?'tag':d.getFullYear()+'-'+d.getMonth();
+    let g=groups[groups.length-1];
+    if(!g||g.key!==key){g={key,d,items:[]};groups.push(g)}
+    g.items.push(s);
+  });
+  list.innerHTML=groups.map(g=>{
+    const n=g.items.length;
+    const name=(calSelDay!==null?g.d.getDate()+'. ':'')+months[g.d.getMonth()];
+    return`<div class="hs-mon"><h2>${name}<small>${g.d.getFullYear()}</small></h2><span>${n} ${n===1?'Session':'Sessions'}</span></div>`+
+      `<div class="hs-group">${g.items.map(histSessionHTML).join('')}</div>`;
+  }).join('');
   runBarGrows(list);
 }
+/* Eine Zeile je Session. Der Körper mit Übungen und Knöpfen entsteht erst beim
+   Aufklappen (histToggle); offen ist immer höchstens eine. Gemerkt wird der
+   Sessionschlüssel, nicht die Position: Speichern und Cloud-Abgleich
+   verschieben das Array. */
+let histOpenKey=null;
 function histSessionHTML(s){
   const d=parseGermanDate(s.date);
-  const months=['JAN','FEB','MÄR','APR','MAI','JUN','JUL','AUG','SEP','OKT','NOV','DEZ'];
   const vol=sessionVolume(s);
   const strength=strengthSets(s.sets||[]);
   const cMin=cardioMinutes(s.sets);
   const prev=previousSameSession(s);
   const prevVol=prev?sessionVolume(prev):0;
   const pct=prevVol>0?Math.round(((vol-prevVol)/prevVol)*100):null;
-  const cls=pct===null?'flat':pct>0?'up':pct<0?'down':'flat';
-  const prs=sessionPRs(s);
-  const avgRir=strength.length?(strength.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/strength.length).toFixed(1):null;
+  const avgRir=strength.length?de1(strength.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/strength.length):null;
+  const n=(s.sets||[]).length;
+  const open=histOpenKey!==null&&histOpenKey===histSessionKey(s);
+  /* Die Veränderung steht weiß mit grauem Pfeil — Rot, Grün und Bernstein
+     gehören den Volumen-Grenzen. */
+  const delta=pct===null?'':`<span class="hs-dl">${pct===0?'':`<svg viewBox="0 0 12 12" role="img" aria-label="${pct>0?'mehr':'weniger'} Volumen"><path d="${pct>0?'M6 2 11 10H1z':'M6 10 1 2h10z'}"/></svg>`}${Math.abs(pct)}\u00a0%</span>`;
+  const meta=`<span><b>${n}</b> ${n===1?'Satz':'Sätze'}</span>`+
+    `<span><b>${de1(vol/1000)}</b> t</span>`+
+    (s.duration?`<span><b>${esc(s.duration)}</b> min</span>`:'')+
+    (avgRir?`<span>RIR <b>${avgRir}</b></span>`:'')+
+    (cMin?`<span><b>${esc(cMin)}</b> min Cardio</span>`:'');
+  return`<div class="hs-item" data-i="${s.__i}">`+
+    `<button type="button" class="hs-row" aria-expanded="${open}" onclick="histToggle(${s.__i})">`+
+      `<span class="hs-d">${d?d.getDate():'–'}</span>`+
+      `<span class="hs-n">${esc(planDisplayName(s.planKey||'Workout'))}</span>`+
+      delta+
+      `<span class="hs-m">${meta}</span>`+
+      `<span class="hs-c"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>`+
+    `</button>`+
+    `<div class="hs-body"${open?'':' hidden'}>${open?histBodyHTML(s):''}</div>`+
+  `</div>`;
+}
+/* Der aufgeklappte Teil: wogegen verglichen wird, die Übungen mit direktem
+   Vergleich zur letzten gleichen Einheit, dann Korrigieren und Löschen. */
+function histBodyHTML(s){
+  const d=parseGermanDate(s.date);
+  const prev=previousSameSession(s);
+  const prs=new Set(sessionPRs(s).map(p=>p.ex));
   /* Übungszeilen mit direktem Vergleich zur letzten gleichen Einheit. Ohne
      Vorgänger steht nur der Wert — eine erfundene Null wäre schlimmer als
      gar keine Angabe. */
@@ -6117,24 +6182,38 @@ function histSessionHTML(s){
     const old=p.length?value(p):null;
     const unit=isC?' min':bodyweight?' Wdh':' kg';
     const dir=old===null?'':curMax>old?'up':curMax<old?'down':'flat';
-    const cmp=old===null?`<span class="w">${esc(curMax)}${unit} · ${cur.length}×</span>`
-      :`<span class="w"><b class="${dir}">${esc(curMax)}</b> ${dir==='flat'?'=':'←'} ${esc(old)}${unit}</span>`;
-    return`<div class="hex" onclick="showExHist('${jsStr(ex)}')"><span class="n">${esc(ex)}</span>${cmp}</div>`;
+    const cmp=old===null?`<span class="w">${esc(de(curMax))}${unit} · ${cur.length}×</span>`
+      :`<span class="w"><b>${esc(de(curMax))}</b> ${dir==='flat'?'=':'←'} ${esc(de(old))}${unit}</span>`;
+    return`<button type="button" class="hex" onclick="showExHist('${jsStr(ex)}')"><span class="n">${esc(ex)}</span>${cmp}<span class="pr">${prs.has(ex)?'<i>PR</i>':''}</span></button>`;
   }).join('');
-  return`<div class="hist-session">`+
-    `<div class="hs-h">`+
-      `<div class="hs-d"><div class="dd">${d?d.getDate():'–'}</div><div class="mm">${d?months[d.getMonth()]:''}</div></div>`+
-      `<div class="hs-b"><div class="n">${esc(planDisplayName(s.planKey||'Workout'))}</div>`+
-      `<div class="m">${(s.sets||[]).length} ${(s.sets||[]).length===1?'Satz':'Sätze'} · ${(vol/1000).toFixed(1)} t`+
-      `${s.duration?` · ${esc(s.duration)} min`:''}${avgRir?` · Ø RIR ${esc(avgRir)}`:''}${cMin?` · ${esc(cMin)} min Cardio`:''}</div>`+
-      `${prev?`<div class="vs">vs. ${esc(prev.date)}</div>`:''}</div>`+
-      `${pct===null?'':`<div class="hs-delta ${cls}">${pct>0?'+':''}${pct}%<small>VOLUMEN</small></div>`}`+
-      `<button type="button" class="hs-edit" title="Session korrigieren" aria-label="Session korrigieren" onclick="event.stopPropagation();openHistEdit(${s.__i})">${icon('edit',15)}</button>`+
-      `<button type="button" class="hs-del" title="Session löschen" onclick="event.stopPropagation();delSess(${s.__i})">×</button>`+
-    `</div>`+
-    (prs.length?`<div class="hs-prs">${prs.map(p=>`<span class="pr">PR ${esc(p.ex)} ${esc(p.w)} kg</span>`).join('')}</div>`:'')+
-    `<div class="hs-ex">${rows}</div>`+
-  `</div>`;
+  const was=prev?parseGermanDate(prev.date):null;
+  const vs=prev?`<div class="hs-cmp">Volumen im Vergleich zu ${esc(planDisplayName(prev.planKey||'Workout'))} vom `+
+    `${was?esc(was.toLocaleDateString('de-DE',{day:'numeric',month:'long',year:d&&was.getFullYear()===d.getFullYear()?undefined:'numeric'})):esc(prev.date)}</div>`:'';
+  return vs+rows+
+    `<div class="hs-act">`+
+      `<button type="button" class="hs-fix" onclick="openHistEdit(${s.__i})">${icon('edit',18)}Korrigieren</button>`+
+      `<button type="button" class="hs-rm" onclick="delSess(${s.__i})">${icon('trash',18)}Löschen</button>`+
+    `</div>`;
+}
+function histToggle(i){
+  const list=document.getElementById('hl');
+  const s=D.history[i];
+  if(!list||!s)return;
+  const key=histSessionKey(s);
+  list.querySelectorAll('.hs-row[aria-expanded="true"]').forEach(r=>{
+    r.setAttribute('aria-expanded','false');
+    const b=r.parentNode.querySelector('.hs-body');
+    b.hidden=true;b.innerHTML='';
+  });
+  if(histOpenKey===key){histOpenKey=null;return}
+  histOpenKey=key;
+  const el=list.querySelector(`.hs-item[data-i="${i}"]`);
+  if(!el)return;
+  el.querySelector('.hs-row').setAttribute('aria-expanded','true');
+  const b=el.querySelector('.hs-body');
+  b.innerHTML=histBodyHTML({...s,__i:i});
+  b.hidden=false;
+  el.scrollIntoView({block:'nearest',behavior:prefersReducedMotion()?'auto':'smooth'});
 }
 /* Der Kopf des Screens: Serie in Wochen als Heldenzahl, darunter eine
    Wochen-Heatmap. Sie beantwortet die Frage, die eine Sessionliste nicht
@@ -6161,7 +6240,7 @@ function renderHistStreak(){
   const level=n=>n<=0?'':n===1?'l1':n===2?'l2':'l3';
   const total=hist.length;
   const activeWeeks=weeks.size||1;
-  const perWeek=(total/Math.max(1,Math.min(WEEKS,activeWeeks))).toFixed(1);
+  const perWeek=de1(total/Math.max(1,Math.min(WEEKS,activeWeeks)));
   const durs=hist.map(s=>parseInt(s.duration)||0).filter(x=>x>0);
   const avgMin=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
   mount.innerHTML=`<div class="mesh-hero streak-hero">`+
@@ -6205,12 +6284,12 @@ function renderBio(){
       const perWeek=weeks?Math.round(delta/weeks*100)/100:0;
       const bmiState=!bmi?null:bmi<18.5?{t:'niedrig',c:'#4ea1ff'}:bmi<25?{t:'normal',c:'#2ee06a'}:bmi<30?{t:'erhöht',c:'#ffb020'}:{t:'hoch',c:'#ff3b5c'};
       stats.innerHTML=`<div class="gtiles${bmi?' three':''}" style="margin-bottom:12px">`+
-        `<div class="gtile"><div class="gl">Aktuell</div><div class="gv">${esc(lastW.toFixed(1))}<small>kg</small></div>`+
+        `<div class="gtile"><div class="gl">Aktuell</div><div class="gv">${esc(de1(lastW))}<small>kg</small></div>`+
         `<div class="gd">${esc(ws[ws.length-1].date)}</div></div>`+
         `<div class="gtile"><div class="gl">Veränderung</div>`+
-        `<div class="gv" style="color:${delta===0?'var(--text)':delta<0?'#2ee06a':'#ffb020'}">${delta>0?'+':delta<0?'−':'±'}${esc(Math.abs(delta).toFixed(1))}<small>kg</small></div>`+
-        `<div class="gd">${weeks?esc(perWeek>0?'+':perWeek<0?'−':'±')+esc(Math.abs(perWeek).toFixed(2))+' kg/Woche':'erst ein Eintrag'}</div></div>`+
-        (bmiState?`<div class="gtile"><div class="gl">BMI</div><div class="gv">${esc(bmi.toFixed(1))}</div>`+
+        `<div class="gv" style="color:${delta===0?'var(--text)':delta<0?'#2ee06a':'#ffb020'}">${delta>0?'+':delta<0?'−':'±'}${esc(de1(Math.abs(delta)))}<small>kg</small></div>`+
+        `<div class="gd">${weeks?esc(perWeek>0?'+':perWeek<0?'−':'±')+esc(de(Math.abs(perWeek).toFixed(2)))+' kg/Woche':'erst ein Eintrag'}</div></div>`+
+        (bmiState?`<div class="gtile"><div class="gl">BMI</div><div class="gv">${esc(de1(bmi))}</div>`+
           `<div class="gd" style="color:${bmiState.c}">${esc(bmiState.t)}</div></div>`:'')+
         `</div>`;
     }
@@ -6222,7 +6301,7 @@ function renderBio(){
     const med=vals.slice().sort((a,b)=>a-b)[Math.floor(vals.length/2)];
     const chartData=ws.map(w=>({v:parseFloat(w.kg)||0,label:String(w.date||'').substring(0,5)}));
     ca.innerHTML=`<div class="prog"><div class="prog-h">Gewichtsverlauf <span style="color:var(--text3);font-family:'JetBrains Mono',monospace;font-size:11px">${ws.length} Einträge</span></div>`+
-      svgChart(chartData,{h:150,color:'var(--accent)',median:med,colorDots:false,showGrid:true,xLabels:true,unit:' kg'})+`</div>`;
+      svgChart(chartData,{h:150,color:'var(--accent)',median:med,showGrid:true,xLabels:true,unit:' kg'})+`</div>`;
   }
   const ea=document.getElementById('bio-entries-area');
   if(!ea)return;
@@ -6234,7 +6313,7 @@ function renderBio(){
     [...ws].reverse().map((w,i)=>{
       const ri=ws.length-1-i;
       const diff=ri>0?(parseFloat(w.kg)-parseFloat(ws[ri-1].kg)):null;
-      const ds=diff===null?'erster Eintrag':(diff>0?'+':diff<0?'−':'±')+Math.abs(diff).toFixed(1)+' kg';
+      const ds=diff===null?'erster Eintrag':(diff>0?'+':diff<0?'−':'±')+de1(Math.abs(diff))+' kg';
       const dc=diff===null?'var(--text3)':diff<0?'#2ee06a':diff>0?'#ffb020':'var(--text3)';
       return`<div class="sr${i===ws.length-1?' sr-last':''}">`+
         `<div class="sr-bd"><b>${esc(w.kg)} kg</b><span>${esc(w.date)}${w.quelle==='egym'?(w.bioIdx===null?' · EGYM':' · EGYM · Handeintrag desselben Tages liegt darunter'):''}</span></div>`+
@@ -7904,7 +7983,7 @@ function bodyMapSVG(m){
   const armDiff=m.mual&&m.muar?Math.abs(m.mual-m.muar):0;
   const legDiff=m.mubl&&m.mubr?Math.abs(m.mubl-m.mubr):0;
   if(armDiff>0.3||legDiff>0.3){
-    h+=`<div style="margin-top:8px;padding:8px 10px;background:rgba(255,176,32,.10);border-radius:10px;font-size:11px;color:var(--orange)">${armDiff>0.3?`Arme: ${armDiff.toFixed(1)}kg Differenz. `:''}${legDiff>0.3?`Beine: ${legDiff.toFixed(1)}kg Differenz.`:''}</div>`;
+    h+=`<div style="margin-top:8px;padding:8px 10px;background:rgba(255,176,32,.10);border-radius:10px;font-size:11px;color:var(--orange)">${armDiff>0.3?`Arme: ${de1(armDiff)}kg Differenz. `:''}${legDiff>0.3?`Beine: ${de1(legDiff)}kg Differenz.`:''}</div>`;
   }else if(m.mual&&m.muar){
     h+='<div style="margin-top:8px;padding:8px 10px;background:rgba(52,211,153,.10);border-radius:10px;font-size:11px;color:var(--green)">Gute L/R Balance</div>';
   }
@@ -8067,7 +8146,7 @@ function renderEgym(){
         const first=pts[0].v,last=pts[pts.length-1].v;
         const delta=Math.round((last-first)*10)/10;
         ch+=`<div class="prog" style="margin-bottom:8px"><div class="prog-h">${cs.l}<span>${last}${delta?` <small style="color:var(--text3)">(${delta>0?'+':''}${delta})</small>`:''}</span></div>`+
-          svgChart(pts,{h:100,color:cs.c,median:med,showGrid:true,colorDots:false,xLabels:pts.length<=10})+`</div>`;
+          svgChart(pts,{h:100,color:cs.c,median:med,showGrid:true,xLabels:pts.length<=10})+`</div>`;
       }
     });
     ca.innerHTML=ch;
@@ -8352,16 +8431,16 @@ function renderAnaReport(){
     `<div class="cap">Diese Woche</div>`+
     `<div class="mesh-row"><div class="mesh-num">${esc(grade)}</div>`+
     `<div class="mesh-side"><div class="u">TRAININGSWOCHE</div>`+
-    `<div class="o">${cur.length} ${cur.length===1?'Einheit':'Einheiten'} · ${(tonCur/1000).toFixed(1)} t · Ø RIR ${rir?rir.toFixed(1):'—'}</div></div></div>`+
+    `<div class="o">${cur.length} ${cur.length===1?'Einheit':'Einheiten'} · ${de1(tonCur/1000)} t · Ø RIR ${rir?de1(rir):'—'}</div></div></div>`+
     `<div class="mesh-note">${headline}</div></div>`+
     `<div class="gtiles">`+
-      `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup" data-count="${(tonCur/1000).toFixed(1)}" data-count-dec="1">0</span><small>t</small></div>`+
+      `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup" data-count="${(tonCur/1000).toFixed(1)}" data-count-dec="1" data-count-comma="1">0</span><small>t</small></div>`+
       `<div class="gd" style="color:${tonTrend===null?'var(--text3)':tonTrend<0?'var(--red)':'var(--green)'}">${tonTrend===null?'keine Vorwoche':(tonTrend>0?'+':'')+tonTrend+' % zur Vorwoche'}</div></div>`+
       `<div class="gtile"><div class="gl">Arbeitssätze</div><div class="gv"><span class="countup" data-count="${sets}">0</span></div>`+
       `<div class="gd" style="color:${st.color}">${esc(st.label)} · Ziel ${lm.mav}</div></div>`+
-      `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${rir?rir.toFixed(1):'—'}</div>`+
+      `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${rir?de1(rir):'—'}</div>`+
       `<div class="gd">${!work.length?'noch keine Sätze':rir<1.5?'nah am Versagen':rir<3?'sauber gesteuert':'viel Luft nach oben'}</div></div>`+
-      `<div class="gtile"><div class="gl">Zeit</div><div class="gv">${(minutes/60).toFixed(1)}<small>h</small></div>`+
+      `<div class="gtile"><div class="gl">Zeit</div><div class="gv">${de1(minutes/60)}<small>h</small></div>`+
       `<div class="gd">${cur.length?'Ø '+Math.round(minutes/cur.length)+' min':'—'}</div></div>`+
     `</div>`;
   runCountUps(mount);
@@ -8396,7 +8475,7 @@ function renderAna(){
     else mc.innerHTML=weeklyMuscleBarsHTML()+`<div class="cap" style="margin:16px 2px 10px">Details je Muskelgruppe</div>`+rows.map(([key,m])=>{
       const byEx={};
       m.sets.forEach(s=>{if(!byEx[s.ex])byEx[s.ex]=[];byEx[s.ex].push(s)});
-      return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><span class="ic-wrap">${icon(key,20)}</span><div class="ana-muscle-name">${esc(m.name)}</div><div class="ana-muscle-cnt">${m.ex.size===1?'1 Übung':m.ex.size+' Übungen'} · ${m.sets.length===1?'1 Satz':m.sets.length+' Sätze'}</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=strengthSets(sets).filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length).toFixed(1):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExDemo('${jsStr(ex)}','${jsStr(key)}','main')" style="font-weight:700;font-size:13px;cursor:pointer">${esc(ex)}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${esc(max)}kg</span></div><div style="font-size:11px;color:var(--text2);margin:4px 0">${sets.length===1?'1 Satz':sets.length+' Sätze'} · Ø RIR ${esc(avg)}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true,unit:' kg'}):'<div style="font-size:11px;color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
+      return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><span class="ic-wrap">${icon(key,20)}</span><div class="ana-muscle-name">${esc(m.name)}</div><div class="ana-muscle-cnt">${m.ex.size===1?'1 Übung':m.ex.size+' Übungen'} · ${m.sets.length===1?'1 Satz':m.sets.length+' Sätze'}</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=strengthSets(sets).filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?de1(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExDemo('${jsStr(ex)}','${jsStr(key)}','main')" style="font-weight:700;font-size:13px;cursor:pointer">${esc(ex)}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${esc(max)}kg</span></div><div style="font-size:11px;color:var(--text2);margin:4px 0">${sets.length===1?'1 Satz':sets.length+' Sätze'} · Ø RIR ${esc(avg)}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true,unit:' kg'}):'<div style="font-size:11px;color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
     }).join('');
   }
   renderAnaReport();
@@ -8545,7 +8624,6 @@ function buildWeekGauge(totalSets,rohSaetze){
      Minimum — aber das ist kein Mangel, es ist ein leerer Anfang. Grau und
      ohne „fehlt"-Hinweise, bis der erste Satz gezählt ist. */
   const leer=gesamt>0&&groups.every(x=>x.sets<=0);
-  const de=n=>String(n).replace('.',',');
   const nennen=(list,grenze)=>list.map(x=>`${esc(muscleName(x.g))} <b>${de(x.sets)}</b>/${grenze(x)}`).join(', ');
   const balken=groups.map(x=>{
     const zeigeMin=x.st.key==='low'&&!leer;
@@ -8738,7 +8816,7 @@ function detectDeload(){
   cur.forEach(s=>(s.sets||[]).forEach(x=>{if(x.type==='main'&&x.rir!==undefined)rirVals.push(x.rir)}));
   if(rirVals.length>=8){
     const avgRir=rirVals.reduce((a,b)=>a+b,0)/rirVals.length;
-    if(avgRir<1.2)reasons.push('Ø RIR diese Woche nur '+avgRir.toFixed(1)+' — du trainierst sehr nah am Muskelversagen');
+    if(avgRir<1.2)reasons.push('Ø RIR diese Woche nur '+de1(avgRir)+' — du trainierst sehr nah am Muskelversagen');
   }
   const vol=getWeeklyVolume();
   const MRV={chest:22,back:23,legs:20,shoulders:20,arms:18,core:16};
@@ -8841,7 +8919,6 @@ function renderDash(){
   /* Drei Kennzahlen in einer Karte. Die Intensität steht als Zeile unter dem
      Ø RIR, weil beide aus denselben Sätzen rechnen. Die Veränderung zur
      Vorwoche ist grau: Grün und Rot gehören den Volumenzuständen. */
-  const de=n=>String(n).replace('.',',');
   const tonSub=tonPrev
     ? `${tonTrend>0?'+':tonTrend<0?'−':''}${Math.abs(tonTrend)}\u00a0% zur Vorwoche`
     : 'noch keine Vorwoche';
