@@ -207,17 +207,24 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .btn-s{width:auto;display:inline-block;margin-top:0;padding:9px 15px;font-size:13px;border-radius:12px}
 
 /* tabs (plan days) */
-.dtabs{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none;padding:2px 0 6px}
+.dtabs{display:flex;gap:4px;margin-bottom:12px;padding:4px;border-radius:20px;background:var(--bg3);box-shadow:var(--edge);overflow-x:auto;scrollbar-width:none}
 .dtabs::-webkit-scrollbar{display:none}
+/* Bis drei Tage teilen sich die Breite gleich; ab dem vierten läuft die Leiste
+   seitlich weiter, und ein weicher Rand zeigt, wo es weitergeht (renderPlan). */
 .dtab{
-  flex-shrink:0;padding:11px 16px;border-radius:15px;font-size:13px;font-weight:700;
-  background:var(--bg2);border:1px solid var(--line);color:var(--text2);cursor:pointer;
-  transition:.2s var(--ease);white-space:nowrap;min-width:120px;
+  flex:1 0 84px;min-height:52px;padding:6px 4px;border-radius:14px;border:0;background:none;color:var(--text2);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-family:inherit;font-size:14px;line-height:1.2;font-weight:600;white-space:nowrap;
+  transition:background .2s var(--ease),color .2s var(--ease),transform var(--dur-micro) var(--sp);
 }
-.dtab:active{transform:scale(.96)}
-.dtab.on{background:color-mix(in srgb,var(--accent) 16%,var(--bg2));border-color:color-mix(in srgb,var(--accent) 42%,transparent);color:var(--text);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent)}
-.dtab .dn{font-size:10px;display:block;color:var(--text3);margin-top:3px;font-weight:500}
-.dtab.on .dn{color:color-mix(in srgb,var(--accent) 70%,var(--text2))}
+.dtab:active{transform:scale(.97)}
+.dtab.on{background:var(--bg4);box-shadow:var(--edge-strong),0 1px 2px rgba(0,0,0,.3);color:var(--text)}
+.dtab>*{max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.dtab .dn{font-size:12px;line-height:1.2;font-weight:500;color:var(--t3)}
+.dtab.on .dn{color:var(--text2)}
+.dtabs.fade-r{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 24px),transparent)}
+.dtabs.fade-l{-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px);mask-image:linear-gradient(90deg,transparent,#000 24px)}
+.dtabs.fade-l.fade-r{-webkit-mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent);mask-image:linear-gradient(90deg,transparent,#000 24px,#000 calc(100% - 24px),transparent)}
 
 /* exercise rows */
 .exr{background:var(--bg2);border:1px solid var(--line);border-radius:16px;margin-bottom:9px;overflow:hidden;transition:border-color .2s}
@@ -241,8 +248,8 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .exr-n .uni{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:800;letter-spacing:.04em;
   color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);
   border-radius:6px;padding:1px 5px;margin-left:6px;vertical-align:1px;white-space:nowrap}
-.exr-m{font-size:11.5px;color:var(--text2);margin-top:3px;display:flex;gap:7px;align-items:center;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;min-width:0}
-.rb{font-size:10px;padding:2px 7px;border-radius:6px;background:var(--nd);color:var(--accent);font-weight:700;font-family:'JetBrains Mono',monospace}
+.exr-m{font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.4;font-variant-numeric:tabular-nums;color:var(--text2);margin-top:2px;display:flex;flex-wrap:wrap;gap:0 12px;min-width:0}
+.exr-m b{font-weight:600;color:var(--text)}
 .exr-a{color:var(--text3);font-size:16px;transition:transform .25s var(--ease)}
 .exr.open .exr-a{transform:rotate(180deg)}
 .exr-d{display:none;padding:0 13px 13px}
@@ -250,9 +257,12 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .exr-note{font-size:12.5px;color:var(--text2);background:var(--bg3);border-radius:12px;padding:9px 11px;line-height:1.5;border-left:2px solid var(--accent);margin-bottom:6px}
 .exr-note.pn{border-left-color:var(--orange)}
 .exr-note.mn{border-left-color:var(--blue)}
-.exr-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
-.exr-act{width:32px;height:32px;border-radius:10px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;background:var(--bg3);color:var(--text2);transition:.15s}
-.exr-act:active{transform:scale(.9);background:var(--bg4)}
+.exr-actions{display:flex;gap:4px;flex-shrink:0;align-items:center;margin-right:-6px}
+.exr-act{width:44px;height:44px;border-radius:999px;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;font-size:18px;line-height:1;background:none;color:var(--text2);transition:transform var(--dur-micro) var(--sp),background .15s}
+.exr-act:active{transform:scale(.94);background:rgba(255,255,255,.08)}
+/* Sortier-Modus: zwei Pfeile je Zeile; am Rand der Liste bleibt der Pfeil als blasse Lücke stehen, damit der andere nicht springt. */
+.exr-act.mv{background:rgba(255,255,255,.06);box-shadow:var(--edge);color:var(--text)}
+.exr-act:disabled{opacity:.3;pointer-events:none}
 
 /* inputs */
 .ir{display:flex;gap:9px;align-items:flex-end;margin-bottom:10px}
@@ -359,7 +369,7 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .mdl{
   background:var(--bg2);border:1px solid var(--line);border-bottom:none;
-  border-radius:26px 26px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;
+  border-radius:26px 26px 0 0;width:100%;max-width:480px;max-height:92vh;max-height:92dvh;overflow-y:auto;
   overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
   padding:22px 16px max(env(safe-area-inset-bottom),18px);animation:su .32s var(--sp);
   box-shadow:0 -20px 60px rgba(0,0,0,.5);
@@ -551,8 +561,9 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .he-nr{flex:0 0 26px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding-bottom:12px}
 
 /* plan mgmt + drawer */
-.plan-mgmt{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.plan-drawer{padding:14px 16px 16px;border-radius:var(--radius)}
+.plan-drawer{padding:14px 16px 16px;border-radius:var(--radius);
+  /* Sichtbar statt abgeschnitten: sonst bliebe der Startknopf nicht am Bildschirmrand kleben (position:sticky). */
+  overflow:visible}
 .plan-drawer-toggle{width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;color:var(--text);padding:2px 2px 8px;cursor:pointer}
 .plan-drawer-toggle span:first-child{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);font-weight:800}
 .plan-drawer-toggle #plan-drawer-meta{margin-left:auto;font-size:12px;color:var(--text3);font-weight:600}
@@ -560,7 +571,23 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .plan-drawer.open .plan-drawer-arrow{transform:rotate(180deg)}
 .plan-drawer-content{display:none;padding-top:10px}
 .plan-drawer.open .plan-drawer-content{display:block;animation:screenIn .22s ease}
-.plan-drawer .plan-mgmt{margin-top:0!important}
+/* Kopf des Plans: ein Knopf (+ Übung) und ein Menü (⋯). Im Sortier-Modus nennt er nur den Modus; „Fertig“ steht im festen Knopf unten. */
+.plan-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-height:44px;margin-bottom:12px}
+.plan-bar[hidden],.plan-go[hidden]{display:none}
+.plan-add{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:var(--edge-strong);color:var(--text);cursor:pointer;font-family:inherit;font-size:14px;font-weight:600}
+.plan-more{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:var(--edge-strong);color:var(--text);cursor:pointer}
+.plan-add:active,.plan-more:active{transform:scale(.97)}
+.plan-sort-t{margin-right:auto;font-size:13px;line-height:16px;color:var(--text2)}
+/* Der Startknopf klebt über der unteren Leiste, solange der Plan im Bild ist (--nav-h: attachNavHeight). */
+.plan-go{position:sticky;bottom:calc(var(--nav-h,68px) + 4px);z-index:5;margin:8px -16px 0;padding:20px 16px 8px;background:linear-gradient(180deg,transparent,var(--bg2) 20px)}
+.plan-go .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;margin:0;padding:0 16px;border-radius:14px;background:var(--accent);
+  font-size:16px;font-weight:700;letter-spacing:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(0,0,0,.4)}
+.plan-go .btn:active{filter:none}
+/* Tageskopf: die Satzzahl ist die große Zahl, daneben Übungen und Dauer — das stand vorher klein in den Tabs. */
+.plan-day{display:flex;align-items:flex-end;gap:12px;margin:4px 0 8px}
+.plan-day-n{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:.82;padding-top:4px;font-variant-numeric:tabular-nums;color:var(--text)}
+.plan-day-tx{display:flex;flex-direction:column;gap:2px;padding-bottom:2px;font-size:13px;line-height:1.3;color:var(--text2)}
+.plan-day-tx b{font-size:17px;line-height:1.25;font-weight:600;color:var(--text)}
 .plan-save-btn{background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 78%,#000))!important;color:#0a0b0e!important;box-shadow:0 10px 24px var(--accent-glow)}
 .plan-save-state{margin:-6px 0 12px;padding:10px 13px;border-radius:13px;background:color-mix(in srgb,var(--green) 10%,transparent);border:1px solid color-mix(in srgb,var(--green) 24%,transparent);color:var(--green);font-size:12px;font-weight:700;letter-spacing:.3px}
 
@@ -811,7 +838,10 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
    Jetzt weicht der CONTAINER aus (das Sheet sitzt an seinem unteren Rand),
    und die maximale Höhe schrumpft um dieselbe Strecke. */
 .mbg{padding-bottom:var(--kb,0px)}
-.mdl{max-height:min(88vh,calc(100dvh - var(--kb,0px) - 16px))}
+/* Auch bei offener Tastatur bleiben oben 16 px frei: eine Regel für alle Fenster.
+   Mehrere hatten ihre eigene Höhe im Markup (90vh, 92vh), die diese Regel
+   überstimmte — mit 300 px Tastatur rutschte die Bibliothek 191 px über den Rand. */
+.mdl{max-height:min(92dvh,calc(100dvh - var(--kb,0px) - 16px))}
 /* Die Hauptaktion bleibt am unteren Rand des Sheets stehen, auch wenn der
    Inhalt scrollt. Ein Dialog, dessen Bestätigen-Knopf man suchen muss, ist
    auf einem Telefon kein Dialog. */
@@ -877,6 +907,35 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mdl-log .rir-circles{margin:0}
 /* Fehlt etwas, sagt die Zeile unter dem Feld, was (Rot nur als Textfarbe). */
 .ig-err{margin-top:12px;font-size:13px;line-height:16px;color:var(--red)}
+/* Übung-, Bibliotheks- und Tag-Fenster: Beschriftung in Satzschrift über dem
+   Feld, Texte linksbündig (nur Zahlen mittig), 48 px hohe Felder, Fehler rot am
+   Feld mit einer Zeile darunter. Das Hauptziel ist die Lime-Fläche unten. */
+.mdl-ex .ig label,.mdl-ex .lab{display:block;margin:0 0 4px;font-size:12px;line-height:16px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--text2)}
+.mdl-ex .ig input,.mdl-ex .ig select,.mdl-ex .ig textarea{
+  border:0;border-radius:14px;background-color:rgba(0,0,0,.3);box-shadow:inset 0 0 0 1px var(--line);
+  font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:500;text-align:left;
+}
+.mdl-ex .ig input,.mdl-ex .ig select{height:48px;padding:0 16px}
+.mdl-ex .ig select{padding-right:34px}
+.mdl-ex .ig input[type="number"]{text-align:center;font-variant-numeric:tabular-nums}
+.mdl-ex .ig textarea{min-height:72px;padding:12px 16px;line-height:1.35;resize:none}
+.mdl-ex .ig input::placeholder,.mdl-ex .ig textarea::placeholder{color:var(--t3);opacity:1}
+.mdl-ex .ig input:focus,.mdl-ex .ig select:focus,.mdl-ex .ig textarea:focus{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent)}
+.mdl-ex .ig [aria-invalid="true"],.mdl-ex .ig [aria-invalid="true"]:focus{box-shadow:inset 0 0 0 2px var(--red)}
+.mdl-ex .ig .ig-err{margin-top:4px}
+.mdl-ex .ir+.ig-err{margin:-6px 0 10px}
+.mdl-ex .ir{align-items:flex-start}
+.mdl-ex .sheet-cta .btn:not(.btn-g){min-height:56px;padding:0 14px;border-radius:14px;background:var(--accent);font-size:16px;font-weight:700;letter-spacing:0;box-shadow:var(--edge-strong)}
+.mdl-ex .sheet-cta .btn-g{min-height:48px;border-radius:14px}
+.mdl-ex #libe-save,.mdl-ex #libe-save:active{box-shadow:var(--edge-strong)}
+.mdl-ex .chipgrid{margin-top:0}
+/* Reihenfolge des Tags („Früher“ · Stand · „Später“), nur beim Bearbeiten. */
+.pd-order{margin-top:12px}
+.pd-order[hidden]{display:none}
+.pd-order-b{display:flex;align-items:center;gap:8px}
+.pd-order-b .btn{flex:1;min-height:44px;margin:0;padding:0 12px}
+.pd-order-b .btn:disabled{opacity:.4;pointer-events:none}
+.pd-order-b span{flex:0 0 auto;font-size:13px;line-height:16px;color:var(--text2);font-variant-numeric:tabular-nums}
 /* Die Notiz klappt auf, wenn man sie braucht (Taste „+ Notiz" unter dem
    Speichern-Knopf). 16 px, sonst zoomt iOS beim Fokussieren hinein (PB-026).
    Das Feld steht ausserhalb von .ig und erbt die dortige Regel nicht. */
@@ -1065,10 +1124,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .daychip{flex:1 1 0;min-width:0;min-height:44px;padding:0 2px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:.15s;text-align:center}
 .daychip:active{transform:scale(.94)}
 .daychip.on{background:color-mix(in srgb,var(--accent) 17%,var(--bg3));border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
-.dtab-wrap{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.dtab-move{width:34px;height:34px;flex:0 0 34px;border-radius:11px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.dtab-move:active{transform:scale(.9)}
-.dtab-wrap .dtabs{margin-bottom:0;flex:1}
 .optrow{display:flex;align-items:flex-start;gap:11px;padding:13px;border-radius:15px;border:1px solid var(--line);background:var(--bg3);margin-bottom:8px;cursor:pointer;transition:.15s}
 .optrow:active{transform:scale(.985)}
 .optrow.on{border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 8%,var(--bg3))}
@@ -1409,6 +1464,9 @@ div.wg-note{cursor:default}
 .menu-row .ic{flex:none;color:var(--text2)}
 .menu-row.last{margin-top:8px;font-weight:700;border-top:1px solid rgba(255,255,255,.14)}
 .menu-row.last .ic{color:var(--text)}
+/* Zerstörendes steht zuletzt, hinter einer Trennlinie, rot als Textfarbe. */
+.menu-row.danger{margin-top:8px;border-top:1px solid rgba(255,255,255,.14);color:var(--red)}
+.menu-row.danger .ic{color:var(--red)}
 
 /* --- die aktive Übung: die erhöhte Fläche, flach wie die Hero-Karte --- */
 .wo-act{
@@ -1570,7 +1628,7 @@ div.wg-note{cursor:default}
    sechs Tagen nicht das Layout bricht — dann wird horizontal gescrollt. */
 .coach-matrix{margin-top:12px;border-radius:18px;overflow-x:auto;border:1px solid rgba(255,255,255,.10);-webkit-overflow-scrolling:touch}
 .coach-matrix .mx-h,.coach-matrix .mx-r{
-  display:grid;grid-template-columns:86px repeat(var(--cols,3),minmax(36px,1fr)) 44px;
+  display:grid;grid-template-columns:86px repeat(var(--cols,3),minmax(36px,1fr)) var(--tail,36px 44px);
   align-items:center;min-width:100%;
 }
 .coach-matrix .mx-h{background:rgba(255,255,255,.05);padding:9px 0}
@@ -1580,7 +1638,8 @@ div.wg-note{cursor:default}
 .coach-matrix .mx-r .nm{font-size:12.5px;font-weight:700;padding-left:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .coach-matrix .mx-r .c{text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.3)}
 .coach-matrix .mx-r .c.on{color:#f6f4fb;font-weight:700}
-.coach-matrix .mx-r .tot{text-align:center;font-family:'Bebas Neue',sans-serif;font-size:22px;padding-right:8px;font-variant-numeric:tabular-nums}
+.coach-matrix .mx-r .c.ind{color:var(--text2)}
+.coach-matrix .mx-r .tot{text-align:center;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;padding-right:8px;font-variant-numeric:tabular-nums}
 .coach-matrix .mx-r.low{background:color-mix(in srgb,var(--orange) 9%,transparent)}
 .coach-matrix .mx-r.high{background:color-mix(in srgb,var(--red) 9%,transparent)}
 .coach-legend{display:flex;gap:12px;margin-top:9px;font-size:10px;color:var(--text3);flex-wrap:wrap}
@@ -2102,9 +2161,9 @@ div.wg-note{cursor:default}
 <div id="login-screen" class="login-screen">
 <div class="login-logo">PUMPBRAH</div>
 <div class="login-sub">Cloud Sync für alle Geräte</div>
-<input class="login-input" id="sync-code" placeholder="DEIN NAME" autocapitalize="words" spellcheck="false">
+<input class="login-input" id="sync-code" aria-label="Dein Name" placeholder="DEIN NAME" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go">
 <div class="login-hint">Dein Name = dein Profil & Sync-Code. Gleicher Name auf jedem Gerät = gleiche Daten überall.</div>
-<button class="btn" style="max-width:300px" onclick="doLogin()">▶ LOS GEHT'S</button>
+<button class="btn" data-primary style="max-width:300px" onclick="doLogin()">▶ LOS GEHT'S</button>
 <div class="sep" style="margin:20px 0;max-width:300px;width:100%"></div>
 <button class="btn btn-g" style="max-width:300px" onclick="offlineMode()">Offline-Modus (ohne Sync)</button>
 </div>
@@ -2146,21 +2205,17 @@ div.wg-note{cursor:default}
 <span class="plan-drawer-arrow" id="plan-drawer-arrow">▾</span>
 </button>
 <div class="plan-drawer-content" id="dash-plan-content">
-<div class="plan-mgmt">
-<button class="btn btn-s btn-g ib" onclick="addPlanDay()"><span data-ic="plus"></span>Tag</button>
-<button class="btn btn-s btn-g ib" onclick="renamePlanDay()"><span data-ic="edit"></span>Bearbeiten</button>
-<button class="btn btn-s btn-g ib" onclick="duplicatePlanDay()"><span data-ic="copy"></span>Duplizieren</button>
-<button class="btn btn-s btn-g ib" style="font-size:12px;color:var(--red)" onclick="deletePlanDay()"><span data-ic="trash"></span>Tag löschen</button>
-<button class="btn btn-s btn-o ib" onclick="openAddEx()"><span data-ic="plus"></span>Übung</button>
-<button class="btn btn-s btn-g ib" onclick="openLibraryEditor()"><span data-ic="book"></span>Bibliothek</button>
-<button class="btn btn-s btn-g ib" onclick="openPlanShare()"><span data-ic="copy"></span>Teilen</button>
-<button class="btn btn-s btn-g ib" onclick="openPlanImport()"><span data-ic="plus"></span>Importieren</button>
-<button class="btn btn-s plan-save-btn" id="plan-save-btn" onclick="savePlanChanges()" style="display:none">💾 Plan speichern</button>
+<div class="plan-bar" id="plan-bar">
+<button type="button" class="plan-add" onclick="openAddEx()"><span data-ic="plus" data-ic-size="20"></span>Übung</button>
+<button type="button" class="plan-more" aria-label="Plan-Menü" aria-haspopup="menu" onclick="openPlanMenu()"><span data-ic="more" data-ic-size="22"></span></button>
 </div>
+<div class="plan-bar" id="plan-sort" hidden><span class="plan-sort-t">Reihenfolge ändern</span></div>
+<button class="btn btn-s plan-save-btn" id="plan-save-btn" onclick="savePlanChanges()" style="display:none">💾 Plan speichern</button>
 <div class="plan-save-state" id="plan-save-state" style="display:none">✓ Automatisch gespeichert & synchronisiert</div>
 <div id="coach-area"></div>
-<div class="dtab-wrap"><button class="dtab-move" title="Tag nach links" onclick="movePlanDay(-1)">‹</button><div class="dtabs" id="pt"></div><button class="dtab-move" title="Tag nach rechts" onclick="movePlanDay(1)">›</button></div>
+<div class="dtabs" id="pt" role="tablist" aria-label="Trainingstag"></div>
 <div id="pl"></div>
+<div class="plan-go" id="plan-go" hidden><button type="button" class="btn" id="plan-go-btn" onclick="planGo()"></button></div>
 </div>
 </div>
 </div>
@@ -2228,18 +2283,18 @@ div.wg-note{cursor:default}
 <div class="set-card">
 <div class="sr" id="bio-weight-row">
 <div class="sr-bd"><b>Gewicht heute</b><span>Immer zur gleichen Tageszeit wiegen — nüchtern nach dem Aufstehen schwankt am wenigsten.</span></div>
-<div class="sr-num"><input type="number" inputmode="decimal" step="0.1" id="bio-weight-input" placeholder="kg" style="width:86px"><button class="setbtn" style="flex:0 0 auto;min-width:0;padding:11px 15px" onclick="addWeight()">+</button></div>
+<div class="sr-num"><input type="number" inputmode="decimal" step="0.1" id="bio-weight-input" aria-label="Gewicht heute in Kilogramm" placeholder="kg" style="width:86px"><button class="setbtn" style="flex:0 0 auto;min-width:0;padding:11px 15px" onclick="addWeight()">+</button></div>
 </div>
 <div class="sr" id="bio-weight-egym" style="display:none">
 <div class="sr-bd"><b>Gewicht</b><span>Kommt aus deiner EGYM-Messung — hier musst du nichts eintragen.</span></div>
 </div>
 <div class="sr">
 <div class="sr-bd"><b>Geburtsdatum</b><span>Basis für Fitnessalter und BioAge-Differenz</span></div>
-<div class="sr-num"><input type="date" id="bio-birthday" style="width:150px;text-align:left" onchange="saveBioBirthday(this.value)"></div>
+<div class="sr-num"><input type="date" id="bio-birthday" aria-label="Geburtsdatum" style="width:150px;text-align:left" onchange="saveBioBirthday(this.value)"></div>
 </div>
 <div class="sr sr-last">
 <div class="sr-bd"><b>Körpergröße</b><span>Für BMI und die Einordnung der Muskelmasse</span></div>
-<div class="sr-num"><input type="number" inputmode="numeric" id="bio-height" placeholder="180" style="width:86px"onchange="saveBioHeight(this.value)"><small>cm</small></div>
+<div class="sr-num"><input type="number" inputmode="numeric" id="bio-height" aria-label="Körpergröße in Zentimetern" placeholder="180" style="width:86px"onchange="saveBioHeight(this.value)"><small>cm</small></div>
 </div>
 </div>
 <div id="bio-chart-area"></div>
@@ -2261,11 +2316,11 @@ div.wg-note{cursor:default}
 <div class="set-card">
 <div class="sr">
 <div class="sr-bd"><b>Satzpause · Grundübung</b><span>Brust, Rücken, Beine</span></div>
-<div class="sr-num"><input type="number" inputmode="numeric" id="set-c" value="120" onchange="saveSetting('compound',this.value)"><small>Sek</small></div>
+<div class="sr-num"><input type="number" inputmode="numeric" id="set-c" aria-label="Satzpause Grundübung in Sekunden" value="120" onchange="saveSetting('compound',this.value)"><small>Sek</small></div>
 </div>
 <div class="sr">
 <div class="sr-bd"><b>Satzpause · Isolation</b><span>Schultern, Arme, Core</span></div>
-<div class="sr-num"><input type="number" inputmode="numeric" id="set-i" value="120" onchange="saveSetting('isolation',this.value)"><small>Sek</small></div>
+<div class="sr-num"><input type="number" inputmode="numeric" id="set-i" aria-label="Satzpause Isolation in Sekunden" value="120" onchange="saveSetting('isolation',this.value)"><small>Sek</small></div>
 </div>
 <div class="sr sr-last">
 <div class="sr-bd"><b>Krank-Modus</b><span id="sick-label">Nicht aktiv</span></div>
@@ -2310,39 +2365,39 @@ div.wg-note{cursor:default}
 </div>
 <div class="mbg" id="m-egym"><div class="mdl">
 <div class="mt"><span id="egym-modal-title">EGYM MESSUNG</span> <button class="mc" onclick="cm('m-egym')">✕</button></div>
-<div class="ig" style="margin-bottom:8px"><label>Datum</label><input type="date" id="egym-date"></div>
+<div class="ig" style="margin-bottom:8px"><label for="egym-date">Datum</label><input type="date" id="egym-date"></div>
 <div class="st" style="margin:10px 0 6px;font-size:12px">BIOAGE</div>
-<div class="ir"><div class="ig"><label>BioAge Gesamt</label><input type="number" inputmode="numeric" id="eg-bioage"></div></div>
-<div class="ir"><div class="ig"><label>Kraftalter</label><input type="number" inputmode="numeric" id="eg-kraft"></div><div class="ig"><label>Kardioalter</label><input type="number" inputmode="numeric" id="eg-kardio"></div></div>
-<div class="ir"><div class="ig"><label>Stoffwechselalter</label><input type="number" inputmode="numeric" id="eg-stoff"></div><div class="ig"><label>Flexibilitätsalter</label><input type="number" inputmode="numeric" id="eg-flex"></div></div>
+<div class="ir"><div class="ig"><label for="eg-bioage">BioAge Gesamt</label><input type="number" inputmode="numeric" id="eg-bioage"></div></div>
+<div class="ir"><div class="ig"><label for="eg-kraft">Kraftalter</label><input type="number" inputmode="numeric" id="eg-kraft"></div><div class="ig"><label for="eg-kardio">Kardioalter</label><input type="number" inputmode="numeric" id="eg-kardio"></div></div>
+<div class="ir"><div class="ig"><label for="eg-stoff">Stoffwechselalter</label><input type="number" inputmode="numeric" id="eg-stoff"></div><div class="ig"><label for="eg-flex">Flexibilitätsalter</label><input type="number" inputmode="numeric" id="eg-flex"></div></div>
 <div class="st" style="margin:10px 0 6px;font-size:12px">MESSUNGEN</div>
-<div class="ig" style="margin-bottom:6px"><label>BMI (kg/m²)</label><input type="number" inputmode="decimal" step="0.1" id="eg-bmi"></div>
-<div class="ig" style="margin-bottom:6px"><label>Extrazelluläres Wasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-ezw"></div>
-<div class="ig" style="margin-bottom:6px"><label>Fettfreie Masse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-ffm"></div>
-<div class="ig" style="margin-bottom:6px"><label>Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-gewicht"></div>
-<div class="ig" style="margin-bottom:6px"><label>Grundumsatz (Kcal)</label><input type="number" inputmode="numeric" id="eg-bmr"></div>
-<div class="ig" style="margin-bottom:6px"><label>Intrazelluläres Wasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-izw"></div>
-<div class="ig" style="margin-bottom:6px"><label>Körperfett (%)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kfp"></div>
-<div class="ig" style="margin-bottom:6px"><label>Körperfett (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kfkg"></div>
-<div class="ig" style="margin-bottom:6px"><label>Körperwasser (%)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kwp"></div>
-<div class="ig" style="margin-bottom:6px"><label>Körperwasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kwl"></div>
-<div class="ir"><div class="ig"><label>Magermasse Arm Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmal"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmar"></div></div>
-<div class="ir"><div class="ig"><label>Magermasse Bein Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmbl"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmbr"></div></div>
-<div class="ig" style="margin-bottom:6px"><label>Magermasse Rumpf (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmru"></div>
-<div class="ir"><div class="ig"><label>Muskeln Arm Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mual"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-muar"></div></div>
-<div class="ir"><div class="ig"><label>Muskeln Bein Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mubl"></div><div class="ig"><label>Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mubr"></div></div>
-<div class="ig" style="margin-bottom:6px"><label>Muskeln Rumpf (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-muru"></div>
-<div class="ig" style="margin-bottom:6px"><label>Phasenwinkel (°)</label><input type="number" inputmode="decimal" step="0.1" id="eg-pw"></div>
-<div class="ig" style="margin-bottom:6px"><label>Skelettmuskelmasse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-smm"></div>
-<div class="ig" style="margin-bottom:6px"><label>Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-bmi">BMI (kg/m²)</label><input type="number" inputmode="decimal" step="0.1" id="eg-bmi"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-ezw">Extrazelluläres Wasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-ezw"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-ffm">Fettfreie Masse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-ffm"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-gewicht">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-gewicht"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-bmr">Grundumsatz (Kcal)</label><input type="number" inputmode="numeric" id="eg-bmr"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-izw">Intrazelluläres Wasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-izw"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-kfp">Körperfett (%)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kfp"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-kfkg">Körperfett (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kfkg"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-kwp">Körperwasser (%)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kwp"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-kwl">Körperwasser (l)</label><input type="number" inputmode="decimal" step="0.1" id="eg-kwl"></div>
+<div class="ir"><div class="ig"><label for="eg-mmal">Magermasse Arm Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmal"></div><div class="ig"><label for="eg-mmar">Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmar" aria-label="Magermasse Arm rechts (kg)"></div></div>
+<div class="ir"><div class="ig"><label for="eg-mmbl">Magermasse Bein Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmbl"></div><div class="ig"><label for="eg-mmbr">Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmbr" aria-label="Magermasse Bein rechts (kg)"></div></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-mmru">Magermasse Rumpf (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mmru"></div>
+<div class="ir"><div class="ig"><label for="eg-mual">Muskeln Arm Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mual"></div><div class="ig"><label for="eg-muar">Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-muar" aria-label="Muskeln Arm rechts (kg)"></div></div>
+<div class="ir"><div class="ig"><label for="eg-mubl">Muskeln Bein Links (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mubl"></div><div class="ig"><label for="eg-mubr">Rechts (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-mubr" aria-label="Muskeln Bein rechts (kg)"></div></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-muru">Muskeln Rumpf (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-muru"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-pw">Phasenwinkel (°)</label><input type="number" inputmode="decimal" step="0.1" id="eg-pw"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-smm">Skelettmuskelmasse (kg)</label><input type="number" inputmode="decimal" step="0.1" id="eg-smm"></div>
+<div class="ig" style="margin-bottom:6px"><label for="eg-vf">Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
 <div class="sheet-cta"><button class="btn" id="egym-save-btn" onclick="saveEgymEntry()">✓ Messung speichern</button></div>
 </div></div>
 <div class="mbg" id="m-setedit"><div class="mdl">
 <div class="mt">SATZ KORRIGIEREN <button class="mc" onclick="closeSetEditor()">✕</button></div>
 <div id="se-sub" style="font-size:11.5px;color:var(--text3);margin-bottom:12px"></div>
-<div class="ig" style="margin-bottom:8px"><label id="se-lab-w">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w"></div>
-<div class="ig" style="margin-bottom:8px"><label id="se-lab-r">Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r"></div>
-<div class="ig" style="margin-bottom:8px"><label>RIR</label><input type="number" inputmode="numeric" id="edit-set-rir"></div>
+<div class="ig" style="margin-bottom:8px"><label id="se-lab-w" for="edit-set-w">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w"></div>
+<div class="ig" style="margin-bottom:8px"><label id="se-lab-r" for="edit-set-r">Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r"></div>
+<div class="ig" style="margin-bottom:8px"><label for="edit-set-rir">RIR</label><input type="number" inputmode="numeric" id="edit-set-rir"></div>
 <div class="sheet-cta"><button type="button" class="btn" id="se-save">✓ Speichern</button>
 <button type="button" class="btn btn-r" id="se-del">🗑️ Satz löschen</button></div>
 </div></div>
@@ -2363,15 +2418,15 @@ div.wg-note{cursor:default}
 <div class="mbg" id="m-timebudget"><div class="mdl">
 <div class="mt">WENIG ZEIT <button class="mc" onclick="cm('m-timebudget')">✕</button></div>
 <div id="tb-info" style="font-size:13px;color:var(--text2);margin-bottom:12px"></div>
-<div class="ir"><div class="ig"><label>Verfügbare Minuten</label><input type="number" inputmode="numeric" id="tb-min" step="5"></div></div>
+<div class="ir"><div class="ig"><label for="tb-min">Verfügbare Minuten</label><input type="number" inputmode="numeric" id="tb-min" step="5"></div></div>
 <div style="font-size:13px;color:var(--text2);line-height:1.4;margin:12px 0">Der Plan bleibt unverändert.</div>
 <div class="sheet-cta"><button class="btn" onclick="applyTimeBudget()">Einheit anpassen</button></div>
 </div></div>
 <div class="mbg" id="m-plates"><div class="mdl">
 <div class="mt">SCHEIBENRECHNER <button class="mc" onclick="cm('m-plates')">✕</button></div>
 <div class="ir">
-<div class="ig"><label>Zielgewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="plate-w" oninput="renderPlates()"></div>
-<div class="ig"><label>Stange (kg)</label><input type="number" inputmode="decimal" step="0.5" id="plate-bar" value="20" oninput="renderPlates()"></div>
+<div class="ig"><label for="plate-w">Zielgewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="plate-w" oninput="renderPlates()"></div>
+<div class="ig"><label for="plate-bar">Stange (kg)</label><input type="number" inputmode="decimal" step="0.5" id="plate-bar" value="20" oninput="renderPlates()"></div>
 </div>
 <div id="plate-out"></div>
 <div style="font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5">Scheiben pro Seite, gierig von schwer nach leicht. Verfügbar: 25 · 20 · 15 · 10 · 5 · 2,5 · 1,25 kg.</div>
@@ -2414,15 +2469,16 @@ div.wg-note{cursor:default}
 <div class="log-sec"><button type="button" id="log-note-btn" aria-expanded="false" aria-controls="log-note-box" onclick="toggleLogNote()"><svg class="ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="v" d="M12 5v14"/><path d="M5 12h14"/></svg>Notiz</button><button type="button" id="log-redo" hidden onclick="redoLast()"></button></div>
 </div>
 </div></div>
-<div class="mbg" id="m-add"><div class="mdl">
-<div class="mt">ÜBUNG <span class="mt-act"><button type="button" class="btn btn-s btn-g ib" onclick="cm('m-add');openLibrary()"><span data-ic="book"></span>Bibliothek</button><button class="mc" aria-label="Schließen" onclick="cm('m-add')">✕</button></span></div>
-<div class="ir"><div class="ig"><label>Übungsname</label><input type="text" id="a-name" placeholder="z.B. Bankdrücken" oninput="refreshLibHint()"></div></div>
+<div class="mbg" id="m-add"><div class="mdl mdl-ex">
+<div class="mt"><span id="a-title">Neue Übung</span> <span class="mt-act"><button type="button" class="btn btn-s btn-g ib" onclick="cm('m-add');openLibrary()"><span data-ic="book"></span>Bibliothek</button><button class="mc" aria-label="Schließen" onclick="cm('m-add')">✕</button></span></div>
+<div class="ir"><div class="ig"><label for="a-name">Name</label><input type="text" id="a-name" placeholder="z. B. Bankdrücken…" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-describedby="a-name-err" oninput="refreshLibHint()"><div class="ig-err" id="a-name-err" hidden></div></div></div>
 <div id="a-libhint" class="libhint" style="display:none"></div>
 <div class="ir">
-<div class="ig"><label>Sätze</label><input type="number" id="a-sets" value="3"></div>
-<div class="ig"><label>Wdh Min</label><input type="number" id="a-rmin" value="8"></div>
-<div class="ig"><label>Wdh Max</label><input type="number" id="a-rmax" value="12"></div>
+<div class="ig"><label for="a-sets">Sätze</label><input type="number" inputmode="numeric" min="1" max="20" id="a-sets" value="3" autocomplete="off" aria-describedby="a-num-err"></div>
+<div class="ig"><label for="a-rmin">Wdh. von</label><input type="number" inputmode="numeric" min="1" max="100" id="a-rmin" value="8" autocomplete="off" aria-describedby="a-num-err"></div>
+<div class="ig"><label for="a-rmax">Wdh. bis</label><input type="number" inputmode="numeric" min="1" max="100" id="a-rmax" value="12" autocomplete="off" aria-describedby="a-num-err"></div>
 </div>
+<div class="ig-err" id="a-num-err" hidden></div>
 <div class="ir"><div class="ig"><div class="rir-lab" id="a-rir-lab">RIR 2 – noch 2 Wiederholungen im Tank</div>
 <div class="rir-circles" id="a-rir-circles" role="radiogroup" aria-label="Wiederholungen im Tank" data-lab="a-rir-lab" onkeydown="rirKey(event)">
 <button type="button" class="rir-c rir-5" role="radio" aria-checked="false" aria-label="RIR 5" data-v="5" tabindex="-1" onclick="pickRirAdd(5)">5</button>
@@ -2434,15 +2490,15 @@ div.wg-note{cursor:default}
 </div>
 <input type="hidden" id="a-rir" value="2">
 </div></div>
-<div class="ir"><div class="ig"><label>Typ</label><select id="a-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
-<div class="ig"><label>Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
-<div class="ir"><div class="ig"><label>Notiz</label><input type="text" id="a-note" placeholder="Ausführungshinweis"></div></div>
+<div class="ir"><div class="ig"><label for="a-type">Typ</label><select id="a-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
+<div class="ig"><label for="a-mus">Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
+<div class="ir"><div class="ig"><label for="a-note">Notiz</label><textarea id="a-note" rows="2" placeholder="z. B. Schulterblätter fixiert, kurzer Brustkontakt…" autocomplete="off" autocapitalize="sentences"></textarea></div></div>
 <div style="font-size:12px;color:var(--text2);margin-bottom:8px" id="a-target"></div>
-<div class="sheet-cta"><button class="btn" id="a-btn" onclick="confirmAddEx()">+ HINZUFÜGEN</button></div>
+<div class="sheet-cta"><button class="btn" id="a-btn" onclick="confirmAddEx()">Übung hinzufügen</button></div>
 </div></div>
-<div class="mbg" id="m-lib"><div class="mdl" style="max-height:90vh">
+<div class="mbg" id="m-lib"><div class="mdl">
 <div class="mt">ÜBUNGSBIBLIOTHEK <button class="mc" onclick="cm('m-lib')">✕</button></div>
-<input class="lib-search" id="lib-search" placeholder="Übung suchen…" oninput="filterLib(this.value)">
+<input class="lib-search" id="lib-search" type="search" aria-label="Übung suchen" placeholder="Übung suchen…" autocomplete="off" enterkeyhint="search" oninput="filterLib(this.value)">
 <div id="lib-content"></div>
 </div></div>
 <div class="mbg" id="m-pick"><div class="mdl">
@@ -2465,10 +2521,10 @@ div.wg-note{cursor:default}
 <div class="mbg" id="m-exnote"><div class="mdl">
 <div class="mt">NOTIZ <button class="mc" onclick="cm('m-exnote')">✕</button></div>
 <div id="exn-name" style="font-size:14px;color:var(--text2);margin-bottom:8px"></div>
-<div class="ir"><div class="ig"><label>Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
+<div class="ir"><div class="ig"><label for="exn-text">Persönliche Notiz (wird bei jeder Session angezeigt)</label><textarea id="exn-text" rows="3" style="width:100%;padding:10px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:8px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:16px;outline:none;resize:vertical" placeholder="z.B. Griff etwas enger, Schulter aufwärmen..."></textarea></div></div>
 <div class="sheet-cta"><button class="btn" onclick="saveExNote()">Notiz speichern</button></div>
 </div></div>
-<div class="mbg" id="m-share"><div class="mdl" style="max-height:92vh;overflow:auto">
+<div class="mbg" id="m-share"><div class="mdl">
 <div class="mt"><span id="share-title">Plan teilen</span> <button class="mc" onclick="cm('m-share')">✕</button></div>
 <div id="share-body"></div>
 </div></div>
@@ -2476,7 +2532,7 @@ div.wg-note{cursor:default}
 <div class="mt">PLAN IMPORTIEREN <button class="mc" onclick="cm('m-import')">✕</button></div>
 <div id="import-body"></div>
 </div></div>
-<div class="mbg" id="m-importpreview"><div class="mdl" style="max-height:92vh;overflow:auto">
+<div class="mbg" id="m-importpreview"><div class="mdl">
 <div class="mt"><span id="importpreview-title">Vorschau</span> <button class="mc" onclick="cm('m-importpreview')">✕</button></div>
 <div id="importpreview-body"></div>
 </div></div>
@@ -2485,48 +2541,56 @@ div.wg-note{cursor:default}
 <div id="alt-sub" style="font-size:12px;color:var(--text2);margin-bottom:12px"></div>
 <div id="alt-list"></div>
 </div></div>
-<div class="mbg" id="m-lib-edit"><div class="mdl" style="max-height:92vh">
+<div class="mbg" id="m-lib-edit"><div class="mdl mdl-ex">
 <div class="mt">ÜBUNGSBIBLIOTHEK <button class="mc" onclick="cm('m-lib-edit')">✕</button></div>
 <div class="card" style="padding:12px;margin-bottom:12px">
-<div class="ir"><div class="ig"><label>Name</label><input id="libe-name" type="text" placeholder="z.B. StairMaster"></div></div>
+<div class="ir"><div class="ig"><label for="libe-name">Name</label><input id="libe-name" type="text" placeholder="z. B. StairMaster…" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-describedby="libe-name-err"><div class="ig-err" id="libe-name-err" hidden></div></div></div>
 <div class="ir">
-<div class="ig"><label>Sätze</label><input id="libe-sets" type="number" value="3"></div>
-<div class="ig"><label>Min</label><input id="libe-rmin" type="number" value="8"></div>
-<div class="ig"><label>Max</label><input id="libe-rmax" type="number" value="12"></div>
+<div class="ig"><label for="libe-sets">Sätze</label><input id="libe-sets" type="number" inputmode="numeric" min="1" max="20" value="3" autocomplete="off" aria-describedby="libe-num-err"></div>
+<div class="ig"><label for="libe-rmin">Wdh. von</label><input id="libe-rmin" type="number" inputmode="numeric" min="1" max="100" value="8" autocomplete="off" aria-describedby="libe-num-err"></div>
+<div class="ig"><label for="libe-rmax">Wdh. bis</label><input id="libe-rmax" type="number" inputmode="numeric" min="1" max="100" value="12" autocomplete="off" aria-describedby="libe-num-err"></div>
 </div>
+<div class="ig-err" id="libe-num-err" hidden></div>
 <div class="ir">
-<div class="ig"><label>Typ</label><select id="libe-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
-<div class="ig"><label>Muskelgruppe</label><select id="libe-muscle"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div>
+<div class="ig"><label for="libe-type">Typ</label><select id="libe-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
+<div class="ig"><label for="libe-muscle">Muskelgruppe</label><select id="libe-muscle"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div>
 </div>
-<div class="ir"><div class="ig"><label>Notiz</label><input id="libe-note" type="text" placeholder="Ausführung, Gerät, Setup"></div></div>
+<div class="ir"><div class="ig"><label for="libe-note">Notiz</label><textarea id="libe-note" rows="2" placeholder="Ausführung, Gerät, Setup" autocomplete="off" autocapitalize="sentences"></textarea></div></div>
 <!-- Bewusst KEIN .sheet-cta: der Knopf gehört zur Formularkarte, und nach der
      Karte kommen noch Suchfeld und Liste. Ein sticky Element klebt nur,
      solange sein Elternteil im Bild ist — es würde also mitten im Sheet
      hängen bleiben statt unten. Der Vertrag hier ist Nähe, nicht Kleben:
      der Knopf steht direkt unter dem letzten Feld. Siehe PB-066. -->
 <div style="display:flex;gap:8px;align-items:center">
-<button class="btn" id="libe-save" style="flex:1" onclick="addLibraryExercise()">+ Übung speichern</button>
+<button class="btn" id="libe-save" data-primary style="flex:1" onclick="addLibraryExercise()">+ Übung speichern</button>
 <button class="btn btn-g" id="libe-cancel" style="display:none;flex:.55" onclick="resetLibraryEditorForm()">Abbrechen</button>
 </div>
 </div>
-<input class="lib-search" id="libe-search" placeholder="Bibliothek suchen..." oninput="renderLibraryEditor(this.value)">
+<input class="lib-search" id="libe-search" type="search" aria-label="Bibliothek durchsuchen" placeholder="Bibliothek suchen…" autocomplete="off" enterkeyhint="search" oninput="renderLibraryEditor(this.value)">
 <div id="libe-list"></div>
 </div></div>
 <div class="mbg" id="m-exdemo"><div class="mdl">
 <div class="mt"><span id="exd-title">Übung</span> <button class="mc" onclick="cm('m-exdemo')">✕</button></div>
 <div id="exd-body"></div>
 </div></div>
-<div class="mbg" id="m-planday"><div class="mdl">
-<div class="mt"><span id="pd-title">Trainingstag</span> <button class="mc" onclick="cm('m-planday')">✕</button></div>
-<div class="ir"><div class="ig"><label>Name des Tags</label><input type="text" id="pd-name" placeholder="z.B. Push A" autocapitalize="words"></div></div>
-<label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:12px 0 0">Wochentage</label>
-<div class="chipgrid" id="pd-days"></div>
+<div class="mbg" id="m-planday"><div class="mdl mdl-ex">
+<div class="mt"><span id="pd-title">Trainingstag</span> <button class="mc" aria-label="Schließen" onclick="cm('m-planday')">✕</button></div>
+<div class="ir"><div class="ig"><label for="pd-name">Name des Tags</label><input type="text" id="pd-name" placeholder="z. B. Push A" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-describedby="pd-name-err"><div class="ig-err" id="pd-name-err" hidden></div></div></div>
+<div class="lab" id="pd-days-lab">Wochentage</div>
+<div class="chipgrid" id="pd-days" role="group" aria-labelledby="pd-days-lab"></div>
 <div style="font-size:11px;color:var(--text3);margin-top:8px" id="pd-hint">Mehrfachauswahl möglich. Der nächste Tag wird auf dem Dashboard vorgeschlagen.</div>
-<div class="sheet-cta"><button class="btn" id="pd-save" onclick="savePlanDay()">✓ SPEICHERN</button>
+<div class="pd-order" id="pd-order" hidden>
+<div class="lab" id="pd-order-lab">Reihenfolge im Plan</div>
+<div class="pd-order-b" role="group" aria-labelledby="pd-order-lab"><button type="button" class="btn btn-g" id="pd-earlier" onclick="movePlanDay(-1,planDayOriginal)">Früher</button><span id="pd-order-n"></span><button type="button" class="btn btn-g" id="pd-later" onclick="movePlanDay(1,planDayOriginal)">Später</button></div>
+</div>
+<div class="sheet-cta"><button class="btn" id="pd-save" onclick="savePlanDay()">Speichern</button>
 <button class="btn btn-g" onclick="cm('m-planday')">Abbrechen</button></div>
 </div></div>
 <div class="mbg" id="m-womenu"><div class="mdl">
 <div id="womenu-list"></div>
+</div></div>
+<div class="mbg" id="m-planmenu"><div class="mdl">
+<div id="planmenu-list"></div>
 </div></div>
 <div class="mbg" id="m-woswitch"><div class="mdl">
 <div class="mt">TRAININGSTAG WECHSELN <button class="mc" onclick="cm('m-woswitch')">✕</button></div>
@@ -3151,7 +3215,7 @@ function resetDForNewUser(){D={plan:{},history:[],active:null,settings:{compound
 function offlineMode(){useFirebase=false;syncCode='offline';localStorage.setItem('pb_sync','offline');loadLocal();if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}}
 function showApp(){normalizeData();document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';document.getElementById('show-sync').textContent=syncCode;restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
   checkSharedPlanLink();
-  hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachSheetGestures();attachReveals();
+  hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachFieldBehavior();attachNavHeight();attachSheetGestures();attachReveals();
   /* Ein beim Laden übernommenes Training steht schon in D (normalizeData),
      ist aber noch nicht geschrieben und noch nicht gemeldet. */
   if(autoSavedNotice){try{localStorage.removeItem('pb_timer')}catch{}save();queueCloudSave(true);showAutoSavedNotice()}
@@ -3202,9 +3266,9 @@ function startOnboarding(){document.getElementById('login-screen').style.display
 function renderObStep(){const c=document.getElementById('ob-content');const sub=document.getElementById('ob-sub');const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');const obMulti=(field,items)=>items.map(i=>`<div class="ob-multi" data-v="${i.k}" onclick="obToggleList('${field}','${i.k}',this)" style="padding:13px;background:var(--bg3);border:2px solid ${(obData[field]||[]).includes(i.k)?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:14px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');
   const steps=[
     {sub:'Schritt 1/9 — Über dich',html:`<div style="margin-bottom:12px">${obSel('ob-gen',[{k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}],'gender','male')}</div>${obBtn('WEITER →','obNext(0)')}`},
-    {sub:'Schritt 2/9 — Körperdaten',html:`<div class="ig" style="margin-bottom:10px"><label>Geburtsdatum</label><input type="date" id="ob-birthday" style="font-size:17px;padding:13px;width:100%;font-family:'JetBrains Mono',monospace"></div>`+
-      `<div class="ir" style="margin-bottom:10px"><div class="ig"><label>Größe (cm)</label><input type="number" id="ob-height" placeholder="175" style="font-size:19px;padding:13px;width:100%"></div>`+
-      `<div class="ig"><label>Gewicht (kg)</label><input type="number" step="0.5" id="ob-weight" placeholder="75" style="font-size:19px;padding:13px;width:100%"></div></div>`+
+    {sub:'Schritt 2/9 — Körperdaten',html:`<div class="ig" style="margin-bottom:10px"><label for="ob-birthday">Geburtsdatum</label><input type="date" id="ob-birthday" style="font-size:17px;padding:13px;width:100%;font-family:'JetBrains Mono',monospace"></div>`+
+      `<div class="ir" style="margin-bottom:10px"><div class="ig"><label for="ob-height">Größe (cm)</label><input type="number" inputmode="numeric" id="ob-height" placeholder="175" style="font-size:19px;padding:13px;width:100%"></div>`+
+      `<div class="ig"><label for="ob-weight">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="ob-weight" placeholder="75" style="font-size:19px;padding:13px;width:100%"></div></div>`+
       `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Für Fitnessalter und Gewichtsverlauf. Ändert am Plan nichts.</div>${obBtn('WEITER →','obNext(1)')}${obBack}`},
     {sub:'Schritt 3/9 — Trainingsort',html:`<div style="margin-bottom:12px">${obSel('ob-loc',[{k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}],'location','gym')}</div>${obBtn('WEITER →','obNext(2)')}${obBack}`},
     {sub:'Schritt 4/9 — Trainingsfrequenz',html:`<div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label><div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===obData.days?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>${obBtn('WEITER →','obNext(3)')}${obBack}`},
@@ -3893,6 +3957,69 @@ function attachKeyboardAvoidance(){
   };
   vv.addEventListener('resize',apply);
   vv.addEventListener('scroll',apply);
+}
+
+/* --- Felder: Fehler am Feld, Enter, Höhe der unteren Leiste ---------------- */
+/* Ein Fehler steht am Feld, nicht in einer Meldung, die nach 2 Sekunden
+   verschwindet: das Feld wird rot (aria-invalid), eine Zeile darunter nennt den
+   Grund (aria-describedby zeigt auf sie). Mehrere Felder dürfen sich eine Zeile
+   teilen (die drei Zahlen der Übungsfenster). Meldungen unten bleiben für Erfolg. */
+function markInvalid(id){
+  const el=document.getElementById(id);
+  if(el)el.setAttribute('aria-invalid','true');
+}
+function showFieldErr(id,text,errId){
+  const err=document.getElementById(errId||id+'-err');
+  if(err){err.textContent=text;err.hidden=false}
+  markInvalid(id);
+}
+function clearFieldErrs(root){
+  if(!root)return;
+  root.querySelectorAll('[aria-invalid]').forEach(el=>el.removeAttribute('aria-invalid'));
+  root.querySelectorAll('.ig-err').forEach(el=>{el.hidden=true});
+}
+function attachFieldBehavior(){
+  /* Sobald man in ein markiertes Feld tippt, geht die Markierung und die Zeile
+     darunter — auch bei den Feldern, die sich diese Zeile teilen; geprüft wird
+     beim nächsten Speichern wieder. */
+  document.addEventListener('input',e=>{
+    const el=e.target;
+    if(!el||!el.getAttribute||el.getAttribute('aria-invalid')!=='true')return;
+    el.removeAttribute('aria-invalid');
+    String(el.getAttribute('aria-describedby')||'').split(/\s+/).forEach(id=>{
+      const err=id&&document.getElementById(id);
+      if(!err||!err.classList.contains('ig-err'))return;
+      err.hidden=true;
+      document.querySelectorAll(`[aria-invalid="true"][aria-describedby~="${id}"]`).forEach(f=>f.removeAttribute('aria-invalid'));
+    });
+  });
+  /* Enter im Eingabefeld löst die Hauptaktion des Fensters aus — auch die Taste
+     „Fertig“ der iOS-Tastatur schickt Enter. Eine Suche schließt nur die
+     Tastatur, ohne Hauptaktion (Zifferntastaturen haben keine Enter-Taste, dort
+     hilft der Knopf über der Tastatur) ebenso. */
+  document.addEventListener('keydown',e=>{
+    if(e.key!=='Enter'||e.isComposing||e.defaultPrevented)return;
+    const el=e.target;
+    if(!el||el.tagName!=='INPUT'||!/^(text|search|number|date)$/.test(el.type))return;
+    const scope=el.type==='search'?null:el.closest('.mdl,.login-screen');
+    const btn=scope&&scope.querySelector('[data-primary],.sheet-cta .btn');
+    e.preventDefault();
+    if(btn&&btn.offsetParent!==null&&!btn.disabled)btn.click();
+    else el.blur();
+  });
+}
+/* Die untere Leiste hat je nach Gerät und Ausrichtung eine andere Höhe. Wer
+   über ihr kleben will (der Startknopf im Plan), liest sie als --nav-h. */
+function attachNavHeight(){
+  const inner=document.querySelector('.bnav-inner');
+  if(!inner)return;
+  const set=()=>{
+    const r=inner.getBoundingClientRect();
+    document.documentElement.style.setProperty('--nav-h',Math.round(r.height+Math.max(0,window.innerHeight-r.bottom))+'px');
+  };
+  set();
+  window.addEventListener('resize',set);
+  if(window.ResizeObserver)new ResizeObserver(set).observe(inner);
 }
 
 /* --- Sheets nach unten wegwischen ---------------------------------------- */
@@ -4816,20 +4943,33 @@ function savePlanChanges(){
   renderPlanSaveState();
   toast('Trainingsplan dauerhaft gespeichert');
 }
+/* Ein Wochentag schreibt sich aus („Dienstag“), mehrere bleiben kurz („Di + Do“). */
+function planDayLabel(day){
+  const d=parseDayString(day);
+  return d.length===1?TAGE[d[0]]:(String(day||'').trim()||'kein Tag');
+}
+/* Passen nicht alle Tage in die Leiste, deutet ein weicher Rand an, wo es weitergeht. */
+function planTabEdges(t){
+  const more=t.scrollWidth>t.clientWidth+1;
+  t.classList.toggle('fade-l',more&&t.scrollLeft>2);
+  t.classList.toggle('fade-r',more&&t.scrollLeft<t.scrollWidth-t.clientWidth-2);
+}
 function renderPlan(){
   if(!curTab||!D.plan[curTab])curTab=Object.keys(D.plan)[0];
   const t=document.getElementById('pt');
   if(!t)return;
   t.innerHTML='';
   Object.entries(D.plan).forEach(([k,v])=>{
-    const d=document.createElement('div');
+    const d=document.createElement('button');
+    d.type='button';
     d.className='dtab'+(k===curTab?' on':'');
-    const count=(v.exercises||[]).length;
-    const mins=estimatedDuration(k);
-    d.innerHTML=esc(planDisplayName(k))+`<span class="dn">${esc(v.day||'kein Tag')} · ${count} Üb.${mins?` · ~${mins} min`:''}</span>`;
+    d.setAttribute('role','tab');
+    d.setAttribute('aria-selected',k===curTab?'true':'false');
+    d.innerHTML=`<span>${esc(planDisplayName(k))}</span><span class="dn">${esc(planDayLabel(v.day))}</span>`;
     d.onclick=()=>{curTab=k;renderPlan();haptic(8)};
     t.appendChild(d);
   });
+  if(!t.dataset.edges){t.dataset.edges='1';t.addEventListener('scroll',()=>planTabEdges(t),{passive:true})}
   /* Den aktiven Tab in der Leiste zentrieren — aber NUR die Leiste bewegen.
      scrollIntoView() scrollt auch die Seite, sobald die Leiste nicht im Bild
      ist: beim Start mit offener Plan-Karte fuhr das Dashboard damit um
@@ -4842,6 +4982,7 @@ function renderPlan(){
     const left=active.getBoundingClientRect().left-t.getBoundingClientRect().left+t.scrollLeft-(t.clientWidth-active.offsetWidth)/2;
     try{t.scrollTo({left:Math.max(0,left),behavior:'smooth'})}catch{t.scrollLeft=Math.max(0,left)}
   }
+  planTabEdges(t);
   renderPL();
   renderPlanSaveState();
   /* Der Plan kann sich zwischen zwei Renderings geändert haben, ohne dass
@@ -4857,12 +4998,34 @@ function togglePlanRow(el,name){
   el.parentElement.classList.toggle('open');
   if(openPlanRows.has(name))openPlanRows.delete(name);else openPlanRows.add(name);
 }
+/* Sortier-Modus: die Zeilen zeigen statt ⋯ zwei Pfeile, „Fertig“ beendet ihn.
+   Er gehört nicht zu den Daten und überlebt weder das Zuklappen der Karte
+   noch einen Plan, in dem es nichts mehr zu sortieren gibt. */
+let planSort=false;
+function syncPlanSortUI(){
+  const bar=document.getElementById('plan-bar'),sort=document.getElementById('plan-sort');
+  if(bar)bar.hidden=planSort;
+  if(sort)sort.hidden=!planSort;
+}
+function startPlanSort(){planSort=true;syncPlanSortUI();renderPL();haptic(8)}
+function endPlanSort(){planSort=false;syncPlanSortUI();renderPL();haptic(8)}
+function startPlanDay(){startWorkout(curTab);go('wo')}
+/* Der feste Knopf unten ist „Starten“; im Sortier-Modus ist er „Fertig“ — so
+   bleibt das Ende des Modus auch mitten in einer langen Liste erreichbar. */
+function planGo(){if(planSort)endPlanSort();else startPlanDay()}
 function renderPL(){
   const c=document.getElementById('pl');
   const p=D.plan[curTab];
+  const goBox=document.getElementById('plan-go');
   if(!c)return;
+  if(planSort&&(!p||p.exercises.length<2)){planSort=false;syncPlanSortUI()}
+  if(goBox)goBox.hidden=!p||!p.exercises.length;
   if(!p||!p.exercises.length){c.innerHTML='<div class="empty">Noch keine Übungen in diesem Tag.<br><br><button class="btn btn-s btn-o" onclick="openAddEx()">+ Erste Übung hinzufügen</button></div>';return}
-  let h='';
+  const n=p.exercises.length;
+  const mins=estimatedDuration(curTab);
+  const wt=planDayLabel(p.day);
+  let h=`<div class="plan-day"><div class="plan-day-n">${p.exercises.reduce((a,e)=>a+(parseInt(e.sets)||0),0)}</div>`+
+    `<div class="plan-day-tx"><span>Sätze${parseDayString(p.day).length===1?' am '+esc(wt):''}</span><b>${n} ${n===1?'Übung':'Übungen'}</b>${mins?`<span>rund ${mins} Minuten</span>`:''}</div></div>`;
   p.exercises.forEach((ex,i)=>{
     const iC=ex.type==='pre'?'c-pre':ex.type==='mob'?'c-mob':'c-'+ex.muscle;
     const cC=ex.type==='pre'?'pre':ex.type==='mob'?'mob':'';
@@ -4871,25 +5034,29 @@ function renderPL(){
     const uNote=D.notes[ex.name];
     const safe=jsStr(ex.name);
     const openCls=openPlanRows.has(ex.name)?' open':'';
-    h+=`<div class="exr ${cC}${openCls}" style="animation:riseIn .34s var(--ease) both;animation-delay:${Math.min(i*30,240)}ms">`+
-      `<div class="exr-h" onclick="togglePlanRow(this,'${safe}')">`+
+    h+=`<div class="exr ${cC}${openCls}"${planSort?' style="animation:none"':` style="animation:riseIn .34s var(--ease) both;animation-delay:${Math.min(i*30,240)}ms"`}>`+
+      `<div class="exr-h"${planSort?'':` onclick="togglePlanRow(this,'${safe}')"`}>`+
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="exr-b"><div class="exr-n">${esc(ex.name)}`+
           (ex.ss?`<span class="uni ssb">Supersatz ${esc(ex.ss)}</span>`:'')+
           (isUnilateral(ex.name,ex)?'<span class="uni">pro Seite</span>':'')+`</div>`+
-        `<div class="exr-m">${esc(ex.sets)}×${esc(reps(ex))} ${ex.rir!==null?`<span class="rb">RIR ${esc(ex.rir)}</span>`:''} ${last?`<span style="color:var(--text3)">• ${esc(last.w)}kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
-        /* Vier Buttons pro Zeile haben den Übungsnamen auf "ATG: Tibialis R…"
-           zusammengequetscht. Sortieren bleibt direkt erreichbar, der Rest
-           wandert ins Überlaufmenü — wie in der Workout-Ansicht. */
-        `<div class="exr-actions">${i>0?`<button class="exr-act" title="nach oben" onclick="event.stopPropagation();mvEx(${i},-1)">↑</button>`:''}${i<p.exercises.length-1?`<button class="exr-act" title="nach unten" onclick="event.stopPropagation();mvEx(${i},1)">↓</button>`:''}<button class="exr-act" title="Optionen" onclick="event.stopPropagation();openPlanExMenu(${i})">${icon('more',15)}</button></div>`+
+        `<div class="exr-m"><b>${esc(ex.sets)} × ${esc(reps(ex))}</b>${ex.rir!==null?`<span>RIR ${esc(ex.rir)}</span>`:''}${last?`<span>${esc(de(last.w))} kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
+        /* Eine Aktion je Zeile hat dem Namen die Breite zurückgegeben: erst
+           drei, dann vier Knöpfe haben ihn auf "ATG: Tibialis R…"
+           zusammengequetscht. Alles Weitere steht im ⋯-Menü, Sortieren im
+           Sortier-Modus (zwei Pfeile statt ⋯, nie beides). */
+        `<div class="exr-actions">${planSort
+          ?`<button type="button" class="exr-act mv" aria-label="${attr(ex.name)} nach oben" ${i>0?'':'disabled '}onclick="event.stopPropagation();mvEx(${i},-1)">↑</button><button type="button" class="exr-act mv" aria-label="${attr(ex.name)} nach unten" ${i<n-1?'':'disabled '}onclick="event.stopPropagation();mvEx(${i},1)">↓</button>`
+          :`<button type="button" class="exr-act" aria-label="Mehr zu ${attr(ex.name)}" aria-haspopup="menu" onclick="event.stopPropagation();openPlanExMenu(${i})">${icon('more',22)}</button>`}</div>`+
       `</div>`+
       `<div class="exr-d">${ex.note?`<div class="exr-note ${nC}">${esc(ex.note)}</div>`:''}${uNote?`<div class="exr-note" style="border-left-color:var(--purple)">📝 ${esc(uNote)}</div>`:''}`+
         `${last?`<div style="font-size:11px;color:var(--text2);margin-bottom:6px">📊 Letztes Mal: <b style="color:var(--text);font-family:JetBrains Mono,monospace">${esc(last.w)}kg × ${esc(last.r)}</b></div>`:''}`+
         `<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${icon('play',14)}Ausführung</button><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();openExNote('${safe}')">${icon('note',14)}Notiz</button><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();showExHist('${safe}')">${icon('chart',14)}Verlauf</button></div>`+
       `</div></div>`;
   });
-  h+=`<button class="btn" style="margin-top:10px;border-radius:12px" onclick="startWorkout('${jsStr(curTab)}');go('wo')">▶ ${esc(planDisplayName(curTab))} starten</button>`;
   c.innerHTML=h;
+  const goBtn=document.getElementById('plan-go-btn');
+  if(goBtn)goBtn.innerHTML=planSort?icon('check',20)+'Fertig':icon('play',20)+esc(planDisplayName(curTab))+' starten';
 }
 /* Überlaufmenü einer Planübung — teilt sich das Sheet mit dem Workout-Menü. */
 function openPlanExMenu(i){
@@ -4962,9 +5129,34 @@ function applyLibHint(){
   haptic(8);
   toast('Werte aus der Bibliothek übernommen');
 }
-function openAddEx(){editRef=null;editTab=curTab;document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);document.getElementById('a-btn').textContent='+ HINZUFÜGEN';refreshLibHint();om('m-add')}
-function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;pickRirAdd(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='✓ SPEICHERN';refreshLibHint();om('m-add')}
-function confirmAddEx(){const n=document.getElementById('a-name').value.trim();if(!n){toast('Name!');return}const obj={id:Date.now(),name:n,sets:parseInt(document.getElementById('a-sets').value)||3,rmin:parseInt(document.getElementById('a-rmin').value)||8,rmax:parseInt(document.getElementById('a-rmax').value)||12,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
+function openAddEx(){editRef=null;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Neue Übung';document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);document.getElementById('a-btn').textContent='Übung hinzufügen';refreshLibHint();om('m-add')}
+function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Übung bearbeiten';document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;pickRirAdd(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='Änderungen speichern';refreshLibHint();om('m-add')}
+/* Name und Zahlen der beiden Übungsfenster (Plan: a-…, Bibliothek: libe-…).
+   Früher deutete confirmAddEx falsche Eingaben still um: Sätze −5 wurden 1,
+   Wdh 12 bis 8 wurden 12 bis 12, 9999 Sätze gingen durch. Jetzt sagt das Feld,
+   was nicht geht — rot, mit einer Zeile darunter, der Fokus im ersten
+   fehlerhaften Feld — und nichts wird gespeichert. */
+const EX_LIMITS={sets:[1,20],reps:[1,100]};
+function readExForm(p){
+  const field=k=>document.getElementById(p+'-'+k);
+  const root=field('name').closest('.mdl');
+  clearFieldErrs(root);
+  const num=(k,[lo,hi])=>{const t=String(field(k).value).trim();const n=Number(t);return t!==''&&Number.isInteger(n)&&n>=lo&&n<=hi?n:null};
+  const name=field('name').value.trim();
+  const sets=num('sets',EX_LIMITS.sets),rmin=num('rmin',EX_LIMITS.reps),rmax=num('rmax',EX_LIMITS.reps);
+  if(!name)showFieldErr(p+'-name','Gib der Übung einen Namen.');
+  const msg=[],bad=[];
+  if(sets===null){msg.push('Sätze: 1 bis 20.');bad.push('sets')}
+  if(rmin===null){msg.push('Wdh. von: 1 bis 100.');bad.push('rmin')}
+  if(rmax===null){msg.push('Wdh. bis: 1 bis 100.');bad.push('rmax')}
+  else if(rmin!==null&&rmax<rmin){msg.push('Wdh. bis: mindestens so viel wie Wdh. von.');bad.push('rmax')}
+  bad.forEach(k=>markInvalid(p+'-'+k));
+  if(msg.length)showFieldErr(p+'-'+bad[0],msg.join(' '),p+'-num-err');
+  const first=root.querySelector('[aria-invalid="true"]');
+  if(first){first.focus();return null}
+  return{name,sets,rmin,rmax};
+}
+function confirmAddEx(){const f=readExForm('a');if(!f)return;const obj={id:Date.now(),name:f.name,sets:f.sets,rmin:f.rmin,rmax:f.rmax,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
   if(editRef){
     /* PB-086: Hier stand ein gemerkter INDEX. Der Cloud-Listener ersetzt in
        `D=mergeSyncedData(remote)` das ganze Datenobjekt — auch bei offenem
@@ -5356,19 +5548,37 @@ function openPlanDayModal(mode,sourceKey){
   document.getElementById('pd-hint').textContent=mode==='duplicate'
     ?`Kopiert ${ (src&&src.exercises||[]).length } Übungen aus „${planDisplayName(sourceKey)}“.`
     :'Mehrfachauswahl möglich. Der nächste Tag wird auf dem Dashboard vorgeschlagen.';
+  clearFieldErrs(document.getElementById('m-planday'));
+  syncPlanDayOrder();
   om('m-planday');
   setTimeout(()=>document.getElementById('pd-name').focus(),200);
 }
 function addPlanDay(){openPlanDayModal('add')}
 function renamePlanDay(){if(!curTab){toast('Erst einen Tag wählen');return}openPlanDayModal('rename',curTab)}
 function duplicatePlanDay(){if(!curTab){toast('Erst einen Tag wählen');return}openPlanDayModal('duplicate',curTab)}
+/* In „Tag bearbeiten“ steht unter den Wochentagen, an welcher Stelle der Tag
+   im Plan liegt; „Früher“ und „Später“ verschieben ihn (die Pfeile neben den
+   Tabs sind dafür weggefallen). */
+function syncPlanDayOrder(){
+  const box=document.getElementById('pd-order');
+  if(!box)return;
+  const keys=Object.keys(D.plan||{});
+  const i=keys.indexOf(planDayOriginal);
+  box.hidden=!(planDayMode==='rename'&&i>=0&&keys.length>1);
+  document.getElementById('pd-order-n').textContent=i>=0?`Tag ${i+1} von ${keys.length}`:'';
+  document.getElementById('pd-earlier').disabled=i<=0;
+  document.getElementById('pd-later').disabled=i<0||i>=keys.length-1;
+}
 function savePlanDay(){
+  const root=document.getElementById('m-planday');
+  clearFieldErrs(root);
   const raw=document.getElementById('pd-name').value.trim();
-  if(!raw){toast('Name eingeben');return}
+  const fail=text=>{showFieldErr('pd-name',text);document.getElementById('pd-name').focus()};
+  if(!raw){fail('Gib dem Tag einen Namen.');return}
   const key=planKeyFromName(raw);
   const dayStr=planDaySelected.join(' + ');
   if(planDayMode==='rename'){
-    if(key!==planDayOriginal&&D.plan[key]){toast('Name existiert bereits!');return}
+    if(key!==planDayOriginal&&D.plan[key]){fail('Diesen Namen gibt es schon.');return}
     const entries=Object.entries(D.plan);
     const rebuilt={};
     entries.forEach(([k,v])=>{
@@ -5382,7 +5592,7 @@ function savePlanDay(){
     }
     curTab=key;
   }else{
-    if(D.plan[key]){toast('Existiert bereits!');return}
+    if(D.plan[key]){fail('Diesen Namen gibt es schon.');return}
     const src=planDayOriginal?D.plan[planDayOriginal]:null;
     D.plan[key]={
       day:dayStr,
@@ -5406,16 +5616,16 @@ function deletePlanDay(){
 }
 /* Objekt-Schlüsselreihenfolge ist die Anzeigereihenfolge — also bauen wir
    das Objekt beim Verschieben neu auf, statt einen Sortierindex zu pflegen. */
-function movePlanDay(dir){
+function movePlanDay(dir,key){
   const keys=Object.keys(D.plan||{});
-  const i=keys.indexOf(curTab);
+  const i=keys.indexOf(key||curTab);
   const j=i+dir;
   if(i<0||j<0||j>=keys.length){haptic(6);return}
   [keys[i],keys[j]]=[keys[j],keys[i]];
   const rebuilt={};
   keys.forEach(k=>{rebuilt[k]=D.plan[k]});
   D.plan=rebuilt;
-  save();markPlanDirty();renderPlan();renderDash();haptic(10);
+  save();markPlanDirty();renderPlan();renderDash();syncPlanDayOrder();haptic(10);
 }
 function saveBioHeight(v){D.bio.height=parseFloat(v)||null;save();renderBio()}
 function saveBioBirthday(v){D.bio.birthday=v||null;save();renderBio()}
@@ -5978,8 +6188,8 @@ function renderHistEdit(){
   if(!body||!histEditDraft)return;
   const iso=dateKey(histEditDraft.date);
   let h=`<div class="ir" style="margin-bottom:6px">`+
-    `<div class="ig"><label>Datum</label><input type="date" id="he-date" value="${attr(/^\d{4}-\d{2}-\d{2}$/.test(iso)?iso:'')}"></div>`+
-    `<div class="ig"><label>Dauer (min)</label><input type="number" inputmode="numeric" id="he-dur" value="${attr(parseInt(histEditDraft.duration,10)||0)}"></div></div>`;
+    `<div class="ig"><label for="he-date">Datum</label><input type="date" id="he-date" value="${attr(/^\d{4}-\d{2}-\d{2}$/.test(iso)?iso:'')}"></div>`+
+    `<div class="ig"><label for="he-dur">Dauer (min)</label><input type="number" inputmode="numeric" id="he-dur" value="${attr(parseInt(histEditDraft.duration,10)||0)}"></div></div>`;
   if(!histEditDraft.sets.length){
     h+=`<div class="empty">Kein Satz mehr übrig. Speichern ist hier nicht möglich — eine Session ohne Sätze wäre keine. Nutze den Löschen-Knopf in der Historie.</div>`;
   }
@@ -5993,9 +6203,9 @@ function renderHistEdit(){
     const cardio=isCardioSet(x);
     h+=`<div class="he-set">`+
       `<span class="he-nr">${esc(parseInt(x.nr,10)||1)}.</span>`+
-      `<div class="ig"><label>${cardio?'Stufe':'kg'}</label><input type="number" inputmode="decimal" step="0.5" id="he-w-${k}" value="${attr(x.w)}"></div>`+
-      `<div class="ig"><label>${cardio?'Min':'Wdh'}</label><input type="number" inputmode="numeric" id="he-r-${k}" value="${attr(x.r)}"></div>`+
-      `<div class="ig"><label>RIR</label><input type="number" inputmode="numeric" id="he-rir-${k}" value="${attr(x.rir)}"></div>`+
+      `<div class="ig"><label for="he-w-${k}">${cardio?'Stufe':'kg'}</label><input type="number" inputmode="decimal" step="0.5" id="he-w-${k}" value="${attr(x.w)}"></div>`+
+      `<div class="ig"><label for="he-r-${k}">${cardio?'Min':'Wdh'}</label><input type="number" inputmode="numeric" id="he-r-${k}" value="${attr(x.r)}"></div>`+
+      `<div class="ig"><label for="he-rir-${k}">RIR</label><input type="number" inputmode="numeric" id="he-rir-${k}" value="${attr(x.rir)}"></div>`+
       `<button type="button" class="be-del" aria-label="Satz löschen" onclick="delHistSet(${k})">${icon('trash',16)}</button>`+
     `</div>`;
   });
@@ -7119,14 +7329,18 @@ function coachMatrixHTML(a){
      lieber scrollen lassen als Spalten unter 40 px zu quetschen. */
   const cols=a.dayKeys.length;
   const labels=coachDayLabels(a.dayKeys);
-  return`<div class="coach-matrix" style="--cols:${cols}">`+
-    `<div class="mx-h"><div>Muskel</div>${a.dayKeys.map((k,i)=>`<div title="${attr(planDisplayName(k))}">${esc(labels[i])}</div>`).join('')}<div>Σ</div></div>`+
+  /* Eine Spalte „ind.“ zwischen den Tagen und der Summe: in jeder Zeile gilt
+     A + B + C + ind. = Σ. Ohne indirekte Sätze (Anzeige „nur direkt“) entfällt sie. */
+  const ind=a.withSecondary;
+  return`<div class="coach-matrix" style="--cols:${cols}${ind?'':';--tail:44px'}">`+
+    `<div class="mx-h"><div>Muskel</div>${a.dayKeys.map((k,i)=>`<div title="${attr(planDisplayName(k))}">${esc(labels[i])}</div>`).join('')}${ind?'<div title="indirekt">ind.</div>':''}<div>Σ</div></div>`+
     a.muscles.map(m=>{
       const cls=m.state.key==='low'||m.sets<=0?'low':m.state.key==='high'?'high':'';
       const label=(VOL_GROUP_META[m.key]||{}).mx||m.name;
       return`<div class="mx-r ${cls}"><div class="nm" title="${attr(m.name)}">${esc(label)}</div>`+
-        a.dayKeys.map(k=>{const v=m.days[k];return`<div class="c${v?' on':''}">${v?esc(v):'·'}</div>`}).join('')+
-        `<div class="tot" style="color:${m.sets<=0?'#ffb020':m.state.color}">${esc(m.sets)}</div></div>`;
+        a.dayKeys.map(k=>{const v=m.days[k];return`<div class="c${v?' on':''}">${v?esc(de(v)):'·'}</div>`}).join('')+
+        (ind?`<div class="c${m.indirect>0?' ind':''}">${m.indirect>0?esc(de(m.indirect)):'·'}</div>`:'')+
+        `<div class="tot" style="color:${m.sets<=0?'#ffb020':m.state.color}">${esc(de(m.sets))}</div></div>`;
     }).join('')+
   `</div>`+
   `<div class="coach-legend"><span><i style="background:#ffb020"></i>unter MEV</span><span><i style="background:#2ee06a"></i>im MAV</span><span><i style="background:#4ea1ff"></i>über MAV</span><span><i style="background:#ff3b5c"></i>über MRV</span></div>`;
@@ -7654,7 +7868,7 @@ async function openPlanShare(dayKeys){
       `<button type="button" class="btn btn-g" style="margin:0" onclick="downloadSharePlan()">Als Datei</button>`+
     `</div>`+
     `<details class="share-code"><summary>Code anzeigen (${code.length} Zeichen)</summary>`+
-    `<textarea readonly rows="4" onclick="this.select()">${esc(code)}</textarea></details>`;
+    `<textarea readonly rows="4" aria-label="Plan-Code" onclick="this.select()">${esc(code)}</textarea></details>`;
   om('m-share');
 }
 async function sharePlanLink(){
@@ -7704,7 +7918,7 @@ let importState={payload:null,mode:'add',pausen:false};
 function openPlanImport(){
   document.getElementById('import-body').innerHTML=
     `<div class="share-sub">Code einfügen, Datei wählen oder einen geteilten Link öffnen.</div>`+
-    `<textarea id="import-code" rows="4" placeholder="PB1C-…" spellcheck="false" autocapitalize="off"></textarea>`+
+    `<textarea id="import-code" rows="4" aria-label="Plan-Code" placeholder="PB1C-…" autocomplete="off" spellcheck="false" autocapitalize="off"></textarea>`+
     `<div class="share-actions sheet-cta">`+
       `<button type="button" class="btn" style="margin:0" onclick="submitImportCode()">Weiter</button>`+
       `<button type="button" class="btn btn-g" style="margin:0" onclick="document.getElementById('import-file').click()">Datei wählen</button>`+
@@ -8894,6 +9108,7 @@ function syncHomeNoteUI(){
 }
 function togglePlanDrawer(){
   ensureHomeUIState();
+  if(planSort)endPlanSort();
   D.ui.homePlanOpen=!D.ui.homePlanOpen;
   save();
   syncPlanDrawerUI();
@@ -9331,11 +9546,8 @@ function syncLogSave(){
   });
 }
 function showLogErr(id,text){
-  const err=document.getElementById(id+'-err');
-  err.textContent=text;err.hidden=false;
-  const el=document.getElementById(id);
-  el.setAttribute('aria-invalid','true');
-  el.focus();
+  showFieldErr(id,text);
+  document.getElementById(id).focus();
 }
 /* „Übernehmen" in der Zielzeile: Gewicht (und, wenn die Vorgabe sie nennt,
    Wiederholungen) auf die Vorgabe setzen. Gerechnet wird wie beim Öffnen
@@ -9876,6 +10088,22 @@ function openWorkoutMenu(){
     row('toggleWorkoutCompact()',D.active.compact?'collapse':'expand',D.active.compact?'Nur Fokus':'Alle aufklappen')+
     row('endWorkout()','check','Workout speichern','last');
   om('m-womenu');
+}
+/* Das ⋯ im Kopf des Plans: alles, was den Plan als Ganzes oder einen Tag
+   betrifft. „+ Übung“ steht als einziger Knopf daneben. */
+function openPlanMenu(){
+  const n=((D.plan[curTab]||{}).exercises||[]).length;
+  const row=(fn,ic,text,cls)=>`<button type="button" class="menu-row${cls?' '+cls:''}" onclick="cm('m-planmenu');${fn}">${icon(ic,20)}<span>${text}</span></button>`;
+  document.getElementById('planmenu-list').innerHTML=
+    row('addPlanDay()','plus','Tag hinzufügen')+
+    row('renamePlanDay()','edit','Tag bearbeiten')+
+    row('duplicatePlanDay()','copy','Tag duplizieren')+
+    (n>1?row('startPlanSort()','swap','Reihenfolge ändern'):'')+
+    row('openLibraryEditor()','book','Bibliothek')+
+    row('openPlanShare()','copy','Plan teilen')+
+    row('openPlanImport()','down','Plan importieren')+
+    row('deletePlanDay()','trash','Tag löschen','danger');
+  om('m-planmenu');
 }
 /* Ein Kontextmenü statt sechs Buttons pro Zeile — auf dem Handy ist
    Bildschirmbreite die knappste Ressource. */
@@ -10434,6 +10662,8 @@ function pickLibraryItem(encodedName){
     if(pushExerciseToActiveWorkout(item))return;
   }
   editRef=null;editTab=curTab;
+  clearFieldErrs(document.getElementById('m-add'));
+  document.getElementById('a-title').textContent='Neue Übung';
   /* Der kurze Name wandert in den Plan — der englische in der Klammer ist
      Suchhilfe, kein Teil der Übung. */
   document.getElementById('a-name').value=exDisplayName(item.name);
@@ -10445,7 +10675,7 @@ function pickLibraryItem(encodedName){
   document.getElementById('a-mus').value=item.m;
   document.getElementById('a-note').value=item.note||'';
   document.getElementById('a-target').textContent='Wird zu: '+(curTab||'').replace('_',' ');
-  document.getElementById('a-btn').textContent='+ HINZUFÜGEN';
+  document.getElementById('a-btn').textContent='Übung hinzufügen';
   om('m-add');
   toast('Bibliothek: '+item.name);
 }
@@ -10466,6 +10696,7 @@ function jsStr(s){
 }
 function resetLibraryEditorForm(){
   libEditOriginal=null;
+  clearFieldErrs(document.getElementById('m-lib-edit'));
   document.getElementById('libe-name').value='';
   document.getElementById('libe-sets').value=3;
   document.getElementById('libe-rmin').value=8;
@@ -10509,13 +10740,14 @@ function editLibraryExercise(name){
 }
 function addLibraryExercise(){
   ensureLibraryState();
-  const name=document.getElementById('libe-name').value.trim();
-  if(!name){toast('Name eingeben');return}
+  const f=readExForm('libe');
+  if(!f)return;
+  const name=f.name;
   const item={
     name,
-    s:parseInt(document.getElementById('libe-sets').value)||3,
-    rn:parseInt(document.getElementById('libe-rmin').value)||8,
-    rx:parseInt(document.getElementById('libe-rmax').value)||12,
+    s:f.sets,
+    rn:f.rmin,
+    rx:f.rmax,
     rir:2,
     t:document.getElementById('libe-type').value,
     m:document.getElementById('libe-muscle').value,
@@ -10622,7 +10854,7 @@ function renderAlternativeList(){
       `<button class="alt-filter${altState.scope==='muscle'?' on':''}" onclick="setAltScope('muscle')">${esc(muscleName(current.muscle))}</button>`+
       `<button class="alt-filter${altState.scope==='all'?' on':''}" onclick="setAltScope('all')">Alle</button>`+
     `</div>`+
-    `<input class="lib-search" id="alt-search" placeholder="Übung suchen…" value="${attr(altState.query)}" oninput="setAltQuery(this.value)">`+
+    `<input class="lib-search" id="alt-search" type="search" aria-label="Übung suchen" placeholder="Übung suchen…" autocomplete="off" enterkeyhint="search" value="${attr(altState.query)}" oninput="setAltQuery(this.value)">`+
     (altState.list.length
       ?altState.list.map(renderAlternativeButton).join('')
       :'<div class="empty">Nichts gefunden. Tippe auf „Alle“ oder such nach einem anderen Namen.</div>');
