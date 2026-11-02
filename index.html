@@ -6125,7 +6125,7 @@ function logTargetExercise(){
   if(!ex||!Array.isArray(ex.logged))return null;
   return ex;
 }
-function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;startTmr();renderWo();toast(`↩ Wiederholt: ${last.w}kg × ${last.r}`);if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx)}
+function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;startTmr();renderWo();toast(`Wiederholt: ${de(last.w)} kg × ${last.r}`);if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx)}
 function skipEx(ei){
   const ex=activeExercisesSafe()[ei];
   if(!ex)return;
@@ -9974,7 +9974,7 @@ function confirmLog(){
   if(cardio){
     toast(`${entry.r} min${entry.w?` · Stufe ${entry.w}`:''}`);haptic(12);
   }else if(isPR){
-    celebratePR('NEUER PR!',`${a} kg × ${b} · e1RM ${calc1RM(a,b)} kg`);
+    celebratePR('NEUER PR!',`${de(a)} kg × ${b} · e1RM ${de(calc1RM(a,b))} kg`);
     toast(`Neuer Rekord: ${de(a)} kg × ${b} · e1RM ${de(calc1RM(a,b))} kg`);
   }else{
     toast(`${de(a)} kg × ${b} · RIR ${rir}`);haptic(12);
