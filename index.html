@@ -651,11 +651,16 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 
 
 /* theme + mode chips */
-.theme-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.theme-chip{padding:10px 15px;border-radius:999px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-weight:700;font-size:12px;cursor:pointer;transition:.15s}
-.theme-chip:active{transform:scale(.95)}
-.theme-chip.active{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 40%,transparent);border-color:color-mix(in srgb,var(--accent) 55%,transparent);color:var(--text);background:color-mix(in srgb,var(--accent) 10%,var(--bg3))}
-.theme-chip .sw{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:8px;vertical-align:middle;box-shadow:0 0 8px currentColor}
+/* Vier runde Farbfelder in einer Reihe, der Name darunter. Die Wahl zeigt
+   ein Ring UND ein Haken — nicht die Farbe allein. */
+.theme-chip-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.theme-chip{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:44px;padding:0;border:0;background:none;
+  color:var(--text2);font-family:'Space Grotesk',sans-serif;font-size:12px;line-height:1;font-weight:500;cursor:pointer}
+.theme-chip i{display:grid;place-items:center;width:44px;height:44px;border-radius:999px;background:var(--c);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);color:#10130a;transition:transform .12s var(--sp)}
+.theme-chip:active i{transform:scale(.95)}
+.theme-chip.active{color:var(--text);font-weight:600}
+.theme-chip.active i{box-shadow:0 0 0 3px var(--bg2),0 0 0 5px var(--accent)}
 .mode-switch{display:flex;gap:8px;margin-top:10px}
 .mode-pill{flex:1;padding:12px 14px;border-radius:14px;background:var(--bg3);border:1px solid var(--line);color:var(--text2);font-weight:700;text-align:center;cursor:pointer}
 .mode-pill.active{background:color-mix(in srgb,var(--accent) 16%,var(--bg3));border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--text)}
@@ -1957,13 +1962,53 @@ div.wg-note{cursor:default}
 .sr-num input{width:74px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;
   background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:12px;padding:9px 10px;color:var(--text)}
 .sr-num small{font-size:10.5px;color:var(--text3);font-weight:700}
-.sr-code{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);flex:0 0 auto;
-  background:rgba(255,255,255,.06);border-radius:10px;padding:7px 11px}
+/* Der Sync-Schlüssel: verdeckt, bis man tippt. Knopf, nicht Text — die
+   Trefferfläche ist 44 px hoch, auch wenn der Schlüssel klein gesetzt ist. */
+.sr-code{flex:0 0 auto;display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:0;border-radius:8px;
+  background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px var(--line);color:var(--text);cursor:pointer;
+  font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+button.sr-code:active{transform:scale(.97)}
+code.sr-code{cursor:auto}
+.sr.sr-tight{padding-bottom:10px;border-bottom:none}
 .setbtn{flex:1 1 auto;min-width:96px;padding:11px 14px;border-radius:14px;cursor:pointer;
   background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);
   font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700}
 .setbtn:active{transform:scale(.97)}
-.setbtn.danger{flex:0 0 auto;color:var(--red)}
+.setbtn.danger{flex:0 0 auto;min-height:44px;color:var(--red)}
+/* Knöpfe einer Karte im Raster: zwei gleich breite Spalten, eine Aktion
+   für sich (Import, Abmelden) über die ganze Breite. Alle 44 px hoch. */
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:2px 0 14px}
+.set-grid .setbtn{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;min-height:44px;padding:0 12px;font-size:14px;font-weight:600}
+.set-grid .set-wide{grid-column:1/-1}
+.set-grid .set-ghost{background:transparent;color:var(--text2)}
+/* Satzpause: Minus, Zeit als m:ss, Plus. Halten wiederholt, wie im Satz-Fenster. */
+.sr-step{display:flex;align-items:center;flex:0 0 auto}
+.sr-pm{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:14px;cursor:pointer;
+  background:rgba(255,255,255,.07);box-shadow:var(--edge),inset 0 0 0 1px var(--line);color:var(--text);
+  transition:transform .12s var(--sp);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.sr-pm:active{transform:scale(.97);background:var(--bg5)}
+.sr-step output{min-width:56px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
+/* Ein Zustand ist ein Schalter, und die ganze Zeile schaltet ihn. */
+.sr.sr-switch{min-height:56px;cursor:pointer}
+
+/* Fenster von unten, das vor einem großen Schritt fragt: Titel, was passiert,
+   der Weg nach vorn, ein sichtbares Abbrechen. Zwei Tipps, keine Geste. */
+.mdl-ask{padding-bottom:max(env(safe-area-inset-bottom),24px)}
+.mdl-ask .ask-t{margin:0;font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;font-weight:400;letter-spacing:.01em;color:var(--text)}
+.mdl-ask .ask-lead{margin:8px 0 0;font-size:14px;line-height:1.45;color:var(--text2);text-wrap:balance}
+.mdl-ask .ask-st{margin:16px 4px 8px;font-size:13px;line-height:1.3;font-weight:600;color:var(--text2)}
+.mdl-ask .ask-list{border-radius:20px;background:var(--bg2);box-shadow:var(--edge)}
+.mdl-ask .ask-li{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;padding:0 16px;font-size:14px;font-weight:500}
+.mdl-ask .ask-li+.ask-li{border-top:1px solid rgba(255,255,255,.07)}
+.mdl-ask .ask-li b{max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.mdl-ask .ask-go,.mdl-ask .ask-del{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:56px;margin-top:16px;border:0;border-radius:999px;
+  font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:transform .12s var(--sp)}
+.mdl-ask .ask-go{background:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.35);color:#10130a}
+.mdl-ask .ask-del{margin-top:8px;background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);color:var(--red)}
+.mdl-ask .ask-cancel{display:flex;align-items:center;justify-content:center;width:100%;height:44px;margin-top:8px;border:0;border-radius:999px;background:none;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--text2)}
+.mdl-ask button:active{transform:scale(.97)}
+.mdl-ask button:disabled{opacity:.5;cursor:default}
 
 /* Schalter: eigener Baustein statt drei absolut positionierter divs mit
    Inline-Styles. Der Knopf hört auf :checked, nicht auf JavaScript — damit
@@ -2161,8 +2206,8 @@ div.wg-note{cursor:default}
 <div id="login-screen" class="login-screen">
 <div class="login-logo">PUMPBRAH</div>
 <div class="login-sub">Cloud Sync für alle Geräte</div>
-<input class="login-input" id="sync-code" aria-label="Dein Name" placeholder="DEIN NAME" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go">
-<div class="login-hint">Dein Name = dein Profil & Sync-Code. Gleicher Name auf jedem Gerät = gleiche Daten überall.</div>
+<input class="login-input" id="sync-code" aria-label="Dein Name oder Sync-Schlüssel" placeholder="NAME ODER SCHLÜSSEL" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go">
+<div class="login-hint">Neu hier: tipp deinen Namen, die App erzeugt deinen Sync-Schlüssel. Auf einem weiteren Gerät tippst du den Schlüssel aus dem Profil.</div>
 <button class="btn" data-primary style="max-width:300px" onclick="doLogin()">▶ LOS GEHT'S</button>
 <div class="sep" style="margin:20px 0;max-width:300px;width:100%"></div>
 <button class="btn btn-g" style="max-width:300px" onclick="offlineMode()">Offline-Modus (ohne Sync)</button>
@@ -2315,17 +2360,17 @@ div.wg-note{cursor:default}
 <div class="st">Training <div class="ln"></div></div>
 <div class="set-card">
 <div class="sr">
-<div class="sr-bd"><b>Satzpause · Grundübung</b><span>Brust, Rücken, Beine</span></div>
-<div class="sr-num"><input type="number" inputmode="numeric" id="set-c" aria-label="Satzpause Grundübung in Sekunden" value="120" onchange="saveSetting('compound',this.value)"><small>Sek</small></div>
+<div class="sr-bd"><b>Satzpause Grundübung</b><span>Brust, Rücken, Beine</span></div>
+<div class="sr-step" role="group" aria-label="Satzpause Grundübung"><button type="button" class="sr-pm" aria-label="Satzpause Grundübung kürzer" onpointerdown="event.preventDefault();pauseHold('compound',-PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('compound',-PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14"/></svg></button><output id="set-c" aria-live="polite">2:00</output><button type="button" class="sr-pm" aria-label="Satzpause Grundübung länger" onpointerdown="event.preventDefault();pauseHold('compound',PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('compound',PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
 </div>
 <div class="sr">
-<div class="sr-bd"><b>Satzpause · Isolation</b><span>Schultern, Arme, Core</span></div>
-<div class="sr-num"><input type="number" inputmode="numeric" id="set-i" aria-label="Satzpause Isolation in Sekunden" value="120" onchange="saveSetting('isolation',this.value)"><small>Sek</small></div>
+<div class="sr-bd"><b>Satzpause Isolation</b><span>Schultern, Arme, Core</span></div>
+<div class="sr-step" role="group" aria-label="Satzpause Isolation"><button type="button" class="sr-pm" aria-label="Satzpause Isolation kürzer" onpointerdown="event.preventDefault();pauseHold('isolation',-PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('isolation',-PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14"/></svg></button><output id="set-i" aria-live="polite">2:00</output><button type="button" class="sr-pm" aria-label="Satzpause Isolation länger" onpointerdown="event.preventDefault();pauseHold('isolation',PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('isolation',PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
 </div>
-<div class="sr sr-last">
-<div class="sr-bd"><b>Krank-Modus</b><span id="sick-label">Nicht aktiv</span></div>
-<button class="btn btn-s btn-orange" id="sick-btn" style="margin:0;flex:0 0 auto" onclick="toggleSick()">Krank melden</button>
-</div>
+<label class="sr sr-last sr-switch">
+<span class="sr-bd"><b>Krank-Modus</b><span id="sick-label">Nicht aktiv</span></span>
+<span class="sw-toggle"><input type="checkbox" id="sick-toggle" role="switch" aria-describedby="sick-label" onchange="toggleSick()"><span class="sw-track"></span><span class="sw-knob"></span></span>
+</label>
 </div>
 <div class="st">Körperanalyse <div class="ln"></div></div>
 <div class="set-card">
@@ -2339,30 +2384,42 @@ div.wg-note{cursor:default}
 </div>
 <div class="st">Daten <div class="ln"></div></div>
 <div class="set-card">
-<div class="sr" id="sync-row">
-<div class="sr-bd"><b>Sync-Code</b><span>Dein Code ist zugleich dein Konto. Wer ihn kennt, sieht deine Daten.</span></div>
-<code class="sr-code" id="show-sync"></code>
-</div>
-<div class="sr">
+<div class="sr sr-tight">
 <div class="sr-bd"><b>Sicherung</b><span id="backup-note">Noch nie exportiert.</span></div>
 </div>
-<div class="sr sr-last" style="flex-wrap:wrap;gap:8px">
-<button class="setbtn" onclick="exportData()">Backup (JSON)</button>
-<button class="setbtn" onclick="exportCSV()">Sätze (CSV)</button>
-<button class="setbtn" onclick="document.getElementById('imp').click()">Import</button>
+<div class="set-grid">
+<button type="button" class="setbtn" onclick="exportData()"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Backup (JSON)</button>
+<button type="button" class="setbtn" onclick="exportCSV()"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M10 10v9"/></svg>Sätze (CSV)</button>
+<button type="button" class="setbtn set-wide" onclick="document.getElementById('imp').click()"><svg class="ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 16V5M7 9l5-5 5 5M5 20h14"/></svg>Import</button>
+</div>
 <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
-<button class="setbtn" onclick="doLogout()">Abmelden</button>
 </div>
-</div>
+<div class="st">Konto <div class="ln"></div></div>
+<div class="set-card" id="konto-card"></div>
 <div class="st">Gefahrenzone <div class="ln"></div></div>
 <div class="set-card">
 <div class="sr sr-last">
 <div class="sr-bd"><b>Alle Daten löschen</b><span>Plan, Historie, Messungen — lokal und in der Cloud. Nicht rückgängig zu machen.</span></div>
-<button class="setbtn danger" onclick="if(confirm('ALLE Daten unwiderruflich löschen?'))resetAll()">Löschen</button>
+<button type="button" class="setbtn danger" onclick="openReset(event)">Löschen</button>
 </div>
 </div>
 </div>
 </div>
+<div class="mbg" id="m-reset"><div class="mdl mdl-ask" role="dialog" aria-modal="true" aria-labelledby="reset-t">
+<h2 class="ask-t" id="reset-t">Alle Daten löschen?</h2>
+<p class="ask-lead" id="reset-lead">Gilt für dieses Gerät und die Cloud. Nicht rückgängig zu machen.</p>
+<h3 class="ask-st">Wird gelöscht</h3>
+<div class="ask-list" id="reset-list"></div>
+<button type="button" class="ask-go" onclick="exportData()"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Backup zuerst laden</button>
+<button type="button" class="ask-del" id="reset-go" onclick="resetAll()">Alles löschen</button>
+<button type="button" class="ask-cancel" id="reset-cancel" onclick="cm('m-reset')">Abbrechen</button>
+</div></div>
+<div class="mbg" id="m-newkey"><div class="mdl mdl-ask" role="dialog" aria-modal="true" aria-labelledby="newkey-t">
+<h2 class="ask-t" id="newkey-t">Neuen Schlüssel erzeugen?</h2>
+<p class="ask-lead" id="newkey-lead">Deine Daten ziehen unter einen zufälligen Schlüssel um. Dein Name gilt danach nicht mehr. Auf anderen Geräten meldest du dich mit dem neuen Schlüssel an.</p>
+<button type="button" class="ask-go" id="newkey-go" onclick="neuenSchluesselErzeugen()">Schlüssel erzeugen</button>
+<button type="button" class="ask-cancel" onclick="cm('m-newkey')">Abbrechen</button>
+</div></div>
 <div class="mbg" id="m-egym"><div class="mdl">
 <div class="mt"><span id="egym-modal-title">EGYM MESSUNG</span> <button class="mc" onclick="cm('m-egym')">✕</button></div>
 <div class="ig" style="margin-bottom:8px"><label for="egym-date">Datum</label><input type="date" id="egym-date"></div>
@@ -2831,6 +2888,10 @@ function mergeSyncedData(remote){
   merged.library.deleted=[...new Set([...(localLibrary.deleted||[]),...(remoteLibrary.deleted||[])])];
   merged.history=mergeHistory(local.history,remote.history,merged.deleted.history);
   merged.meta={...(local.meta||{}),...(incoming.meta||{}),updatedAt:Math.max(dataStamp(local),dataStamp(incoming))};
+  /* Der Anzeigename (Sync-Schlüssel) hängt nicht daran, wessen ui-Block
+     gewinnt: ein Stand ohne Namen löscht ihn nicht. */
+  const name=(preferRemote?[incoming,local]:[local,incoming]).map(x=>x.ui&&x.ui.name).find(Boolean);
+  if(name)merged.ui={...(merged.ui||{}),name};
   return merged;
 }
 function mergeSyncedSnapshot(localSnapshot,remote){
@@ -3094,8 +3155,12 @@ if(typeof document!=='undefined'){
   window.addEventListener('pagehide',()=>queueCloudSave(true));
 }
 function flushCloudSave(){
-  if(!useFirebase||!db||!syncCode)return;
-  const ref=db.collection('pumpbrah').doc(syncCode);
+  if(!useFirebase||!db||!syncCode||kontoFehlt)return;
+  const code=syncCode,warDa=kontoWarDa();
+  const ref=db.collection('pumpbrah').doc(code);
+  /* War das Konto schon einmal da und fehlt jetzt, wird es nicht neu angelegt:
+     es ist umgezogen oder gelöscht (siehe kontoWeg). */
+  const pruefen=doc=>{if(!doc.exists&&warDa)throw new Error(KONTO_WEG)};
   const localSnapshot=cloneData(D);
   const zusammenfuehren=remote=>{
     const merged=remote?mergeSyncedSnapshot(cloneData(localSnapshot),remote):cloneData(localSnapshot);
@@ -3107,10 +3172,13 @@ function flushCloudSave(){
     /* Ältere SDK-Fassungen ohne runTransaction fallen auf den alten Weg
        zurück — schlechter, aber besser als kein Sync. */
     if(typeof db.runTransaction!=='function')
-      return ref.get().then(doc=>ref.set(zusammenfuehren(doc.exists?doc.data():null)));
+      return ref.get().then(doc=>{pruefen(doc);return ref.set(zusammenfuehren(doc.exists?doc.data():null))});
     return db.runTransaction(t=>
-      t.get(ref).then(doc=>{t.set(ref,zusammenfuehren(doc.exists?doc.data():null))}));
-  }).then(()=>updateSyncState(true)).catch(e=>{
+      t.get(ref).then(doc=>{pruefen(doc);t.set(ref,zusammenfuehren(doc.exists?doc.data():null))}));
+  }).then(()=>{if(code===syncCode)kontoGesehen(code);updateSyncState(true)}).catch(e=>{
+    /* Nur wenn es noch das Konto des Geräts ist — ein Schreiben, das vor dem
+       eigenen Schlüsselwechsel losging, meint den alten Namen. */
+    if(e&&e.message===KONTO_WEG){if(code===syncCode)kontoWeg();return}
     console.error('PUMPBRAH: Sync fehlgeschlagen',e);
     updateSyncState(false);
     toast('⚠️ Sync fehlgeschlagen');
@@ -3123,7 +3191,10 @@ function startSync(){
   if(unsubscribe)unsubscribe();
   const ref=db.collection('pumpbrah').doc(syncCode);
   ref.get().then(doc=>{
+    if(!doc.exists&&!ausCache(doc)&&kontoWarDa()){kontoWeg();return}
     if(doc.exists){
+      kontoGesehen();
+      altenNamenLoeschen();
       const remote=doc.data();
       const before=JSON.stringify(D);
       D=mergeSyncedData(remote);
@@ -3150,6 +3221,7 @@ function startSync(){
     updateSyncState(true);
   }).catch(e=>{console.error('PUMPBRAH: Initial sync fehlgeschlagen',e);updateSyncState(false)});
   unsubscribe=ref.onSnapshot(doc=>{
+    if(!doc.exists&&!ausCache(doc)&&kontoWarDa()){kontoWeg();return}
     if(doc.exists){
       const remote=doc.data();
       const before=JSON.stringify(D);
@@ -3180,40 +3252,173 @@ function retrySync(){
   queueCloudSave(true);
 }
 function profileStatusText(){
+  if(kontoFehlt)return'Konto nicht mehr in der Cloud';
   if(!useFirebase)return'Nur auf diesem Gerät';
   const um=lastSyncOk?new Date(lastSyncOk).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'';
   return'Eingeloggt · Cloud-Sync aktiv'+(um?' · gesichert '+um:'');
 }
+/* --------------------------------------------------------------------------
+   SYNC-SCHLÜSSEL
+   Bis November 2026 war der Name zugleich der Schlüssel zum Cloud-Dokument:
+   wer „chris" eintippte, sah Chris' Daten. Neue Konten bekommen beim ersten
+   Sync einen zufälligen Schlüssel — 10 Zeichen aus 32, rund 50 Bit, ohne
+   0/O/1/I —, der Name ist nur noch Anzeige (D.ui.name). Alte Konten mit
+   Namen melden sich weiter an; im Profil ziehen sie auf Wunsch um.
+   Gespeichert wird der Schlüssel klein und ohne Striche, gezeigt groß in
+   Vierergruppen (K7M2-9QXP-4D).
+   -------------------------------------------------------------------------- */
+const SYNC_ZEICHEN='abcdefghjklmnpqrstuvwxyz23456789';
+/* Mindestens eine Ziffer und ein Buchstabe: so hält kein alter Name aus zehn
+   Buchstaben für einen Schlüssel her. */
+function istSyncSchluessel(c){return /^[a-hj-np-z2-9]{10}$/.test(c)&&/\d/.test(c)&&/[a-z]/.test(c)}
+function neuerSyncSchluessel(){
+  const z=new Uint8Array(10);
+  for(;;){
+    crypto.getRandomValues(z);
+    const k=[...z].map(b=>SYNC_ZEICHEN[b&31]).join('');
+    if(istSyncSchluessel(k))return k;
+  }
+}
+function syncSchluesselAnzeige(c){const u=String(c||'').toUpperCase();return u.slice(0,4)+'-'+u.slice(4,8)+'-'+u.slice(8)}
+/* Der Name im Profil: gewählt, sonst der alte Name-als-Schlüssel, sonst „Athlet". */
+function anzeigeName(ersatz){
+  ensureUIState();
+  const n=String(D.ui.name||'').trim();
+  if(n)return n;
+  if(syncCode&&syncCode!=='offline'&&!istSyncSchluessel(syncCode))return syncCode.charAt(0).toUpperCase()+syncCode.slice(1);
+  return ersatz===undefined?'Athlet':ersatz;
+}
+/* Ein Gerät, das sein Konto schon einmal in der Cloud gesehen hat, legt es
+   nicht still neu an, wenn es fehlt: dann hat ein anderes Gerät es auf einen
+   neuen Schlüssel umgezogen oder gelöscht. Neu angelegt, lägen die Daten
+   wieder unter dem alten Namen. Die Daten auf dem Gerät bleiben, und beim
+   nächsten Anmelden kommen sie mit (pb_mitnehmen). */
+const KONTO_WEG='konto-weg';
+let kontoFehlt=false;
+function kontoGesehen(code){try{localStorage.setItem('pb_cloud',code||syncCode)}catch{}}
+function kontoWarDa(){try{return!!syncCode&&localStorage.getItem('pb_cloud')===syncCode}catch{return false}}
+/* Firestore meldet ohne Netz „gibt es nicht" aus dem Zwischenspeicher. Das
+   ist keine Auskunft über die Cloud. */
+function ausCache(doc){return!!(doc&&doc.metadata&&doc.metadata.fromCache)}
+function kontoWeg(){
+  if(kontoFehlt)return;
+  kontoFehlt=true;
+  if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null}
+  if(unsubscribe){unsubscribe();unsubscribe=null}
+  try{localStorage.setItem('pb_mitnehmen','1')}catch{}
+  toastAction('Dein Konto liegt nicht mehr unter diesem Schlüssel.','Neu anmelden',syncVerbinden);
+  if(document.getElementById('main-app').style.display!=='none')renderSettings();
+}
+/* „Mit Sync-Schlüssel verbinden" (offline) und „Neu anmelden": die Daten
+   auf dem Gerät gehen mit ins Konto, statt beim Anmelden zu verschwinden. */
+function syncVerbinden(){try{localStorage.setItem('pb_mitnehmen','1')}catch{}doLogout()}
 function doLogin(){
-  const code=document.getElementById('sync-code').value.trim().toLowerCase();
-  if(!code){toast('Name eingeben!');return}
-  syncCode=code;
-  localStorage.setItem('pb_sync',code);
-  useFirebase=initFirebase();
-  if(useFirebase&&db){
-    db.collection('pumpbrah').doc(code).get().then(doc=>{
-      if(doc.exists){
-        D=mergeLocalOnlyFields(doc.data());
-        normalizeData();
-        localStorage.setItem('pb_data',JSON.stringify(D));
-        startSync();
-        showApp();
-      }else{
-        resetDForNewUser();
-        startOnboarding();
-      }
-    }).catch(()=>{
-      loadLocal();
-      if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}
-    });
-  }else{
+  const eingabe=document.getElementById('sync-code').value.trim();
+  const code=eingabe.toLowerCase();
+  if(!code){toast('Name oder Sync-Schlüssel eingeben');return}
+  const schluessel=code.replace(/[\s-]/g,'');
+  const alsSchluessel=istSyncSchluessel(schluessel)?schluessel:'';
+  let mitnehmen=false;
+  try{mitnehmen=localStorage.getItem('pb_mitnehmen')==='1'}catch{}
+  const anmelden=id=>{syncCode=id;localStorage.setItem('pb_sync',id);localStorage.removeItem('pb_mitnehmen')};
+  /* Ohne Cloud lässt sich nicht prüfen, ob es das Konto gibt: wie bisher. */
+  const ohneCloud=()=>{
+    anmelden(code);
     loadLocal();
     if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}
-  }
+  };
+  if(!db)useFirebase=initFirebase();
+  if(!useFirebase||!db){ohneCloud();return}
+  const col=db.collection('pumpbrah');
+  col.doc(code).get().then(doc=>doc.exists||!alsSchluessel||alsSchluessel===code?[code,doc]
+    :col.doc(alsSchluessel).get().then(d=>[alsSchluessel,d])
+  ).then(([id,doc])=>{
+    if(!doc.exists&&alsSchluessel){toast('Diesen Sync-Schlüssel gibt es nicht. Prüf die Schreibweise.');return}
+    if(mitnehmen)loadLocal();
+    const lokalDa=mitnehmen&&!!(D.bio&&D.bio.height);
+    if(doc.exists){
+      anmelden(id);
+      /* Mitgebrachte Daten: derselbe Weg wie ein wiederkehrendes Gerät
+         (autoResume → startSync führt zusammen). */
+      if(lokalDa){showApp();startSync();queueCloudSave(true);return}
+      D=mergeLocalOnlyFields(doc.data());
+      normalizeData();
+      localStorage.setItem('pb_data',JSON.stringify(D));
+      startSync();
+      showApp();
+      return;
+    }
+    /* Neues Konto: zufälliger Schlüssel, der getippte Name wird Anzeige. */
+    anmelden(neuerSyncSchluessel());
+    if(lokalDa){ensureUIState();D.ui.name=eingabe.slice(0,40);save();showApp();startSync();return}
+    resetDForNewUser();
+    D.ui.name=eingabe.slice(0,40);
+    localStorage.setItem('pb_data',JSON.stringify(D));
+    startOnboarding();
+  }).catch(ohneCloud);
+}
+/* Altes Konto mit Namen → zufälliger Schlüssel. Reihenfolge ist alles:
+   erst in EINER Transaktion lesen und die Kopie unter dem neuen Schlüssel
+   schreiben; erst wenn das festgeschrieben ist, zieht das Gerät um und der
+   alte Name wird gelöscht. Scheitert das Schreiben, bleibt alles, wie es war. */
+function neuenSchluesselErzeugen(){
+  if(!useFirebase||!db||!syncCode||syncCode==='offline'||kontoFehlt||istSyncSchluessel(syncCode))return;
+  const knopf=document.getElementById('newkey-go');
+  const zurueck=meldung=>{
+    if(knopf){knopf.disabled=false;knopf.textContent='Schlüssel erzeugen'}
+    toast(meldung);
+  };
+  if(typeof db.runTransaction!=='function'){zurueck('Das geht mit dieser Version nicht.');return}
+  if(knopf){knopf.disabled=true;knopf.textContent='Zieht um …'}
+  ensureUIState();
+  if(!String(D.ui.name||'').trim())D.ui.name=anzeigeName();
+  const alt=syncCode,neu=neuerSyncSchluessel();
+  const col=db.collection('pumpbrah'),altRef=col.doc(alt),neuRef=col.doc(neu);
+  if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null}
+  const lokal=cloneData(D);
+  let kopie=null;
+  const umzug=cloudWriteQueue.catch(()=>{}).then(()=>db.runTransaction(t=>
+    t.get(neuRef).then(n=>{
+      if(n.exists)throw new Error('Schlüssel schon vergeben');
+      return t.get(altRef);
+    }).then(a=>{
+      const merged=a.exists?mergeSyncedSnapshot(cloneData(lokal),a.data()):cloneData(lokal);
+      if(!merged.meta)merged.meta={};
+      merged.meta.updatedAt=Math.max(dataStamp(lokal),Date.now());
+      kopie=cloudSafeSnapshot(merged);
+      t.set(neuRef,kopie);
+    })));
+  cloudWriteQueue=umzug;
+  return umzug.then(()=>{
+    if(unsubscribe){unsubscribe();unsubscribe=null}
+    syncCode=neu;
+    localStorage.setItem('pb_sync',neu);
+    kontoGesehen(neu);
+    try{localStorage.setItem('pb_alt',alt)}catch{}
+    D=mergeSyncedData(kopie);
+    normalizeData();
+    save();
+    startSync();
+    cm('m-newkey');
+    if(knopf){knopf.disabled=false;knopf.textContent='Schlüssel erzeugen'}
+    renderSettings();
+    toast('Neuer Schlüssel aktiv. Dein Name gilt nicht mehr.');
+  },e=>{
+    console.error('PUMPBRAH: Schlüsselwechsel fehlgeschlagen',e);
+    zurueck('Nicht geklappt, nichts geändert. Versuch es mit Netz noch einmal.');
+  });
+}
+/* Der alte Name wird gelöscht, sobald der neue Schlüssel steht — klappt das
+   nicht sofort (kein Netz), beim nächsten Sync. */
+function altenNamenLoeschen(){
+  let alt='';
+  try{alt=localStorage.getItem('pb_alt')||''}catch{}
+  if(!alt||alt===syncCode||!db)return;
+  db.collection('pumpbrah').doc(alt).delete().then(()=>{try{localStorage.removeItem('pb_alt')}catch{}}).catch(()=>{});
 }
 function resetDForNewUser(){D={plan:{},history:[],active:null,settings:{compound:120,isolation:120},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[],birthday:null,gender:null},egym:{enabled:false,measurements:[]},library:{custom:[],deleted:[]},ui:{accent:'volt',mode:'dark',avatar:'',homePlanOpen:false}};normalizeData();localStorage.setItem('pb_data',JSON.stringify(D))}
 function offlineMode(){useFirebase=false;syncCode='offline';localStorage.setItem('pb_sync','offline');loadLocal();if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}}
-function showApp(){normalizeData();document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';document.getElementById('show-sync').textContent=syncCode;restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
+function showApp(){normalizeData();document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
   checkSharedPlanLink();
   hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachFieldBehavior();attachNavHeight();attachSheetGestures();attachReveals();
   /* Ein beim Laden übernommenes Training steht schon in D (normalizeData),
@@ -4917,7 +5122,7 @@ function getWeeklyVolume(includeSecondary){
   Object.values(vol).forEach(v=>{v.sets=Math.round(v.sets*10)/10;v.indirect=Math.round(v.indirect*10)/10});
   return vol;
 }
-function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Gute Besserung vorbei — back to grind! 💪')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank gemeldet — gute Besserung! 🤒')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?de1(sets.reduce((a,s)=>a+s.rir,0)/sets.length):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;/* Je Einheit ein Punkt: der schwerste Arbeitssatz. Jeder Satz einzeln ergäbe
+function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Krank-Modus aus.')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank-Modus an. Workouts pausiert.')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?de1(sets.reduce((a,s)=>a+s.rir,0)/sets.length):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${maxW} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv">${est1rm?est1rm.rm:'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${median} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;/* Je Einheit ein Punkt: der schwerste Arbeitssatz. Jeder Satz einzeln ergäbe
    vier gleiche Punkte je Einheit und eine Treppe statt einer Linie. Das Datum
    steht unter dem Punkt, der Bestwert ist der gefüllte. */
 const topSets=perSessionSeries(sets,s=>s.w);
@@ -6697,7 +6902,7 @@ function egymBadge(rate){
 }
 function ensureUIState(){
   if(!D.ui||typeof D.ui!=='object')D.ui={};
-  if(!D.ui.accent)D.ui.accent='volt';
+  if(!D.ui.accent||!accentPresets()[D.ui.accent])D.ui.accent='volt';
   D.ui.mode='dark';
   if(D.ui.avatar===undefined)D.ui.avatar='';
   if(D.ui.homePlanOpen===undefined)D.ui.homePlanOpen=false;
@@ -6730,13 +6935,15 @@ function toggleSection(key){
   applySectionState(key);
   haptic(8);
 }
+/* Kein Rot, Blau oder Orange: die gehören den Volumenzonen (über MRV, Info,
+   unter MEV). Whoop-Rot war vom MRV-Rot nicht zu unterscheiden (ΔE 1,9).
+   Gespeichertes „whoop", „apple" oder „ember" wird zu Volt (ensureUIState). */
 function accentPresets(){
   return{
     volt:{accent:'#c6f24e',accent2:'#e4ff7a',glow:'rgba(198,242,78,.34)'},
-    whoop:{accent:'#ff2959',accent2:'#ff4d73',glow:'rgba(255,41,89,.32)'},
-    apple:{accent:'#0a84ff',accent2:'#4da2ff',glow:'rgba(10,132,255,.28)'},
-    ember:{accent:'#ff6a00',accent2:'#ff944d',glow:'rgba(255,106,0,.30)'},
-    cyber:{accent:'#22d3ee',accent2:'#67e8f9',glow:'rgba(34,211,238,.30)'}
+    cyber:{accent:'#22d3ee',accent2:'#67e8f9',glow:'rgba(34,211,238,.30)'},
+    eis:{accent:'#e6ecff',accent2:'#f4f7ff',glow:'rgba(230,236,255,.26)'},
+    rosa:{accent:'#ff8fb8',accent2:'#ffb3cf',glow:'rgba(255,143,184,.30)'}
   };
 }
 function applyVisualTheme(){
@@ -6766,9 +6973,13 @@ function renderThemeControls(){
   /* Kein zweiter Titel „Design" in der Karte — der Abschnitt darüber sagt es
      bereits. Doppelte Überschriften sind die häufigste Art, wie ein Screen
      unruhig wird. */
+  const haken='<svg class="ic" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" style="stroke-width:2"><path d="m5 12 5 5 9-10"/></svg>';
   return`<div class="set-card"><div class="sr sr-last" style="display:block">`+
-    `<div class="sr-bd"><b>Akzentfarbe</b><span>Färbt Knöpfe, Ringe und Hervorhebungen.</span></div>`+
-    `<div class="theme-chip-row">${Object.entries({volt:'Volt',whoop:'Whoop',apple:'Apple',ember:'Ember',cyber:'Cyber'}).map(([k,label])=>`<button class="theme-chip ${D.ui.accent===k?'active':''}" onclick="setAccentTheme('${k}')"><span class="sw" style="background:${presets[k].accent}"></span>${label}</button>`).join('')}</div>`+
+    `<div class="sr-bd"><b>Akzentfarbe</b></div>`+
+    `<div class="theme-chip-row" role="radiogroup" aria-label="Akzentfarbe">${Object.entries({volt:'Volt',cyber:'Cyber',eis:'Eis',rosa:'Rosa'}).map(([k,label])=>{
+      const an=D.ui.accent===k;
+      return`<button type="button" class="theme-chip${an?' active':''}" role="radio" aria-checked="${an}" onclick="setAccentTheme('${k}')"><i style="--c:${presets[k].accent}">${an?haken:''}</i>${label}</button>`;
+    }).join('')}</div>`+
     `</div></div>`;
 }
 function muscleName(m){
@@ -7717,7 +7928,8 @@ function planSharePayload(dayKeys){
   return{
     v:1,
     n:String(name).slice(0,SHARE_MAX_TEXT),
-    a:String((syncCode&&syncCode!=='offline')?syncCode:'').slice(0,60),
+    /* Der Name, nie der Sync-Schlüssel: wer den Plan bekommt, soll nicht ins Konto können. */
+    a:String(anzeigeName('')).slice(0,60),
     t:new Date().toISOString().slice(0,10),
     /* Die Pausenlängen gehören zum Plan, nicht zum Gerät: ein Tag mit 90 s
        Isolationspause ist eine andere Einheit als derselbe Tag mit 120 s —
@@ -8036,7 +8248,53 @@ function checkSharedPlanLink(){
 const EG_FIELDS=['bioage','kraft','kardio','stoff','flex','bmi','gewicht','kfp','kfkg','ffm','smm','kwp','kwl','ezw','izw','bmr','vf','pw','mmal','mmar','mmbl','mmbr','mmru','mual','muar','mubl','mubr','muru'];
 function saveSetting(k,v){D.settings[k]=parseInt(v)||0;save()}
 function doLogout(){if(unsubscribe)unsubscribe();localStorage.removeItem('pb_sync');location.reload()}
-function resetAll(){if(useFirebase&&db&&syncCode)db.collection('pumpbrah').doc(syncCode).delete().catch(()=>{});localStorage.clear();location.reload()}
+/* „Alle Daten löschen": erst zeigen, was verloren geht, dann ein Backup
+   anbieten. Zwei Tipps (Löschen → Alles löschen), keine Geste — das geht mit
+   Tastatur, VoiceOver und Schaltersteuerung gleich. */
+function openReset(e){
+  normalizeData();
+  const tage=Object.keys(D.plan||{}).filter(k=>D.plan[k]&&Array.isArray(D.plan[k].exercises));
+  const uebungen=tage.reduce((n,k)=>n+D.plan[k].exercises.length,0);
+  const messungen=((D.bio&&D.bio.weights)||[]).length+((D.egym&&D.egym.measurements)||[]).length;
+  const cloud=!!syncCode&&syncCode!=='offline';
+  const zeilen=[['Einheiten mit allen Sätzen',(D.history||[]).length],['Trainingstage im Plan',tage.length],
+    ['Übungen im Plan',uebungen],['Messungen',messungen]];
+  if(cloud)zeilen.push(['Cloud-Konto',anzeigeName()]);
+  document.getElementById('reset-list').innerHTML=zeilen.map(([t,w])=>`<div class="ask-li"><span>${t}</span><b>${esc(w)}</b></div>`).join('');
+  document.getElementById('reset-lead').textContent=(cloud?'Gilt für dieses Gerät und die Cloud.':'Gilt für dieses Gerät.')+' Nicht rückgängig zu machen.';
+  const los=document.getElementById('reset-go');
+  los.disabled=false;los.textContent='Alles löschen';
+  om('m-reset');
+  /* Mit der Tastatur geöffnet: der Fokus springt ins Fenster, auf das sichere „Abbrechen". */
+  if(e&&e.detail===0)setTimeout(()=>{const c=document.getElementById('reset-cancel');if(c)c.focus({preventScroll:true})},60);
+}
+/* Erst die Cloud, dann das Gerät: Ist die Cloud nicht erreichbar, wird
+   nichts gelöscht — sonst bliebe die Kopie dort liegen, und man hielte sie
+   für weg. Ein Schreibvorgang, der gerade läuft, darf vorher fertig werden;
+   danach schreibt nichts mehr. Die Meldung kommt nach dem Neuladen. */
+function resetAll(){
+  const cloud=!!(useFirebase&&db&&syncCode&&syncCode!=='offline'&&!kontoFehlt);
+  const knopf=document.getElementById('reset-go');
+  if(knopf){knopf.disabled=true;knopf.textContent='Wird gelöscht …'}
+  if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null}
+  if(unsubscribe){unsubscribe();unsubscribe=null}
+  const code=syncCode,warSync=useFirebase;
+  useFirebase=false;
+  const weg=cloud?Promise.race([
+    cloudWriteQueue.catch(()=>{}).then(()=>db.collection('pumpbrah').doc(code).delete()),
+    new Promise((_,nein)=>setTimeout(()=>nein(new Error('Zeitüberschreitung')),10000))]):Promise.resolve();
+  return weg.then(()=>{
+    localStorage.clear();
+    try{sessionStorage.setItem('pb_notice',cloud?'Cloud-Daten gelöscht.':'Alle Daten gelöscht.')}catch{}
+    location.reload();
+  },e=>{
+    console.error('PUMPBRAH: Löschen in der Cloud fehlgeschlagen',e);
+    useFirebase=warSync;
+    if(useFirebase)startSync();
+    if(knopf){knopf.disabled=false;knopf.textContent='Alles löschen'}
+    toast('Cloud nicht erreichbar. Nichts gelöscht.');
+  });
+}
 /* --------------------------------------------------------------------------
    CSV-EXPORT
    JSON ist das vollständige Backup, aber niemand rechnet damit in einer
@@ -8063,12 +8321,28 @@ function exportCSV(){
   const esc2=v=>{const t=String(v);return /[";\n]/.test(t)?'"'+t.replace(/"/g,'""')+'"':t};
   const csv='﻿'+rows.map(r=>r.map(esc2).join(';')).join('\r\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  return teilenOderLaden(blob,'pumpbrah_saetze_'+new Date().toISOString().slice(0,10)+'.csv').then(ok=>{
+    if(ok)toast(`${rows.length-1} Sätze als CSV exportiert`);
+  });
+}
+/* Auf dem iPhone landet ein Download aus der Home-Screen-App oft nirgends;
+   das Teilen-Blatt bietet „In Dateien sichern", AirDrop und Mail. Ohne
+   Teilen-Blatt (Desktop) bleibt der Download. Ergebnis: true = gesichert,
+   false = abgebrochen. Nicht auf einem echten iPhone geprüft. */
+function teilenOderLaden(blob,name){
+  let datei=null;
+  try{datei=new File([blob],name,{type:blob.type})}catch{}
+  if(datei&&navigator.share&&navigator.canShare&&navigator.canShare({files:[datei]}))
+    return navigator.share({files:[datei],title:name}).then(()=>true,e=>e&&e.name==='AbortError'?false:dateiLaden(blob,name));
+  return Promise.resolve(dateiLaden(blob,name));
+}
+function dateiLaden(blob,name){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='pumpbrah_saetze_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download=name;
   a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  toast(`${rows.length-1} Sätze als CSV exportiert`);
+  return true;
 }
 /* --------------------------------------------------------------------------
    SCHEIBENRECHNER
@@ -8152,13 +8426,13 @@ function markBackupDone(){
 function exportData(){
   normalizeData();
   const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='pumpbrah_'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  markBackupDone();
-  toast('Exportiert!');
+  /* „Gesichert" erst, wenn es wirklich geteilt oder geladen ist — wer das
+     Teilen-Blatt abbricht, hat kein Backup. */
+  return teilenOderLaden(blob,'pumpbrah_'+new Date().toISOString().slice(0,10)+'.json').then(ok=>{
+    if(!ok)return;
+    markBackupDone();
+    toast('Exportiert!');
+  });
 }
 function importData(e){
   const f=e.target.files[0];
@@ -9000,12 +9274,61 @@ function buildWeekGauge(totalSets,rohSaetze){
     `<div class="mesh-side"><div class="o">Wochenvolumen</div><div class="u">von ${gesamt} Gruppen</div><div class="o">im Korridor</div></div></div>`+
     (balken?`<div class="wg-list"><div class="wg-scale"><span class="s-mev">MEV</span><span class="s-mav">MAV</span><span class="s-mrv">MRV</span><span class="s-n">Sätze</span></div><i class="wg-band"></i>${balken}</div>`:'')+
     fuss+`</div>`;
-}function renderSettings(){
+}/* Satzpause: 30 Sekunden bis 10 Minuten in Schritten zu 15 Sekunden,
+   gespeichert weiter in Sekunden. Ein krummer alter Wert (100 s) rastet beim
+   ersten Tipp auf das Raster ein. */
+const PAUSE_MIN=30,PAUSE_MAX=600,PAUSE_SCHRITT=15;
+function pauseText(sek){const v=Math.max(0,parseInt(sek)||0);return Math.floor(v/60)+':'+String(v%60).padStart(2,'0')}
+function pauseStep(k,delta){
+  const v=parseInt(D.settings[k])||0;
+  const n=Math.min(PAUSE_MAX,Math.max(PAUSE_MIN,Math.round((v+delta)/PAUSE_SCHRITT)*PAUSE_SCHRITT));
+  if(n!==v)saveSetting(k,n);
+  const el=document.getElementById(k==='compound'?'set-c':'set-i');
+  if(el)el.textContent=pauseText(n);
+}
+/* Halten wiederholt — derselbe Takt wie stepHold im Satz-Fenster. */
+function pauseHold(k,delta){
+  pauseStep(k,delta);
+  clearTimeout(stepDelay);clearInterval(stepTimer);
+  stepDelay=setTimeout(()=>{stepTimer=setInterval(()=>pauseStep(k,delta),150)},350);
+  const stop=()=>{clearTimeout(stepDelay);clearInterval(stepTimer);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop)};
+  document.addEventListener('pointerup',stop);
+  document.addEventListener('pointercancel',stop);
+}
+/* Konto: wer angemeldet ist, mit welchem Schlüssel, was in der Cloud liegt.
+   Der Schlüssel ist verdeckt: ein Tipp zeigt ihn, der nächste kopiert ihn. */
+let schluesselOffen=false;
+function syncSchluesselTipp(){
+  if(!schluesselOffen){schluesselOffen=true;renderKonto();document.getElementById('sync-key')?.focus();return}
+  copyText(syncSchluesselAnzeige(syncCode),'Schlüssel kopiert');
+}
+function renderKonto(){
+  const el=document.getElementById('konto-card');
+  if(!el)return;
+  if(!syncCode||syncCode==='offline'){
+    el.innerHTML=`<div class="sr sr-tight"><div class="sr-bd"><b>Nicht angemeldet</b><span>Deine Daten liegen nur auf diesem Gerät.</span></div></div>`+
+      `<div class="set-grid"><button type="button" class="setbtn set-wide" onclick="syncVerbinden()">Mit Sync-Schlüssel verbinden</button></div>`;
+    return;
+  }
+  const alterName=!istSyncSchluessel(syncCode);
+  const zustand=kontoFehlt?'Dein Konto liegt nicht mehr unter diesem Schlüssel.':useFirebase?'Sync ist aktiv.':'Gerade keine Verbindung zur Cloud.';
+  const schluessel=alterName
+    ?`<code class="sr-code">${esc(syncCode)}</code>`
+    :`<button type="button" class="sr-code" id="sync-key" onclick="syncSchluesselTipp()" aria-label="${schluesselOffen?'Sync-Schlüssel '+syncSchluesselAnzeige(syncCode)+' kopieren':'Sync-Schlüssel zeigen'}">${schluesselOffen?syncSchluesselAnzeige(syncCode):'•••• •••• ••'}</button>`;
+  el.innerHTML=`<div class="sr"><div class="sr-bd"><b>Angemeldet als ${esc(anzeigeName())}</b><span>${zustand}</span></div></div>`+
+    `<div class="sr"><div class="sr-bd"><b>Sync-Schlüssel</b><span>${alterName?'Dein Schlüssel ist dein Name. Wer ihn errät, sieht deine Daten.':'Tippen zeigt ihn, Tippen auf den Schlüssel kopiert ihn.'}</span></div>${schluessel}</div>`+
+    `<div class="sr sr-tight"><div class="sr-bd"><span>In der Cloud liegen Trainings, Pläne und Körperdaten. „Alle Daten löschen“ entfernt auch diese Kopie.</span></div></div>`+
+    `<div class="set-grid">`+
+    (alterName&&!kontoFehlt&&useFirebase?`<button type="button" class="setbtn set-wide" onclick="om('m-newkey')">Neuen Schlüssel erzeugen</button>`:'')+
+    (kontoFehlt?`<button type="button" class="setbtn set-wide" onclick="syncVerbinden()">Neu anmelden</button>`
+      :`<button type="button" class="setbtn set-wide set-ghost" onclick="doLogout()">Abmelden</button>`)+
+    `</div>`;
+}
+function renderSettings(){
   applyVisualTheme();
-  document.getElementById('set-c').value=D.settings.compound;
-  document.getElementById('set-i').value=D.settings.isolation;
-  document.getElementById('show-sync').textContent=syncCode;
-  const displayName=(syncCode&&syncCode!=='offline')?syncCode.charAt(0).toUpperCase()+syncCode.slice(1):'Athlet';
+  document.getElementById('set-c').textContent=pauseText(D.settings.compound);
+  document.getElementById('set-i').textContent=pauseText(D.settings.isolation);
+  const displayName=anzeigeName();
   const avatarEl=document.getElementById('prof-avatar');
   document.getElementById('prof-name').textContent=displayName.toUpperCase();
   if(!D.ui)D.ui={accent:'volt',mode:'dark',avatar:''};
@@ -9016,24 +9339,15 @@ function buildWeekGauge(totalSets,rohSaetze){
   }else{
     avatarEl.classList.remove('has-image');
     avatarEl.style.backgroundImage='';
-    avatarEl.textContent=syncCode.charAt(0).toUpperCase();
+    avatarEl.textContent=displayName.charAt(0).toUpperCase();
   }
-  /* Ohne Cloud gibt es keinen Code: die Zeile mit „offline" entfällt, der
-     Zustand steht einmal unter dem Namen. */
-  const syncRow=document.getElementById('sync-row');
-  if(syncRow)syncRow.style.display=syncCode==='offline'?'none':'';
   document.getElementById('prof-status').textContent=profileStatusText();
-  if(D.health.sick){
-    document.getElementById('sick-label').textContent='Aktiv seit '+new Date(D.health.sickSince).toLocaleDateString('de-DE')+' — Workouts pausiert';
-    document.getElementById('sick-btn').textContent='Gesund melden';
-    document.getElementById('sick-btn').className='btn btn-s btn-green';
-    document.getElementById('sick-btn').style.margin='0';
-  }else{
-    document.getElementById('sick-label').textContent='Nicht aktiv';
-    document.getElementById('sick-btn').textContent='Krank melden';
-    document.getElementById('sick-btn').className='btn btn-s btn-orange';
-    document.getElementById('sick-btn').style.margin='0';
-  }
+  renderKonto();
+  /* Krank-Modus ist ein Zustand: der Schalter zeigt ihn, darunter seit wann. */
+  const seit=D.health.sick&&D.health.sickSince?new Date(D.health.sickSince):null;
+  document.getElementById('sick-toggle').checked=!!D.health.sick;
+  document.getElementById('sick-label').textContent=!D.health.sick?'Nicht aktiv'
+    :seit&&!isNaN(seit)?'Aktiv seit '+seit.toLocaleDateString('de-DE',{day:'numeric',month:'short'}):'Aktiv';
   if(!D.egym)D.egym={enabled:false,measurements:[]};
   toggleEgym(D.egym.enabled);
   const bn=document.getElementById('backup-note');
@@ -10947,6 +11261,8 @@ document.addEventListener('click',function(e){
 ensureUIState();
 if(D.ui.avatar===undefined)D.ui.avatar='';
 applyVisualTheme();
+/* Die Meldung nach „Alle Daten löschen" überlebt das Neuladen. */
+try{const n=sessionStorage.getItem('pb_notice');if(n){sessionStorage.removeItem('pb_notice');setTimeout(()=>toast(n),300)}}catch{}
 (function autoResume(){
   const saved=localStorage.getItem('pb_sync');
   if(!saved)return;
