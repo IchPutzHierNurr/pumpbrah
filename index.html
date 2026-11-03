@@ -117,9 +117,9 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 
 .app{width:100%;max-width:480px;margin:0 auto;min-height:100dvh;position:relative}
 .screen{display:none;padding:0 15px calc(96px + env(safe-area-inset-bottom,0px))}
-.screen.active{display:block;animation:screenIn .38s var(--ease)}
+/* Seitenwechsel: die Seite blendet nur ein, ohne Unschärfe, Hochrutschen oder Karten, die einzeln nachkommen. */
+.screen.active{display:block;animation:fadeIn .15s var(--ease)}
 @keyframes screenIn{from{opacity:0;transform:translateY(10px) scale(.994);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
-@keyframes riseIn{from{opacity:0;transform:translateY(14px) scale(.99)}to{opacity:1;transform:none}}
 
 /* header */
 .hdr{
@@ -146,26 +146,42 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .bnav-inner{
   pointer-events:auto;
   display:flex;width:100%;max-width:480px;margin:0 auto;
-  background:rgba(14,15,19,.86);
-  backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);
+  background:#0e0f13;
   border-top:1px solid var(--line);
   padding:8px 8px calc(6px + env(safe-area-inset-bottom,0px));
 }
 .bnav-safe{display:none}
-.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;cursor:pointer;border-radius:16px;transition:background .2s var(--ease);position:relative}
-.ni svg{width:21px;height:21px;stroke:var(--text3);fill:none;stroke-width:1.8;transition:.22s var(--ease)}
-.ni .nl{font-size:10px;letter-spacing:.2px;color:var(--text3);transition:.22s var(--ease);line-height:1;font-weight:600}
+/* Fünf feste Plätze, jeder heißt wie seine Seite. Deckender Grund, Beschriftung
+   11 px hellgrau; der aktive Platz in Lime, ohne Leuchten. */
+.ni{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;margin:0;padding:9px 0;border:0;background:none;color:inherit;font-family:inherit;cursor:pointer;border-radius:16px;transition:background .2s var(--ease);position:relative}
+.ni svg{width:21px;height:21px;stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:.22s var(--ease)}
+.ni .nl{font-size:11px;letter-spacing:.2px;color:var(--text2);transition:.22s var(--ease);line-height:1;font-weight:600}
 .ni:active{transform:scale(.94)}
+.ni:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .ni.on{background:color-mix(in srgb,var(--accent) 12%,transparent)}
-.ni.on svg{stroke:var(--accent);transform:translateY(-1px);filter:drop-shadow(0 0 6px var(--accent-glow))}
+.ni.on svg{stroke:var(--accent)}
 .ni.on .nl{color:var(--accent)}
+/* Laufendes Training auf jeder anderen Seite: schmale Leiste über der unteren
+   Leiste (nicht auf Start und nicht im Training selbst, renderLiveBar). */
+.live-dock{display:none;pointer-events:auto;width:100%;max-width:480px;margin:0 auto;padding:18px 13px 6px;background:linear-gradient(180deg,rgba(11,12,17,0) 0,rgba(11,12,17,.94) 14px,#0b0c11 20px)}
+body.has-live .live-dock{display:block}
+.live-bar{width:100%;height:48px;display:flex;align-items:center;gap:8px;margin:0;padding:0 2px 0 16px;border:0;border-radius:14px;background:#262a33;box-shadow:var(--edge-strong),var(--shadow-2);color:var(--text);font-family:inherit;text-align:left;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
+.live-bar:active{transform:scale(.98)}
+.live-bar:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lb-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.lb-n{flex:1;min-width:0;font-size:15px;line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-s{flex:none;font-size:12px;line-height:16px;font-weight:500;color:var(--text2);white-space:nowrap}
+.lb-t{flex:none;font:600 17px/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:var(--accent);margin-left:6px}
+.lb-t:empty{display:none}
+.lb-go{flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.lb-go svg{width:22px;height:22px;stroke:var(--text2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px))}
 
 /* generic card + section titles */
 .card{
   background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);
   padding:16px;margin-bottom:12px;position:relative;overflow:hidden;
   box-shadow:0 12px 34px rgba(0,0,0,.28);
-  animation:riseIn .4s var(--ease) both;
 }
 .st{
   font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;
@@ -183,7 +199,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .hs{
   background:linear-gradient(180deg,var(--bg2),var(--bg3));
   border:1px solid var(--line);border-radius:18px;padding:15px 8px;text-align:center;
-  box-shadow:0 10px 26px rgba(0,0,0,.22);animation:riseIn .4s var(--ease) both;
+  box-shadow:0 10px 26px rgba(0,0,0,.22);
 }
 .hs .v{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--text);line-height:1;letter-spacing:.5px}
 .hs .l{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1.2px;margin-top:5px;font-weight:700}
@@ -606,26 +622,19 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .he-ex{font-size:12px;font-weight:700;color:var(--text2);margin:12px 0 2px;letter-spacing:.02em}
 .he-nr{flex:0 0 26px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text3);padding-bottom:12px}
 
-/* plan mgmt + drawer */
-.plan-drawer{padding:14px 16px 16px;border-radius:var(--radius);
+/* Plan: eigene Seite, eine Karte */
+.plan-card{padding:16px;border-radius:var(--radius);
   /* Sichtbar statt abgeschnitten: sonst bliebe der Startknopf nicht am Bildschirmrand kleben (position:sticky). */
   overflow:visible}
-.plan-drawer-toggle{width:100%;display:flex;align-items:center;gap:12px;background:none;border:none;color:var(--text);padding:2px 2px 8px;cursor:pointer}
-.plan-drawer-toggle span:first-child{font-size:12px;text-transform:uppercase;letter-spacing:2px;color:var(--text2);font-weight:800}
-.plan-drawer-toggle #plan-drawer-meta{margin-left:auto;font-size:12px;color:var(--text3);font-weight:600}
-.plan-drawer-arrow{font-size:18px;color:var(--text2);transition:transform .25s var(--ease)}
-.plan-drawer.open .plan-drawer-arrow{transform:rotate(180deg)}
-.plan-drawer-content{display:none;padding-top:10px}
-.plan-drawer.open .plan-drawer-content{display:block;animation:screenIn .22s ease}
 /* Kopf des Plans: ein Knopf (+ Übung) und ein Menü (⋯). Im Sortier-Modus nennt er nur den Modus; „Fertig“ steht im festen Knopf unten. */
-.plan-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-height:44px;margin-bottom:12px}
+.plan-bar{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-height:44px}
 .plan-bar[hidden],.plan-go[hidden]{display:none}
 .plan-add{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:var(--edge-strong);color:var(--text);cursor:pointer;font-family:inherit;font-size:14px;font-weight:600}
 .plan-more{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:var(--edge-strong);color:var(--text);cursor:pointer}
 .plan-add:active,.plan-more:active{transform:scale(.97)}
 .plan-sort-t{margin-right:auto;font-size:13px;line-height:16px;color:var(--text2)}
-/* Der Startknopf klebt über der unteren Leiste, solange der Plan im Bild ist (--nav-h: attachNavHeight). */
-.plan-go{position:sticky;bottom:calc(var(--nav-h,68px) + 4px);z-index:5;margin:8px -16px 0;padding:20px 16px 8px;background:linear-gradient(180deg,transparent,var(--bg2) 20px)}
+/* Der Startknopf klebt über der unteren Leiste und der Leiste des laufenden Trainings (--nav-h, --live-h: attachNavHeight). */
+.plan-go{position:sticky;bottom:calc(var(--nav-h,68px) + var(--live-h,0px) + 4px);z-index:5;margin:8px -16px 0;padding:20px 16px 8px;background:linear-gradient(180deg,transparent,var(--bg2) 20px)}
 .plan-go .btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;margin:0;padding:0 16px;border-radius:14px;background:var(--accent);
   font-size:16px;font-weight:700;letter-spacing:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 6px 16px rgba(0,0,0,.4)}
 .plan-go .btn:active{filter:none}
@@ -687,7 +696,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 
 /* dashboard: KPI row */
 .dash-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-.dash-kpi{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:15px 13px 13px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 12px 30px rgba(0,0,0,.22);animation:riseIn .4s var(--ease) both}
+.dash-kpi{background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:15px 13px 13px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 12px 30px rgba(0,0,0,.22)}
 .dash-kpi .k-label{color:var(--text3);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:800}
 .dash-kpi .k-value{font-family:'Bebas Neue',sans-serif;color:var(--text);font-size:34px;line-height:.9;font-weight:400;letter-spacing:.5px;margin-top:8px}
 .dash-kpi .k-unit{color:var(--text3);font-size:13px;margin-left:3px;font-family:'Space Grotesk',sans-serif}
@@ -735,7 +744,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 
 
 /* deload banner */
-.deload-banner{background:linear-gradient(135deg,color-mix(in srgb,var(--orange) 13%,var(--bg2)),var(--bg2));border:1px solid color-mix(in srgb,var(--orange) 30%,transparent);border-radius:var(--radius);padding:16px;margin-bottom:14px;animation:riseIn .4s var(--ease) both}
+.deload-banner{background:linear-gradient(135deg,color-mix(in srgb,var(--orange) 13%,var(--bg2)),var(--bg2));border:1px solid color-mix(in srgb,var(--orange) 30%,transparent);border-radius:var(--radius);padding:16px;margin-bottom:14px}
 .deload-banner .dl-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .deload-banner .dl-ico{font-size:24px}
 .deload-banner .dl-title{font-weight:800;font-size:14px;color:var(--orange);letter-spacing:1.4px;text-transform:uppercase}
@@ -781,8 +790,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 /* iOS "Transparenz reduzieren" und "Kontrast erhöhen" ernst nehmen:
    Glas wird undurchsichtig, Ränder werden deutlich. */
 @media (prefers-reduced-transparency:reduce){
-  .glass,.bnav-inner,.mdl,.hdr,.toast{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-  .glass,.bnav-inner,.toast{background:#14161b!important}
+  .glass,.mdl,.hdr,.toast{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .glass,.toast{background:#14161b!important}
   .mdl{background:var(--bg2)!important}
 }
 @media (prefers-contrast:more){
@@ -1040,14 +1049,11 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 /* „Hinzufügen" im Übung-Fenster ist flach, ohne Lichtschein. */
 #a-btn,#a-btn:active{box-shadow:var(--edge-strong)}
 
-/* --- Bottom-Nav als schwebende Glasleiste --- */
+/* --- Untere Leiste: deckend, mit Lichtkante; kein Text schimmert durch --- */
 .bnav-inner{
-  background:rgba(14,15,19,.7);
-  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
   box-shadow:var(--edge-strong),0 -8px 30px rgba(0,0,0,.4);
 }
 .ni.on{background:color-mix(in srgb,var(--accent) 14%,transparent);box-shadow:var(--edge)}
-.ni .nl{font-size:10.5px}
 
 /* --- Toast als Material --- */
 .toast{
@@ -1058,16 +1064,12 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   top:calc(max(env(safe-area-inset-top),12px) + 46px);
 }
 
-/* --- Scroll-Reveal: Karten blenden beim Hereinscrollen ein --- */
-.reveal{opacity:0;transform:translateY(16px)}
-.reveal.in{opacity:1;transform:none;transition:opacity .5s var(--ease),transform .5s var(--ease)}
-
 /* --- Auf iPad/Desktop: Inhalt zentriert, aber nicht ausgefranst --- */
 /* Nur Tablet und Desktop: ein iPhone im Querformat (852 × 393) ist breit, aber niedrig. */
 @media (min-width:820px) and (min-height:700px){
   .app{max-width:560px}
   .bnav-inner{max-width:560px;border-radius:22px;margin-bottom:10px;border:1px solid var(--line)}
-  .wo-dock{max-width:560px}
+  .wo-dock,.live-dock{max-width:560px}
   .bnav{padding:0 12px}
 }
 /* Querformat auf dem iPhone: die Notch liegt seitlich. */
@@ -1223,7 +1225,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
    ============================================================================ */
 :root{
   --out:cubic-bezier(.22,1,.36,1);      /* Ausklang: Balken, Zähler */
-  --dur-micro:120ms; --dur-el:320ms; --dur-view:380ms; --dur-ring:1100ms;
+  --dur-micro:120ms; --dur-el:320ms; --dur-ring:1100ms;
   /* Flaches Hero-Material: Graphit über --bg3, helle Oberkante, weiter Schatten.
      Eine Fläche für jede große Karte (Start, Historie, Zahlen); wer noch auf
      eigenem Verlauf steht, nimmt dieses Token statt eines neuen Rezepts. */
@@ -1259,18 +1261,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   opacity:calc(var(--t,0) * .9);
   transition:opacity .2s linear;
   border-radius:0 2px 2px 0;
-}
-/* Parallaxe: --py wird in JS aus der Scrollposition gesetzt (Pixel).
-   Nur transform + opacity → GPU, kein Reflow. */
-.parallax{will-change:transform;transform:translate3d(0,calc(var(--py,0px)),0)}
-
-/* Gestaffelter Eintritt. --rd ist die Verzögerung in ms, in JS pro Karte
-   gesetzt und bei 5 Karten gedeckelt — danach wartet niemand mehr gern. */
-.reveal{opacity:0;transform:translate3d(0,18px,0) scale(.985)}
-.reveal.in{
-  opacity:1;transform:none;
-  transition:opacity var(--dur-view) var(--out) calc(var(--rd,0)*1ms),
-             transform var(--dur-view) var(--out) calc(var(--rd,0)*1ms);
 }
 
 /* --- Regel 3: Karten mit Lichtkante statt Rahmen ------------------------- */
@@ -1779,9 +1769,7 @@ div.wg-note{cursor:default}
 .heat{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-top:14px}
 .heat i{
   aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,.09);
-  animation:heatIn .34s var(--out) both;animation-delay:var(--hd,0ms);
 }
-@keyframes heatIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:none}}
 /* Wochen mit Training in drei neutralen Helligkeitsstufen (eine, zwei, drei
    und mehr Sessions); Lime markiert nur die laufende Woche. */
 .heat i.l1{background:rgba(244,246,251,.34)}
@@ -2205,7 +2193,7 @@ code.sr-code{cursor:auto}
 @media (min-width:700px){
   .app{max-width:520px}
   .bnav-inner{max-width:520px;border-radius:26px 26px 0 0;border:1px solid var(--line);border-bottom:none}
-  .wo-dock{max-width:520px}
+  .wo-dock,.live-dock{max-width:520px}
 }
 @media (max-width:430px){
   .screen{padding-left:13px;padding-right:13px}
@@ -2221,6 +2209,8 @@ code.sr-code{cursor:auto}
   .ni svg{width:20px;height:20px}
   .ni .nl{font-size:11px}
   .wo-dock{padding:16px 13px 8px}
+  .live-dock{padding:12px 13px 4px}
+  .live-bar{height:44px}
   .wo-log,.wo-log.fin{height:48px}
   #s-wo{padding-bottom:calc(144px + env(safe-area-inset-bottom,0px))}
   #wo-sticky-top{display:flex;align-items:center;gap:8px;padding-top:max(env(safe-area-inset-top),6px);padding-bottom:6px}
@@ -2244,10 +2234,6 @@ code.sr-code{cursor:auto}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.05ms!important}
-  /* Parallaxe ganz aus: --py wird in JS gar nicht erst gesetzt, aber falls
-     doch (Systemeinstellung während der Sitzung geändert), hier gekappt. */
-  .parallax{transform:none!important}
-  .reveal{opacity:1!important;transform:none!important}
 }
 </style>
 </head>
@@ -2275,19 +2261,20 @@ code.sr-code{cursor:auto}
 <nav class="bnav">
 <div class="toast-act" id="toast-act" role="status" aria-live="polite"></div>
 <div class="wo-dock" id="wo-dock"><button type="button" class="wo-log" id="wo-log"></button></div>
-<div class="bnav-inner">
-<div class="ni on" data-tab="dash" onclick="go('dash')"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Home</span></div>
-<div class="ni" id="nav-aktiv" data-tab="wo" onclick="go('wo')" style="display:none"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span class="nl">Aktiv</span></div>
-<div class="ni" data-tab="hist" onclick="go('hist')"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Historie</span></div>
-<div class="ni" data-tab="ana" onclick="go('ana')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nl">Stats</span></div>
-<div class="ni" data-tab="settings" onclick="go('settings')"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span class="nl">Setup</span></div>
+<div class="live-dock" id="live-dock"><button type="button" class="live-bar" id="live-bar" onclick="tab('wo')"><span class="lb-vh">Zurück ins Training: </span><span class="lb-n" id="lb-n"></span><span class="lb-s" id="lb-s"></span><span class="lb-t" id="lb-t"></span><span class="lb-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button></div>
+<div class="bnav-inner" role="tablist" aria-label="Hauptnavigation">
+<button type="button" role="tab" aria-selected="true" class="ni on" data-tab="dash" onclick="tab('dash')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Start</span></button>
+<button type="button" role="tab" aria-selected="false" class="ni" data-tab="plan" onclick="tab('plan')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.8h6V4M9 10h6M9 14h6M9 18h3.5"/></svg><span class="nl">Plan</span></button>
+<button type="button" role="tab" aria-selected="false" class="ni" data-tab="hist" onclick="tab('hist')"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Historie</span></button>
+<button type="button" role="tab" aria-selected="false" class="ni" data-tab="ana" onclick="tab('ana')"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="nl">Zahlen</span></button>
+<button type="button" role="tab" aria-selected="false" class="ni" data-tab="settings" onclick="tab('settings')"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="nl">Profil</span></button>
 </div>
 <div class="bnav-safe"></div>
 </nav>
 <div class="screen active" id="s-dash">
 <div class="ltitle">
 <div class="ltitle-row">
-<div style="min-width:0"><div class="ltitle-h">Home</div></div>
+<div style="min-width:0"><div class="ltitle-h">Start</div></div>
 <div class="ltitle-slot"><button type="button" class="sync-fail" id="sync-fail" hidden onclick="retrySync()" aria-label="Nicht gesichert. Tippen, um es erneut zu versuchen">Nicht gesichert</button></div>
 </div>
 </div>
@@ -2297,25 +2284,27 @@ code.sr-code{cursor:auto}
 <div id="d-kpi-row"></div>
 <div id="meso-area"></div>
 <div id="deload-area"></div>
-<div class="plan-drawer card" id="dash-plan-drawer">
-<button class="plan-drawer-toggle" id="plan-drawer-toggle" onclick="togglePlanDrawer()">
-<span>Trainingsplan</span>
-<span id="plan-drawer-meta">Tippen zum Aufklappen</span>
-<span class="plan-drawer-arrow" id="plan-drawer-arrow">▾</span>
-</button>
-<div class="plan-drawer-content" id="dash-plan-content">
+</div>
+<div class="screen" id="s-plan">
+<div class="ltitle">
+<div class="ltitle-row">
+<div style="min-width:0"><div class="ltitle-h">Plan</div></div>
+<div class="ltitle-slot">
 <div class="plan-bar" id="plan-bar">
 <button type="button" class="plan-add" onclick="openAddEx()"><span data-ic="plus" data-ic-size="20"></span>Übung</button>
 <button type="button" class="plan-more" aria-label="Plan-Menü" aria-haspopup="menu" onclick="openPlanMenu()"><span data-ic="more" data-ic-size="22"></span></button>
 </div>
 <div class="plan-bar" id="plan-sort" hidden><span class="plan-sort-t">Reihenfolge ändern</span></div>
+</div>
+</div>
+</div>
+<div class="plan-card card">
 <button class="btn btn-s plan-save-btn" id="plan-save-btn" onclick="savePlanChanges()" style="display:none">💾 Plan speichern</button>
 <div class="plan-save-state" id="plan-save-state" style="display:none">✓ Automatisch gespeichert & synchronisiert</div>
 <div id="coach-area"></div>
 <div class="dtabs" id="pt" role="tablist" aria-label="Trainingstag"></div>
 <div id="pl"></div>
 <div class="plan-go" id="plan-go" hidden><button type="button" class="btn" id="plan-go-btn" onclick="planGo()"></button></div>
-</div>
 </div>
 </div>
 <div class="screen" id="s-wo">
@@ -2336,7 +2325,7 @@ code.sr-code{cursor:auto}
 <div class="ltitle-sub" id="h-cnt"></div>
 </div></div>
 </div>
-<div id="h-streak" class="parallax"></div>
+<div id="h-streak"></div>
 <details class="hist-cal" id="h-cal-wrap">
 <summary><span>Kalender</span><span class="cal-meta" id="cal-meta"></span></summary>
 <div class="calcard">
@@ -2355,10 +2344,10 @@ code.sr-code{cursor:auto}
 <div class="ltitle">
 <div class="ltitle-row"><div style="min-width:0">
 <div class="ltitle-eyebrow">ANALYSE</div>
-<div class="ltitle-h">Stats</div>
+<div class="ltitle-h">Zahlen</div>
 </div><div class="ltitle-slot"><div class="pill" id="ana-total">0 Sätze</div></div></div>
 </div>
-<div id="ana-report" class="parallax"></div>
+<div id="ana-report"></div>
 <div class="st st-tog" onclick="toggleSection('balance')"><span>Balance</span><span class="chev" id="chev-balance">▾</span><div class="ln"></div></div>
 <div id="ana-muscles"></div>
 <div id="egym-section" style="display:none">
@@ -2429,7 +2418,7 @@ code.sr-code{cursor:auto}
 <div class="st">Körperanalyse <div class="ln"></div></div>
 <div class="set-card">
 <div class="sr sr-last">
-<div class="sr-bd"><b>EGYM BioAge</b><span>Schaltet den BioAge-Bereich unter Stats frei. Werte trägst du nach der Messung im Studio selbst ein.</span></div>
+<div class="sr-bd"><b>EGYM BioAge</b><span>Schaltet den BioAge-Bereich unter Zahlen frei. Werte trägst du nach der Messung im Studio selbst ein.</span></div>
 <label class="sw-toggle" aria-label="EGYM Körperanalyse einschalten">
 <input type="checkbox" id="egym-toggle" onchange="toggleEgym(this.checked)">
 <span class="sw-track"></span><span class="sw-knob" id="egym-knob"></span>
@@ -3156,7 +3145,9 @@ function checkIdleWorkout(){
   if(typeof resetTmr==='function')resetTmr();
   if(typeof releaseWakeLock==='function')releaseWakeLock();
   renderAll();renderHist();
-  if(document.getElementById('s-wo')&&document.getElementById('s-wo').classList.contains('active'))renderWo();
+  /* Ohne laufendes Training gibt es keinen Platz für den Trainings-Bildschirm
+     mehr: wer dort stand, landet auf Start. */
+  if(document.getElementById('s-wo')&&document.getElementById('s-wo').classList.contains('active'))go('dash');
   showAutoSavedNotice();
 }
 function showAutoSavedNotice(){
@@ -3499,11 +3490,11 @@ function altenNamenLoeschen(){
   if(!alt||alt===syncCode||!db)return;
   db.collection('pumpbrah').doc(alt).delete().then(()=>{try{localStorage.removeItem('pb_alt')}catch{}}).catch(()=>{});
 }
-function resetDForNewUser(){D={plan:{},history:[],active:null,settings:{compound:120,isolation:120},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[],birthday:null,gender:null},egym:{enabled:false,measurements:[]},library:{custom:[],deleted:[]},ui:{accent:'volt',mode:'dark',avatar:'',homePlanOpen:false}};normalizeData();localStorage.setItem('pb_data',JSON.stringify(D))}
+function resetDForNewUser(){D={plan:{},history:[],active:null,settings:{compound:120,isolation:120},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[],birthday:null,gender:null},egym:{enabled:false,measurements:[]},library:{custom:[],deleted:[]},ui:{accent:'volt',mode:'dark',avatar:''}};normalizeData();localStorage.setItem('pb_data',JSON.stringify(D))}
 function offlineMode(){useFirebase=false;syncCode='offline';localStorage.setItem('pb_sync','offline');loadLocal();if(eingerichtet()){showApp()}else{resetDForNewUser();startOnboarding()}}
-function showApp(){normalizeData();document.body.classList.remove('no-nav');document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
+function showApp(){normalizeData();document.body.classList.remove('no-nav');document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active){requestWakeLock();go('wo')}
   checkSharedPlanLink();
-  hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachFieldBehavior();attachNavHeight();attachSheetGestures();attachReveals();
+  hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachFieldBehavior();attachNavHeight();attachSheetGestures();
   /* Ein beim Laden übernommenes Training steht schon in D (normalizeData),
      ist aber noch nicht geschrieben und noch nicht gemeldet. */
   if(autoSavedNotice){try{localStorage.removeItem('pb_timer')}catch{}save();queueCloudSave(true);showAutoSavedNotice()}
@@ -4114,32 +4105,82 @@ document.addEventListener('click',e=>{
   const bg=e.target.classList&&e.target.classList.contains('mbg')?e.target:null;
   if(bg)cm(bg.id);
 });
-function go(id){
+/* Wo jede Seite stand, als du sie verlassen hast (nur im Arbeitsspeicher). */
+const tabScroll={};
+/* go(id) öffnet eine Seite oben; go(id,y) an der Stelle y (tab()). */
+function go(id,y){
   const target=document.getElementById('s-'+id);
   if(!target)return;
+  const vorher=document.querySelector('.screen.active');
+  if(vorher&&vorher!==target)tabScroll[vorher.id]=window.scrollY||0;
   withViewTransition(()=>{
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     target.classList.add('active');
-    document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('on',n.dataset.tab===id));
+    document.querySelectorAll('.ni').forEach(n=>{
+      const on=n.dataset.tab===id;
+      n.classList.toggle('on',on);
+      n.setAttribute('aria-selected',on?'true':'false');
+    });
     const tf=document.getElementById('wo-timer-bar');
     if(tf)tf.style.display=(id==='wo'&&D.active)?'':'none';
-    updateNavAktiv();
+    renderLiveBar();
     renderWoDock();
     window.scrollTo(0,0);
-    if(id==='dash'){renderDash();renderPlan()}
+    if(id==='dash')renderDash();
+    if(id==='plan')renderPlan();
     if(id==='wo')renderWo();
     if(id==='hist')renderHist();
     if(id==='settings')renderSettings();
     if(id==='ana')renderAna();
+    /* Large Title passend zur Stelle, an der die Seite steht, und zwar VOR dem
+       Scrollen: schrumpfte er erst danach, rückte der Browser die Seite um
+       seine Höhe zurück. */
+    const t=Math.min(1,Math.max(0,(y||0)/56));
+    document.querySelectorAll('.ltitle').forEach(el=>el.style.setProperty('--t',t.toFixed(3)));
+    if(y)window.scrollTo(0,y);
   });
   haptic(6);
-  /* Large Title zurücksetzen: der neue Screen startet oben, ohne das wäre
-     die Kopfzeile beim Wechsel kurz im eingeklappten Zustand eingefroren. */
-  document.querySelectorAll('.ltitle').forEach(el=>el.style.setProperty('--t','0'));
-  setTimeout(()=>attachReveals(target),40);
 }
-function updateNavAktiv(){const nav=document.getElementById('nav-aktiv');if(nav)nav.style.display=D.active?'':'none'}
-function renderAll(){updateNavAktiv();renderDash();renderPlan();renderWo()}
+/* Tipp auf einen Platz der unteren Leiste (und auf die Leiste des laufenden
+   Trainings): zurück an die Stelle, an der du warst. Ein zweiter Tipp auf den
+   aktiven Platz rollt nach oben. */
+function tab(id){
+  const target=document.getElementById('s-'+id);
+  if(!target)return;
+  if(target.classList.contains('active')){
+    window.scrollTo({top:0,behavior:prefersReducedMotion()?'auto':'smooth'});
+    haptic(6);
+    return;
+  }
+  go(id,tabScroll[target.id]||0);
+}
+/* Satzstand des laufenden Trainings, ohne übersprungene Übungen. */
+function activeSetStand(){
+  const liste=activeExercisesSafe().filter(e=>!e.skipped);
+  return{geplant:liste.reduce((a,e)=>a+(parseInt(e.sets)||0),0),fertig:liste.reduce((a,e)=>a+(e.logged||[]).length,0)};
+}
+/* Läuft ein Training, sitzt auf jeder Seite außer Start und dem Training
+   selbst eine schmale Leiste über der unteren Leiste: Einheit, laufende Pause
+   (sonst der Satzstand), Pfeil. Ein Tipp führt zurück ins Training. */
+function renderLiveBar(){
+  const scr=document.querySelector('.screen.active');
+  const zeigen=!!(D&&D.active)&&!!scr&&scr.id!=='s-wo'&&scr.id!=='s-dash';
+  document.body.classList.toggle('has-live',zeigen);
+  const n=document.getElementById('lb-n');
+  if(!zeigen||!n)return;
+  n.textContent=planDisplayName(D.active.planKey);
+  tickLiveBar();
+}
+function tickLiveBar(){
+  if(!D.active||!document.body.classList.contains('has-live'))return;
+  const st=document.getElementById('lb-s'),t=document.getElementById('lb-t');
+  if(!st||!t)return;
+  if(timerInt){st.textContent='Pause';t.textContent=fmtT(getTimerRemaining());return}
+  const s=activeSetStand();
+  st.textContent=`${s.fertig} von ${s.geplant} Sätzen`;
+  t.textContent='';
+}
+function renderAll(){renderLiveBar();renderDash();renderPlan();renderWo()}
 function reps(e){return e.rmin===e.rmax?e.rmin:e.rmin+'–'+e.rmax}
 function rc(r){const n=parseInt(r);return 'r'+(Number.isFinite(n)?Math.min(5,Math.max(0,n)):5)}
 function fmtT(s){const m=Math.floor(s/60),ss=s%60;return m+':'+(ss<10?'0':'')+ss}
@@ -4355,17 +4396,24 @@ function attachFieldBehavior(){
   });
 }
 /* Die untere Leiste hat je nach Gerät und Ausrichtung eine andere Höhe. Wer
-   über ihr kleben will (der Startknopf im Plan), liest sie als --nav-h. */
+   über ihr kleben will (der Startknopf im Plan), liest sie als --nav-h, die
+   Leiste des laufenden Trainings darüber als --live-h (0, wenn sie fehlt). */
 function attachNavHeight(){
   const inner=document.querySelector('.bnav-inner');
   if(!inner)return;
+  const live=document.getElementById('live-dock');
   const set=()=>{
     const r=inner.getBoundingClientRect();
     document.documentElement.style.setProperty('--nav-h',Math.round(r.height+Math.max(0,window.innerHeight-r.bottom))+'px');
+    document.documentElement.style.setProperty('--live-h',(live?Math.round(live.getBoundingClientRect().height):0)+'px');
   };
   set();
   window.addEventListener('resize',set);
-  if(window.ResizeObserver)new ResizeObserver(set).observe(inner);
+  if(window.ResizeObserver){
+    const ro=new ResizeObserver(set);
+    ro.observe(inner);
+    if(live)ro.observe(live);
+  }
 }
 
 /* --- Sheets nach unten wegwischen ---------------------------------------- */
@@ -4417,61 +4465,13 @@ function attachSheetGestures(){
   });
 }
 
-/* --- Scroll-Reveal -------------------------------------------------------
-   Nur Elemente, die beim Rendern UNTER dem Falz liegen, werden versteckt und
-   eingeblendet. Alles, was sofort sichtbar ist, bekommt direkt `.in` — sonst
-   flackert der halbe Bildschirm bei jedem Re-Render einmal auf.            */
-const REVEAL_TARGETS='.card,.mesh-hero,.gtiles,.kpi-card,.prog,.ana-muscle,.wa-card,.hist-calendar,.hs-group,.deload-banner,.coach-card';
-let revealObserver=null;
-function attachReveals(root){
-  const scope=root||document;
-  if(prefersReducedMotion()||!('IntersectionObserver'in window)){
-    scope.querySelectorAll(REVEAL_TARGETS).forEach(el=>el.classList.add('in'));
-    return;
-  }
-  if(!revealObserver){
-    revealObserver=new IntersectionObserver(entries=>{
-      /* Staffelung: alles, was in DIESEM Callback gleichzeitig sichtbar wird,
-         tritt nacheinander ein statt im Block. 40 ms pro Karte, gedeckelt bei
-         5 — ab da wartet niemand mehr gern (docs/DESIGN.md, Regel 4). */
-      let step=0;
-      entries.forEach(en=>{
-        if(!en.isIntersecting)return;
-        en.target.style.setProperty('--rd',String(Math.min(step,4)*40));
-        step++;
-        en.target.classList.add('in');
-        revealObserver.unobserve(en.target);   // einmalig, dann loslassen
-      });
-    },{rootMargin:'0px 0px -6% 0px',threshold:.04});
-  }
-  const fold=window.innerHeight||800;
-  let above=0;
-  scope.querySelectorAll(REVEAL_TARGETS).forEach(el=>{
-    if(el.dataset.rv)return;
-    el.dataset.rv='1';
-    if(el.getBoundingClientRect().top<fold*0.95){
-      /* Auch der sofort sichtbare Teil tritt gestaffelt ein — sonst wirkt der
-         obere Bildschirmrand statisch und nur der untere lebendig. */
-      el.style.setProperty('--rd',String(Math.min(above,4)*40));
-      above++;
-      el.classList.add('reveal');
-      requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));
-      return;
-    }
-    el.classList.add('reveal');
-    revealObserver.observe(el);
-  });
-}
-
 /* --- Scroll-Choreografie -------------------------------------------------
-   Beim Scrollen laufen mehrere Ebenen unterschiedlich schnell. Genau diese
-   Differenz erzeugt Raumgefühl (docs/DESIGN.md, Regel 4):
+   Beim Scrollen bewegt sich nur, was etwas anzeigt:
      · Kopfzeile kollabiert     -> --t,  attachLargeTitles()
      · Fortschrittsleiste       -> --sp0 auf .ltitle
-     · Hero driftet langsamer   -> --py  auf .parallax
-   Alles in EINEM rAF-gedrosselten Scroll-Listener; drei separate Listener
-   würden sich gegenseitig um Frames bringen.                              */
-const PARALLAX_FACTOR=.14;
+   Karten, die beim Scrollen einzeln nachkommen, und die große Karte, die
+   langsamer mitdriftet und verblasst, sind entfallen: Was du hinscrollst,
+   steht schon da. Ein rAF-gedrosselter Scroll-Listener.                    */
 function attachScrollChoreography(){
   if(prefersReducedMotion())return;
   const update=()=>{
@@ -4481,13 +4481,6 @@ function attachScrollChoreography(){
       const max=Math.max(1,screen.scrollHeight-window.innerHeight);
       const p=Math.min(1,Math.max(0,y/max));
       screen.querySelectorAll('.ltitle').forEach(el=>el.style.setProperty('--sp0',p.toFixed(4)));
-      /* Nur bis 340 px Scrolltiefe driften lassen. Danach ist der Hero ohnehin
-         aus dem Bild und weiteres Verschieben kostet nur Rechenzeit. */
-      const drift=Math.min(y,340)*PARALLAX_FACTOR;
-      screen.querySelectorAll('.parallax').forEach(el=>{
-        el.style.setProperty('--py',drift.toFixed(1)+'px');
-        el.style.opacity=String(Math.max(.45,1-Math.min(y,420)/620));
-      });
     }
   };
   let ticking=false;
@@ -5414,7 +5407,7 @@ function renderPL(){
     const uNote=D.notes[ex.name];
     const safe=jsStr(ex.name);
     const openCls=openPlanRows.has(ex.name)?' open':'';
-    h+=`<div class="exr ${cC}${openCls}"${planSort?' style="animation:none"':` style="animation:riseIn .34s var(--ease) both;animation-delay:${Math.min(i*30,240)}ms"`}>`+
+    h+=`<div class="exr ${cC}${openCls}">`+
       `<div class="exr-h"${planSort?'':` onclick="togglePlanRow(this,'${safe}')"`}>`+
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="exr-b"><div class="exr-n">${esc(ex.name)}`+
@@ -6344,6 +6337,7 @@ function beep(){
    Gerechnet wird aus dem Zeitstempel, nicht aus der Zahl der Ticks — nach
    einem gesperrten Bildschirm stimmt die Überzeit deshalb trotzdem. */
 function tickTimerBar(){
+  tickLiveBar();
   const d=document.getElementById('td');
   if(!d)return;
   const rem=getTimerRemaining();
@@ -6932,17 +6926,16 @@ function renderHistStreak(){
   const avgMin=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
   mount.innerHTML=`<div class="mesh-hero streak-hero">`+
     `<div class="cap">Aktuelle Serie</div>`+
-    `<div class="mesh-row"><div class="mesh-num countup" data-count="${streak}" data-count-dur="800">0</div>`+
+    `<div class="mesh-row"><div class="mesh-num countup">${streak}</div>`+
     `<div class="mesh-side"><div class="u">${streak===1?'WOCHE':'WOCHEN'}</div>`+
     `<div class="o">ohne Ausfall · Bestwert ${best}</div></div></div>`+
-    `<div class="heat">${counts.map((n,i)=>`<i class="${level(n)}" title="${n} ${n===1?'Session':'Sessions'}" style="--hd:${i*22}ms"></i>`).join('')}</div>`+
+    `<div class="heat">${counts.map((n,i)=>`<i class="${level(n)}" title="${n} ${n===1?'Session':'Sessions'}"></i>`).join('')}</div>`+
     `<div class="heat-lg"><span>vor ${WEEKS} Wochen</span><span>diese Woche</span></div>`+
     `<div class="streak-tri">`+
-      `<div><b class="countup" data-count="${total}">0</b><span>SESSIONS</span></div>`+
+      `<div><b class="countup">${total}</b><span>SESSIONS</span></div>`+
       `<div><b>${perWeek}</b><span>Ø PRO WOCHE</span></div>`+
-      `<div><b class="countup" data-count="${avgMin}">0</b><span>Ø MINUTEN</span></div>`+
+      `<div><b class="countup">${avgMin}</b><span>Ø MINUTEN</span></div>`+
     `</div></div>`;
-  runCountUps(mount);
 }
 function renderBio(){
   if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
@@ -7082,7 +7075,6 @@ function ensureUIState(){
   if(!D.ui.accent||!accentPresets()[D.ui.accent])D.ui.accent='volt';
   D.ui.mode='dark';
   if(D.ui.avatar===undefined)D.ui.avatar='';
-  if(D.ui.homePlanOpen===undefined)D.ui.homePlanOpen=false;
   if(D.ui.homeNoteOpen===undefined)D.ui.homeNoteOpen=false;
   if(D.ui.deloadSnoozedUntil===undefined)D.ui.deloadSnoozedUntil=0;
   if(D.ui.volMode!=='direct'&&D.ui.volMode!=='total')D.ui.volMode='total';
@@ -8403,10 +8395,8 @@ function confirmPlanImport(){
   save();markPlanDirty();
   curTab=Object.keys(D.plan)[0];
   cm('m-importpreview');
-  ensureHomeUIState();
-  D.ui.homePlanOpen=true;
-  renderAll();renderPlan();syncPlanDrawerUI();
-  go('dash');
+  renderAll();
+  go('plan');
   haptic([15,50,15]);
   toast(`${added} ${added===1?'Trainingstag':'Trainingstage'} importiert`);
   importState={payload:null,mode:'add',pausen:false};
@@ -9207,16 +9197,15 @@ function renderAnaReport(){
     (gruppen.length?`<div class="u">${drin} von ${gruppen.length} Gruppen</div><div class="o">im Korridor</div>`:`<div class="u">${einheiten}</div>`)+
     `</div></div></div>`+
     `<div class="gtiles">`+
-      `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup" data-count="${(tonCur/1000).toFixed(1)}" data-count-dec="1" data-count-comma="1">0</span><small>t</small></div>`+
+      `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup">${de1(tonCur/1000)}</span><small>t</small></div>`+
       `<div class="gd" style="color:${tonTrend===null?'var(--text3)':tonTrend<0?'var(--red)':'var(--green)'}">${tonTrend===null?'keine Vorwoche':(tonTrend>0?'+':'')+tonTrend+' % zur Vorwoche'}</div></div>`+
-      `<div class="gtile"><div class="gl">Arbeitssätze</div><div class="gv"><span class="countup" data-count="${sets}">0</span></div>`+
+      `<div class="gtile"><div class="gl">Arbeitssätze</div><div class="gv"><span class="countup">${sets}</span></div>`+
       `<div class="gd">${gruppen.length?`${drin} von ${gruppen.length} Gruppen im Korridor`:'—'}</div></div>`+
       `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${rir?de1(rir):'—'}</div>`+
       `<div class="gd">${!work.length?'noch keine Sätze':rir<1.5?'nah am Versagen':rir<3?'sauber gesteuert':'viel Luft nach oben'}</div></div>`+
       `<div class="gtile"><div class="gl">Zeit</div><div class="gv">${de1(minutes/60)}<small>h</small></div>`+
       `<div class="gd">${cur.length?`${einheiten}, Ø ${Math.round(minutes/cur.length)} min`:'—'}</div></div>`+
     `</div>`;
-  runCountUps(mount);
 }
 function renderAna(){
   normalizeData();
@@ -9260,7 +9249,6 @@ function renderAna(){
   renderAnaProgress();
   applyAllSections();
   runBarGrows(document.getElementById('s-ana'));
-  runCountUps(document.getElementById('s-ana'));
 }
 function saveProfileImage(ev){
   const file=ev&&ev.target&&ev.target.files&&ev.target.files[0];
@@ -9579,7 +9567,6 @@ function renderSettings(){
 function ensureHomeUIState(){
   if(!D.ui)D.ui={accent:'volt',mode:'dark',avatar:''};
   if(D.ui.avatar===undefined)D.ui.avatar='';
-  if(D.ui.homePlanOpen===undefined)D.ui.homePlanOpen=false;
   if(D.ui.homeNoteOpen===undefined)D.ui.homeNoteOpen=false;
 }
 function toggleHomeNote(){
@@ -9596,22 +9583,6 @@ function syncHomeNoteUI(){
   foot.classList.toggle('open',!!D.ui.homeNoteOpen);
   const btn=foot.querySelector('button.wg-note');
   if(btn)btn.setAttribute('aria-expanded',D.ui.homeNoteOpen?'true':'false');
-}
-function togglePlanDrawer(){
-  ensureHomeUIState();
-  if(planSort)endPlanSort();
-  D.ui.homePlanOpen=!D.ui.homePlanOpen;
-  save();
-  syncPlanDrawerUI();
-}
-function syncPlanDrawerUI(){
-  ensureHomeUIState();
-  const drawer=document.getElementById('dash-plan-drawer');
-  const meta=document.getElementById('plan-drawer-meta');
-  if(!drawer||!meta)return;
-  drawer.classList.toggle('open',!!D.ui.homePlanOpen);
-  meta.textContent=D.ui.homePlanOpen?(planDirty?'Änderungen speichern':'Tippen zum Einklappen'):'Tippen zum Aufklappen';
-  renderPlanSaveState();
 }
 /* Drei Definitionen, nie von selbst: das „i" in der großen Karte öffnet sie.
    Die Zahlen kommen aus MUSCLE_LANDMARKS, am Beispiel Brust. */
@@ -9786,7 +9757,15 @@ function renderDash(){
     `</div>`;
   const nk=nextPlanDay();
   const nc=document.getElementById('d-next-card');
-  if(!nk){
+  if(D.active){
+    /* Läuft ein Training, ist die obere Karte der Weg zurück hinein — statt
+       „Nächstes Workout“ mit einem zweiten Startknopf. */
+    const st=activeSetStand();
+    const p=D.plan&&D.plan[D.active.planKey];
+    nc.innerHTML=`<div class="next-card-shot"><div class="nx-top"><span>Läuft</span><span>${esc(p&&p.day?(TAGE[p.day]||p.day):'')}</span></div>`+
+      `<div class="row"><div class="big">${esc(planDisplayName(D.active.planKey).toUpperCase()||'WORKOUT')}</div><div class="small">${st.fertig} von ${st.geplant} Sätzen</div></div>`+
+      `<button type="button" class="play" onclick="tab('wo')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 18 12 8 18.5z" fill="currentColor"/></svg>Weiter trainieren</button></div>`;
+  }else if(!nk){
     nc.innerHTML='<div class="empty">Kein nächstes Workout gefunden.</div>';
   }else{
     const p=D.plan[nk.key];
@@ -9807,7 +9786,6 @@ function renderDash(){
   }
   renderMeso();
   renderDeload();
-  syncPlanDrawerUI();
   runCountUps(document.getElementById('s-dash'));
   runBarGrows(document.getElementById('s-dash'));
   const sa=document.getElementById('sick-area');
@@ -9875,7 +9853,7 @@ function endWorkout(){
   if(!confirm('Workout speichern?'))return;
   const s=sessionFromActive(D.active);
   const dur=s.duration;
-  if(s.sets.length===0){D.active=null;save();resetTmr();updateNavAktiv();go('dash');toast('Kein Satz geloggt');return}
+  if(s.sets.length===0){D.active=null;save();resetTmr();go('dash');toast('Kein Satz geloggt');return}
   const previousSimilar=[...D.history].reverse().find(h=>h.planKey===s.planKey&&h.sets&&h.sets.length);
   const progData=[];
   const exNames=[...new Set(s.sets.map(x=>x.ex))];
@@ -9914,7 +9892,7 @@ function endWorkout(){
   om('m-wosummary');
   releaseWakeLock();
   try{localStorage.removeItem('pb_timer')}catch{}
-  updateNavAktiv();
+  renderLiveBar();
   renderWo();
 }
 function isCardioExercise(ex){
@@ -10218,6 +10196,7 @@ function applyTimeBudget(){
    Behälter, ein `renderWo()` aus einem Intervall heraus würde dagegen die
    ganze Übungsliste unter den Fingern des Nutzers neu aufbauen. */
 function renderFocusBar(){
+  tickLiveBar();
   const tf=document.getElementById('wo-timer-bar');
   if(!tf)return;
   if(!D.active){tf.style.display='none';return}
@@ -10270,9 +10249,7 @@ function renderWoHead(){
     more.style.display='none';prog.style.display='none';
     return;
   }
-  const liste=activeExercisesSafe().filter(e=>!e.skipped);
-  const geplant=liste.reduce((a,e)=>a+(parseInt(e.sets)||0),0);
-  const fertig=liste.reduce((a,e)=>a+(e.logged||[]).length,0);
+  const{geplant,fertig}=activeSetStand();
   const plan=D.plan&&D.plan[D.active.planKey];
   const tag=plan&&plan.day?(TAGE[plan.day]||plan.day):'';
   t.textContent=planDisplayName(D.active.planKey);
