@@ -401,19 +401,65 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:16px;text-align:left;r
 .wa-row .wl{color:var(--text2)}
 .wa-row .wv{font-weight:700;font-family:'JetBrains Mono',monospace}
 
-/* login / onboarding */
-.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:28px 22px;text-align:center;
-  background:
-    radial-gradient(90% 50% at 50% 0%, color-mix(in srgb,var(--accent) 10%,transparent), transparent 60%),
-    linear-gradient(180deg,#090a0d,#0b0c11);
-}
-.login-logo{font-family:'Bebas Neue',sans-serif;font-size:60px;letter-spacing:5px;color:var(--text);margin-bottom:8px;position:relative}
-.login-logo::after{content:'';position:absolute;left:50%;transform:translateX(-50%);bottom:8px;width:70px;height:4px;border-radius:4px;background:var(--accent);box-shadow:0 0 22px var(--accent-glow)}
+/* login / onboarding — flacher Grund, kein Lichtschein, kein Leuchtbalken
+   unter dem Schriftzug (onb-licht). Ohne Tab-Leiste kein Abstand dafür. */
+body.no-nav{padding-bottom:0}
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:28px 22px;text-align:center;background:var(--bg)}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:60px;letter-spacing:5px;color:var(--text);margin-bottom:8px}
 .login-sub{color:var(--text2);font-size:14px;margin-bottom:34px}
+/* Anmeldung (onb-anmelden): ein echtes Formular, damit Return anmeldet;
+   die Beschriftung steht am Feld und verschwindet nicht beim Tippen. */
+.login-form{display:flex;flex-direction:column;align-items:center;width:100%}
+.login-lab{display:block;width:100%;max-width:320px;margin-bottom:8px;text-align:left;font-size:13px;font-weight:600;color:var(--text2)}
 .login-input{width:100%;max-width:320px;padding:16px;background:var(--bg3);border:1.5px solid var(--line);border-radius:15px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:18px;text-align:center;outline:none;margin-bottom:12px;letter-spacing:2px;transition:.2s}
 .login-input:focus{border-color:color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent)}
 .login-input::placeholder{color:var(--text3)}
-.login-hint{font-size:12px;color:var(--text3);margin-bottom:20px;max-width:320px;line-height:1.5}
+.login-hint{font-size:13px;color:var(--text2);margin-bottom:20px;max-width:320px;line-height:1.5}
+/* „Anmelden" und „Ohne Konto starten" sind gleich groß und stehen direkt
+   untereinander (onb-konto, Antwort A). */
+#login-screen .btn{max-width:300px;min-height:48px}
+#login-screen .login-ohne{margin-top:8px}
+.login-note{max-width:340px;margin-top:12px;font-size:13px;line-height:1.4;color:var(--text2)}
+/* Beim Senden: gesperrt, ohne Lichtschein, der Kreis dreht sich. */
+#login-screen .btn[aria-busy="true"]{opacity:.72;box-shadow:var(--edge-strong);cursor:progress}
+.login-spin{width:18px;height:18px;margin-right:8px;vertical-align:-4px;animation:loginSpin .8s linear infinite}
+@keyframes loginSpin{to{transform:rotate(360deg)}}
+/* Einrichten (onb-schritte): oben neun Striche und der Name des Schritts,
+   „Weiter" sitzt fest unten über der Tastatur, „Zurück" darunter als Zeile. */
+.ob-screen{align-items:stretch;justify-content:flex-start;padding:max(env(safe-area-inset-top,0px),16px) 26px 0;text-align:left}
+.ob-prog{display:flex;gap:4px;height:4px;flex:none}
+.ob-prog i{flex:1;border-radius:2px;background:var(--bg4)}
+.ob-prog i.d{background:var(--text2)}
+.ob-title{margin:16px 0 0;font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:40px;line-height:1;letter-spacing:.5px;color:var(--text);overflow-wrap:anywhere}
+.ob-frei{margin-left:2px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;letter-spacing:0;color:var(--text2)}
+#ob-content{flex:1;display:flex;flex-direction:column;width:100%;padding-top:12px}
+.ob-hint{margin:0 0 12px;font-size:12px;line-height:1.5;color:var(--text3)}
+.ob-lab{display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px}
+.ob-foot{position:sticky;bottom:var(--kb,0px);z-index:2;margin:auto -26px 0;padding:24px 26px max(env(safe-area-inset-bottom,0px),12px);
+  background:linear-gradient(180deg,transparent,var(--bg) 28%);
+  /* Wie .sheet-cta (PB-090): der durchsichtige Rand oben fängt keinen Tipp ab. */
+  pointer-events:none}
+.ob-foot>*{pointer-events:auto}
+.ob-foot .btn{margin:0}
+.ob-link,.ob-gap{display:block;width:100%;min-height:44px;margin:0;padding:0 12px;border:0;background:none;cursor:pointer;
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--text2)}
+.ob-gap{cursor:default}
+/* Antwortkarten (onb-karten): echte Knöpfe mit Kästchen statt Emoji —
+   rund bei einer Wahl, eckig, wenn mehrere gehen; gewählt mit Haken. */
+.ob-opt{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin:0 0 6px;padding:10px 13px;border-radius:12px;
+  background:var(--bg3);border:2px solid var(--bg4);color:var(--text);text-align:left;font:inherit;cursor:pointer}
+.ob-opt.on{border-color:var(--accent)}
+.ob-mark{flex:0 0 22px;width:22px;height:22px;border-radius:50%;border:2px solid var(--bg5);position:relative}
+.ob-multi .ob-mark{border-radius:6px}
+.ob-opt.on .ob-mark{background:var(--accent);border-color:var(--accent)}
+.ob-opt.on .ob-mark::after{content:'';position:absolute;left:5.5px;top:1.5px;width:5px;height:10px;border:solid #0a0b0e;border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
+.ob-tx{min-width:0}
+.ob-tx b{display:block;font-size:14px;font-weight:700;line-height:18px}
+.ob-tx span{display:block;font-size:12px;line-height:16px;color:var(--text2)}
+.ob-days{display:flex;gap:8px}
+.ob-day{flex:1;min-width:0;padding:16px 0;border-radius:12px;background:var(--bg3);border:2px solid var(--bg4);color:var(--text);cursor:pointer;
+  font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1}
+.ob-day.on{border-color:var(--accent)}
 
 /* workout timer strip */
 .st-inner{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
@@ -2205,22 +2251,25 @@ code.sr-code{cursor:auto}
 }
 </style>
 </head>
-<body>
+<body class="no-nav">
 <div class="app" id="app">
 <div id="toast" class="toast"></div>
 <div id="login-screen" class="login-screen">
 <div class="login-logo">PUMPBRAH</div>
 <div class="login-sub">Cloud Sync für alle Geräte</div>
-<input class="login-input" id="sync-code" aria-label="Dein Name oder Sync-Schlüssel" placeholder="NAME ODER SCHLÜSSEL" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go">
+<form class="login-form" onsubmit="event.preventDefault();doLogin()" novalidate>
+<label class="login-lab" for="sync-code">Name oder Sync-Schlüssel</label>
+<input class="login-input" id="sync-code" name="sync" placeholder="z. B. Chris" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go">
 <div class="login-hint">Neu hier: tipp deinen Namen, die App erzeugt deinen Sync-Schlüssel. Auf einem weiteren Gerät tippst du den Schlüssel aus dem Profil.</div>
-<button class="btn" data-primary style="max-width:300px" onclick="doLogin()">▶ LOS GEHT'S</button>
-<div class="sep" style="margin:20px 0;max-width:300px;width:100%"></div>
-<button class="btn btn-g" style="max-width:300px" onclick="offlineMode()">Offline-Modus (ohne Sync)</button>
+<button class="btn" id="login-go" data-primary>Anmelden</button>
+</form>
+<button type="button" class="btn btn-g login-ohne" onclick="offlineMode()">Ohne Konto starten</button>
+<p class="login-note">Dann bleiben deine Daten nur auf diesem iPhone.</p>
 </div>
-<div id="onboard-screen" style="display:none" class="login-screen">
-<div class="login-logo">SETUP</div>
-<div class="login-sub" id="ob-sub">Lass uns dein Training einrichten</div>
-<div style="width:100%;max-width:340px;text-align:left" id="ob-content"></div>
+<div id="onboard-screen" style="display:none" class="login-screen ob-screen">
+<div class="ob-prog" id="ob-prog" role="progressbar" aria-valuemin="1" aria-valuemax="9"></div>
+<h1 class="ob-title" id="ob-title"></h1>
+<div id="ob-content"></div>
 </div>
 <div id="main-app" style="display:none">
 <nav class="bnav">
@@ -2898,6 +2947,9 @@ function mergeSyncedData(remote){
      gewinnt: ein Stand ohne Namen löscht ihn nicht. */
   const name=(preferRemote?[incoming,local]:[local,incoming]).map(x=>x.ui&&x.ui.name).find(Boolean);
   if(name)merged.ui={...(merged.ui||{}),name};
+  /* Ebenso „eingerichtet": ein Stand ohne das Merkmal (ein Gerät mit älterer
+     Version) schickt das andere nicht zurück ins Einrichten. */
+  if([local,incoming].some(x=>x.ui&&x.ui.setupDone))merged.ui={...(merged.ui||{}),setupDone:true};
   return merged;
 }
 function mergeSyncedSnapshot(localSnapshot,remote){
@@ -3011,6 +3063,10 @@ function normalizeData(){
   ensureLibraryState();
   ensureTombstoneState();
   ensureUIState();
+  /* Stände von vor dem Merkmal „eingerichtet" (siehe eingerichtet()): wer
+     eine Größe, ein Training oder Antworten aus dem Einrichten hat, war
+     schon durch. */
+  if(!D.ui.setupDone&&(D.bio.height||D.history.length||D.profile.days))D.ui.setupDone=true;
 }
 /* --------------------------------------------------------------------------
    EIN LIEGENGEBLIEBENES TRAINING WIRD GESPEICHERT, NICHT VERWORFEN
@@ -3318,7 +3374,25 @@ function kontoWeg(){
 /* „Mit Sync-Schlüssel verbinden" (offline) und „Neu anmelden": die Daten
    auf dem Gerät gehen mit ins Konto, statt beim Anmelden zu verschwinden. */
 function syncVerbinden(){try{localStorage.setItem('pb_mitnehmen','1')}catch{}doLogout()}
+/* Eingerichtet ist, wer das Einrichten einmal abgeschlossen hat. Bis November
+   2026 hieß das „hat eine Körpergröße" — seit die Körperdaten freiwillig sind
+   (onb-kurz), trägt der Stand ein eigenes Merkmal. Alte Stände haben es nicht:
+   normalizeData leitet es aus Größe, Historie oder den Einrichte-Antworten ab,
+   und die Größe zählt hier weiter mit. Wer einmal eingerichtet war, landet nie wieder im
+   Einrichten — dort würde resetDForNewUser() seine Daten ersetzen. */
+function eingerichtet(){return!!(D&&((D.ui&&D.ui.setupDone)||(D.bio&&D.bio.height)))}
+/* Solange die Cloud antwortet, zeigt der Knopf „Verbinde …" und ist gesperrt:
+   ein zweiter Tipp legte sonst ein zweites Konto an (onb-anmelden). */
+function loginWartet(an){
+  const knopf=document.getElementById('login-go');
+  if(!knopf)return;
+  knopf.disabled=an;
+  if(an)knopf.setAttribute('aria-busy','true');else knopf.removeAttribute('aria-busy');
+  knopf.innerHTML=an?'<svg class="login-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 1-8.2 5.3"/></svg>Verbinde …':'Anmelden';
+}
 function doLogin(){
+  const knopf=document.getElementById('login-go');
+  if(knopf&&knopf.disabled)return;
   const eingabe=document.getElementById('sync-code').value.trim();
   const code=eingabe.toLowerCase();
   if(!code){toast('Name oder Sync-Schlüssel eingeben');return}
@@ -3329,19 +3403,22 @@ function doLogin(){
   const anmelden=id=>{syncCode=id;localStorage.setItem('pb_sync',id);localStorage.removeItem('pb_mitnehmen')};
   /* Ohne Cloud lässt sich nicht prüfen, ob es das Konto gibt: wie bisher. */
   const ohneCloud=()=>{
+    loginWartet(false);
     anmelden(code);
     loadLocal();
-    if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}
+    if(eingerichtet()){showApp()}else{resetDForNewUser();startOnboarding()}
   };
   if(!db)useFirebase=initFirebase();
   if(!useFirebase||!db){ohneCloud();return}
+  loginWartet(true);
   const col=db.collection('pumpbrah');
   col.doc(code).get().then(doc=>doc.exists||!alsSchluessel||alsSchluessel===code?[code,doc]
     :col.doc(alsSchluessel).get().then(d=>[alsSchluessel,d])
   ).then(([id,doc])=>{
+    loginWartet(false);
     if(!doc.exists&&alsSchluessel){toast('Diesen Sync-Schlüssel gibt es nicht. Prüf die Schreibweise.');return}
     if(mitnehmen)loadLocal();
-    const lokalDa=mitnehmen&&!!(D.bio&&D.bio.height);
+    const lokalDa=mitnehmen&&eingerichtet();
     if(doc.exists){
       anmelden(id);
       /* Mitgebrachte Daten: derselbe Weg wie ein wiederkehrendes Gerät
@@ -3423,8 +3500,8 @@ function altenNamenLoeschen(){
   db.collection('pumpbrah').doc(alt).delete().then(()=>{try{localStorage.removeItem('pb_alt')}catch{}}).catch(()=>{});
 }
 function resetDForNewUser(){D={plan:{},history:[],active:null,settings:{compound:120,isolation:120},notes:{},health:{sick:false,sickSince:null,sickDays:0},bio:{height:null,weights:[],birthday:null,gender:null},egym:{enabled:false,measurements:[]},library:{custom:[],deleted:[]},ui:{accent:'volt',mode:'dark',avatar:'',homePlanOpen:false}};normalizeData();localStorage.setItem('pb_data',JSON.stringify(D))}
-function offlineMode(){useFirebase=false;syncCode='offline';localStorage.setItem('pb_sync','offline');loadLocal();if(D.bio&&D.bio.height){showApp()}else{resetDForNewUser();startOnboarding()}}
-function showApp(){normalizeData();document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
+function offlineMode(){useFirebase=false;syncCode='offline';localStorage.setItem('pb_sync','offline');loadLocal();if(eingerichtet()){showApp()}else{resetDForNewUser();startOnboarding()}}
+function showApp(){normalizeData();document.body.classList.remove('no-nav');document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='none';document.getElementById('main-app').style.display='';restoreTimer();renderAll();renderHist();renderSettings();renderAna();if(D.active)requestWakeLock();
   checkSharedPlanLink();
   hydrateIcons();attachLargeTitles();attachScrollChoreography();attachKeyboardAvoidance();attachFieldBehavior();attachNavHeight();attachSheetGestures();attachReveals();
   /* Ein beim Laden übernommenes Training steht schon in D (normalizeData),
@@ -3459,6 +3536,15 @@ function showApp(){normalizeData();document.getElementById('login-screen').style
 let idleWatchAttached=false;
 let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experience:'beginner',gender:'male',location:'gym',birthday:null,
   minutes:75,limits:[],methods:['superset','shortrest']};
+/* Eine Wahl aus mehreren (Ort, Tage, Zeit, Ziel, Erfahrung): der Zustand
+   steht in obData und an der Karte (.on, aria-checked) — nicht in einem
+   Inline-Rahmen, den „Zurück" vergisst. */
+function obPick(field,value,el){
+  obData[field]=value;
+  if(el&&el.parentElement)[...el.parentElement.children].forEach(c=>{
+    c.classList.toggle('on',c===el);c.setAttribute('aria-checked',String(c===el));
+  });
+}
 function obToggleList(field,value,el){
   const list=obData[field]||(obData[field]=[]);
   /* „Keine" schließt alles andere aus — sonst steht da „keine Beschwerden,
@@ -3469,40 +3555,81 @@ function obToggleList(field,value,el){
     obData[field]=ohneNone.includes(value)?ohneNone.filter(x=>x!==value):[...ohneNone,value];
   }
   if(el&&el.parentElement)[...el.parentElement.children].forEach(c=>{
-    c.style.borderColor=(obData[field]||[]).includes(c.dataset.v)?'var(--neon)':'var(--bg4)';
+    const on=(obData[field]||[]).includes(c.dataset.v);
+    c.classList.toggle('on',on);c.setAttribute('aria-checked',String(on));
   });
   haptic(8);
 }
-function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';obStep=0;renderObStep()}
-function renderObStep(){const c=document.getElementById('ob-content');const sub=document.getElementById('ob-sub');const obBtn=(label,action)=>`<button class="btn" onclick="${action}">${label}</button>`;const obBack=`<button class="btn btn-g" style="margin-top:6px" onclick="obStep--;renderObStep()">← ZURÜCK</button>`;const obSel=(cls,items,field,def)=>items.map(i=>`<div onclick="document.querySelectorAll('.${cls}').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.${field}='${i.k}'" class="${cls}" style="padding:14px;background:var(--bg3);border:2px solid ${i.k===def?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:15px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');const obMulti=(field,items)=>items.map(i=>`<div class="ob-multi" data-v="${i.k}" onclick="obToggleList('${field}','${i.k}',this)" style="padding:13px;background:var(--bg3);border:2px solid ${(obData[field]||[]).includes(i.k)?'var(--neon)':'var(--bg4)'};border-radius:12px;margin-bottom:6px;cursor:pointer"><div style="font-weight:700;font-size:14px">${i.l}</div><div style="font-size:12px;color:var(--text2)">${i.d}</div></div>`).join('');
+function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';attachKeyboardAvoidance();obStep=0;renderObStep()}
+/* Einrichten (onb-schritte): neun Striche statt „Schritt 8/9", der Name des
+   Schritts ist der Titel, „Weiter" sitzt fest unten. Jede Karte liest ihren
+   Zustand aus obData — „Zurück" zeigt, was schon gewählt und eingetragen ist,
+   nicht die Vorgabe. Ab Schritt 2 erstellt „Rest überspringen" den Plan mit
+   dem, was gewählt ist; der Rest sind die Vorgaben in obData (onb-kurz). */
+function renderObStep(){
+  const c=document.getElementById('ob-content');
+  const letzter=obStep===8;
+  const karte=(multi,field,i)=>{
+    const on=multi?(obData[field]||[]).includes(i.k):String(obData[field])===i.k;
+    return `<button type="button" class="ob-opt${multi?' ob-multi':''}${on?' on':''}" role="${multi?'checkbox':'radio'}" aria-checked="${on}" data-v="${i.k}" onclick="${multi?'obToggleList':'obPick'}('${field}','${i.k}',this)"><i class="ob-mark"></i><span class="ob-tx"><b>${i.l}</b><span>${i.d}</span></span></button>`;
+  };
+  const obSel=(field,items)=>`<div role="radiogroup" aria-labelledby="ob-title">${items.map(i=>karte(false,field,i)).join('')}</div>`;
+  const obMulti=(field,items)=>`<div role="group" aria-labelledby="ob-title">${items.map(i=>karte(true,field,i)).join('')}</div>`;
+  const hinweis=t=>`<p class="ob-hint">${t}</p>`;
   const steps=[
-    {sub:'Schritt 1/9 — Über dich',html:`<div style="margin-bottom:12px">${obSel('ob-gen',[{k:'male',l:'♂️ Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'♀️ Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}],'gender','male')}</div>${obBtn('WEITER →','obNext(0)')}`},
-    {sub:'Schritt 2/9 — Körperdaten',html:`<div class="ig" style="margin-bottom:10px"><label for="ob-birthday">Geburtsdatum</label><input type="date" id="ob-birthday" style="font-size:17px;padding:13px;width:100%;font-family:'JetBrains Mono',monospace"></div>`+
-      `<div class="ir" style="margin-bottom:10px"><div class="ig"><label for="ob-height">Größe (cm)</label><input type="number" inputmode="numeric" id="ob-height" placeholder="175" style="font-size:19px;padding:13px;width:100%"></div>`+
-      `<div class="ig"><label for="ob-weight">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="ob-weight" placeholder="75" style="font-size:19px;padding:13px;width:100%"></div></div>`+
-      `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Für Fitnessalter und Gewichtsverlauf. Ändert am Plan nichts.</div>${obBtn('WEITER →','obNext(1)')}${obBack}`},
-    {sub:'Schritt 3/9 — Trainingsort',html:`<div style="margin-bottom:12px">${obSel('ob-loc',[{k:'gym',l:'🏋️ Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'🏠 Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}],'location','gym')}</div>${obBtn('WEITER →','obNext(2)')}${obBack}`},
-    {sub:'Schritt 4/9 — Trainingsfrequenz',html:`<div style="margin-bottom:12px"><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px">Trainingstage pro Woche</label><div style="display:flex;gap:8px">${[2,3,4,5,6].map(d=>`<div onclick="document.querySelectorAll('.ob-day').forEach(x=>x.style.borderColor='var(--bg4)');this.style.borderColor='var(--neon)';obData.days=${d}" class="ob-day" style="flex:1;padding:16px;background:var(--bg3);border:2px solid ${d===obData.days?'var(--neon)':'var(--bg4)'};border-radius:12px;text-align:center;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:28px">${d}</div>`).join('')}</div></div>${obBtn('WEITER →','obNext(3)')}${obBack}`},
-    {sub:'Schritt 5/9 — Zeit pro Einheit',html:`<div style="margin-bottom:10px">${obSel('ob-min',[{k:'45',l:'⏱️ 45 Minuten',d:'Nur Grundübungen, kleine Muskeln über die Woche verteilt'},{k:'60',l:'⏱️ 60 Minuten',d:'Kompakt, Isolation gekoppelt'},{k:'75',l:'⏱️ 75 Minuten',d:'Alle Muskelgruppen versorgt, ohne Hetze'},{k:'90',l:'⏱️ 90 Minuten',d:'Voller Umfang, längere Pausen'}],'minutes','75')}</div>`+
-      `<div style="font-size:12px;color:var(--text3);margin-bottom:12px">Gerechnet mit Umbauzeit zwischen den Übungen — also die Zeit, die du wirklich im Studio stehst.</div>${obBtn('WEITER →','obNext(4)')}${obBack}`},
-    {sub:'Schritt 6/9 — Trainingsziel',html:`<div style="margin-bottom:12px">${obSel('ob-focus',[{k:'hypertrophy',l:'💪 Muskelaufbau',d:'Maximaler Muskelzuwachs'},{k:'strength',l:'🏋️ Kraft',d:'Maximale Kraft aufbauen'},{k:'balanced',l:'⚖️ Ausgeglichen',d:'Kraft + Muskeln + Fitness'},{k:'recomp',l:'🔄 Rekomposition',d:'Fett ab, Muskeln auf'},...(obData.gender==='female'?[{k:'bbp',l:'🍑 Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])],'focus','balanced')}</div>${obBtn('WEITER →','obNext(5)')}${obBack}`},
-    {sub:'Schritt 7/9 — Erfahrung',html:`<div style="margin-bottom:12px">${obSel('ob-exp',[{k:'beginner',l:'🌱 Anfänger',d:'0–1 Jahr Training'},{k:'intermediate',l:'⚡ Fortgeschritten',d:'1–3 Jahre konsistent'},{k:'advanced',l:'🔥 Erfahren',d:'3+ Jahre'}],'experience','beginner')}</div>${obBtn('WEITER →','obNext(6)')}${obBack}`},
-    {sub:'Schritt 8/9 — Beschwerden',html:`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Mehrfachauswahl. Betroffene Übungen werden durch schonendere ersetzt — nicht weggelassen.</div>`+
-      `<div style="margin-bottom:12px">${obMulti('limits',[{k:'none',l:'✅ Keine',d:'Alle Bewegungsmuster erlaubt'},{k:'shoulder',l:'🫱 Schulter',d:'Kein steiles Drücken, keine Dips'},{k:'lowback',l:'🦴 Unterer Rücken',d:'Kein freies Kreuzheben, Maschine statt Langhantel'},{k:'knee',l:'🦵 Knie',d:'Weniger Beinstrecken, mehr geführte Übungen'},{k:'elbow',l:'💪 Ellbogen',d:'Kein Stirndrücken, Kabel statt Langhantel'}])}</div>${obBtn('WEITER →','obNext(7)')}${obBack}`},
-    {sub:'Schritt 9/9 — Zeit sparen',html:`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Beides kostet nach der Datenlage keinen Muskelzuwachs und spart zusammen zehn bis fünfzehn Minuten je Einheit.</div>`+
-      `<div style="margin-bottom:12px">${obMulti('methods',[{k:'superset',l:'🔗 Supersätze bei Isolation',d:'Zwei Übungen im Wechsel mit gemeinsamer Pause'},{k:'shortrest',l:'⏩ 90 s Pause bei Isolation',d:'Grundübungen behalten zwei Minuten'}])}</div>${obBtn('🚀 PLAN ERSTELLEN','finishOnboarding()')}${obBack}`}
-  ];sub.textContent=steps[obStep].sub;c.innerHTML=steps[obStep].html}
+    {t:'Über dich',html:obSel('gender',[{k:'male',l:'Männlich',d:'Trainingsplan für Männer'},{k:'female',l:'Weiblich',d:'Inkl. spezielle Frauen-Optionen (BBP etc.)'}])},
+    {t:'Körperdaten',frei:true,html:`<div class="ig" style="margin-bottom:10px"><label for="ob-birthday">Geburtsdatum</label><input type="date" id="ob-birthday" value="${obData.birthday||''}" style="font-size:17px;padding:13px;width:100%;font-family:'JetBrains Mono',monospace"></div>`+
+      `<div class="ir" style="margin-bottom:10px"><div class="ig"><label for="ob-height">Größe (cm)</label><input type="number" inputmode="numeric" id="ob-height" placeholder="175" value="${obData.height||''}" style="font-size:19px;padding:13px;width:100%"></div>`+
+      `<div class="ig"><label for="ob-weight">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="ob-weight" placeholder="75" value="${obData.weight||''}" style="font-size:19px;padding:13px;width:100%"></div></div>`+
+      hinweis('Für Fitnessalter und Gewichtsverlauf. Geht auch später unter Körperdaten.')},
+    {t:'Trainingsort',html:obSel('location',[{k:'gym',l:'Fitnessstudio',d:'Voller Zugang zu Geräten, Hanteln, Kabeln'},{k:'home',l:'Home Workout',d:'Kurzhanteln, Bänder, Körpergewicht'}])},
+    {t:'Trainingsfrequenz',html:`<span class="ob-lab" id="ob-days-lab">Trainingstage pro Woche</span><div class="ob-days" role="radiogroup" aria-labelledby="ob-days-lab">${[2,3,4,5,6].map(d=>{const on=String(obData.days)===String(d);return `<button type="button" class="ob-day${on?' on':''}" role="radio" aria-checked="${on}" data-v="${d}" onclick="obPick('days',${d},this)">${d}</button>`}).join('')}</div>`},
+    {t:'Zeit pro Einheit',html:obSel('minutes',[{k:'45',l:'45 Minuten',d:'Nur Grundübungen, kleine Muskeln über die Woche verteilt'},{k:'60',l:'60 Minuten',d:'Kompakt, Isolation gekoppelt'},{k:'75',l:'75 Minuten',d:'Alle Muskelgruppen versorgt, ohne Hetze'},{k:'90',l:'90 Minuten',d:'Voller Umfang, längere Pausen'}])+
+      hinweis('Gerechnet mit Umbauzeit zwischen den Übungen — also die Zeit, die du wirklich im Studio stehst.')},
+    {t:'Trainingsziel',html:obSel('focus',[{k:'hypertrophy',l:'Muskelaufbau',d:'Maximaler Muskelzuwachs'},{k:'strength',l:'Kraft',d:'Maximale Kraft aufbauen'},{k:'balanced',l:'Ausgeglichen',d:'Kraft + Muskeln + Fitness'},{k:'recomp',l:'Rekomposition',d:'Fett ab, Muskeln auf'},...(obData.gender==='female'?[{k:'bbp',l:'Bauch Beine Po',d:'Fokus auf Unterkörper + Core'}]:[])])},
+    {t:'Erfahrung',html:obSel('experience',[{k:'beginner',l:'Anfänger',d:'0–1 Jahr Training'},{k:'intermediate',l:'Fortgeschritten',d:'1–3 Jahre konsistent'},{k:'advanced',l:'Erfahren',d:'3+ Jahre'}])},
+    {t:'Beschwerden',html:hinweis('Mehrfachauswahl. Betroffene Übungen werden durch schonendere ersetzt — nicht weggelassen.')+
+      obMulti('limits',[{k:'none',l:'Keine',d:'Alle Bewegungsmuster erlaubt'},{k:'shoulder',l:'Schulter',d:'Kein steiles Drücken, keine Dips'},{k:'lowback',l:'Unterer Rücken',d:'Kein freies Kreuzheben, Maschine statt Langhantel'},{k:'knee',l:'Knie',d:'Weniger Beinstrecken, mehr geführte Übungen'},{k:'elbow',l:'Ellbogen',d:'Kein Stirndrücken, Kabel statt Langhantel'}])},
+    {t:'Zeit sparen',html:hinweis('Beides kostet nach der Datenlage keinen Muskelzuwachs und spart zusammen zehn bis fünfzehn Minuten je Einheit.')+
+      obMulti('methods',[{k:'superset',l:'Supersätze bei Isolation',d:'Zwei Übungen im Wechsel mit gemeinsamer Pause'},{k:'shortrest',l:'90 s Pause bei Isolation',d:'Grundübungen behalten zwei Minuten'}])}
+  ];
+  const s=steps[obStep];
+  const prog=document.getElementById('ob-prog');
+  prog.innerHTML=steps.map((_,i)=>`<i${i<=obStep?' class="d"':''}></i>`).join('');
+  prog.setAttribute('aria-valuenow',obStep+1);
+  prog.setAttribute('aria-valuetext',`Schritt ${obStep+1} von ${steps.length}`);
+  document.getElementById('ob-title').innerHTML=s.t+(s.frei?' <span class="ob-frei">freiwillig</span>':'');
+  /* Die Fußleiste hat immer drei Zeilen, auch wo „Zurück" (Schritt 1) oder
+     „Überspringen" (Schritt 9) fehlt — sonst rutscht „Weiter" doch wieder. */
+  const luecke='<span class="ob-gap" aria-hidden="true"></span>';
+  c.innerHTML=`<div class="ob-body">${s.html}</div><div class="ob-foot">`+
+    (letzter?`<button class="btn" onclick="finishOnboarding()">Plan erstellen</button>`:`<button class="btn" onclick="obNext(${obStep})">WEITER →</button>`)+
+    (obStep>0?`<button type="button" class="ob-link" onclick="obBack()">Zurück</button>`:luecke)+
+    (obStep>0&&!letzter?`<button type="button" class="ob-link" onclick="obSkip()">Rest überspringen, Plan erstellen</button>`:luecke)+
+    `</div>`;
+}
+/* Körperdaten sind freiwillig (onb-kurz): leere Felder bleiben null. Gelesen
+   wird beim Weiter, beim Zurück und beim Überspringen — eingetippte Werte
+   gehen auf keinem dieser Wege verloren. */
+function obKoerperLesen(){
+  const h=document.getElementById('ob-height');
+  if(!h)return;
+  obData.birthday=document.getElementById('ob-birthday').value||null;
+  obData.height=parseFloat(h.value)||null;
+  obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;
+}
+function obGeh(step){obStep=step;renderObStep();window.scrollTo(0,0)}
 function obNext(step){
-  if(step===1){
-    obData.birthday=document.getElementById('ob-birthday').value||null;
-    obData.height=parseFloat(document.getElementById('ob-height').value)||null;
-    obData.weight=parseFloat(document.getElementById('ob-weight').value)||null;
-    if(!obData.birthday){toast('Geburtsdatum eingeben!');return}
-    if(!obData.height){toast('Größe eingeben!');return}
-    if(!obData.weight){toast('Gewicht eingeben!');return}
-  }
-  if(step===4)obData.minutes=parseInt(obData.minutes)||75;
-  obStep++;renderObStep();
+  if(step===1)obKoerperLesen();
+  obGeh(step+1);
+}
+function obBack(){
+  if(obStep===1)obKoerperLesen();
+  obGeh(Math.max(0,obStep-1));
+}
+function obSkip(){
+  if(obStep===1)obKoerperLesen();
+  finishOnboarding();
 }
 /* --------------------------------------------------------------------------
    PLAN AUS DEN ONBOARDING-ANTWORTEN
@@ -3554,24 +3681,24 @@ const OB_TEMPLATES={
      sechs Sätzen, das MEV der seitlichen Schulter liegt bei acht. Solange
      Schulterdrücken fälschlich auf dieselbe Gruppe zählte, fiel die Lücke
      nicht auf — seit die vordere Schulter eigene Grenzen hat, schon. */
-  2:[['Ganzkoerper A',['push','row','squat','legcurl','raise','triext','calf','core']],
-     ['Ganzkoerper B',['push2','pulld','hinge','legext','raise2','rear','curl','calf2','core2']]],
+  2:[['Ganzkörper A',['push','row','squat','legcurl','raise','triext','calf','core']],
+     ['Ganzkörper B',['push2','pulld','hinge','legext','raise2','rear','curl','calf2','core2']]],
   3:[['FullBody A',['push','row','squat','legcurl','raise','calf','triext','core']],
      ['FullBody B',['push2','pulld','hinge','legext','rear','curl','calf2','core2']],
      ['FullBody C',['fly','row2','squat2','legcurl2','raise2','rear2','triext2','curl2']]],
-  4:[['Oberkoerper A',['push','row','raise','triext','curl','core']],
-     ['Unterkoerper A',['squat','hinge','legext','calf','rear2']],
-     ['Oberkoerper B',['push2','pulld','row2','rear','triext2','curl2']],
-     ['Unterkoerper B',['squat2','legcurl','calf2','raise2','core2']]],
-  5:[['Druecken',['push','pushh','raise','triext','core']],
+  4:[['Oberkörper A',['push','row','raise','triext','curl','core']],
+     ['Unterkörper A',['squat','hinge','legext','calf','rear2']],
+     ['Oberkörper B',['push2','pulld','row2','rear','triext2','curl2']],
+     ['Unterkörper B',['squat2','legcurl','calf2','raise2','core2']]],
+  5:[['Drücken',['push','pushh','raise','triext','core']],
      ['Ziehen',['pulld','row','curl','rear']],
      ['Beine',['squat','hinge','legext','calf']],
-     ['Oberkoerper',['push2','row2','raise2','triext2','curl2']],
+     ['Oberkörper',['push2','row2','raise2','triext2','curl2']],
      ['Beine & Rumpf',['squat2','legcurl','calf2','rear2','core2']]],
-  6:[['Druecken A',['push','pushh','raise','triext']],
+  6:[['Drücken A',['push','pushh','raise','triext']],
      ['Ziehen A',['pulld','row','curl','rear']],
      ['Beine A',['squat','hinge','legext','calf']],
-     ['Druecken B',['push2','raise2','triext2','core']],
+     ['Drücken B',['push2','raise2','triext2','core']],
      ['Ziehen B',['row2','curl2','rear2','core2']],
      ['Beine B',['squat2','legcurl','calf2','fly']]]
 };
@@ -3796,7 +3923,11 @@ function buildPlanFromOnboarding(ob){
   return plan;
 }
 function finishOnboarding(){
+  /* Die Zeit kommt als Kartenwert ('60') — auch beim Überspringen eine Zahl. */
+  obData.minutes=parseInt(obData.minutes)||75;
   D.bio.height=obData.height;D.bio.gender=obData.gender;D.bio.birthday=obData.birthday;
+  /* Eingerichtet, auch ohne Körperdaten (siehe eingerichtet()). */
+  ensureUIState();D.ui.setupDone=true;
   if(obData.weight)D.bio.weights=[{date:new Date().toLocaleDateString('de-DE'),kg:obData.weight}];
   /* Die Antworten bleiben erhalten: sie erklären später, warum der Plan so
      aussieht, und ein Neuaufbau kann sie wiederverwenden. */
@@ -4146,9 +4277,13 @@ function attachLargeTitles(){
 }
 
 /* --- Tastatur: Sheets weichen aus, statt Felder zu verdecken -------------- */
+/* Läuft schon im Einrichten (Weiter über der Tastatur) und noch einmal in
+   showApp — angehängt wird nur einmal. */
+let kbAttached=false;
 function attachKeyboardAvoidance(){
   const vv=window.visualViewport;
-  if(!vv)return;
+  if(!vv||kbAttached)return;
+  kbAttached=true;
   const apply=()=>{
     /* Differenz zwischen Layout- und visuellem Viewport = Tastaturhöhe. */
     const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);
@@ -11312,12 +11447,12 @@ try{const n=sessionStorage.getItem('pb_notice');if(n){sessionStorage.removeItem(
   if(saved==='offline'){
     useFirebase=false;
     loadLocal();
-    if(D.bio&&D.bio.height)showApp();
+    if(eingerichtet())showApp();
     return;
   }
   useFirebase=initFirebase();
   loadLocal();
-  if(D.bio&&D.bio.height){
+  if(eingerichtet()){
     showApp();
     if(useFirebase)startSync();
   }else if(useFirebase&&db){
