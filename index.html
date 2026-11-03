@@ -70,11 +70,11 @@
   --radius:22px;
   /* Schriftskala: vier Stufen für Text (11, 12, 14, 16 px), sechs für Zahlen
      und Titel (22 bis 106 px). Jede Schriftgröße der App kommt von hier; eine
-     neue Stelle nimmt die nächste Stufe statt eines eigenen Werts. --fs-10
-     tragen nur die Versalien-Etiketten über Zahlen (TONNAGE, SESSIONS),
-     sonst liegt nichts unter 11 px. Die Größen sind fest: sie wachsen nicht
-     mit der Textgröße des iPhones. */
-  --fs-10:10px;--fs-11:11px;--fs-12:12px;--fs-14:14px;--fs-16:16px;
+     neue Stelle nimmt die nächste Stufe statt eines eigenen Werts. Nichts liegt
+     unter 11 px, auch nicht die Versalien-Etiketten über Zahlen (TONNAGE,
+     SESSIONS). Die Größen sind fest: sie wachsen nicht mit der Textgröße des
+     iPhones. */
+  --fs-11:11px;--fs-12:12px;--fs-14:14px;--fs-16:16px;
   --fs-22:22px;--fs-30:30px;--fs-38:38px;--fs-44:44px;--fs-72:72px;--fs-106:106px;
   /* motion */
   --sp:cubic-bezier(.34,1.56,.64,1);
@@ -129,14 +129,6 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .screen.active{display:block;animation:fadeIn .15s var(--ease)}
 @keyframes screenIn{from{opacity:0;transform:translateY(10px) scale(.994);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
 
-/* header */
-.hdr{
-  padding:max(env(safe-area-inset-top),14px) 0 12px;
-  display:flex;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:50;
-  background:linear-gradient(180deg,var(--bg) 55%,transparent);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-}
 .logo{
   font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);letter-spacing:3px;
   color:var(--text);position:relative;
@@ -164,7 +156,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .ni{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;margin:0;padding:9px 0;border:0;background:none;color:inherit;font-family:inherit;cursor:pointer;border-radius:16px;transition:background .2s var(--ease);position:relative}
 .ni svg{width:21px;height:21px;stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:.22s var(--ease)}
 .ni .nl{font-size:var(--fs-11);letter-spacing:.2px;color:var(--text2);transition:.22s var(--ease);line-height:1;font-weight:600}
-.ni:active{transform:scale(.94)}
+.ni:active{transform:scale(var(--press))}
 .ni:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .ni.on{background:color-mix(in srgb,var(--accent) 12%,transparent)}
 .ni.on svg{stroke:var(--accent)}
@@ -174,7 +166,7 @@ body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));overscroll-beha
 .live-dock{display:none;pointer-events:auto;width:100%;max-width:480px;margin:0 auto;padding:18px 13px 6px;background:linear-gradient(180deg,rgba(11,12,17,0) 0,rgba(11,12,17,.94) 14px,#0b0c11 20px)}
 body.has-live .live-dock{display:block}
 .live-bar{width:100%;height:48px;display:flex;align-items:center;gap:8px;margin:0;padding:0 2px 0 16px;border:0;border-radius:14px;background:#262a33;box-shadow:var(--edge-strong),var(--shadow-2);color:var(--text);font-family:inherit;text-align:left;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
-.live-bar:active{transform:scale(.98)}
+.live-bar:active{transform:scale(var(--press-l))}
 .live-bar:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .lb-vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .lb-n{flex:1;min-width:0;font-size:var(--fs-16);line-height:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -210,7 +202,7 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
   box-shadow:0 10px 26px rgba(0,0,0,.22);
 }
 .hs .v{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);color:var(--text);line-height:1;letter-spacing:.5px}
-.hs .l{font-size:var(--fs-10);color:var(--text2);text-transform:uppercase;letter-spacing:1.2px;margin-top:5px;font-weight:700}
+.hs .l{font-size:var(--fs-11);color:var(--text2);text-transform:uppercase;letter-spacing:1.2px;margin-top:5px;font-weight:700}
 .nwc{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px;position:relative;overflow:hidden}
 
 /* buttons */
@@ -222,7 +214,7 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
   box-shadow:0 10px 26px var(--accent-glow);
   transition:transform .12s var(--sp),box-shadow .2s var(--ease),filter .2s;
 }
-.btn:active{transform:scale(.97);box-shadow:0 6px 16px var(--accent-glow);filter:brightness(1.05)}
+.btn:active{transform:scale(var(--press));box-shadow:0 6px 16px var(--accent-glow);filter:brightness(1.05)}
 .btn-o{background:transparent;border:1.5px solid var(--accent);color:var(--accent);box-shadow:none}
 .btn-g{background:var(--bg3);color:var(--text);border:1px solid var(--line);box-shadow:none}
 .btn-r{background:linear-gradient(180deg,var(--red),#d02a46);color:#fff;box-shadow:0 10px 24px rgba(255,59,92,.28)}
@@ -241,7 +233,7 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
   font-family:inherit;font-size:var(--fs-14);line-height:1.2;font-weight:600;white-space:nowrap;
   transition:background .2s var(--ease),color .2s var(--ease),transform var(--dur-micro) var(--sp);
 }
-.dtab:active{transform:scale(.97)}
+.dtab:active{transform:scale(var(--press))}
 .dtab.on{background:var(--bg4);box-shadow:var(--edge-strong),0 1px 2px rgba(0,0,0,.3);color:var(--text)}
 .dtab>*{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .dtab .dn{font-size:var(--fs-12);line-height:1.2;font-weight:500;color:var(--t3)}
@@ -285,7 +277,7 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
 .exr-note.mn{border-left-color:var(--blue)}
 .exr-actions{display:flex;gap:4px;flex-shrink:0;align-items:center;margin-right:-6px}
 .exr-act{width:44px;height:44px;border-radius:999px;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;font-size:var(--fs-16);line-height:1;background:none;color:var(--text2);transition:transform var(--dur-micro) var(--sp),background .15s}
-.exr-act:active{transform:scale(.94);background:rgba(255,255,255,.08)}
+.exr-act:active{transform:scale(var(--press-s));background:rgba(255,255,255,.08)}
 /* Sortier-Modus: zwei Pfeile je Zeile; am Rand der Liste bleibt der Pfeil als blasse Lücke stehen, damit der andere nicht springt. */
 .exr-act.mv{background:rgba(255,255,255,.06);box-shadow:var(--edge);color:var(--text)}
 .exr-act:disabled{opacity:.3;pointer-events:none}
@@ -293,7 +285,7 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
 /* inputs */
 .ir{display:flex;gap:9px;align-items:flex-end;margin-bottom:10px}
 .ig{flex:1}
-.ig label{display:block;font-size:var(--fs-10);text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px;font-weight:700}
+.ig label{display:block;font-size:var(--fs-11);text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px;font-weight:700}
 /* ============================================================
    FORMULARFELDER — 16px ist auf iOS keine Geschmacksfrage.
    Safari zoomt beim Fokussieren automatisch hinein, sobald ein
@@ -334,7 +326,7 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);text-alig
 .stepper-pm{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .stepper-btn{height:48px;border:none;border-radius:14px;background:rgba(255,255,255,.06);box-shadow:var(--edge);color:var(--text);cursor:pointer;display:grid;place-items:center;
   transition:transform .12s var(--sp),background .1s;touch-action:manipulation;-webkit-user-select:none;user-select:none}
-.stepper-btn:active{background:var(--bg5);transform:scale(.97)}
+.stepper-btn:active{background:var(--bg5);transform:scale(var(--press))}
 
 /* rest timer ring */
 .tc{width:150px;height:150px;border-radius:50%;border:3px solid var(--bg4);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;position:relative;background:var(--bg2)}
@@ -390,7 +382,7 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);text-alig
 .chart-median{stroke:var(--text3);stroke-dasharray:3,5;stroke-width:1;opacity:.7}
 
 /* modals */
-.mbg{display:none;position:fixed;inset:0;background:rgba(4,5,8,.66);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.mbg{display:none;position:fixed;inset:0;background:rgba(4,5,8,.66);z-index:200;align-items:flex-end;justify-content:center}
 .mbg.show{display:flex;animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .mdl{
@@ -405,7 +397,7 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);text-alig
 .mt{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);letter-spacing:1px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
 /* Das ✕ jedes Fensters: 44 × 44 px. */
 .mc{flex:0 0 44px;width:44px;height:44px;border-radius:11px;background:var(--bg3);border:1px solid var(--line);color:var(--text);font-size:var(--fs-16);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
-.mc:active{transform:scale(.9)}
+.mc:active{transform:scale(var(--press-s))}
 /* Kopf mit zwei Handgriffen (Übung-Fenster): Bibliothek und Schließen (.mc), je 44 px hoch. */
 .mt-act{display:flex;align-items:center;gap:8px}
 .mt-act .btn{min-height:44px;margin:0;padding:0 16px}
@@ -456,7 +448,7 @@ body.no-nav{padding-bottom:0}
 .ob-frei{margin-left:2px;font-family:'Space Grotesk',sans-serif;font-size:var(--fs-14);font-weight:600;letter-spacing:0;color:var(--text2)}
 #ob-content{flex:1;display:flex;flex-direction:column;width:100%;padding-top:12px}
 .ob-hint{margin:0 0 12px;font-size:var(--fs-12);line-height:1.5;color:var(--text3)}
-.ob-lab{display:block;font-size:var(--fs-10);text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px}
+.ob-lab{display:block;font-size:var(--fs-11);text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:8px}
 .ob-foot{position:sticky;bottom:var(--kb,0px);z-index:2;margin:auto -26px 0;padding:24px 26px max(env(safe-area-inset-bottom,0px),12px);
   background:linear-gradient(180deg,transparent,var(--bg) 28%);
   /* Wie .sheet-cta (PB-090): der durchsichtige Rand oben fängt keinen Tipp ab. */
@@ -493,9 +485,9 @@ body.no-nav{padding-bottom:0}
 .st-circle.run .st-time{color:var(--accent)}.st-circle.done .st-time{color:var(--green)}
 .st-btns{display:flex;gap:5px;flex-wrap:wrap}
 .st-btn{padding:6px 11px;border-radius:9px;border:none;font-size:var(--fs-11);font-weight:700;cursor:pointer;transition:.12s}
-.st-btn:active{transform:scale(.92)}
+.st-btn:active{transform:scale(var(--press-s))}
 .st-info{flex:1;min-width:0}
-.st-label{font-size:var(--fs-10);color:var(--text2);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
+.st-label{font-size:var(--fs-11);color:var(--text2);text-transform:uppercase;letter-spacing:.6px;font-weight:700}
 .st-elapsed{font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:var(--text3)}
 .sess-detail.open{max-height:600px!important}
 
@@ -513,7 +505,7 @@ body.no-nav{padding-bottom:0}
 #m-wosummary .sheet-cta .btn{min-height:52px}
 .wo-sum-sub{margin:-10px 0 16px;font-size:var(--fs-14);line-height:17px;color:var(--text2)}
 .wo-sum-hero{padding:16px;border-radius:28px;background:var(--mat-hero);box-shadow:var(--edge-strong),var(--shadow-2)}
-.wo-sum-cap{display:block;font-size:var(--fs-10);font-weight:700;line-height:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.wo-sum-cap{display:block;font-size:var(--fs-11);font-weight:700;line-height:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
 .wo-sum-num{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 8px;margin-top:8px}
 .wo-sum-num b{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:var(--fs-106);line-height:.82;font-variant-numeric:tabular-nums}
 .wo-sum-num span{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-38);line-height:1;color:var(--text2)}
@@ -544,12 +536,12 @@ body.no-nav{padding-bottom:0}
 /* workout action row + alternative picker */
 .wo-action-row{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .wo-icon-btn{min-width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--bg3);color:var(--text);display:flex;align-items:center;justify-content:center;font-family:inherit;font-size:var(--fs-14);cursor:pointer;transition:.15s}
-.wo-icon-btn:active{transform:scale(.9)}
+.wo-icon-btn:active{transform:scale(var(--press-s))}
 .wo-alt-btn{height:44px;border-radius:14px;border:1px solid var(--line);background:var(--bg3);color:var(--text);font-family:inherit;font-size:var(--fs-14);font-weight:600;padding:0 16px 0 12px;cursor:pointer;transition:.15s}
-.wo-alt-btn:active{transform:scale(.95)}
+.wo-alt-btn:active{transform:scale(var(--press))}
 button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch-action:manipulation}
 .alt-item{display:flex;align-items:center;gap:12px;width:100%;border:1px solid var(--line);background:var(--bg3);color:var(--text);border-radius:15px;padding:13px;margin-bottom:8px;text-align:left;cursor:pointer;transition:.15s;font-size:var(--fs-14)}
-.alt-item:active{transform:scale(.98);border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.alt-item:active{transform:scale(var(--press-l));border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
 .alt-ico{width:40px;height:40px;border-radius:12px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:var(--fs-16);flex:0 0 auto}
 .alt-name{font-weight:800;font-size:var(--fs-14)}
 /* Meta-Zeile als Flex-Container: die Badges sind inline-block mit eigener
@@ -575,7 +567,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .lib-items{display:none;padding-left:2px}
 .lib-cat.open .lib-items{display:block}
 .lib-item{display:flex;align-items:center;gap:11px;padding:12px;background:var(--bg3);border:1px solid var(--line);border-radius:13px;margin-bottom:5px;cursor:pointer;transition:.15s}
-.lib-item:active{transform:scale(.98);background:var(--bg4)}
+.lib-item:active{transform:scale(var(--press-l));background:var(--bg4)}
 .lib-item .li-name{font-size:var(--fs-14);font-weight:600;flex:1}
 .lib-item .li-info{font-size:var(--fs-11);color:var(--text3);font-family:'JetBrains Mono',monospace}
 .lib-search{width:100%;padding:12px 15px;background:var(--bg3);border:1.5px solid var(--line);border-radius:14px;color:var(--text);font-size:var(--fs-16);-webkit-appearance:none;appearance:none;outline:none;margin-bottom:12px;transition:.2s}
@@ -584,7 +576,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 
 /* stats: muscle groups */
 .ana-muscle{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:9px;cursor:pointer;transition:.15s}
-.ana-muscle:active{transform:scale(.985)}
+.ana-muscle:active{transform:scale(var(--press-l))}
 .ana-muscle.open{border-color:color-mix(in srgb,var(--accent) 26%,transparent)}
 .ana-muscle-hdr{display:flex;align-items:center;gap:11px}
 .ana-muscle-ico{font-size:var(--fs-22)}
@@ -600,7 +592,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .rir-c{flex:0 0 44px;width:44px;height:44px;padding:0;border:none;border-radius:50%;display:grid;place-items:center;cursor:pointer;
   font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);line-height:1;font-variant-numeric:tabular-nums;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.1);transition:transform .15s var(--sp),box-shadow .15s}
-.rir-c:active{transform:scale(.9)}
+.rir-c:active{transform:scale(var(--press-s))}
 /* Der gewählte Kreis trägt den Lime-Ring, sonst nichts. */
 .rir-c.sel{box-shadow:0 0 0 3px var(--bg2),0 0 0 5px var(--accent)}
 
@@ -636,7 +628,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .plan-bar[hidden],.plan-go[hidden]{display:none}
 .plan-add{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border:0;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:var(--edge-strong);color:var(--text);cursor:pointer;font-family:inherit;font-size:var(--fs-14);font-weight:600}
 .plan-more{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:var(--edge-strong);color:var(--text);cursor:pointer}
-.plan-add:active,.plan-more:active{transform:scale(.97)}
+.plan-add:active{transform:scale(var(--press))}
+.plan-more:active{transform:scale(var(--press-s))}
 .plan-sort-t{margin-right:auto;font-size:var(--fs-14);line-height:16px;color:var(--text2)}
 /* Der Startknopf klebt über der unteren Leiste und der Leiste des laufenden Trainings (--nav-h, --live-h: attachNavHeight). */
 .plan-go{position:sticky;bottom:calc(var(--nav-h,68px) + var(--live-h,0px) + 4px);z-index:5;margin:8px -16px 0;padding:20px 16px 8px;background:linear-gradient(180deg,transparent,var(--bg2) 20px)}
@@ -657,7 +650,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .set-hero .profile-actions{position:absolute;right:14px;bottom:12px;margin:0}
 .set-hero .profile-pic-btn{padding:7px 12px;font-size:var(--fs-11);background:rgba(255,255,255,.08)}
 .profile-pic-btn{padding:10px 15px;border-radius:999px;border:1px solid var(--line);background:var(--bg3);color:var(--text);font-size:var(--fs-12);font-weight:700;cursor:pointer;transition:.15s}
-.profile-pic-btn:active{transform:scale(.95)}
+.profile-pic-btn:active{transform:scale(var(--press))}
 #prof-avatar.has-image{background-size:cover!important;background-position:center!important;color:transparent!important;border:2px solid var(--line)}
 
 /* Muskelbalken (Zahlen: Sätze je Muskel) */
@@ -718,7 +711,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   color:var(--text2);font-family:'Space Grotesk',sans-serif;font-size:var(--fs-12);line-height:1;font-weight:500;cursor:pointer}
 .theme-chip i{display:grid;place-items:center;width:44px;height:44px;border-radius:999px;background:var(--c);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.35);color:#10130a;transition:transform .12s var(--sp)}
-.theme-chip:active i{transform:scale(.95)}
+.theme-chip:active i{transform:scale(var(--press-s))}
 .theme-chip.active{color:var(--text);font-weight:600}
 .theme-chip.active i{box-shadow:0 0 0 3px var(--bg2),0 0 0 5px var(--accent)}
 .mode-switch{display:flex;gap:8px;margin-top:10px}
@@ -731,7 +724,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .hist-month{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);letter-spacing:.08em;color:var(--text)}
 .hist-nav{width:42px;height:42px;border:none;border-radius:50%;background:var(--bg3);color:var(--text);font-size:var(--fs-22);cursor:pointer}
 .hist-weekdays,.hist-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.hist-weekdays div{text-align:center;font-size:var(--fs-10);color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.hist-weekdays div{text-align:center;font-size:var(--fs-11);color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
 .hist-day{min-height:56px;padding:8px 0 6px;border-radius:16px;border:1px solid var(--line);background:var(--bg3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;color:var(--text)}
 .hist-day.muted{opacity:.3}
 .hist-day.today{border-color:color-mix(in srgb,var(--accent) 42%,transparent)}
@@ -775,7 +768,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   --shadow-1:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.22);
   --shadow-2:0 2px 6px rgba(0,0,0,.34),0 18px 44px rgba(0,0,0,.3);
   --shadow-3:0 4px 12px rgba(0,0,0,.4),0 30px 70px rgba(0,0,0,.42);
-  --blur:saturate(180%) blur(22px);
   --r-sm:14px; --r-md:18px; --r-lg:24px; --r-xl:30px;
 }
 .mat{
@@ -784,24 +776,19 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   box-shadow:var(--edge),var(--shadow-1);
 }
 .mat-2{background:var(--mat-2),var(--bg3);border:1px solid var(--line);box-shadow:var(--edge)}
-/* Glas: nur dort, wo wirklich etwas dahinter durchscrollt. Backdrop-Filter
-   auf jeder Karte kostet auf dem iPhone spürbar Bildrate. */
-.glass{
-  background:rgba(16,18,23,.72);
-  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:var(--edge-strong),var(--shadow-2);
-}
+/* Glas (Unschärfe) nur dort, wo wirklich etwas dahinter durchscrollt: an der
+   Kopfzeile (.ltitle) und hinter einem offenen Fenster (.mbg.show). Die untere
+   Leiste ist deckend. Kacheln, Abschnittsköpfe, Fenster und ihre Knopfleiste
+   haben einen deckenden Grund: Backdrop-Filter auf jeder Fläche kostet auf
+   dem iPhone spürbar Bildrate, und hinter ihnen liegt nur der dunkle Grund. */
 /* iOS "Transparenz reduzieren" und "Kontrast erhöhen" ernst nehmen:
    Glas wird undurchsichtig, Ränder werden deutlich. */
 @media (prefers-reduced-transparency:reduce){
-  .glass,.mdl,.hdr{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-  .glass{background:#14161b!important}
-  .mdl{background:var(--bg2)!important}
+  .ltitle,.mbg.show{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 }
 @media (prefers-contrast:more){
   :root{--line:rgba(255,255,255,.22);--line2:rgba(255,255,255,.14);--text2:#c3c9d6;--text3:#9aa1b2}
-  .mat,.mat-2,.glass,.card{border-width:1.5px}
+  .mat,.mat-2,.card{border-width:1.5px}
 }
 
 /* --- Karten auf das Materialsystem heben --- */
@@ -877,8 +864,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
    es nur das ✕. Der Griff ist zusätzlich die Ziehfläche.
    ============================================================================ */
 .mdl{
-  background:var(--mat-2),rgba(19,21,25,.94);
-  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  background:var(--mat-2),var(--bg2);
   border-radius:var(--r-xl) var(--r-xl) 0 0;
   box-shadow:var(--edge-strong),0 -24px 70px rgba(0,0,0,.55);
   will-change:transform;
@@ -908,8 +894,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mdl .sheet-cta{
   position:sticky;bottom:0;
   margin:0 -16px 0;padding:10px 16px 2px;
-  background:linear-gradient(180deg,transparent,var(--bg2) 22%);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:2;
+  background:linear-gradient(180deg,transparent,var(--bg2) 22%);z-index:2;
   /* PB-090: Der obere Rand dieser Leiste ist durchsichtig — dort sieht man
      den Inhalt darunter und tippt danach. Ohne diese Zeile fing die Leiste
      den Tipp trotzdem ab: im Historien-Editor landete ein Griff nach dem
@@ -1030,7 +1015,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .log-tgt .tg-take{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border-radius:999px;
   background:rgba(255,255,255,.08);box-shadow:var(--edge);border:none;cursor:pointer;color:var(--text);
   font-family:'Space Grotesk',sans-serif;font-size:var(--fs-14);font-weight:600}
-.log-tgt .tg-take:active{transform:scale(.97)}
+.log-tgt .tg-take:active{transform:scale(var(--press))}
 /* Auf dem iPhone SE (320 px) etwas weniger Luft, damit das Fenster ohne
    Scrollen passt und die klebende Leiste keine RIR-Kreise verdeckt. */
 @media (max-width:359px){
@@ -1044,7 +1029,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   border-radius:16px;
 }
 .btn-g,.btn-o{box-shadow:var(--edge)}
-.btn:active{transform:scale(.975)}
+.btn:active{transform:scale(var(--press))}
 /* „Hinzufügen" im Übung-Fenster ist flach, ohne Lichtschein. */
 #a-btn,#a-btn:active{box-shadow:var(--edge-strong)}
 
@@ -1130,14 +1115,14 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .exdemo-cap{position:absolute;left:0;right:0;bottom:0;padding:10px 13px;font-size:var(--fs-11);font-weight:600;letter-spacing:.04em;color:rgba(255,255,255,.82);background:linear-gradient(0deg,rgba(6,7,10,.88) 30%,rgba(6,7,10,.55) 70%,transparent);text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .exdemo-thumb{width:44px;height:44px;flex:0 0 44px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid var(--line2);overflow:hidden;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;--fig:var(--text);--fig-far:rgba(244,246,251,.24);transition:.15s}
 .exdemo-thumb svg{width:100%;height:100%;padding:0}
-.exdemo-thumb:active{transform:scale(.92);background:rgba(255,255,255,.08)}
+.exdemo-thumb:active{transform:scale(var(--press-s));background:rgba(255,255,255,.08)}
 /* Übungsbild: weiße Zeichnung, füllt Kachel bzw. Demo-Fläche. */
 .ex-img{display:block;width:100%;height:100%;object-fit:contain;background:#fff}
 .exdemo-thumb:has(.ex-img){background:#fff}
 .exdemo-pic{background:#fff}
 .exdemo-pic .ex-img{height:auto;aspect-ratio:300/273}
 .exdemo-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.exdemo-tag{font-size:var(--fs-10);font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--bg3);border:1px solid var(--line);color:var(--text2)}
+.exdemo-tag{font-size:var(--fs-11);font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:5px 10px;border-radius:999px;background:var(--bg3);border:1px solid var(--line);color:var(--text2)}
 .exdemo-tag.hl{background:color-mix(in srgb,var(--accent) 14%,var(--bg3));border-color:color-mix(in srgb,var(--accent) 34%,transparent);color:var(--accent)}
 .exdemo-cue{font-size:var(--fs-12);color:var(--text2);line-height:1.55;padding:9px 12px;background:var(--bg3);border-radius:13px;border-left:2px solid var(--accent);margin-top:8px}
 .exdemo-speed{display:flex;gap:6px;margin-top:10px}
@@ -1170,10 +1155,10 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
    findet. Die Chips teilen sich stattdessen die Breite. */
 .chipgrid{display:flex;gap:6px;margin-top:6px}
 .daychip{flex:1 1 0;min-width:0;min-height:44px;padding:0 2px;border-radius:12px;border:1px solid var(--line);background:var(--bg3);color:var(--text2);font-size:var(--fs-14);font-weight:700;cursor:pointer;transition:.15s;text-align:center}
-.daychip:active{transform:scale(.94)}
+.daychip:active{transform:scale(var(--press-s))}
 .daychip.on{background:color-mix(in srgb,var(--accent) 17%,var(--bg3));border-color:color-mix(in srgb,var(--accent) 45%,transparent);color:var(--accent)}
 .optrow{display:flex;align-items:flex-start;gap:11px;padding:13px;border-radius:15px;border:1px solid var(--line);background:var(--bg3);margin-bottom:8px;cursor:pointer;transition:.15s}
-.optrow:active{transform:scale(.985)}
+.optrow:active{transform:scale(var(--press-l))}
 .optrow.on{border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 8%,var(--bg3))}
 .optrow .optmark{width:20px;height:20px;flex:0 0 20px;border-radius:50%;border:2px solid var(--bg5);margin-top:2px;transition:.15s;position:relative}
 .optrow.on .optmark{border-color:var(--accent);background:var(--accent)}
@@ -1216,6 +1201,11 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 :root{
   --out:cubic-bezier(.22,1,.36,1);      /* Ausklang: Balken, Zähler */
   --dur-micro:120ms; --dur-el:320ms; --dur-ring:1100ms;
+  /* Druckstufen (Regel 6): dieselbe Prozentzahl bewegt eine 44-px-Taste um
+     1 px und eine ganze Zeile um 11 px. Deshalb drei Stufen: kleine Tasten
+     bis etwa 64 px geben etwas mehr nach, Knöpfe und Chips mittel, ganze
+     Zeilen und Karten kaum. Kein Druckzustand nimmt einen eigenen Wert. */
+  --press-s:.94; --press:.97; --press-l:.985;
   /* Flaches Hero-Material: Graphit über --bg3, helle Oberkante, weiter Schatten.
      Eine Fläche für jede große Karte (Start, Historie, Zahlen); wer noch auf
      eigenem Verlauf steht, nimmt dieses Token statt eines neuen Rezepts. */
@@ -1235,7 +1225,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 }
 .hero-unit{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);font-weight:800;color:var(--text3);letter-spacing:.02em}
 .cap{
-  font-size:var(--fs-10);font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  font-size:var(--fs-11);font-weight:800;letter-spacing:.18em;text-transform:uppercase;
   color:var(--text3);
 }
 .num,.k-value,.hs .v,.sv,.week-ring-value,.stat-hero{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}
@@ -1297,15 +1287,15 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mesh-side .o{font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);color:rgba(255,255,255,.56);margin-top:3px;line-height:1.35}
 .mesh-scale{display:flex;justify-content:space-between;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:rgba(255,255,255,.5)}
 
-/* --- Glaskacheln: 2x2 (Zahlen) ------------------------------------------ */
+/* --- Kacheln: 2x2 (Zahlen) ---------------------------------------------- */
+/* Dieselbe Fläche wie jede Karte, ohne Glas: dahinter liegt nur der Grund. */
 .gtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .gtile{
   border-radius:22px;padding:15px 14px;position:relative;overflow:hidden;
-  background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.10);
-  backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.13);
+  background:var(--mat-1),var(--bg2);border:1px solid var(--line);
+  box-shadow:var(--edge),var(--shadow-1);
 }
-.gtile .gl{font-size:var(--fs-10);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--text3)}
+.gtile .gl{font-size:var(--fs-11);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--text3)}
 .gtile .gv{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-44);line-height:.9;margin-top:6px;font-variant-numeric:tabular-nums}
 /* Die Einheit ist bewusst NICHT Bebas: Bebas hat nur Großbuchstaben, ein
    kleines „t" für Tonnen wird dort zu einem großen T. */
@@ -1332,7 +1322,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   transition:transform var(--dur-micro) var(--sp);
 }
 .next-card-shot .play svg,.leer-block .play svg{width:20px;height:20px}
-.next-card-shot .play:active,.leer-block .play:active{transform:scale(.97)}
+.next-card-shot .play:active,.leer-block .play:active{transform:scale(var(--press))}
 /* Leere Seite (Zahlen, Historie): solange kein Training gespeichert ist, steht
    dort ein Block mit dem Weg zum ersten — statt gestrichelter Kästen ohne Knopf. */
 .leer-block{margin-top:16px;padding:24px 16px;border-radius:28px;background:var(--mat-hero);box-shadow:var(--edge-strong),var(--shadow-2)}
@@ -1353,7 +1343,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   border:0;background:none;color:var(--text2);cursor:pointer;
 }
 .hero-info svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.hero-info:active{transform:scale(.92)}
+.hero-info:active{transform:scale(var(--press-s))}
 .hero-tag{
   position:absolute;top:12px;right:52px;display:inline-flex;align-items:center;height:28px;padding:0 12px;
   border-radius:999px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);
@@ -1419,7 +1409,7 @@ div.wg-note{cursor:default}
 .kpi-card{display:flex;margin-bottom:12px;border-radius:20px;background:var(--mat-1),var(--bg2);box-shadow:var(--edge),var(--shadow-1)}
 .kpi-c{flex:1;min-width:0;padding:16px 12px}
 .kpi-c+.kpi-c{border-left:1px solid var(--line)}
-.kpi-l{font-size:var(--fs-10);font-weight:700;line-height:1;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.kpi-l{font-size:var(--fs-11);font-weight:700;line-height:1;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
 .kpi-v{margin-top:8px;font-family:'Bebas Neue',sans-serif;font-size:var(--fs-38);line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
 .kpi-v small{margin-left:2px;font-size:var(--fs-22);color:var(--t3)}
 /* Die Einheit ist bewusst NICHT Bebas: Bebas hat nur Großbuchstaben, ein
@@ -1479,14 +1469,14 @@ div.wg-note{cursor:default}
   transition:transform var(--dur-micro) var(--sp);
 }
 .fb-btn.mono{font-family:'JetBrains Mono',monospace;font-weight:700}
-.fb-btn:active{transform:scale(.92)}
+.fb-btn:active{transform:scale(var(--press))}
 @media (max-width:359px){.fb-btn .lbl{display:none}}
 
 /* Kopf des laufenden Trainings: Name der Einheit, Satzstand, feine Linie. */
 #wo-sticky-top::after{display:none}
 #wo-sticky-top .ltitle-row{align-items:flex-start}
 .wo-more{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);box-shadow:var(--edge);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
-.wo-more:active{transform:scale(.94)}
+.wo-more:active{transform:scale(var(--press-s))}
 .wo-prog{height:3px;margin-top:12px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
 .wo-prog i{display:block;height:100%;width:0;border-radius:999px;background:var(--text2);transition:width var(--dur-ring) var(--out)}
 #wo-timer-bar{margin-top:12px}
@@ -1526,7 +1516,7 @@ div.wg-note{cursor:default}
 /* Zielangabe: die Heldenzahl dieses Screens, 72 px. */
 .wo-target{margin-top:12px;padding:12px 16px;border-radius:14px;background:rgba(0,0,0,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .wo-open .wo-target{background:rgba(255,255,255,.04);box-shadow:none}
-.wo-tl{font-size:var(--fs-10);font-weight:700;line-height:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.wo-tl{font-size:var(--fs-11);font-weight:700;line-height:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
 .wo-big{display:flex;align-items:baseline;gap:8px;margin-top:4px}
 .wo-big b{font-family:'Bebas Neue',sans-serif;font-weight:400;font-size:var(--fs-72);line-height:.85;font-variant-numeric:tabular-nums}
 .wo-big span{font-family:'JetBrains Mono',monospace;font-size:var(--fs-22);line-height:24px;font-weight:600;word-spacing:-.2em;white-space:nowrap;color:var(--text2)}
@@ -1551,7 +1541,7 @@ div.wg-note{cursor:default}
 .wo-chips .wsr .wsr-pen{font-size:var(--fs-11);opacity:.5;margin-left:1px}
 @media (max-width:359px){.wo-chips{grid-template-columns:1fr}}
 .wo-open .wo-chips .wsr{background:rgba(255,255,255,.04);border-color:var(--line)}
-.wo-chips .wsr:active{transform:scale(.94)}
+.wo-chips .wsr:active{transform:scale(var(--press))}
 .wo-chips .wsr .n{flex:none;width:12px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:var(--t3)}
 .wo-chips .wsr b{font-family:'JetBrains Mono',monospace;font-size:var(--fs-14);font-weight:600;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums}
 .wo-chips .wsr .r{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:var(--text2);white-space:nowrap}
@@ -1561,19 +1551,19 @@ div.wg-note{cursor:default}
 /* Bestwert: 1,2 s ein Akzentring mit der Marke „PR“ (der Chip trägt die
    Klasse nur so lange, siehe confirmLog). */
 .wo-chips .wsr.pr{box-shadow:0 0 0 2px var(--accent)}
-.wo-chips .wsr .wsr-pr{position:absolute;top:-9px;right:12px;padding:0 6px;background:var(--bg3);font-family:inherit;font-size:var(--fs-10);font-style:normal;font-weight:700;line-height:16px;letter-spacing:.14em;color:var(--accent);opacity:1}
+.wo-chips .wsr .wsr-pr{position:absolute;top:-9px;right:12px;padding:0 6px;background:var(--bg3);font-family:inherit;font-size:var(--fs-11);font-style:normal;font-weight:700;line-height:16px;letter-spacing:.14em;color:var(--accent);opacity:1}
 
 /* Satz loggen: fest über der unteren Leiste, deckender Grund, 24 px Verlauf als Oberkante. */
 .wo-dock{display:none;pointer-events:auto;width:100%;max-width:480px;margin:0 auto;padding:24px 13px 12px;background:linear-gradient(180deg,rgba(11,12,17,0) 0,rgba(11,12,17,.94) 16px,#0b0c11 24px)}
 .wo-log{width:100%;height:56px;padding:0 20px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;background:var(--accent);color:#0a0b0e;font-family:'Space Grotesk',sans-serif;box-shadow:var(--edge-strong),0 6px 16px rgba(0,0,0,.4);transition:transform var(--dur-micro) var(--sp)}
-.wo-log:active{transform:scale(.97)}
+.wo-log:active{transform:scale(var(--press))}
 .wo-log span{display:flex;gap:.25em;min-width:0;font-size:var(--fs-16);font-weight:700;white-space:nowrap}
 .wo-log span i{min-width:0;font-style:normal;overflow:hidden;text-overflow:ellipsis}
 .wo-log b{font:700 var(--fs-16) 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
 .wo-log.fin{height:52px;justify-content:center}
 /* Eine Übung, die man von Hand aufgeklappt hat: eigener, ruhiger Knopf (Lime gehört dem festen Knopf). */
 .wo-log-in{width:100%;min-height:48px;margin-top:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:var(--fs-16);font-weight:600;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
-.wo-log-in:active{transform:scale(.97)}
+.wo-log-in:active{transform:scale(var(--press))}
 #s-wo{padding-bottom:calc(188px + env(safe-area-inset-bottom,0px))}
 
 /* Meldungen: EIN Kasten unten, über der Leiste und dem, was darauf sitzt
@@ -1585,7 +1575,8 @@ div.wg-note{cursor:default}
 .toast .ta-t{flex:1;min-width:0;padding:6px 0;overflow-wrap:anywhere}
 .toast.has-b{pointer-events:auto;padding-right:4px}
 .toast .ta-b{flex:0 0 auto;min-width:44px;height:44px;padding:0 16px;border:0;border-radius:10px;background:rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:var(--fs-14);font-weight:700;cursor:pointer}
-.toast .ta-b:active,.toast .ta-x:active{transform:scale(.95)}
+.toast .ta-b:active{transform:scale(var(--press))}
+.toast .ta-x:active{transform:scale(var(--press-s))}
 /* Bleibende Meldung (Daten betroffen): Knopf und ✕, bis du tippst. */
 .toast.has-x{gap:2px;padding:4px 0 4px 14px}
 .toast.has-x .ta-t{padding-right:4px}
@@ -1614,7 +1605,7 @@ div.wg-note{cursor:default}
   background:rgba(255,255,255,.04);border:1px solid var(--line);
   transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease);
 }
-.wo-slim:active{transform:scale(.985)}
+.wo-slim:active{transform:scale(var(--press-l))}
 .wo-slim .i{width:34px;height:34px;flex:0 0 34px;border-radius:12px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:var(--fs-14);color:var(--text2)}
 .wo-slim .o{flex:0 0 24px;font:500 var(--fs-12) 'JetBrains Mono',monospace;color:var(--t3)}
 .wo-slim .n{flex:1;min-width:0;font-size:var(--fs-14);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1658,7 +1649,9 @@ div.wg-note{cursor:default}
   background:var(--mat-hero);
   box-shadow:var(--edge-strong),var(--shadow-2);
 }
-.coach-h{display:flex;align-items:center;gap:9px}
+/* Bei 320 px rückt „MEV · MAV · MRV“ geschlossen in die zweite Zeile, statt
+   mitten im Kürzel umzubrechen. */
+.coach-h{display:flex;flex-wrap:wrap;align-items:center;gap:2px 9px}
 .coach-h .av{
   width:30px;height:30px;border-radius:10px;flex:0 0 30px;
   background:rgba(255,255,255,.06);
@@ -1666,7 +1659,7 @@ div.wg-note{cursor:default}
 }
 .coach-h .av .ic{stroke:#fff;stroke-width:2.2}
 .coach-h .t{font-weight:800;font-size:var(--fs-14)}
-.coach-h .src{margin-left:auto;font-size:var(--fs-10);font-weight:800;letter-spacing:.1em;color:rgba(255,255,255,.42);font-family:'JetBrains Mono',monospace}
+.coach-h .src{margin-left:auto;white-space:nowrap;font-size:var(--fs-11);font-weight:800;letter-spacing:.1em;color:rgba(255,255,255,.42);font-family:'JetBrains Mono',monospace}
 .coach-foot{margin-top:8px;font-size:var(--fs-11);line-height:1.45;color:var(--t3)}
 
 /* Matrix Muskel × Trainingstag. Die Spaltenzahl kommt aus --cols, damit bei
@@ -1677,7 +1670,7 @@ div.wg-note{cursor:default}
   align-items:center;min-width:100%;
 }
 .coach-matrix .mx-h{background:rgba(255,255,255,.05);padding:9px 0}
-.coach-matrix .mx-h div{font-size:var(--fs-10);font-weight:800;letter-spacing:.08em;color:var(--text3);text-align:center;text-transform:uppercase}
+.coach-matrix .mx-h div{font-size:var(--fs-11);font-weight:800;letter-spacing:.08em;color:var(--text3);text-align:center;text-transform:uppercase}
 .coach-matrix .mx-h div:first-child{text-align:left;padding-left:11px}
 .coach-matrix .mx-r{padding:9px 0;border-top:1px solid rgba(255,255,255,.06)}
 .coach-matrix .mx-r .nm{font-size:var(--fs-12);font-weight:700;padding-left:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1777,9 +1770,10 @@ div.wg-note{cursor:default}
 .heat i:last-child.l1,.heat i:last-child.l2,.heat i:last-child.l3{background:var(--accent)}
 .heat-lg{display:flex;justify-content:space-between;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:rgba(255,255,255,.45)}
 .streak-tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
-.streak-tri div{text-align:center;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}
+/* 2 px Rand: „Ø MINUTEN“ in 11 px passt so auch bei 320 px in eine Zeile. */
+.streak-tri div{text-align:center;padding:10px 2px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}
 .streak-tri b{display:block;font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
-.streak-tri span{display:block;font-size:var(--fs-10);font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.45);margin-top:2px}
+.streak-tri span{display:block;font-size:var(--fs-11);font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.45);margin-top:2px}
 
 /* --- Kalender: eingeklappt, weil er selten gebraucht wird --- */
 .hist-cal{margin-bottom:12px}
@@ -1804,16 +1798,16 @@ div.wg-note{cursor:default}
   background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--text2);font-size:var(--fs-16);
   transition:transform var(--dur-micro) var(--sp);
 }
-.calnav:active{transform:scale(.9)}
+.calnav:active{transform:scale(var(--press-s))}
 .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
-.calgrid .wd{font-size:var(--fs-10);font-weight:800;letter-spacing:.08em;color:var(--text3);padding:4px 0}
+.calgrid .wd{font-size:var(--fs-11);font-weight:800;letter-spacing:.08em;color:var(--text3);padding:4px 0}
 .calgrid .cell{
   aspect-ratio:1;border-radius:11px;border:none;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:transparent;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:var(--fs-12);
   transition:transform var(--dur-micro) var(--sp);
 }
-.calgrid .cell:active{transform:scale(.9)}
+.calgrid .cell:active{transform:scale(var(--press-s))}
 .calgrid .cell.has{background:color-mix(in srgb,var(--accent) 13%,transparent);font-weight:800}
 .calgrid .cell.has.big{background:color-mix(in srgb,var(--accent) 28%,transparent)}
 .calgrid .cell.today{outline:1.5px solid var(--accent);outline-offset:-1.5px}
@@ -1823,7 +1817,7 @@ div.wg-note{cursor:default}
 .cal-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .cal-sum div{text-align:center;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line2)}
 .cal-sum b{display:block;font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
-.cal-sum span{display:block;font-size:var(--fs-10);font-weight:800;letter-spacing:.12em;color:var(--text3);margin-top:2px}
+.cal-sum span{display:block;font-size:var(--fs-11);font-weight:800;letter-spacing:.12em;color:var(--text3);margin-top:2px}
 
 /* --- Sessions: eine Zeile je Einheit, nach Monat gruppiert ---
    Die Zeile zeigt, was beim Überfliegen zählt: Tag, Name, Kennzahlen und die
@@ -1874,7 +1868,7 @@ div.wg-note{cursor:default}
 .hs-fix svg,.hs-rm svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .hs-fix{background:var(--bg4);box-shadow:var(--edge);color:var(--text)}
 .hs-rm{margin-right:-8px;padding:0 8px;background:none;color:var(--red)}
-.hs-fix:active,.hs-rm:active{transform:scale(.97)}
+.hs-fix:active,.hs-rm:active{transform:scale(var(--press))}
 
 /* ============================================================================
    STATS
@@ -1891,7 +1885,7 @@ div.wg-note{cursor:default}
   background:rgba(255,255,255,.04);border:1px solid var(--line);
   transition:transform var(--dur-micro) var(--sp);
 }
-.prow:active{transform:scale(.985)}
+.prow:active{transform:scale(var(--press-l))}
 .prow.stale{border-color:color-mix(in srgb,var(--red) 30%,transparent);background:color-mix(in srgb,var(--red) 6%,transparent)}
 .prow .bd{flex:1;min-width:0}
 .prow .bd b{display:block;font-size:var(--fs-14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1924,7 +1918,7 @@ div.wg-note{cursor:default}
   background:rgba(255,255,255,.04);border:1px dashed var(--line);color:var(--text2);
   font-family:'Space Grotesk',sans-serif;font-size:var(--fs-12);font-weight:700;letter-spacing:.02em;
 }
-.trend-more:active{transform:scale(.985);color:var(--text)}
+.trend-more:active{transform:scale(var(--press-l));color:var(--text)}
 .rot-row{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--bg3);cursor:pointer}
 .rot-row:last-child{border-bottom:none}
 .rot-row input{width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:var(--accent);font-size:var(--fs-16)}
@@ -1953,8 +1947,10 @@ div.wg-note{cursor:default}
 .meso-card .mc-t{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);letter-spacing:.5px}
 .meso-card .mc-f{font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);color:var(--accent);font-weight:700}
 .meso-card .mc-wk{display:flex;align-items:center;gap:8px;font-size:var(--fs-12);color:var(--text2)}
-.meso-card .mc-wk button{width:26px;height:26px;border-radius:9px;border:1px solid var(--line);
-  background:rgba(255,255,255,.06);color:var(--text);font-size:var(--fs-16);line-height:1;cursor:pointer}
+/* Wochen − und +: 44 px wie die Satzpause im Profil. */
+.meso-card .mc-wk button{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:14px;
+  background:rgba(255,255,255,.07);box-shadow:var(--edge),inset 0 0 0 1px var(--line);color:var(--text);
+  font-family:inherit;font-size:var(--fs-16);line-height:1;cursor:pointer;touch-action:manipulation}
 .meso-card .mc-bar{position:relative;height:8px;border-radius:999px;background:rgba(255,255,255,.09);margin:11px 0 9px}
 .meso-card .mc-bar i{position:absolute;left:0;top:0;height:8px;border-radius:999px;background:var(--accent);
   transition:width var(--dur-ring) var(--out)}
@@ -1984,7 +1980,7 @@ div.wg-note{cursor:default}
   box-shadow:var(--edge);
 }
 .sh-av.has-image{color:transparent}
-.sh-av:active{transform:scale(.96)}
+.sh-av:active{transform:scale(var(--press))}
 .sh-bd{min-width:0}
 .sh-name{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);line-height:1;letter-spacing:1.5px}
 .sh-status{font-size:var(--fs-12);color:var(--text2);margin-top:3px}
@@ -2005,13 +2001,13 @@ div.wg-note{cursor:default}
 .sr-code{flex:0 0 auto;display:inline-flex;align-items:center;min-height:44px;padding:0 12px;border:0;border-radius:8px;
   background:rgba(0,0,0,.28);box-shadow:inset 0 0 0 1px var(--line);color:var(--text);cursor:pointer;
   font-family:'JetBrains Mono',monospace;font-size:var(--fs-14);font-weight:600;letter-spacing:.04em;white-space:nowrap}
-button.sr-code:active{transform:scale(.97)}
+button.sr-code:active{transform:scale(var(--press))}
 code.sr-code{cursor:auto}
 .sr.sr-tight{padding-bottom:10px;border-bottom:none}
 .setbtn{flex:1 1 auto;min-width:96px;padding:11px 14px;border-radius:14px;cursor:pointer;
   background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--text);
   font-family:'Space Grotesk',sans-serif;font-size:var(--fs-14);font-weight:700}
-.setbtn:active{transform:scale(.97)}
+.setbtn:active{transform:scale(var(--press))}
 .setbtn.danger{flex:0 0 auto;min-height:44px;color:var(--red)}
 /* Knöpfe einer Karte im Raster: zwei gleich breite Spalten, eine Aktion
    für sich (Import, Abmelden) über die ganze Breite. Alle 44 px hoch. */
@@ -2024,7 +2020,7 @@ code.sr-code{cursor:auto}
 .sr-pm{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:14px;cursor:pointer;
   background:rgba(255,255,255,.07);box-shadow:var(--edge),inset 0 0 0 1px var(--line);color:var(--text);
   transition:transform .12s var(--sp);touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.sr-pm:active{transform:scale(.97);background:var(--bg5)}
+.sr-pm:active{transform:scale(var(--press-s));background:var(--bg5)}
 .sr-step output{min-width:56px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:var(--fs-16);font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
 /* Ein Zustand ist ein Schalter, und die ganze Zeile schaltet ihn. */
 .sr.sr-switch{min-height:56px;cursor:pointer}
@@ -2045,7 +2041,7 @@ code.sr-code{cursor:auto}
 .mdl-ask .ask-del{margin-top:8px;background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);color:var(--red)}
 .mdl-ask .ask-cancel{display:flex;align-items:center;justify-content:center;width:100%;height:44px;margin-top:8px;border:0;border-radius:999px;background:none;cursor:pointer;
   font-family:'Space Grotesk',sans-serif;font-size:var(--fs-14);font-weight:600;color:var(--text2)}
-.mdl-ask button:active{transform:scale(.97)}
+.mdl-ask button:active{transform:scale(var(--press))}
 .mdl-ask button:disabled{opacity:.5;cursor:default}
 /* Rückfrage aus askSheet(): steht der rote Knopf allein vorn, hält er den
    Abstand zum Text. „Verwerfen“ und „Weiter schreiben“ stehen nebeneinander. */
@@ -2095,7 +2091,7 @@ code.sr-code{cursor:auto}
 .bio-axis .mark{position:absolute;top:6px;width:14px;height:22px;margin-left:-7px;border-radius:7px;
   background:var(--accent);box-shadow:0 0 0 3px rgba(0,0,0,.35),0 6px 16px var(--accent-glow);
   transition:left var(--dur-ring) var(--out)}
-.bio-axis .lb{position:absolute;top:0;font-size:var(--fs-10);letter-spacing:.08em;color:var(--text3);text-transform:uppercase}
+.bio-axis .lb{position:absolute;top:0;font-size:var(--fs-11);letter-spacing:.08em;color:var(--text3);text-transform:uppercase}
 
 .bio-dim{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:18px;margin-bottom:8px;
   background:rgba(255,255,255,.04);border:1px solid var(--line)}
@@ -2110,7 +2106,7 @@ code.sr-code{cursor:auto}
 .bio-dim .bar u{position:absolute;top:-3px;width:2px;height:12px;background:rgba(255,255,255,.45);left:50%}
 .bio-dim .v{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);line-height:1;min-width:52px;text-align:right;
   font-variant-numeric:tabular-nums}
-.bio-dim .v small{display:block;font-family:'Space Grotesk',sans-serif;font-size:var(--fs-10);font-weight:800;
+.bio-dim .v small{display:block;font-family:'Space Grotesk',sans-serif;font-size:var(--fs-11);font-weight:800;
   letter-spacing:.06em;color:var(--text3)}
 
 /* Körperzusammensetzung: eine Zeile ist ein Messwert mit seinem Normbereich.
@@ -2167,10 +2163,38 @@ code.sr-code{cursor:auto}
 }
 .ev-note b{color:var(--text)}
 
-/* --- Regel 6: Druckzustände --------------------------------------------- */
+/* --- Regel 6: Druckzustände ---------------------------------------------
+   Jede Taste gibt beim Drücken nach, in einer der drei Stufen --press-s,
+   --press und --press-l, und federt in 120 ms zurück statt zu springen. */
 .card,.gtile,.exr,.dtab,.optrow{transition:transform var(--dur-micro) var(--sp),border-color .2s var(--ease)}
 .btn,.btn-s{transition:transform var(--dur-micro) var(--sp),box-shadow .2s var(--ease),filter .2s}
-.gtile:active{transform:scale(.965)}
+.gtile:active{transform:scale(var(--press-l))}
+.ni{transition:background .2s var(--ease),transform var(--dur-micro) var(--sp)}
+.seg button{transition:color .22s var(--ease),transform var(--dur-micro) var(--sp)}
+.plan-add,.plan-more,.log-tgt .tg-take,.hero-info,.trend-more,.sh-av,.setbtn,.mdl-ask .ask-cancel,
+.toast .ta-b,.toast .ta-x,.sync-fail,.exr-h,.hex,.hs-row,.fb-ring,.wo-why,.warmup summary,.wo-hist summary,
+.hist-cal summary,.share-code summary,.st.st-tog,.be-del,.hs-edit,.meso-card .mc-wk button,.alt-row,.menu-row,
+.lib-cat-hdr,.cta-sub,.mdl-log .log-link,.mdl-log .log-sec button,.wo-step button{transition:transform var(--dur-micro) var(--sp)}
+/* Bisher ohne Nachgeben: die Plan-Zeilen, die Übungen einer geöffneten
+   Einheit, der Pausenring und die übrigen Zeilen und kleinen Tasten. */
+.exr-h:active,.hex:active,.hs-row:active,.st.st-tog:active,.alt-row:active,.menu-row:active,.lib-cat-hdr:active,
+.cta-sub:active,.wo-why:active,.warmup summary:active,.wo-hist summary:active,.hist-cal summary:active{transform:scale(var(--press-l))}
+.fb-ring:active,.seg button:active,.alt-filter:active,.sync-fail:active,.share-code summary:active,
+.mdl-log .log-link:active,.mdl-log .log-sec button:active{transform:scale(var(--press))}
+.be-del:active,.hs-edit:active,.meso-card .mc-wk button:active,.wo-step button:active,.sr-num .setbtn:active{transform:scale(var(--press-s))}
+
+/* --- Regel 6: Trefferflächen ---------------------------------------------
+   Jede Taste fängt mindestens 44 × 44 px. Wo Symbol oder Knopf kleiner
+   aussehen, wächst nur die Fläche: ein unsichtbares ::after ergänzt auf
+   44 px und bleibt bei größeren Knöpfen deckungsgleich mit dem Knopf. */
+.calnav,.seg button,.trend-more,.sr-num .setbtn,.be-del,.hs-edit,.profile-pic-btn,.btn-s,.alt-filter,
+.cta-sub,.share-code summary{position:relative}
+.calnav::after,.seg button::after,.trend-more::after,.sr-num .setbtn::after,.be-del::after,.hs-edit::after,
+.profile-pic-btn::after,.btn-s::after,.alt-filter::after,.cta-sub::after,.share-code summary::after,
+.st.st-tog::after,.sw-toggle::after{content:'';position:absolute;inset:min(0px,calc(50% - 22px))}
+/* Stift und Papierkorb einer EGYM-Messung: 16 px Luft, damit sich ihre
+   44-px-Flächen nicht überlappen und Korrigieren nie Löschen trifft. */
+.rep .hs-edit+.be-del{margin-left:5px}
 
 /* --- Sektionstitel: klebt beim Scrollen ---------------------------------
    Ein Titel, der beim Durchscrollen oben stehen bleibt, sagt dem Auge
@@ -2182,7 +2206,6 @@ code.sr-code{cursor:auto}
      ein gutes Drittel durchsichtig — genau die Höhe einer Zeile. */
   background:linear-gradient(180deg,var(--bg) 0%,var(--bg) 82%,transparent 100%);
   padding-top:10px;padding-bottom:10px;margin-top:22px;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
 
 /* --- Leere Zustände: Regel „Tag 1 ist der erste Eindruck" ---------------- */
@@ -5286,7 +5309,10 @@ let chartSeq=0;
    wie die Karte innen ist (Seitenrand 2 × 15, Kartenpolster 2 × 17,5), und
    nicht in 320 Einheiten, die dann auf die Kartenbreite skaliert werden. Nur
    so ist die Schrift im Diagramm wirklich 11 px groß. */
-function chartWidth(){return Math.round(Math.min(window.innerWidth||393,480)-65)}
+/* Breite des Diagramms in px, passend zu seiner Karte. Im Fenster steht der
+   Inhalt 16 statt 13 px vom Rand, das Diagramm ist 6 px schmaler; mit der
+   Seitenbreite würde es gestaucht und die 11-px-Achse fiele unter 11 px. */
+function chartWidth(imFenster){return Math.round(Math.min(window.innerWidth||393,480)-(imFenster?71:65))}
 /* Achsenwerte in glatten Schritten (1, 2, 2,5 oder 5 mal Zehnerpotenz): drei
    bis fünf Linien, und die Daten füllen mindestens die halbe Achse. Von
    mehreren passenden Schritten gewinnt der größte, das sind die wenigsten
@@ -5529,8 +5555,8 @@ function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=n
    vier gleiche Punkte je Einheit und eine Treppe statt einer Linie. Das Datum
    steht unter dem Punkt, der Bestwert ist der gefüllte. */
 const topSets=perSessionSeries(sets,s=>s.w);
-if(topSets.length>=2){const best=Math.max(...topSets.map(e=>e.v));const bi=topSets.findIndex(e=>e.v===best);h+=`<div class="prog"><div class="prog-h">Schwerster Arbeitssatz je Einheit <span class="chart-key"><i></i>Bestwert</span></div>${chartSumLine(topSets[0].v,topSets[topSets.length-1].v,'kg',undefined,topSets[0].date,topSets[topSets.length-1].date)}${svgChart(topSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{h:150,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:bi,label:'Schwerster Arbeitssatz '+name,noun:'Einheiten'})}</div>`;}
-const rmSets=perSessionSeries(sets.filter(s=>s.w>0&&s.r>0&&s.r<=15),s=>calc1RM(s.w,s.r));if(rmSets.length>=2){const firstRm=rmSets[0].v,lastRm=rmSets[rmSets.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const bestRm=Math.max(...rmSets.map(e=>e.v));h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${chartSumLine(firstRm,lastRm,'kg',undefined,rmSets[0].date,rmSets[rmSets.length-1].date)}${svgChart(rmSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{h:140,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:rmSets.findIndex(e=>e.v===bestRm),label:'Geschätzter 1RM '+name,noun:'Einheiten'})}<div style="font-size:var(--fs-11);color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(de(s.w))} kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
+if(topSets.length>=2){const best=Math.max(...topSets.map(e=>e.v));const bi=topSets.findIndex(e=>e.v===best);h+=`<div class="prog"><div class="prog-h">Schwerster Arbeitssatz je Einheit <span class="chart-key"><i></i>Bestwert</span></div>${chartSumLine(topSets[0].v,topSets[topSets.length-1].v,'kg',undefined,topSets[0].date,topSets[topSets.length-1].date)}${svgChart(topSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:150,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:bi,label:'Schwerster Arbeitssatz '+name,noun:'Einheiten'})}</div>`;}
+const rmSets=perSessionSeries(sets.filter(s=>s.w>0&&s.r>0&&s.r<=15),s=>calc1RM(s.w,s.r));if(rmSets.length>=2){const firstRm=rmSets[0].v,lastRm=rmSets[rmSets.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const bestRm=Math.max(...rmSets.map(e=>e.v));h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${chartSumLine(firstRm,lastRm,'kg',undefined,rmSets[0].date,rmSets[rmSets.length-1].date)}${svgChart(rmSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:140,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:rmSets.findIndex(e=>e.v===bestRm),label:'Geschätzter 1RM '+name,noun:'Einheiten'})}<div style="font-size:var(--fs-11);color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(de(s.w))} kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
 let planDirty=false;
 function renderPlanSaveState(){
   const btn=document.getElementById('plan-save-btn');
@@ -6110,7 +6136,7 @@ function renderExDemo(){
     `<div class="exdemo-cue">${esc(meta.cue)}</div>`+
 
     (userNote?`<div class="exdemo-cue" style="border-left-color:var(--purple)">📝 ${esc(userNote)}</div>`:'')+
-    (series.length>=2?`<div class="prog" style="margin-top:12px"><div class="prog-h">Dein Verlauf <span>${series.length} Sätze</span></div>${svgChart(series,{h:110,color:'var(--accent)',showGrid:true,unit:' kg',label:'Dein Verlauf',noun:'Sätze'})}</div>`:'')+
+    (series.length>=2?`<div class="prog" style="margin-top:12px"><div class="prog-h">Dein Verlauf <span>${series.length} Sätze</span></div>${svgChart(series,{w:chartWidth(true),h:110,color:'var(--accent)',showGrid:true,unit:' kg',label:'Dein Verlauf',noun:'Sätze'})}</div>`:'')+
     `<div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');openExNote('${jsStr(name)}')">${icon('note',15)}Notiz</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="cm('m-exdemo');showExHist('${jsStr(name)}')">${icon('chart',15)}Verlauf</button><button class="btn btn-s btn-g ib" style="flex:1;justify-content:center" onclick="openExWebSearch()">${icon('book',15)}Web</button></div>`;
 }
 /* Die RIR-Kreise (Satz-Fenster und Plan-Editor) sind eine Auswahlgruppe
