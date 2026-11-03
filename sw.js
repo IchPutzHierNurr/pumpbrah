@@ -7,19 +7,26 @@
    genau dann, wenn man sie braucht.
 
    Strategie:
-   * Navigation (die HTML-Seite): erst Netz, dann Cache. So kommt eine neue
-     Version an, sobald Empfang da ist, und offline läuft die letzte bekannte.
+   * Navigation (die HTML-Seite): erst Netz, aber höchstens 2,5 s. So kommt
+     eine neue Version an, sobald Empfang da ist, und ohne Netz läuft sofort
+     die letzte bekannte. Hängt das Netz (Keller: ein Balken, keine Antwort),
+     startet nach 2,5 s die gespeicherte Fassung; die Antwort aus dem Netz
+     legt sich nebenher in den Cache und gilt ab dem nächsten Öffnen.
      Umgekehrt (Cache first) würde ein Update erst nach dem übernächsten
      Öffnen sichtbar — bei einer App, die aus einer einzigen Datei besteht,
      wäre das jede Änderung.
    * Alles andere: erst Cache, dann Netz, und das Ergebnis wird abgelegt.
+   * Fremde Hosts (Schriften, Firebase) fasst er nicht an: Schriftdateien
+     liegen bewusst nicht im Cache, bis sie da sind, gilt die Systemschrift.
 
    Die App ist eine einzige HTML-Datei; es gibt keine Build-Hashes, an denen
    man eine Version erkennen könnte. Deshalb wird der Cache-Name von Hand
    erhöht, wenn sich am Caching etwas ändert — der Inhalt selbst aktualisiert
    sich über die Netz-zuerst-Regel von allein.
    -------------------------------------------------------------------------- */
-const CACHE = 'pumpbrah-v1';
+const CACHE = 'pumpbrah-v2';
+/* Längste Wartezeit aufs Netz, bevor die gespeicherte Seite startet. */
+const NETZ_GRENZE = 2500;
 const CORE = ['./', './index.html'];
 
 self.addEventListener('install', event => {
@@ -50,15 +57,27 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
-    );
+    const gespeichert = () => caches.match(req).then(hit => hit || caches.match('./index.html'));
+    /* Die Netzantwort landet immer im Cache, auch wenn sie zu spät für
+       dieses Öffnen kommt — waitUntil hält den Worker dafür am Leben. Nur
+       eine gute Antwort ersetzt die gespeicherte Fassung. */
+    const netz = fetch(req).then(res => {
+      if (res.ok) {
+        const copy = res.clone();
+        event.waitUntil(caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {}));
+      }
+      return res;
+    });
+    event.waitUntil(netz.catch(() => {}));
+    event.respondWith(new Promise(antworte => {
+      let fertig = false;
+      const gib = res => { if (!fertig && res) { fertig = true; antworte(res); } };
+      /* Nach der Grenze die gespeicherte Fassung — gibt es keine (erster
+         Besuch), bleibt es beim Warten aufs Netz. */
+      const uhr = setTimeout(() => gespeichert().then(gib).catch(() => {}), NETZ_GRENZE);
+      netz.then(res => { clearTimeout(uhr); gib(res); },
+        () => { clearTimeout(uhr); gespeichert().then(hit => gib(hit || Response.error()), () => gib(Response.error())); });
+    }));
     return;
   }
 
