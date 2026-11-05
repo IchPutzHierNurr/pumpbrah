@@ -1063,7 +1063,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 @media (min-width:820px) and (min-height:700px){
   .app{max-width:560px}
   .bnav-inner{max-width:560px;border-radius:22px;margin-bottom:10px;border:1px solid var(--line)}
-  .wo-dock,.live-dock{max-width:560px}
+  .live-dock{max-width:560px}
   .bnav{padding:0 12px}
 }
 /* Querformat auf dem iPhone: die Notch liegt seitlich. */
@@ -1455,34 +1455,30 @@ div.wg-note{cursor:default}
    eine Zeile. Wer während eines Satzes scrollen muss, um zu sehen, was er als
    Nächstes heben soll, hat ein UI-Problem, kein Trainingsproblem.
    ============================================================================ */
-.focus-bar{
-  display:flex;align-items:center;gap:16px;padding:calc(12px - var(--t,0) * 4px) 16px calc(12px - var(--t,0) * 4px) 12px;border-radius:20px;
-  background:var(--mat-1),var(--bg2);
-  border:1px solid var(--line);box-shadow:var(--edge),var(--shadow-1);
+/* Die Pause ist EINE Zeile im festen Kopf, 44 px hoch (Training-Übersicht
+   05.11.; vorher eine Karte mit 88-px-Ring, 114 px hoch, und der Kopf nahm
+   ein Drittel des Bildschirms). Links der kleine Ring mit Zeit und Zustand —
+   er ist der Knopf für Anhalten und Weiter —, rechts „Überspringen“ und
+   „+30 s“. */
+.focus-bar{display:flex;align-items:center;gap:8px}
+.fb-ring{
+  flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:44px;padding:0 12px 0 6px;border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--text);
+  font-family:inherit;text-align:left;cursor:pointer;
 }
-/* Pause vorbei: die Karte tönt in Lime, der Ring ist voll. Ein Zustand, kein Schmuck. */
-.focus-bar.end{background:linear-gradient(0deg,color-mix(in srgb,var(--accent) 18%,transparent),color-mix(in srgb,var(--accent) 18%,transparent)),var(--mat-1),var(--bg2)}
-/* Der Ring ist der Knopf für Pausieren und Weiter. Beim Scrollen schrumpft er
-   mit der Kopfzeile (--t), damit die klebende Pause nicht ein Drittel des
-   Bildschirms belegt. */
-.fb-ring{position:relative;flex:0 0 auto;width:calc(88px - var(--t,0) * 28px);height:calc(88px - var(--t,0) * 28px);padding:0;border:0;border-radius:50%;background:none;color:var(--text);cursor:pointer}
-.fb-ring>svg{width:100%;height:100%;display:block}
+.fb-ring>svg{flex:none;width:32px;height:32px;display:block}
 .fb-ring .pr{transition:stroke-dashoffset .25s linear}
-.fb-rt{
-  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',monospace;font-size:calc(var(--fs-30) - var(--t,0) * 8px);font-weight:700;letter-spacing:-.06em;
-  font-variant-numeric:tabular-nums;color:var(--text);
-}
-.fb-rp{position:absolute;left:0;right:0;top:66%;display:flex;justify-content:center;color:var(--t3);opacity:calc(1 - var(--t,0) * 2)}
-.fb-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
-.fb-t{font-size:var(--fs-14);line-height:17px;color:var(--text2)}
-.focus-bar.end .fb-t{font-size:var(--fs-22);line-height:24px;font-weight:700;color:var(--text)}
-.focus-bar.end .fb-rt{font-size:calc(var(--fs-22) - var(--t,0) * 6px);letter-spacing:-.04em}
-.focus-bar.end .fb-s{margin-top:-8px}
-.fb-s{font-size:var(--fs-14);line-height:17px;color:var(--text2)}
-.fb-btns{display:flex;gap:8px}
+.fb-zt{min-width:0;display:flex;flex-direction:column}
+.fb-zl{display:flex;align-items:center;gap:4px}
+.fb-rt{font:700 var(--fs-16)/18px 'JetBrains Mono',monospace;letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--text)}
+.fb-rp{display:flex;color:var(--t3)}
+.fb-t{font-size:var(--fs-12);line-height:15px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Pause vorbei: die Zeile tönt in Lime, der Ring ist voll. Ein Zustand, kein Schmuck. */
+.focus-bar.end .fb-ring{background:color-mix(in srgb,var(--accent) 18%,rgba(255,255,255,.06));border-color:color-mix(in srgb,var(--accent) 40%,transparent)}
+.focus-bar.end .fb-t{font-weight:700;color:var(--text)}
+.fb-btns{flex:none;display:flex;gap:8px}
 .fb-btn{
-  min-width:48px;height:48px;padding:0 12px;border-radius:14px;flex:0 0 auto;
+  min-width:44px;height:44px;padding:0 12px;border-radius:14px;flex:0 0 auto;
   border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--text);
   font-family:inherit;font-size:var(--fs-14);font-weight:600;white-space:nowrap;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
   transition:transform var(--dur-micro) var(--sp);
@@ -1491,14 +1487,24 @@ div.wg-note{cursor:default}
 .fb-btn:active{transform:scale(var(--press))}
 @media (max-width:359px){.fb-btn .lbl{display:none}}
 
-/* Kopf des laufenden Trainings: Name der Einheit, Satzstand, feine Linie. */
+/* Kopf des laufenden Trainings: Name der Einheit, Satzstand, feine Linie, die
+   Pause — zusammen höchstens etwa 120 px. Er schrumpft beim Scrollen nicht
+   mit (--t): Die aktive Karte steht genau unter ihm, dafür muss seine Höhe
+   feststehen. Deckend mit Milchglas wie jede eingeklappte Kopfzeile. */
+#wo-sticky-top{
+  padding-top:max(env(safe-area-inset-top),8px);padding-bottom:6px;
+  background:rgba(10,11,14,.94);border-bottom-color:rgba(255,255,255,.08);
+  backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+}
 #wo-sticky-top::after{display:none}
 #wo-sticky-top .ltitle-row{align-items:flex-start}
+#wo-sticky-top .ltitle-h{font-size:var(--fs-30)}
+#wo-sticky-top .ltitle-sub{opacity:1;max-height:none;line-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wo-more{width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);box-shadow:var(--edge);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
 .wo-more:active{transform:scale(var(--press-s))}
-.wo-prog{height:3px;margin-top:12px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
+.wo-prog{height:3px;margin-top:6px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden}
 .wo-prog i{display:block;height:100%;width:0;border-radius:999px;background:var(--text2);transition:width var(--dur-ring) var(--out)}
-#wo-timer-bar{margin-top:12px}
+#wo-timer-bar{margin-top:6px}
 #wo-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Menü des Trainings: Fenster von unten, Einträge 56 px. */
@@ -1572,21 +1578,35 @@ div.wg-note{cursor:default}
 .wo-chips .wsr.pr{box-shadow:0 0 0 2px var(--accent)}
 .wo-chips .wsr .wsr-pr{position:absolute;top:-9px;right:12px;padding:0 6px;background:var(--bg3);font-family:inherit;font-size:var(--fs-11);font-style:normal;font-weight:700;line-height:16px;letter-spacing:.14em;color:var(--accent);opacity:1}
 
-/* Satz loggen: fest über der unteren Leiste, deckender Grund, 24 px Verlauf als Oberkante. */
-.wo-dock{display:none;pointer-events:auto;width:100%;max-width:480px;margin:0 auto;padding:24px 13px 12px;background:linear-gradient(180deg,rgba(11,12,17,0) 0,rgba(11,12,17,.94) 16px,#0b0c11 24px)}
-.wo-log{width:100%;height:56px;padding:0 20px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;background:var(--accent);color:#0a0b0e;font-family:'Space Grotesk',sans-serif;box-shadow:var(--edge-strong),0 6px 16px rgba(0,0,0,.4);transition:transform var(--dur-micro) var(--sp)}
+/* Satz loggen: in der aktiven Karte direkt unter dem Ziel, volle Breite, 56 px
+   (Training-Übersicht 05.11.; vorher fest über der unteren Leiste, wo er mit
+   seinem Verlauf 92 px Liste verdeckte). Sind alle Übungen erledigt, steht
+   derselbe Knopf als „Workout speichern“ nach der Liste. */
+.wo-log{width:100%;height:56px;margin-top:12px;padding:0 20px;border:0;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;background:var(--accent);color:#0a0b0e;font-family:'Space Grotesk',sans-serif;box-shadow:var(--edge-strong),0 4px 12px rgba(0,0,0,.3);transition:transform var(--dur-micro) var(--sp)}
 .wo-log:active{transform:scale(var(--press))}
 .wo-log span{display:flex;gap:.25em;min-width:0;font-size:var(--fs-16);font-weight:700;white-space:nowrap}
 .wo-log span i{min-width:0;font-style:normal;overflow:hidden;text-overflow:ellipsis}
 .wo-log b{font:700 var(--fs-16) 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
-.wo-log.fin{height:52px;justify-content:center}
-/* Eine Übung, die man von Hand aufgeklappt hat: eigener, ruhiger Knopf (Lime gehört dem festen Knopf). */
+.wo-log.fin{margin:16px 0 12px;justify-content:center}
+/* Eine Übung, die man von Hand aufgeklappt hat: eigener, ruhiger Knopf (Lime gehört dem Knopf der aktiven Übung). */
 .wo-log-in{width:100%;min-height:48px;margin-top:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:var(--fs-16);font-weight:600;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
 .wo-log-in:active{transform:scale(var(--press))}
-#s-wo{padding-bottom:calc(188px + env(safe-area-inset-bottom,0px))}
+/* Erledigte Übungen stehen gesammelt am Ende: zu eine Zeile „Erledigt: N“,
+   auf die schmalen Zeilen darunter (Training-Übersicht 05.11.). */
+.wo-done-h{
+  display:flex;align-items:center;gap:11px;width:100%;min-height:56px;margin:24px 0 8px;padding:0 16px;border-radius:18px;
+  border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text2);
+  font-family:inherit;font-size:var(--fs-14);font-weight:700;text-align:left;cursor:pointer;
+  transition:transform var(--dur-micro) var(--sp);
+}
+.wo-done-h:active{transform:scale(var(--press-l))}
+#wo-c>.wo-done-h:first-child{margin-top:8px}
+.wo-done-h .i{width:34px;height:34px;flex:0 0 34px;border-radius:12px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:var(--green)}
+.wo-done-h .cv{margin-left:auto;display:flex;color:var(--text3);transition:transform var(--dur-el) var(--out)}
+.wo-done-h[aria-expanded="true"] .cv{transform:rotate(90deg)}
 
 /* Meldungen: EIN Kasten unten, über der Leiste und dem, was darauf sitzt
-   (Satz-Knopf, Trainingsleiste, Startknopf im Plan); bei offenem Fenster über
+   (Trainingsleiste, Startknopf im Plan); bei offenem Fenster über
    dessen Oberkante. placeToast() setzt die Höhe. Bricht um, Knöpfe 44 px.
    Ohne Knopf lässt er jeden Tipp durch. */
 .toast{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom,0px) + var(--kb,0px));z-index:900;display:none;align-items:center;gap:8px;width:calc(100% - 26px);max-width:454px;min-height:52px;margin:0 auto;padding:4px 16px;border-radius:14px;background:#262a33;box-shadow:var(--edge-strong),var(--shadow-2);font-size:var(--fs-14);line-height:20px;font-weight:500;color:var(--text);pointer-events:none}
@@ -1713,8 +1733,8 @@ div.wg-note{cursor:default}
 .coach-badge.high{background:color-mix(in srgb,var(--red) 14%,transparent);color:var(--red);border:1px solid color-mix(in srgb,var(--red) 30%,transparent)}
 
 /* Hinweisbalken über einem Trainingstag */
-/* Session-Beitrag im Workout: eine 44-px-Zeile unter der aktiven Übung. */
-.wo-sess{display:flex;align-items:center;gap:8px;min-height:44px;margin:4px 0 8px}
+/* Session-Beitrag im Workout: eine 44-px-Zeile am Ende der Liste (bis zur Training-Übersicht 05.11. unter der aktiven Übung). */
+.wo-sess{display:flex;align-items:center;gap:8px;min-height:44px;margin:16px 0 8px}
 .wo-sess-l{flex:none;margin-right:4px;font:500 var(--fs-11)/16px 'JetBrains Mono',monospace;color:var(--t3)}
 .wo-sess-p{display:flex;gap:8px;min-width:0;overflow-x:auto;scrollbar-width:none}
 .wo-sess-p::-webkit-scrollbar{display:none}
@@ -2240,7 +2260,7 @@ code.sr-code{cursor:auto}
 @media (min-width:700px){
   .app{max-width:520px}
   .bnav-inner{max-width:520px;border-radius:26px 26px 0 0;border:1px solid var(--line);border-bottom:none}
-  .wo-dock,.live-dock{max-width:520px}
+  .live-dock{max-width:520px}
 }
 @media (max-width:430px){
   .screen{padding-left:13px;padding-right:13px}
@@ -2248,36 +2268,19 @@ code.sr-code{cursor:auto}
   .card,.prog,.hist-calendar{border-radius:20px}
 }
 /* Querformat auf dem iPhone (kurze Höhe): schmale untere Leiste mit Symbol neben
-   der Beschriftung, die Pause in einer Zeile mit dem ⋯, der feste Knopf 48 px.
+   der Beschriftung, die Pausenzeile neben dem ⋯ statt unter dem Titel.
    Steht nach den Breitenregeln, damit sie hier nicht wieder greifen. */
 @media (orientation:landscape) and (max-height:500px){
   .bnav-inner{margin-bottom:0;padding:0 8px env(safe-area-inset-bottom,0px)}
   .ni{flex-direction:row;justify-content:center;gap:6px;height:44px;padding:0}
   .ni svg{width:20px;height:20px}
   .ni .nl{font-size:var(--fs-11)}
-  .wo-dock{padding:16px 13px 8px}
   .live-dock{padding:12px 13px 4px}
   .live-bar{height:44px}
-  .wo-log,.wo-log.fin{height:48px}
-  #s-wo{padding-bottom:calc(144px + env(safe-area-inset-bottom,0px))}
   #wo-sticky-top{display:flex;align-items:center;gap:8px;padding-top:max(env(safe-area-inset-top),6px);padding-bottom:6px}
   #wo-sticky-top .ltitle-row{order:2;flex:none}
   #wo-sticky-top .wo-head-t,#wo-sticky-top .wo-prog{display:none}
   #wo-timer-bar{order:1;flex:1;min-width:0;margin-top:0}
-  .focus-bar{min-height:56px;padding:0 0 0 4px;gap:12px;border:0;border-radius:14px;background:none;box-shadow:none}
-  .focus-bar.end{padding:0 8px 0 4px}
-  .fb-ring{display:flex;align-items:center;gap:12px;width:auto;height:44px;border-radius:14px}
-  .fb-ring>svg{width:40px;height:40px;flex:none}
-  .fb-ring circle{stroke-width:9}
-  .fb-rt{position:static;display:block;font-size:var(--fs-22);letter-spacing:-.04em}
-  .fb-rp{display:none}
-  .fb-col{flex-direction:row;align-items:center;gap:12px}
-  .fb-t,.focus-bar.end .fb-t{font-size:var(--fs-14);line-height:17px;font-weight:400}
-  .focus-bar.end .fb-t{color:var(--text)}
-  .fb-s{display:none}
-  .fb-btns{margin-left:auto}
-  .fb-btn{height:44px;min-width:44px}
-  .fb-btn .lbl{display:none}
 }
 @media (prefers-reduced-motion:reduce){
   /* Nichts wartet: auch Verzögerungen fallen weg, sonst stehen Diagrammpunkte
@@ -2312,7 +2315,6 @@ code.sr-code{cursor:auto}
 </div>
 <div id="main-app" style="display:none">
 <nav class="bnav">
-<div class="wo-dock" id="wo-dock"><button type="button" class="wo-log" id="wo-log"></button></div>
 <div class="live-dock" id="live-dock"><button type="button" class="live-bar" id="live-bar" onclick="tab('wo')"><span class="lb-vh">Zurück ins Training: </span><span class="lb-n" id="lb-n"></span><span class="lb-s" id="lb-s"></span><span class="lb-t" id="lb-t"></span><span class="lb-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></button></div>
 <div class="bnav-inner" role="tablist" aria-label="Hauptnavigation">
 <button type="button" role="tab" aria-selected="true" class="ni on" data-tab="dash" onclick="tab('dash')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span class="nl">Start</span></button>
@@ -4117,6 +4119,8 @@ function getTimerTotal(){
    · toastAction(text,knopf,fn,ende)  mit Knopf („Rückgängig“), 8 s, solange
                                       man ihn berührt auch länger. `ende` läuft,
                                       wenn die Meldung OHNE Tipp auf den Knopf geht;
+                                      `ms` in toastRender setzt eine andere Dauer
+                                      (die Meldung nach einem Satz: „Ändern“, 5 s);
    · toastBleibt(text,{id,knopf,fn})  Daten betroffen: bleibt mit ✕ stehen, bis
                                       du tippst (toastWeg(id) räumt sie ab).
    Eine neue Meldung ersetzt die alte samt ihrer Zeit — vorher lief die Zeit der
@@ -4146,7 +4150,7 @@ function toastRender(text,o){
   toastEnde=o.ende||null;
   el.onpointerdown=el.onpointerup=el.onpointercancel=null;
   if(!o.bleibt){
-    const ms=o.knopf?8000:Math.min(5000,Math.max(1500,1000+45*String(text).length));
+    const ms=o.ms||(o.knopf?8000:Math.min(5000,Math.max(1500,1000+45*String(text).length)));
     const arm=()=>{clearTimeout(toastTimer);toastTimer=setTimeout(hideToast,ms)};
     if(o.knopf){el.onpointerdown=()=>clearTimeout(toastTimer);el.onpointerup=el.onpointercancel=arm}
     arm();
@@ -4177,8 +4181,8 @@ function toastWeg(id){
 }
 /* Wo der Kasten steht: über dem, was unten liegt. Fenster offen: über dessen
    Oberkante (ist dort kein Platz, oben am Rand). Sonst über der Leiste — der
-   Satz-Knopf und der Startknopf im Plan tragen oben einen Verlauf, in den der
-   Kasten 8 px hineinragt; Leiste und Trainingsleiste bekommen 8 px Luft.
+   Startknopf im Plan trägt oben einen Verlauf, in den der Kasten 8 px
+   hineinragt; Leiste und Trainingsleiste bekommen 8 px Luft.
    Vor der Anmeldung gilt der Wert aus dem CSS. */
 function placeToast(){
   const el=document.getElementById('toast');
@@ -4206,10 +4210,9 @@ function placeToast(){
   }
   let rand=h;
   const nav=document.querySelector('.bnav');
-  const dock=document.getElementById('wo-dock');
   if(nav){
     const r=nav.getBoundingClientRect();
-    if(r.height)rand=dock&&dock.offsetHeight?r.top+8:r.top-8;
+    if(r.height)rand=r.top-8;
   }
   const go=document.querySelector('.screen.active .plan-go:not([hidden])');
   if(go){
@@ -4377,10 +4380,13 @@ document.addEventListener('keydown',e=>{
 });
 /* Wo jede Seite stand, als du sie verlassen hast (nur im Arbeitsspeicher). */
 const tabScroll={};
-/* go(id) öffnet eine Seite oben; go(id,y) an der Stelle y (tab()). */
+/* go(id) öffnet eine Seite oben; go(id,y) an der Stelle y (tab()). Das
+   Training öffnet immer oben: dort steht die aktive Übung direkt unter dem
+   festen Kopf (Training-Übersicht 05.11.). */
 function go(id,y){
   const target=document.getElementById('s-'+id);
   if(!target)return;
+  if(id==='wo')y=0;
   const vorher=document.querySelector('.screen.active');
   if(vorher&&vorher!==target)tabScroll[vorher.id]=window.scrollY||0;
   withViewTransition(()=>{
@@ -4394,7 +4400,6 @@ function go(id,y){
     const tf=document.getElementById('wo-timer-bar');
     if(tf)tf.style.display=(id==='wo'&&D.active)?'':'none';
     renderLiveBar();
-    renderWoDock();
     window.scrollTo(0,0);
     if(id==='dash')renderDash();
     if(id==='plan')renderPlan();
@@ -4686,7 +4691,7 @@ function attachNavHeight(){
     ro.observe(inner);
     if(live)ro.observe(live);
   }
-  /* Die Meldung zieht mit, wenn Satz-Knopf oder Trainingsleiste kommen und gehen. */
+  /* Die Meldung zieht mit, wenn die Trainingsleiste kommt und geht. */
   window.addEventListener('resize',placeToast);
   const nav=document.querySelector('.bnav');
   if(window.ResizeObserver&&nav)new ResizeObserver(placeToast).observe(nav);
@@ -6471,6 +6476,7 @@ function startWorkout(pk){
   if(!D.plan[pk]){toast('Trainingstag nicht gefunden');return}
   const base=cloneData(D.plan[pk].exercises||[]).map(e=>{const n=normalizeExercise(e);n.logged=[];return n});
   D.active={id:newSessionId(),planKey:pk,startTime:Date.now(),exercises:applyDeloadToExercises(base),compact:false,deload:deloadActive()};
+  woDoneOpen=false;
   save();go('wo');renderWo();requestWakeLock();
   haptic([15,50,15]);
 }
@@ -6578,7 +6584,7 @@ function logTargetExercise(){
   if(!ex||!Array.isArray(ex.logged))return null;
   return ex;
 }
-function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;startTmr();renderWo();toast(`Wiederholt: ${de(last.w)} kg × ${last.r}`);if(ex.logged.length>=ex.sets)autoScrollNext(logTgt.exIdx)}
+function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;if(ex.logged.length>=ex.sets&&D.active.openEx===logTgt.exIdx)D.active.openEx=null;startTmr();renderWo();toastSatz(`Wiederholt: ${de(last.w)} kg × ${last.r}`,ex,ex.logged.length-1);scrollToActiveCard()}
 function skipEx(ei){
   const ex=activeExercisesSafe()[ei];
   if(!ex)return;
@@ -6765,22 +6771,6 @@ function celebratePR(text,sub){
   burst.innerHTML=chips;
   document.body.appendChild(burst);
   setTimeout(()=>burst.remove(),2600);
-}
-function autoScrollNext(currentIdx){
-  if(!D.active)return;
-  setTimeout(()=>{
-    /* Gleiche Fehlerklasse wie oben: der Guard vor dem setTimeout schützt
-       nicht den Rumpf, der 300ms später läuft. */
-    if(!D.active||!Array.isArray(D.active.exercises))return;
-    for(let i=currentIdx+1;i<D.active.exercises.length;i++){
-      const ex=D.active.exercises[i];
-      if(!ex.skipped&&(ex.logged||[]).length<ex.sets){
-        const el=document.getElementById('wo-ex-'+i);
-        if(el)el.scrollIntoView({behavior:prefersReducedMotion()?'auto':'smooth',block:'center'});
-        return;
-      }
-    }
-  },300);
 }
 let calMonth=new Date().getMonth(),calYear=new Date().getFullYear(),calSelDay=null;
 function calNav(d){calMonth+=d;if(calMonth>11){calMonth=0;calYear++}if(calMonth<0){calMonth=11;calYear--}calSelDay=null;renderHist()}
@@ -10201,8 +10191,8 @@ function workoutCompareLine(c){
   return `<div class="wo-sum-cmp">${line}</div>`+
     (c.teilweise?`<div class="wo-sum-cmp note">Verglichen: ${c.shared===1?'die eine Übung, die in beiden vorkam':`die ${c.shared} Übungen, die in beiden vorkamen`}</div>`:'');
 }
-/* Ohne zweite Frage: Der feste Knopf zeigt „Workout speichern“ erst, wenn
-   alles erledigt ist, und im ⋯-Fenster ist es schon der zweite Tipp. */
+/* Ohne zweite Frage: Der Knopf „Workout speichern“ steht erst unter der
+   Liste, wenn alles erledigt ist, und im ⋯-Fenster ist es schon der zweite Tipp. */
 function endWorkout(){
   if(!D.active)return;
   const s=sessionFromActive(D.active);
@@ -10431,33 +10421,44 @@ function confirmLog(){
   const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&!p.skipped);
   timerTgt=pending.length?SUPERSET_GAP:restSecondsFor(ex.name,ex.muscle,ex.type);
   /* Die Supersatz-Karte folgt der Runde: eine angetippte Partnerzeile ist mit
-     dem Satz erledigt. Wer als Nächstes dran ist, sagt die Pausenkarte. */
+     dem Satz erledigt. Wer als Nächstes dran ist, sagt die Pausenzeile. */
   const inCard=groupMembers(D.active.exercises,activeIndex(D.active.exercises)).includes(logTgt.exIdx);
   if(inCard)D.active.openEx=null;
+  /* Mit dem letzten Satz klappt die Übung sofort zu einer Zeile in „Erledigt“
+     zusammen — auch eine, die man von Hand aufgeklappt hatte (Training-
+     Übersicht 05.11.; vorher blieb sie nach PB-092 offen oben stehen). */
+  if(ex.logged.length>=ex.sets&&D.active.openEx===logTgt.exIdx)D.active.openEx=null;
   if(timerInt){clearInterval(timerInt);timerInt=null}
   timerStartedAt=0;timerPausedRemaining=0;
   startTmr();
   renderWo();
+  const melde=text=>toastSatz(text,ex,ex.logged.length-1);
   if(cardio){
-    toast(`${entry.r} min${entry.w?` · Stufe ${entry.w}`:''}`);haptic(12);
+    melde(`${entry.r} min${entry.w?` · Stufe ${entry.w}`:''}`);haptic(12);
   }else if(isPR){
     celebratePR('NEUER PR!',`${de(a)} kg × ${b} · e1RM ${de(calc1RM(a,b))} kg`);
-    toast(`Neuer Rekord: ${de(a)} kg × ${b} · e1RM ${de(calc1RM(a,b))} kg`);
+    melde(`Neuer Rekord: ${de(a)} kg × ${b} · e1RM ${de(calc1RM(a,b))} kg`);
   }else{
-    toast(`${de(a)} kg × ${b} · RIR ${rir}`);haptic(12);
+    melde(`${de(a)} kg × ${b} · RIR ${rir}`);haptic(12);
   }
-  if(ex.logged.length>=ex.sets&&!inCard){
-    /* PB-092: Mit dem letzten Satz gilt die Übung als erledigt, im
-       Fokus-Layout klappt sie damit zu einer Zeile zusammen — und die
-       Satz-Chips verschwinden. Genau in dem Moment will man aber am
-       ehesten korrigieren: es ist der Satz, den man gerade getippt hat.
-       PB-081 verspricht „ein Tipp öffnet den Editor"; ohne diese Zeile
-       wären es zwei, und der erste stünde nirgends. Die gerade
-       abgeschlossene Übung bleibt deshalb aufgeklappt. */
-    D.active.openEx=logTgt.exIdx;
-    renderWo();
-    autoScrollNext(logTgt.exIdx);
-  }
+  /* Nach jedem Satz steht die Übung, die jetzt dran ist, mit Namen direkt
+     unter dem festen Kopf. */
+  scrollToActiveCard();
+}
+/* PB-092: Den Satz, den man gerade getippt hat, will man am ehesten
+   korrigieren. PB-081 verspricht „ein Tipp öffnet den Editor“ — die Meldung
+   nach dem Satz trägt dafür „Ändern“ und steht 5 s, auch wenn die Übung
+   damit schon zugeklappt ist (Training-Übersicht 05.11.; vorher blieb sie
+   dafür offen). Gesucht wird beim Tipp, nicht jetzt: in den 5 s kann ein
+   Abgleich die Liste umgebaut haben. */
+function toastSatz(text,ex,si){
+  toastRender(text,{knopf:'Ändern',ms:5000,fn:()=>{
+    const liste=activeExercisesSafe();
+    let i=liste.indexOf(ex);
+    if(i<0&&ex.id!=null)i=liste.findIndex(e=>e&&e.id===ex.id);
+    if(i>=0&&Array.isArray(liste[i].logged)&&liste[i].logged[si])openSetEditor(i,si);
+    else toast('Dieser Satz gehört nicht mehr zur Session');
+  }});
 }
 /* --------------------------------------------------------------------------
    ZEITBUDGET — „ich habe heute nur X Minuten"
@@ -10568,26 +10569,26 @@ function renderFocusBar(){
   const R=40,CIRC=2*Math.PI*R;
   const ringCol=tState==='done'?'var(--accent)':tState==='run'?'var(--text)':'rgba(255,255,255,.55)';
   /* Zwischen zwei Partnern eines Supersatzes ist es kein Ausruhen, sondern der
-     Umbau: die Karte nennt die Übung, zu der es weitergeht. */
+     Umbau: die Zeile nennt die Übung, zu der es weitergeht. */
   const liste=activeExercisesSafe();
   const ai=activeIndex(liste);
   const umbau=ai>=0&&groupMembers(liste,ai).length&&liste.some(e=>e!==liste[ai]&&e.ss===liste[ai].ss&&!e.skipped&&(e.logged||[]).length>(liste[ai].logged||[]).length);
   const label=tState==='run'?(umbau?'Weiter mit '+esc(liste[ai].name):'Pause läuft'):tState==='done'?'Los':paused?'Pausiert':'Pause starten';
-  /* Ist die Pause vorbei, räumt ein Tipp auf den Ring die Karte weg — er startet nicht still die volle Pause von vorn. */
+  /* Ist die Pause vorbei, räumt ein Tipp auf den Ring die Pause weg — er startet nicht still die volle Pause von vorn. */
   const ringAct=tState==='run'?'Pause anhalten':paused?'Pause fortsetzen':tState==='done'?'Pause beenden':'Pause starten';
   const zahl=tState==='done'?'+'+fmtT(Math.max(0,getTimerElapsed()-timerTgt)):fmtT(tRem);
   tf.innerHTML=`<div class="focus-bar${tState==='done'?' end':''}">`+
-    `<button type="button" class="fb-ring" onclick="${tState==='done'?'resetTmr()':'startTmr()'}" aria-label="${ringAct}"><svg viewBox="0 0 88 88" aria-hidden="true">`+
-      `<circle cx="44" cy="44" r="${R}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="5"/>`+
-      `<circle class="pr" id="td-ring" cx="44" cy="44" r="${R}" fill="none" stroke="${ringCol}" stroke-width="5" stroke-linecap="round" `+
+    `<button type="button" class="fb-ring" onclick="${tState==='done'?'resetTmr()':'startTmr()'}" aria-label="${ringAct}" aria-describedby="fb-t"><svg viewBox="0 0 88 88" aria-hidden="true">`+
+      `<circle cx="44" cy="44" r="${R}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="8"/>`+
+      `<circle class="pr" id="td-ring" cx="44" cy="44" r="${R}" fill="none" stroke="${ringCol}" stroke-width="8" stroke-linecap="round" `+
       `stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${(CIRC*(1-restPct)).toFixed(1)}" transform="rotate(-90 44 44)"/>`+
-    `</svg><span class="fb-rt ${tState}" id="td">${zahl}</span>`+
-    (tState==='done'?'':`<span class="fb-rp" aria-hidden="true">${icon(tState==='run'?'pause':'play',12)}</span>`)+`</button>`+
-    `<div class="fb-col"><div class="fb-t">${label}</div>${tState==='done'?'<div class="fb-s">Pause vorbei</div>':''}`+
+    `</svg><span class="fb-zt"><span class="fb-zl"><span class="fb-rt ${tState}" id="td">${zahl}</span>`+
+    (tState==='done'?'':`<span class="fb-rp" aria-hidden="true">${icon(tState==='run'?'pause':'play',12)}</span>`)+`</span>`+
+    `<span class="fb-t" id="fb-t">${label}</span></span></button>`+
     `<div class="fb-btns">`+
       `<button type="button" class="fb-btn" aria-label="Pause überspringen" onclick="resetTmr()">${icon('skip',16)}<span class="lbl">Überspringen</span></button>`+
       `<button type="button" class="fb-btn mono" aria-label="30 Sekunden mehr" onclick="adjTmr(30)">+30 s</button>`+
-    `</div></div>`+
+    `</div>`+
   `</div>`;
 }
 /* Kopf des laufenden Trainings: Name der Einheit, Wochentag und Satzstand,
@@ -10611,32 +10612,17 @@ function renderWoHead(){
   more.style.display='';prog.style.display='';
   document.getElementById('wo-prog-i').style.width=(geplant?Math.min(100,Math.round(fertig/geplant*100)):0)+'%';
 }
-/* Der feste Knopf über der unteren Leiste: loggt den nächsten Satz der aktiven
-   Übung, und wenn alles erledigt ist, speichert er das Workout. Er gehört nur
-   auf den Workout-Screen. */
-function renderWoDock(){
-  const dock=document.getElementById('wo-dock');
-  const btn=document.getElementById('wo-log');
-  if(!dock||!btn)return;
-  const screen=document.getElementById('s-wo');
-  if(!D.active||!screen||!screen.classList.contains('active')){dock.style.display='none';return}
-  dock.style.display='block';
-  const liste=activeExercisesSafe();
-  const ei=activeIndex(liste);
-  if(ei<0){
-    btn.className='wo-log fin';
-    btn.onclick=()=>endWorkout();
-    btn.innerHTML='<span>Workout speichern</span>';
-    return;
-  }
-  const ex=liste[ei];
+/* Der Knopf „Satz N loggen“ der aktiven Übung. Bis zur Training-Übersicht
+   vom 05.11. stand er fest über der unteren Leiste und verdeckte mit seinem
+   Verlauf 92 px Liste; jetzt sitzt er in der Karte direkt unter dem Ziel.
+   Beschriftung wie damals: links der Satz — im Supersatz die Übung, die dran
+   ist —, rechts das Ziel. */
+function woLogBtn(list,ei){
+  const ex=list[ei];
   const tgt=nextSetTarget(ex);
   const ziel=tgt&&tgt.num?`${de(tgt.num)} kg${tgt.r?' × '+tgt.r:''}`:'';
-  btn.className='wo-log';
-  btn.onclick=()=>{unlockAudio();openLog(ei)};
-  /* Im Supersatz nennt der Knopf die Übung, die dran ist, nicht die Satznummer. */
-  const was=groupMembers(liste,ei).length?`<i>${esc(ex.name)}</i> loggen`:`Satz ${ex.logged.length+1} loggen`;
-  btn.innerHTML=`<span>${was}</span>${ziel?`<b>${esc(ziel)}</b>`:''}`;
+  const was=groupMembers(list,ei).length?`<i>${esc(ex.name)}</i> loggen`:`Satz ${ex.logged.length+1} loggen`;
+  return `<button type="button" class="wo-log" onclick="unlockAudio();openLog(${ei})"><span>${was}</span>${ziel?`<b>${esc(ziel)}</b>`:''}</button>`;
 }
 function renderWo(){
   applyVisualTheme();
@@ -10644,7 +10630,7 @@ function renderWo(){
   const tf=document.getElementById('wo-timer-bar');
   if(!D.active){
     tf.style.display='none';
-    renderWoHead();renderWoDock();
+    renderWoHead();
     c.innerHTML=`<div class="empty">Kein aktives Workout.<br><br><button class="btn" onclick="startWorkout()">▶ WORKOUT STARTEN</button></div>`;
     return;
   }
@@ -10659,54 +10645,48 @@ function renderWo(){
   });
   renderFocusBar();
   renderWoHead();
-  let h='';
   const list=D.active.exercises;
   const activeExIdx=activeIndex(list);
   /* Steht die Übung, die jetzt dran ist, in einem Supersatz, bilden sie und
-     ihre Partner EINE Karte. Sie sitzt dort, wo der erste von ihnen steht. */
+     ihre Partner EINE Karte. */
   const grp=groupMembers(list,activeExIdx);
-  const anchor=grp.length?grp[0]:activeExIdx;
   const ords=exOrdinals(list);
   /* `compact` heißt jetzt „alles aufklappen": im Fokus-Layout ist eingeklappt
      der Normalfall, ausgeklappt die Ausnahme. Der Feldname bleibt, weil er in
      gespeicherten Sessions steht — nur die Bedeutung des Schalters dreht sich. */
   const expandAll=!!D.active.compact;
-  /* Zwischenüberschriften markieren die drei Zonen: was erledigt ist, was
-     gerade dran ist, was noch kommt. Sie dürfen erst NACH der aktiven Übung
-     „Danach" heißen — sonst steht die Überschrift über der erledigten
-     Übung und behauptet das Gegenteil. */
-  let zoneShown={before:false,after:false,none:false};
+  /* Die Liste hat drei Teile (Training-Übersicht 05.11.): oben die aktive
+     Übung, offen; darunter, was noch kommt, schmal; am Ende die erledigten,
+     gesammelt in einer Gruppe, die zu nur eine Zeile ist. Vorher stand alles
+     in Plan-Reihenfolge — Erledigtes über der aktiven Übung, und nach dem
+     letzten Satz blieb die fertige Übung offen oben stehen. Jetzt steht die
+     aktive Übung immer direkt unter dem festen Kopf. Übersprungene zählen zu
+     „was noch kommt“: von dort holt man sie mit „Doch machen“ zurück. */
+  const naechste=[],erledigt=[];
   list.forEach((ex,ei)=>{
-    if(grp.includes(ei)){
-      if(ei===anchor)h+=woGroupCard(list,grp,activeExIdx,ords)+coachSessionHTML();
-      return;
-    }
+    if(ei===activeExIdx||grp.includes(ei))return;
+    (!ex.skipped&&ex.logged.length>=ex.sets?erledigt:naechste).push(ei);
+  });
+  const zeile=ei=>{
+    const ex=list[ei];
     const done=ex.logged.length>=ex.sets;
     const skipped=ex.skipped;
     const isActive=ei===activeExIdx;
     const open=isActive||expandAll||D.active.openEx===ei;
     const cardio=isCardioExercise(ex);
     const safe=jsStr(ex.name);
-    if(activeExIdx<0){
-      if(!zoneShown.none){h+=`<div class="st">Übungen <div class="ln"></div></div>`;zoneShown.none=true}
-    }else if(ei<anchor){
-      if(!zoneShown.before){h+=`<div class="st">Erledigt <div class="ln"></div></div>`;zoneShown.before=true}
-    }else if(ei>anchor){
-      if(!zoneShown.after){h+=`<div class="st">Danach <div class="ln"></div></div>`;zoneShown.after=true}
-    }
     /* --- eingeklappte Zeile: eine Zeile pro Übung, sonst nichts. Vorn steht
        die Nummer, im Supersatz der Buchstabe; erledigt und übersprungen
        tragen statt dessen ihr Zeichen. --- */
     if(!open){
-      h+=`<div id="wo-ex-${ei}" class="wo-slim${done?' done':''}${skipped?' skipped':''}" onclick="toggleWoRow(${ei})">`+
+      return `<div id="wo-ex-${ei}" class="wo-slim${done?' done':''}${skipped?' skipped':''}" onclick="toggleWoRow(${ei})">`+
         `${done?'<div class="i">✓</div>':skipped?'<div class="i">⤼</div>':`<div class="o">${ords[ei]}</div>`}`+
         `<div class="n">${esc(ex.name)}</div>`+
         `<div class="r">${esc(ex.sets)}×${esc(reps(ex))}${done&&ex.logged.length?` · ${esc(ex.logged[ex.logged.length-1].w)} kg`:''}</div>`+
         `<div class="cv">›</div></div>`;
-      return;
     }
     /* --- aufgeklappt: aktive Übung als Mesh-Karte, andere als normale Karte --- */
-    h+=`<div id="wo-ex-${ei}" class="${isActive?'wo-act':'wo-open'}${skipped?' skipped':''}">`+
+    return `<div id="wo-ex-${ei}" class="${isActive?'wo-act':'wo-open'}${skipped?' skipped':''}">`+
       `<div class="wo-act-top">`+
         `<div class="exdemo-thumb" onclick="showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="wo-act-name"><div class="n">${esc(ex.name)}${skipped?' <span style="opacity:.7;font-size:var(--fs-12);font-weight:600">(übersprungen)</span>':''}</div>`+
@@ -10716,11 +10696,21 @@ function renderWo(){
         `<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${ei})">⋯</button>`+
         `${!isActive?`<button type="button" class="wo-icon-btn" title="Zuklappen" onclick="toggleWoRow(${ei})">▾</button>`:''}</div>`+
       `</div>`+woExBody(ex,ei,isActive,false)+'</div>';
-    if(isActive)h+=coachSessionHTML();
-  });
-  if(activeExIdx<0)h+=coachSessionHTML();
-  c.innerHTML=h;
-  renderWoDock();
+  };
+  let h='';
+  if(activeExIdx>=0)h+=grp.length?woGroupCard(list,grp,activeExIdx,ords):zeile(activeExIdx);
+  if(naechste.length)h+=`<div class="st">${activeExIdx<0?'Übungen':'Danach'} <div class="ln"></div></div>`+naechste.map(zeile).join('');
+  if(erledigt.length){
+    /* Eine daraus geöffnete Übung (Tipp auf ihre Zeile, zum Korrigieren)
+       hält die Gruppe offen. */
+    const auf=woDoneOpen||erledigt.includes(D.active.openEx);
+    h+=`<button type="button" class="wo-done-h" aria-expanded="${auf}" onclick="toggleWoDone()"><span class="i" aria-hidden="true">✓</span>`+
+      `<span>Erledigt: ${erledigt.length}</span><span class="cv" aria-hidden="true">${icon('chev',16)}</span></button>`;
+    if(auf)h+=erledigt.map(zeile).join('');
+  }
+  /* Alles erledigt: der Abschluss steht nach der letzten Übung. */
+  if(activeExIdx<0)h+=`<button type="button" class="wo-log fin" onclick="endWorkout()"><span>Workout speichern</span></button>`;
+  c.innerHTML=h+coachSessionHTML();
 }
 /* Alles unter dem Kopf einer aufgeklappten Übung: Notiz, Ziel, Aufwärmen,
    Satz-Chips, Werkzeuge, Verlauf. Die einzelne Karte und die Supersatz-Karte
@@ -10741,6 +10731,7 @@ function woExBody(ex,ei,isActive,round){
           `<button type="button" class="wo-why" onclick="this.classList.toggle('open')"><span>${tgt.why}</span>${icon('chev',16)}</button></div>`
         :`<div class="target-hint"><span class="th-ico">${tgt.icon}</span><span class="th-t">${tgt.text}</span></div>`;
     }
+    if(isActive)h+=woLogBtn(activeExercisesSafe(),ei);
     h+=renderWarmup(ex);
   }
   if(!skipped){
@@ -10757,8 +10748,8 @@ function woExBody(ex,ei,isActive,round){
       }
     }
     if(chips.length)h+=`<div class="wo-chips">${chips.join('')}</div>`;
-    /* Die aktive Übung loggt der feste Knopf unten; eine von Hand
-       aufgeklappte andere bekommt ihren eigenen, ruhigen. */
+    /* Die aktive Übung loggt ihr Knopf unter dem Ziel; eine von Hand
+       aufgeklappte andere bekommt einen eigenen, ruhigen. */
     if(!done&&!isActive)h+=`<button type="button" class="wo-log-in" onclick="unlockAudio();openLog(${ei})">Satz ${ex.logged.length+1} loggen</button>`;
   }else{
     h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:8px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
@@ -10804,13 +10795,23 @@ function woGroupCard(list,grp,act,ords){
   return `<div id="wo-ex-${act}" class="wo-act">`+
     `<div class="wo-g-head"><span class="wo-g-l">Supersatz</span><span class="wo-g-r">Runde ${list[act].logged.length+1} von ${rounds}`+
     `<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${shown})">⋯</button></span></div>`+
-    `<div class="wo-g-list">${rows}</div>`+woExBody(list[shown],shown,shown===act,true)+`</div>`;
+    `<div class="wo-g-list">${rows}</div>`+(shown===act?'':woLogBtn(list,act))+woExBody(list[shown],shown,shown===act,true)+`</div>`;
 }
 /* Eine eingeklappte Zeile auf-/zuklappen. Nur EINE Zeile kann offen sein —
    sonst ist man nach drei Tippern wieder bei der alten Endlosliste. */
 function toggleWoRow(ei){
   if(!D.active)return;
   D.active.openEx=D.active.openEx===ei?null:ei;
+  renderWo();haptic(6);
+}
+/* Die Gruppe „Erledigt“ auf- und zuklappen. Zu schließt sie auch eine daraus
+   geöffnete Übung — die hielte die Gruppe sonst gleich wieder offen. */
+function toggleWoDone(){
+  if(!D.active)return;
+  const b=document.querySelector('#wo-c .wo-done-h');
+  woDoneOpen=!(b&&b.getAttribute('aria-expanded')==='true');
+  const o=activeExercisesSafe()[D.active.openEx];
+  if(!woDoneOpen&&o&&!o.skipped&&(o.logged||[]).length>=o.sets)D.active.openEx=null;
   renderWo();haptic(6);
 }
 /* ==========================================================================
@@ -10821,6 +10822,9 @@ function toggleWoRow(ei){
    ergänzen noch umsortieren. Das hier ist die Reparatur.
    ========================================================================== */
 let justLoggedKey=null,justPRKey=null,justLoggedTimer=null,justPRTimer=null;
+/* Ob die Gruppe „Erledigt“ aufgeklappt ist: nur im Arbeitsspeicher, nach dem
+   Neuladen und in jedem neuen Training steht sie zu. */
+let woDoneOpen=false;
 function activeExercisesSafe(){
   if(!D.active)return[];
   if(!Array.isArray(D.active.exercises))D.active.exercises=[];
@@ -10865,16 +10869,29 @@ function loggedSetCount(){return activeExercisesSafe().reduce((a,e)=>a+((e.logge
 function toggleWorkoutCompact(){
   if(!D.active)return;
   D.active.compact=!D.active.compact;
+  /* „Alle aufklappen“ zeigt auch die erledigten. */
+  woDoneOpen=D.active.compact;
   save();renderWo();haptic(8);
 }
-function jumpToActiveExercise(){
+/* Die aktive Karte mit ihrer Oberkante direkt unter den festen Kopf rollen —
+   nie mittig, nie darunter versteckt (Training-Übersicht 05.11.; vorher
+   block:'center', und der Name verschwand unter der Pausenkarte). Der Versatz
+   ist die gemessene Höhe des Kopfs samt Abstand, keine geratene Zahl: sie
+   hängt an der Safe Area. Ist alles erledigt, geht es nach oben zum
+   Abschluss. Gibt zurück, ob es eine aktive Karte gab. */
+function scrollToActiveCard(){
   const i=activeIndex(activeExercisesSafe());
-  if(i>=0){
-    const el=document.getElementById('wo-ex-'+i);
-    if(el)el.scrollIntoView({behavior:prefersReducedMotion()?'auto':'smooth',block:'center'});
-    return;
-  }
-  toast('Alle Übungen erledigt');
+  const el=i>=0?document.getElementById('wo-ex-'+i):null;
+  if(!el){window.scrollTo({top:0,behavior:prefersReducedMotion()?'auto':'smooth'});return false}
+  const kopf=document.getElementById('wo-sticky-top');
+  const abstand=kopf?kopf.getBoundingClientRect().height+(parseFloat(getComputedStyle(kopf).marginBottom)||0):0;
+  el.style.scrollMarginTop=Math.round(abstand)+'px';
+  el.scrollIntoView({behavior:prefersReducedMotion()?'auto':'smooth',block:'start'});
+  return true;
+}
+function jumpToActiveExercise(){
+  if(activeIndex(activeExercisesSafe())<0){toast('Alle Übungen erledigt');return}
+  scrollToActiveCard();
 }
 function moveActiveExercise(ei,dir){
   const a=activeExercisesSafe();
