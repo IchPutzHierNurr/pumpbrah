@@ -382,8 +382,15 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);text-alig
 .hr{display:flex;align-items:center;padding:9px 11px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;margin-bottom:4px;gap:9px;font-size:var(--fs-12)}
 .hr .sn{width:26px;height:26px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:var(--fs-11);color:var(--text2);font-weight:700;flex-shrink:0}
 .hr .se{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.hr .sw{font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:700;font-size:var(--fs-12);white-space:nowrap}
-.hr .sr{font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);white-space:nowrap}
+.hr.exh-tag{min-height:48px;padding:6px 12px;gap:10px}
+.exh-tag .se{flex:0 0 auto}
+/* Passt eine Einheit nicht in eine Zeile (320 px), bricht sie hinter „×“ um:
+   oben das Gewicht, darunter die Wiederholungen; die brechen nur hinter
+   einem Punkt. */
+.exh-tag .exh-s{flex:1;min-width:0;text-align:right;font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);line-height:18px;color:var(--text);font-variant-numeric:tabular-nums}
+.exh-tag .exh-s b{color:var(--accent);font-weight:700;white-space:nowrap}
+.exh-tag .exh-r{display:inline-block}
+.exh-tag .exh-rir{flex:0 0 auto;min-width:50px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:var(--text2);white-space:nowrap;font-variant-numeric:tabular-nums}
 
 /* charts */
 .prog{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:12px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.24)}
@@ -434,13 +441,6 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);text-alig
 .sick-banner .si{font-size:var(--fs-30)}
 .sick-banner .st2{font-weight:800;color:var(--red);font-size:var(--fs-14)}
 .sick-banner .sd{font-size:var(--fs-12);color:var(--text2)}
-
-/* weekly-analysis cards */
-.wa-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin-bottom:10px}
-.wa-row{display:flex;justify-content:space-between;padding:8px 0;font-size:var(--fs-14);border-bottom:1px solid var(--line2)}
-.wa-row:last-child{border:none}
-.wa-row .wl{color:var(--text2)}
-.wa-row .wv{font-weight:700;font-family:'JetBrains Mono',monospace}
 
 /* login / onboarding — flacher Grund, kein Lichtschein, kein Leuchtbalken
    unter dem Schriftzug (onb-licht). Ohne Tab-Leiste kein Abstand dafür. */
@@ -602,18 +602,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .lib-search:focus{border-color:color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent)}
 .lib-search::placeholder{color:var(--text3)}
 
-/* stats: muscle groups */
-.ana-muscle{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:9px;cursor:pointer;transition:.15s}
-.ana-muscle:active{transform:scale(var(--press-l))}
-.ana-muscle.open{border-color:color-mix(in srgb,var(--accent) 26%,transparent)}
-.ana-muscle-hdr{display:flex;align-items:center;gap:11px}
-.ana-muscle-ico{font-size:var(--fs-22)}
-.ana-muscle-hdr .ic-wrap{width:36px;height:36px;flex:0 0 36px}
-.ana-muscle-name{font-weight:800;font-size:var(--fs-16);flex:1}
-.ana-muscle-cnt{font-size:var(--fs-11);color:var(--text3);font-family:'JetBrains Mono',monospace}
-.ana-detail{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
-.ana-muscle.open .ana-detail{display:block;animation:screenIn .22s ease}
-
 /* RIR picker circles */
 .rir-circles{display:flex;justify-content:space-between;margin:8px 0}
 .rir-lab{font-size:var(--fs-14);line-height:16px;font-weight:400;color:var(--text2);text-transform:none;letter-spacing:0}
@@ -640,12 +628,22 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .hs-edit{background:none;border:none;color:var(--text3);cursor:pointer;padding:6px;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;border-radius:9px;line-height:0}
 .hs-edit:active{background:rgba(255,255,255,.08);color:var(--text)}
-.he-set{display:flex;gap:7px;align-items:flex-end;padding:9px 0;border-bottom:1px solid var(--line2)}
+.he-set{display:flex;gap:7px;align-items:flex-end;padding:6px 0;border-bottom:1px solid var(--line2)}
 .he-set:last-child{border-bottom:none}
 .he-set .ig{flex:1;min-width:0;margin:0}
 .he-set .ig input{width:100%}
 .he-ex{font-size:var(--fs-12);font-weight:700;color:var(--text2);margin:12px 0 2px;letter-spacing:.02em}
-.he-nr{flex:0 0 26px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:var(--text3);padding-bottom:12px}
+.he-nr{flex:0 0 26px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:var(--text3);padding-bottom:14px}
+/* Folgesätze einer Übung: ohne sichtbare Spaltenköpfe, Zeile 60 px. */
+.he-set.he-folge{align-items:center}
+.he-set.he-folge .he-nr{padding-bottom:0}
+.he-set.he-folge .ig label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* Papierkorb in Korrigieren und „Alle Wiegungen“: die Taste selbst 44 px,
+   das Zeichen bleibt 16 px (Runde 4). */
+.he-set .be-del,#bio-entries-list .be-del{width:44px;height:44px;padding:0;justify-content:center}
+.he-set .be-del{margin-bottom:2px}
+.he-set.he-folge .be-del{margin-bottom:0}
+#bio-entries-list .be-del{margin:-8px -8px -8px 0}
 
 /* Plan: eigene Seite, eine Karte */
 .plan-card{padding:16px;border-radius:var(--radius);
@@ -1800,11 +1798,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .heat i.l3{background:rgba(244,246,251,.74)}
 .heat i:last-child.l1,.heat i:last-child.l2,.heat i:last-child.l3{background:var(--accent)}
 .heat-lg{display:flex;justify-content:space-between;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:rgba(255,255,255,.45)}
-.streak-tri{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
-/* 2 px Rand: „Ø MINUTEN“ in 11 px passt so auch bei 320 px in eine Zeile. */
-.streak-tri div{text-align:center;padding:10px 2px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10)}
-.streak-tri b{display:block;font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
-.streak-tri span{display:block;font-size:var(--fs-11);font-weight:800;letter-spacing:.13em;color:rgba(255,255,255,.45);margin-top:2px}
 
 /* --- Kalender: eingeklappt, weil er selten gebraucht wird --- */
 .hist-cal{margin-bottom:12px}
@@ -1845,10 +1838,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .calgrid .cell.sel,.calgrid .cell.has.big.sel{background:var(--accent);font-weight:800;color:#0a0b0e}
 .calgrid .cell .dv{font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);color:var(--text3);margin-top:1px}
 .calgrid .cell.sel .dv{color:rgba(10,11,14,.72)}
-.cal-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
-.cal-sum div{text-align:center;padding:10px 6px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--line2)}
-.cal-sum b{display:block;font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);line-height:1;font-weight:400;font-variant-numeric:tabular-nums}
-.cal-sum span{display:block;font-size:var(--fs-11);font-weight:800;letter-spacing:.12em;color:var(--text3);margin-top:2px}
 
 /* --- Sessions: eine Zeile je Einheit, nach Monat gruppiert ---
    Die Zeile zeigt, was beim Überfliegen zählt: Tag, Name, Kennzahlen und die
@@ -2384,7 +2373,6 @@ code.sr-code{cursor:auto}
 <button type="button" class="calnav" title="Monat vor" onclick="calNav(1)">›</button>
 </div>
 <div id="cal-grid" class="calgrid"></div>
-<div id="cal-sum" class="cal-sum"></div>
 </div>
 </details>
 <div id="hl"></div>
@@ -2572,7 +2560,6 @@ code.sr-code{cursor:auto}
 </div></div>
 <div class="mbg" id="m-histedit" data-guard><div class="mdl">
 <div class="mt">SESSION KORRIGIEREN <button class="mc" aria-label="Schließen" onclick="cm('m-histedit')">✕</button></div>
-<div style="font-size:var(--fs-12);color:var(--text2);line-height:1.5;margin-bottom:12px">Ein vertippter Satz kostete bisher die ganze Einheit — löschen war der einzige Weg. Hier änderst du einzelne Zahlen; alles andere bleibt stehen.</div>
 <div id="he-body"></div>
 <div class="sheet-cta"><button class="btn" onclick="saveHistEdit()">✓ Änderungen speichern</button>
 <button type="button" class="cta-sub" onclick="cm('m-histedit')">Abbrechen</button></div>
@@ -5630,12 +5617,34 @@ function getWeeklyVolume(includeSecondary){
   Object.values(vol).forEach(v=>{v.sets=Math.round(v.sets*10)/10;v.indirect=Math.round(v.indirect*10)/10});
   return vol;
 }
-function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Krank-Modus aus.')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank-Modus an. Workouts pausiert.')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}const maxW=Math.max(...sets.map(s=>s.w));const avgRir=sets.length?de1(sets.reduce((a,s)=>a+s.rir,0)/sets.length):'—';const median=sets.length?sets.map(s=>s.w).sort((a,b)=>a-b)[Math.floor(sets.length/2)]:0;const trend=getExTrend(name);const tText=trend==='up'?'↑ Progression':trend==='down'?'↓ Rückgang':trend==='flat'?'→ Stagnation':'—';const est1rm=getEx1RM(name);let h=`<div class="wa-card"><div class="wa-row"><div class="wl">All-Time Max</div><div class="wv" style="color:var(--neon)">${de(maxW)} kg</div></div><div class="wa-row"><div class="wl">Est. 1RM (Epley)</div><div class="wv">${est1rm?de(est1rm.rm):'-'} kg</div></div><div class="wa-row"><div class="wl">Median Gewicht</div><div class="wv">${de(median)} kg</div></div><div class="wa-row"><div class="wl">Ø RIR</div><div class="wv">${avgRir}</div></div><div class="wa-row"><div class="wl">Trend</div><div class="wv">${tText}</div></div><div class="wa-row"><div class="wl">Datenpunkte</div><div class="wv">${sets.length}</div></div></div>`;/* Je Einheit ein Punkt: der schwerste Arbeitssatz. Jeder Satz einzeln ergäbe
+function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Krank-Modus aus.')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank-Modus an. Workouts pausiert.')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}/* Oben stand eine Kennzahlen-Tabelle (All-Time Max, Est. 1RM, Median, Ø RIR,
+   Trend, Datenpunkte); raus in Runde 4. Höchstgewicht und 1RM stehen groß an
+   den Diagrammen, der Trend ist die Linie selbst. */
+let h='';/* Je Einheit ein Punkt: der schwerste Arbeitssatz. Jeder Satz einzeln ergäbe
    vier gleiche Punkte je Einheit und eine Treppe statt einer Linie. Das Datum
    steht unter dem Punkt, der Bestwert ist der gefüllte. */
 const topSets=perSessionSeries(sets,s=>s.w);
 if(topSets.length>=2){const best=Math.max(...topSets.map(e=>e.v));const bi=topSets.findIndex(e=>e.v===best);h+=`<div class="prog"><div class="prog-h">Schwerster Arbeitssatz je Einheit <span class="chart-key"><i></i>Bestwert</span></div>${chartSumLine(topSets[0].v,topSets[topSets.length-1].v,'kg',undefined,topSets[0].date,topSets[topSets.length-1].date)}${svgChart(topSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:150,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:bi,label:'Schwerster Arbeitssatz '+name,noun:'Einheiten'})}</div>`;}
-const rmSets=perSessionSeries(sets.filter(s=>s.w>0&&s.r>0&&s.r<=15),s=>calc1RM(s.w,s.r));if(rmSets.length>=2){const firstRm=rmSets[0].v,lastRm=rmSets[rmSets.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const bestRm=Math.max(...rmSets.map(e=>e.v));h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${chartSumLine(firstRm,lastRm,'kg',undefined,rmSets[0].date,rmSets[rmSets.length-1].date)}${svgChart(rmSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:140,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:rmSets.findIndex(e=>e.v===bestRm),label:'Geschätzter 1RM '+name,noun:'Einheiten'})}<div style="font-size:var(--fs-11);color:var(--text3);margin-top:8px;line-height:1.45">Nach Epley aus Gewicht und Wiederholungen. Sätze über 15 Wiederholungen sind ausgenommen, dort wird die Formel unzuverlässig. Der e1RM zeigt Stagnation früher als das Rohgewicht: 80×8 und 85×5 sind fast dieselbe Leistung.</div></div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>';[...sets].reverse().slice(0,20).forEach(s=>{h+=`<div class="hr"><div class="se">${esc(s.date||'')}</div><div class="sw">${esc(de(s.w))} kg</div><div class="sr">×${esc(s.r)}</div><div class="ri ${rc(s.rir)}">RIR${esc(s.rir)}</div></div>`});document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
+const rmSets=perSessionSeries(sets.filter(s=>s.w>0&&s.r>0&&s.r<=15),s=>calc1RM(s.w,s.r));if(rmSets.length>=2){const firstRm=rmSets[0].v,lastRm=rmSets[rmSets.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const bestRm=Math.max(...rmSets.map(e=>e.v));h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${chartSumLine(firstRm,lastRm,'kg',undefined,rmSets[0].date,rmSets[rmSets.length-1].date)}${svgChart(rmSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:140,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:rmSets.findIndex(e=>e.v===bestRm),label:'Geschätzter 1RM '+name,noun:'Einheiten'})}</div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>'+exhTageHTML(sets);document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
+/* „Alle Sätze“ im Übungsverlauf: eine Zeile je Einheit, neueste oben (Runde 4).
+   Vorher stand jeder Satz als eigene Karte mit vollem Datum da, bei
+   Bankdrücken viermal „3.11.2026“ untereinander. Die Wiederholungen stehen in
+   der Reihenfolge der Sätze; wechselt das Gewicht, steht es vor jeder Gruppe
+   („30 kg × 6 · 7, 27,5 kg × 8“). Wie bisher die letzten 20. */
+function exhTageHTML(sets){
+  const tage=[];
+  sets.forEach(s=>{let t=tage.find(x=>x.date===s.date);if(!t)tage.push(t={date:s.date,s:[]});t.s.push(s)});
+  tage.sort((a,b)=>(parseGermanDate(b.date)||0)-(parseGermanDate(a.date)||0));
+  return tage.slice(0,20).map(t=>{
+    const gruppen=[];
+    t.s.forEach(s=>{const g=gruppen[gruppen.length-1];if(g&&g.w===s.w)g.r.push(s.r);else gruppen.push({w:s.w,r:[s.r]})});
+    const rir=t.s.map(s=>parseFloat(s.rir)).filter(Number.isFinite);
+    const lo=Math.min(...rir),hi=Math.max(...rir);
+    return`<div class="hr exh-tag"><div class="se">${esc(t.date||'')}</div>`+
+      `<div class="exh-s">${gruppen.map((g,i)=>`<b>${esc(de(g.w))}\u00a0kg</b>\u00a0× <span class="exh-r">${g.r.map(r=>esc(r)).join('\u00a0· ')}${i<gruppen.length-1?',':''}</span>`).join(' ')}</div>`+
+      (rir.length?`<div class="exh-rir">RIR ${esc(lo===hi?lo:lo+'–'+hi)}</div>`:'')+`</div>`;
+  }).join('');
+}
 let planDirty=false;
 function renderPlanSaveState(){
   const btn=document.getElementById('plan-save-btn');
@@ -6492,13 +6501,16 @@ function germanFromKey(k){
    EGYM-Einordnung rechnen. Was sich nicht als Datum lesen lässt, gehört nicht
    in eine Reihe, die nach Datum sortiert ist. */
 function istDatum(k){return /^\d{4}-\d{2}-\d{2}$/.test(String(k||''))}
+/* Tag (JJJJ-MM-TT) einer Wiegung, deren Löschen noch zurückgenommen werden
+   kann (delWeight). */
+let weightPendingDel=null;
 function weightSeries(){
   const hand=(D.bio&&Array.isArray(D.bio.weights))?D.bio.weights:[];
   const map=new Map();
   hand.forEach((w,i)=>{
     const k=dateKey(w&&w.date);
     const kg=parseFloat(w&&w.kg);
-    if(!istDatum(k)||!isFinite(kg))return;
+    if(!istDatum(k)||!isFinite(kg)||k===weightPendingDel)return;
     map.set(k,{date:germanFromKey(k),kg,quelle:'hand',bioIdx:i});
   });
   if(D.egym&&D.egym.enabled){
@@ -6535,8 +6547,33 @@ function egymLiefertGewicht(){
     return isFinite(kg)&&kg>0;
   });
 }
-function addWeight(){const v=parseFloat(document.getElementById('bio-weight-input').value);if(!v||v<20||v>300){toast('Gewicht eingeben (20-300kg)');return}const today=new Date().toLocaleDateString('de-DE');removeTombstone('weights',dateKey(today));const idx=D.bio.weights.findIndex(w=>w.date===today);if(idx>=0)D.bio.weights[idx].kg=v;else D.bio.weights.push({date:today,kg:v});D.bio.weights.sort((a,b)=>{const pa=a.date.split('.');const pb=b.date.split('.');return new Date(pa[2],pa[1]-1,pa[0])-new Date(pb[2],pb[1]-1,pb[0])});document.getElementById('bio-weight-input').value='';save();renderBio();toast(de(v)+' kg gespeichert')}
-function delWeight(i){addTombstone('weights',dateKey((D.bio.weights[i]||{}).date));D.bio.weights.splice(i,1);save();renderBio()}function openExNote(name){document.getElementById('exn-name').textContent=name;document.getElementById('exn-text').value=D.notes[name]||'';document.getElementById('exn-text').dataset.ex=name;om('m-exnote')}
+function addWeight(){const v=parseFloat(document.getElementById('bio-weight-input').value);if(!v||v<20||v>300){toast('Gewicht eingeben (20-300kg)');return}if(weightPendingDel)hideToast();const today=new Date().toLocaleDateString('de-DE');removeTombstone('weights',dateKey(today));const idx=D.bio.weights.findIndex(w=>w.date===today);if(idx>=0)D.bio.weights[idx].kg=v;else D.bio.weights.push({date:today,kg:v});D.bio.weights.sort((a,b)=>{const pa=a.date.split('.');const pb=b.date.split('.');return new Date(pa[2],pa[1]-1,pa[0])-new Date(pb[2],pb[1]-1,pb[0])});document.getElementById('bio-weight-input').value='';save();renderBio();toast(de(v)+' kg gespeichert')}
+
+/* Wiegung löschen fragt nicht nach, es lässt sich 8 s lang zurücknehmen
+   (Runde 4; vorher war sie sofort und ohne Meldung weg). Wie in der
+   Bibliothek wird erst geschrieben, wenn die Meldung ohne „Rückgängig“ geht:
+   Der Tag IST der Schlüssel einer Wiegung, und Grabsteine werden beim Abgleich
+   vereinigt — einmal in der Cloud, holte kein Rückgängig sie mehr zurück.
+   Bis dahin blendet weightSeries() sie nur aus; geht die App vorher zu,
+   bleibt sie. */
+function delWeight(i){
+  const w=D.bio.weights[i];
+  if(!w)return;
+  if(weightPendingDel)hideToast();
+  weightPendingDel=dateKey(w.date);
+  renderBio();
+  toastAction(`Wiegung vom ${kurzDatum(w.date)} gelöscht`,'Rückgängig',()=>{weightPendingDel=null;renderBio()},commitWeightDelete);
+}
+function commitWeightDelete(){
+  const k=weightPendingDel;
+  if(!k)return;
+  weightPendingDel=null;
+  addTombstone('weights',k);
+  D.bio.weights=D.bio.weights.filter(w=>dateKey(w&&w.date)!==k);
+  save();
+  renderBio();
+}
+function openExNote(name){document.getElementById('exn-name').textContent=name;document.getElementById('exn-text').value=D.notes[name]||'';document.getElementById('exn-text').dataset.ex=name;om('m-exnote')}
 function saveExNote(){const name=document.getElementById('exn-text').dataset.ex;const txt=document.getElementById('exn-text').value.trim();if(txt)D.notes[name]=txt;else delete D.notes[name];save();cm('m-exnote');renderPL();toast('Notiz gespeichert!')}
 function startWorkout(pk){
   if(D.health.sick){toast('Krank-Modus ist an');return}
@@ -7032,15 +7069,19 @@ function renderHistEdit(){
   if(!histEditDraft.sets.length){
     h+=`<div class="empty">Kein Satz mehr übrig. Speichern ist hier nicht möglich — eine Session ohne Sätze wäre keine. Nutze den Löschen-Knopf in der Historie.</div>`;
   }
+  /* Spaltenköpfe nur über dem ersten Satz jeder Übung (Runde 4); vorher
+     standen sie über jedem der 30 Sätze. Die übrigen behalten ihr Label,
+     nur unsichtbar, damit jedes Feld weiter benannt ist. */
   let letzte=null;
   histEditDraft.sets.forEach((x,k)=>{
-    if(x.ex!==letzte){h+=`<div class="he-ex">${esc(x.ex||'Übung')}</div>`;letzte=x.ex}
+    const erste=x.ex!==letzte;
+    if(erste){h+=`<div class="he-ex">${esc(x.ex||'Übung')}</div>`;letzte=x.ex}
     /* PB-096: Cardio misst Minuten und eine Stufe, keine Kilogramm und keine
        Wiederholungen. Der Rest der App beschriftet dasselbe Feld längst so —
        nur dieser Editor zeigte „20 Wiederholungen" für zwanzig Minuten
        Laufband. Wer das für falsch hält und „korrigiert", trägt Unsinn ein. */
     const cardio=isCardioSet(x);
-    h+=`<div class="he-set">`+
+    h+=`<div class="he-set${erste?'':' he-folge'}">`+
       `<span class="he-nr">${esc(parseInt(x.nr,10)||1)}.</span>`+
       `<div class="ig"><label for="he-w-${k}">${cardio?'Stufe':'kg'}</label><input type="number" inputmode="decimal" step="0.5" id="he-w-${k}" value="${attr(x.w)}"></div>`+
       `<div class="ig"><label for="he-r-${k}">${cardio?'Min':'Wdh'}</label><input type="number" inputmode="numeric" id="he-r-${k}" value="${attr(x.r)}"></div>`+
@@ -7128,7 +7169,7 @@ function trainingStreak(){
   const c2=new Date();let s2=0;
   if(!weeks.has(isoWeekKey(c2)))c2.setDate(c2.getDate()-7);
   while(weeks.has(isoWeekKey(c2))){s2++;c2.setDate(c2.getDate()-7)}
-  return{streak:s2,best:Math.max(best,s2),weeks};
+  return{streak:s2,best:Math.max(best,s2)};
 }
 function isoWeekKey(d){
   const t=new Date(d.getFullYear(),d.getMonth(),d.getDate());
@@ -7193,7 +7234,7 @@ function renderHist(){
   if(!cnt||!title||!grid||!list)return;
   const months=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
   const hist=D.history||[];
-  /* Wie weit die Liste zurückreicht; die Sessionzahl steht in der Serien-Karte. */
+  /* Wie weit die Liste zurückreicht. */
   const oldest=hist.map(s=>parseGermanDate(s.date)).filter(Boolean).sort((a,b)=>a-b)[0];
   cnt.textContent=oldest?'Seit '+months[oldest.getMonth()]+(oldest.getFullYear()!==new Date().getFullYear()?' '+oldest.getFullYear():''):'';
   title.textContent=months[calMonth]+' '+calYear;
@@ -7213,7 +7254,7 @@ function renderHist(){
   const offset=firstDay===0?6:firstDay-1;
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
   const today=new Date();
-  let monthSessions=0,monthVol=0,monthMin=0;
+  let monthSessions=0;
   let gh=['MO','DI','MI','DO','FR','SA','SO'].map(d=>`<div class="wd">${d}</div>`).join('');
   for(let i=0;i<offset;i++)gh+='<div></div>';
   for(let d=1;d<=daysInMonth;d++){
@@ -7222,7 +7263,7 @@ function renderHist(){
     const isToday=today.getFullYear()===calYear&&today.getMonth()===calMonth&&today.getDate()===d;
     const isSel=calSelDay===d;
     let vol=0;
-    if(idx){idx.forEach(i=>{vol+=sessionVolume(hist[i]);monthMin+=parseInt(hist[i].duration)||0});monthSessions+=idx.length;monthVol+=vol}
+    if(idx){idx.forEach(i=>{vol+=sessionVolume(hist[i])});monthSessions+=idx.length}
     const t=vol/1000;
     const cls=['cell'];
     if(idx)cls.push(t>=12?'has big':'has');
@@ -7232,10 +7273,8 @@ function renderHist(){
       `<span class="dn">${d}</span>${idx?`<span class="dv">${t>=1?(t>=10?Math.round(t):de1(t))+'t':'·'}</span>`:''}</button>`;
   }
   grid.innerHTML=gh;
-  const sum=document.getElementById('cal-sum');
-  if(sum)sum.innerHTML=`<div><b>${monthSessions}</b><span>SESSIONS</span></div>`+
-    `<div><b>${monthVol/1000>=10?Math.round(monthVol/1000):de1(monthVol/1000)}</b><span>TONNEN</span></div>`+
-    `<div><b>${monthSessions?Math.round(monthMin/monthSessions):0}</b><span>Ø MINUTEN</span></div>`;
+  /* Unter dem Kalender standen drei Kacheln (Sessions, Tonnen, Ø Minuten);
+     raus in Runde 4. Die Zahl der Einheiten steht in der Kalenderzeile. */
   const meta=document.getElementById('cal-meta');
   if(meta)meta.textContent=`${months[calMonth]} ${calYear} · ${monthSessions} ${monthSessions===1?'Session':'Sessions'}`;
   const sessions=hist.map((s,i)=>({...s,__i:i})).filter(s=>{
@@ -7370,7 +7409,7 @@ function renderHistStreak(){
     mount.innerHTML=leerBlockHTML('cal','Nach deinem ersten Workout steht hier jede Einheit mit Datum, Dauer und Sätzen.');
     return;
   }
-  const{streak,best,weeks}=trainingStreak();
+  const{streak,best}=trainingStreak();
   const WEEKS=12;
   const counts=[];
   const cursor=new Date();
@@ -7382,11 +7421,6 @@ function renderHistStreak(){
     cursor.setDate(cursor.getDate()-7);
   }
   const level=n=>n<=0?'':n===1?'l1':n===2?'l2':'l3';
-  const total=hist.length;
-  const activeWeeks=weeks.size||1;
-  const perWeek=de1(total/Math.max(1,Math.min(WEEKS,activeWeeks)));
-  const durs=hist.map(s=>parseInt(s.duration)||0).filter(x=>x>0);
-  const avgMin=durs.length?Math.round(durs.reduce((a,b)=>a+b,0)/durs.length):0;
   mount.innerHTML=`<div class="mesh-hero streak-hero">`+
     `<div class="cap">Aktuelle Serie</div>`+
     `<div class="mesh-row"><div class="mesh-num countup">${streak}</div>`+
@@ -7394,11 +7428,9 @@ function renderHistStreak(){
     `<div class="o">ohne Ausfall · Bestwert ${best}</div></div></div>`+
     `<div class="heat">${counts.map((n,i)=>`<i class="${level(n)}" title="${n} ${n===1?'Session':'Sessions'}"></i>`).join('')}</div>`+
     `<div class="heat-lg"><span>vor ${WEEKS} Wochen</span><span>diese Woche</span></div>`+
-    `<div class="streak-tri">`+
-      `<div><b class="countup">${total}</b><span>SESSIONS</span></div>`+
-      `<div><b>${perWeek}</b><span>Ø PRO WOCHE</span></div>`+
-      `<div><b class="countup">${avgMin}</b><span>Ø MINUTEN</span></div>`+
-    `</div></div>`;
+    /* Die drei Zählkacheln darunter (Sessions, Ø pro Woche, Ø Minuten) sind
+       raus (Runde 4): Die Dauer steht in jeder Zeile der Liste. */
+    `</div>`;
 }
 function renderBio(){
   if(D.bio.height)document.getElementById('bio-height').value=D.bio.height;
@@ -7631,6 +7663,36 @@ function weeklyHistorySeries(weeks=6){
     if(idx>=0&&idx<weeks)buckets[idx].push(session);
   });
   return buckets;
+}
+/* Wochentag eines Datums, 0 = Montag; ein unlesbares Datum liegt hinter jedem. */
+function wochentagIdx(date){
+  const d=parseGermanDate(date);
+  return d?(d.getDay()+6)%7:7;
+}
+/* Bis zu welchem Wochentag diese Woche schon zählt, wenn sie mit der Vorwoche
+   verglichen wird. Heute zählt, sobald heute trainiert ist; sonst endet der
+   Vergleich gestern: Wer abends trainiert, sieht morgens kein Minus.
+   −1 heißt, diese Woche ist noch kein Tag vorbei. */
+function wocheBis(){
+  const now=new Date();
+  const heute=dateKey(now.toLocaleDateString('de-DE'));
+  const trainiert=(D.history||[]).some(h=>h&&dateKey(h.date)===heute);
+  return (now.getDay()+6)%7-(trainiert?0:1);
+}
+/* Wie viele Einheiten der Plan von Montag bis zum Tag `bis` vorsieht. Ein
+   Plan-Tag mit mehreren Wochentagen („Di + Do“) ist an jedem davon dran;
+   Tage ohne Wochentag verteilen sich gleichmäßig über die Woche. Ohne Plan
+   zählt wie bisher eine Einheit pro Woche, verteilt wie ein Tag ohne
+   Wochentag. */
+function planSollBis(bis){
+  const tage=Object.values(D.plan||{});
+  let soll=0,frei=tage.length?0:1;
+  tage.forEach(t=>{
+    const w=parseDayString(t&&t.day);
+    if(!w.length)frei++;
+    else soll+=w.filter(d=>WEEKDAYS.indexOf(d)<=bis).length;
+  });
+  return soll+Math.floor(frei*(bis+1)/7);
 }
 function miniSpark(values,color='var(--accent)'){
   const nums=(values||[]).map(v=>Number(v)||0);
@@ -9541,7 +9603,7 @@ function weeklyMuscleBarsHTML(){
     const fill=barPos(sets,rp);
     const note=st.key==='low'?` · ${st.label}`:st.key==='high'?` · ${st.label}`:'';
     return`<div class="mv-row"><div class="mv-top"><b>${esc(muscleName(key))}</b>`+
-      `<span style="color:${st.key==='mid'?'var(--text3)':st.color}">${esc(sets)} / ${esc(st.key==='low'?rp.mev:st.key==='high'?rp.mrv:rp.mav)}${esc(note)}</span></div>`+
+      `<span style="color:${st.key==='mid'?'var(--text3)':st.color}">${esc(de(sets))} / ${esc(st.key==='low'?rp.mev:st.key==='high'?rp.mrv:rp.mav)}${esc(note)}</span></div>`+
       `<div class="mv-bar" ${meterAttrs(muscleName(key),sets,rp,st)}><div class="mv-fill ${cls}" data-grow="${fill.toFixed(1)}%"></div>`+
       `<span class="mv-mark" style="left:33.333%"></span>`+
       `<span class="mv-mark" style="left:66.667%"></span></div></div>`;
@@ -9653,8 +9715,24 @@ function renderAnaReport(){
   const cur=weeks[weeks.length-1]||[];
   const prev=weeks[weeks.length-2]||[];
   const ton=list=>list.reduce((a,s)=>a+sessionVolume(s),0);
-  const tonCur=ton(cur),tonPrev=ton(prev);
-  const tonTrend=tonPrev>0?Math.round(((tonCur-tonPrev)/tonPrev)*100):null;
+  const tonCur=ton(cur);
+  /* Gleich lange Zeiträume (Runde 4): Vorher standen die Tage ab Montag gegen
+     die GANZE Vorwoche. Wer genau nach Plan trainierte, las am Dienstagabend
+     „-63 % zur Vorwoche“ in Rot, erst am Samstag stimmte die Zahl. */
+  const bis=wocheBis();
+  const bisDahin=list=>list.filter(s=>wochentagIdx(s.date)<=bis);
+  const curBis=bisDahin(cur);
+  const tonCurBis=ton(curBis),tonPrevBis=ton(bisDahin(prev));
+  const tagName=bis>=0?TAGE[WEEKDAYS[bis]]:'';
+  let tonText,tonFarbe='var(--text3)';
+  if(!prev.length)tonText='keine Vorwoche';
+  else if(bis<0)tonText=`Vorwoche ${de1(ton(prev)/1000)} t`;
+  else if(tonPrevBis>0){
+    const p=Math.round(((tonCurBis-tonPrevBis)/tonPrevBis)*100);
+    tonText=`${p>0?'+':''}${p} % zur Vorwoche bis ${tagName}`;
+    tonFarbe=p<0?'var(--red)':p>0?'var(--green)':'var(--text2)';
+  }else if(tonCurBis>0){tonText=`+${de1(tonCurBis/1000)} t zur Vorwoche bis ${tagName}`;tonFarbe='var(--green)'}
+  else{tonText=`0 % zur Vorwoche bis ${tagName}`;tonFarbe='var(--text2)'}
   const work=cur.flatMap(s=>strengthSets(s.sets).filter(x=>!x.type||x.type==='main'));
   const sets=work.length;
   const lm=weeklyLandmarks();
@@ -9671,8 +9749,10 @@ function renderAnaReport(){
      Genauigkeit hätten die Daten nicht her. */
   let score=0;
   if(st.key==='mid'||st.key==='ok')score+=2; else if(st.key==='low')score+=0; else score+=1;
-  const planDays=Math.max(1,Object.keys(D.plan||{}).length);
-  if(cur.length>=planDays)score+=2; else if(cur.length>=planDays-1)score+=1;
+  /* Frequenz: gezählt wird nur, was laut Plan bis heute dran war — nicht
+     schon am Montag die ganze Woche. */
+  const soll=planSollBis(bis);
+  if(curBis.length>=soll)score+=2; else if(curBis.length>=soll-1)score+=1;
   if(!low.length)score+=1;
   const grade=['D','C','C+','B','A−','A'][Math.max(0,Math.min(5,score))];
   /* Große Karte und Kachel sagen dasselbe: wie viele Gruppen im Korridor
@@ -9688,7 +9768,7 @@ function renderAnaReport(){
     `</div></div></div>`+
     `<div class="gtiles">`+
       `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup">${de1(tonCur/1000)}</span><small>t</small></div>`+
-      `<div class="gd" style="color:${tonTrend===null?'var(--text3)':tonTrend<0?'var(--red)':'var(--green)'}">${tonTrend===null?'keine Vorwoche':(tonTrend>0?'+':'')+tonTrend+' % zur Vorwoche'}</div></div>`+
+      `<div class="gd" style="color:${tonFarbe}">${esc(tonText)}</div></div>`+
       `<div class="gtile"><div class="gl">Arbeitssätze</div><div class="gv"><span class="countup">${sets}</span></div>`+
       `<div class="gd">${gruppen.length?`${drin} von ${gruppen.length} Gruppen im Korridor`:'—'}</div></div>`+
       `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${rir?de1(rir):'—'}</div>`+
@@ -9701,9 +9781,7 @@ function renderAna(){
   normalizeData();
   renderBio();
   renderEgym();
-  const allSets=[];
-  (D.history||[]).forEach(session=>(session.sets||[]).forEach(set=>allSets.push({...set,date:session.date})));
-  const totalSets=allSets.length;
+  const totalSets=(D.history||[]).reduce((a,session)=>a+(session.sets||[]).length,0);
   /* Hier standen drei weitere Kennzahlen — Höchstgewicht, Ø RIR, Anzahl
      Übungen —, geschrieben nach #a-maxw, #a-avgrir und #a-excount. Diese drei
      Elemente erzeugt die Seite nirgends; die Zeilen waren mit `if(el)`
@@ -9715,26 +9793,12 @@ function renderAna(){
   const leer=!(D.history||[]).length;
   ['balance','trend'].forEach(k=>{const c=document.getElementById('chev-'+k);if(c&&c.parentElement)c.parentElement.style.display=leer?'none':''});
   ['ana-muscles','ana-progress'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=leer?'none':''});
-  const muscles={chest:{name:'Brust',sets:[],ex:new Set()},back:{name:'Rücken',sets:[],ex:new Set()},legs:{name:'Beine',sets:[],ex:new Set()},shoulders:{name:'Schultern',sets:[],ex:new Set()},arms:{name:'Arme',sets:[],ex:new Set()},core:{name:'Core',sets:[],ex:new Set()}};
-  const exMuscleMap={};
-  Object.values(D.plan||{}).forEach(day=>(day.exercises||[]).forEach(ex=>{exMuscleMap[ex.name]=ex.muscle}));
-  if(typeof allLibraryCategories==='function')allLibraryCategories().forEach(cat=>(cat.items||[]).forEach(item=>{if(!exMuscleMap[item.name])exMuscleMap[item.name]=item.m}));
-  allSets.forEach(set=>{
-    const m=set.muscle||exMuscleMap[set.ex]||'chest';
-    if(!muscles[m])return;
-    muscles[m].sets.push(set);
-    if(set.ex)muscles[m].ex.add(set.ex);
-  });
+  /* Hier standen unter den Balken sechs Karten „Details je Muskelgruppe“
+     (Runde 4 raus): andere Gruppen und ein anderer Zeitraum als die Balken
+     direkt darüber, aufgeklappt dieselben Kurven wie der Übungsverlauf. Jede
+     Übung öffnet ihren Verlauf aus „Übungen nach Trend“ und der Historie. */
   const mc=document.getElementById('ana-muscles');
-  if(mc){
-    const rows=Object.entries(muscles).filter(([k,m])=>m.sets.length);
-    if(!rows.length){mc.innerHTML='<div class="empty">Noch keine Trainingsdaten. Log dein erstes Workout.</div>'}
-    else mc.innerHTML=weeklyMuscleBarsHTML()+`<div class="cap" style="margin:16px 2px 10px">Details je Muskelgruppe</div>`+rows.map(([key,m])=>{
-      const byEx={};
-      m.sets.forEach(s=>{if(!byEx[s.ex])byEx[s.ex]=[];byEx[s.ex].push(s)});
-      return`<div class="ana-muscle" onclick="this.classList.toggle('open')"><div class="ana-muscle-hdr"><span class="ic-wrap">${icon(key,20)}</span><div class="ana-muscle-name">${esc(m.name)}</div><div class="ana-muscle-cnt">${m.ex.size===1?'1 Übung':m.ex.size+' Übungen'} · ${m.sets.length===1?'1 Satz':m.sets.length+' Sätze'}</div></div><div class="ana-detail">${Object.entries(byEx).map(([ex,sets])=>{const ws=strengthSets(sets).filter(s=>(parseFloat(s.w)||0)>0);const max=ws.length?Math.max(...ws.map(s=>parseFloat(s.w)||0)):0;const avg=sets.length?de1(sets.reduce((a,s)=>a+(parseFloat(s.rir)||0),0)/sets.length):'—';const data=ws.slice(-8).map(s=>({v:parseFloat(s.w)||0,label:s.date||''}));return`<div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--bg3)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div onclick="event.stopPropagation();showExDemo('${jsStr(ex)}','${jsStr(key)}','main')" style="font-weight:700;font-size:var(--fs-14);cursor:pointer">${esc(ex)}</div><span style="font-family:'JetBrains Mono',monospace;color:var(--neon)">${esc(max)}kg</span></div><div style="font-size:var(--fs-11);color:var(--text2);margin:4px 0">${sets.length===1?'1 Satz':sets.length+' Sätze'} · Ø RIR ${esc(avg)}</div>${data.length>=2?svgChart(data,{h:60,color:'var(--accent)',showGrid:false,showDots:true,showArea:true,unit:' kg',label:'Verlauf '+ex,noun:'Sätze'}):'<div style="font-size:var(--fs-11);color:var(--text3)">Zu wenig Daten für Verlauf</div>'}</div>`}).join('')}</div></div>`;
-    }).join('');
-  }
+  if(mc)mc.innerHTML=totalSets?weeklyMuscleBarsHTML():'<div class="empty">Noch keine Trainingsdaten. Log dein erstes Workout.</div>';
   renderAnaReport();
   renderAnaProgress();
   applyAllSections();
@@ -11935,7 +11999,7 @@ function commitLibraryDelete(){
   renderLibLists();
 }
 /* Wer die App wegwischt, hat nicht mehr „Rückgängig“ getippt. */
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&libPendingDel)hideToast()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&(libPendingDel||weightPendingDel))hideToast()});
 function renderLibLists(){
   renderLibraryEditor(document.getElementById('libe-search').value);
   renderLib(document.getElementById('lib-search')?document.getElementById('lib-search').value:'');
