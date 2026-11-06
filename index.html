@@ -1024,17 +1024,13 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mdl-log .log-sec [aria-expanded="true"] .v{display:none}
 .mdl-log .log-sec .m{font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);font-variant-numeric:tabular-nums;color:var(--t3)}
 /* Die Zielvorgabe: eine ruhige graue Zeile ohne Akzent und ohne Begründung.
-   „Übernehmen" setzt Gewicht und Wiederholungen darauf. */
-.log-tgt{display:flex;align-items:center;gap:8px;min-height:52px;margin-bottom:12px;padding:0 4px 0 16px;border-radius:14px;
+   Die Felder darunter stehen beim Öffnen schon auf ihr. */
+.log-tgt{display:flex;align-items:center;gap:8px;min-height:52px;margin-bottom:12px;padding:0 16px;border-radius:14px;
   background:var(--bg3);box-shadow:var(--edge)}
 .log-tgt .tg-l{font-size:var(--fs-14);line-height:16px;color:var(--text2)}
 .log-tgt .tg-v{flex:1;min-width:0;display:flex;align-items:baseline;gap:4px;white-space:nowrap}
 .log-tgt .tg-n{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);line-height:1;font-variant-numeric:tabular-nums;color:var(--text2)}
 .log-tgt .tg-u{font-size:var(--fs-14);line-height:16px;color:var(--t3)}
-.log-tgt .tg-take{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border-radius:999px;
-  background:rgba(255,255,255,.08);box-shadow:var(--edge);border:none;cursor:pointer;color:var(--text);
-  font-family:'Space Grotesk',sans-serif;font-size:var(--fs-14);font-weight:600}
-.log-tgt .tg-take:active{transform:scale(var(--press))}
 /* Auf dem iPhone SE (320 px) etwas weniger Luft, damit das Fenster ohne
    Scrollen passt und die klebende Leiste keine RIR-Kreise verdeckt. */
 @media (max-width:359px){
@@ -1484,6 +1480,8 @@ div.wg-note{cursor:default}
   transition:transform var(--dur-micro) var(--sp);
 }
 .fb-btn.mono{font-family:'JetBrains Mono',monospace;font-weight:700}
+/* Ohne laufende Pause nur „Pause starten“ über die ganze Breite (Runde 4). */
+.fb-go{font-size:var(--fs-14);font-weight:600;line-height:18px}
 .fb-btn:active{transform:scale(var(--press))}
 @media (max-width:359px){.fb-btn .lbl{display:none}}
 
@@ -1574,7 +1572,7 @@ div.wg-note{cursor:default}
 .wo-chips .wsr.justlogged{animation:chipPop .32s var(--sp)}
 @keyframes chipPop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 /* Bestwert: 1,2 s ein Akzentring mit der Marke „PR“ (der Chip trägt die
-   Klasse nur so lange, siehe confirmLog). */
+   Klasse nur so lange, siehe logSet). */
 .wo-chips .wsr.pr{box-shadow:0 0 0 2px var(--accent)}
 .wo-chips .wsr .wsr-pr{position:absolute;top:-9px;right:12px;padding:0 6px;background:var(--bg3);font-family:inherit;font-size:var(--fs-11);font-style:normal;font-weight:700;line-height:16px;letter-spacing:.14em;color:var(--accent);opacity:1}
 
@@ -1588,6 +1586,16 @@ div.wg-note{cursor:default}
 .wo-log span i{min-width:0;font-style:normal;overflow:hidden;text-overflow:ellipsis}
 .wo-log b{font:700 var(--fs-16) 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
 .wo-log.fin{margin:16px 0 12px;justify-content:center}
+/* Ein Tipp speichert das Ziel (Runde 4): links der Lime-Knopf, rechts
+   „Anpassen“ fürs Satz-Fenster, gleich hoch. Auf dem iPhone SE bleibt von
+   „Anpassen“ nur der Stift, wie bei „Überspringen“ in der Pausenzeile. */
+.wo-log-row{display:flex;gap:8px;margin-top:12px}
+.wo-log-row .wo-log{flex:1;width:auto;min-width:0;margin-top:0}
+.wo-log-adj{flex:none;width:120px;height:56px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--text);
+  font-family:inherit;font-size:var(--fs-14);font-weight:600;white-space:nowrap;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
+.wo-log-adj:active{transform:scale(var(--press))}
+@media (max-width:359px){.wo-log-adj{width:56px}.wo-log-adj .lbl{display:none}}
 /* Eine Übung, die man von Hand aufgeklappt hat: eigener, ruhiger Knopf (Lime gehört dem Knopf der aktiven Übung). */
 .wo-log-in{width:100%;min-height:48px;margin-top:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.08);color:var(--text);font-family:inherit;font-size:var(--fs-16);font-weight:600;cursor:pointer;transition:transform var(--dur-micro) var(--sp)}
 .wo-log-in:active{transform:scale(var(--press))}
@@ -2210,7 +2218,7 @@ code.sr-code{cursor:auto}
 .gtile:active{transform:scale(var(--press-l))}
 .ni{transition:background .2s var(--ease),transform var(--dur-micro) var(--sp)}
 .seg button{transition:color .22s var(--ease),transform var(--dur-micro) var(--sp)}
-.plan-add,.plan-more,.log-tgt .tg-take,.hero-info,.trend-more,.sh-av,.setbtn,.mdl-ask .ask-cancel,
+.plan-add,.plan-more,.hero-info,.trend-more,.sh-av,.setbtn,.mdl-ask .ask-cancel,
 .toast .ta-b,.toast .ta-x,.sync-fail,.exr-h,.hex,.hs-row,.fb-ring,.wo-why,.warmup summary,.wo-hist summary,
 .hist-cal summary,.share-code summary,.st.st-tog,.be-del,.hs-edit,.meso-card .mc-wk button,.alt-row,.menu-row,
 .lib-cat-hdr,.cta-sub,.mdl-log .log-link,.mdl-log .log-sec button,.wo-step button{transition:transform var(--dur-micro) var(--sp)}
@@ -5531,6 +5539,12 @@ function perSessionSeries(sets,score){
   return Object.values(by).sort((a,b)=>(parseGermanDate(a.date)||0)-(parseGermanDate(b.date)||0));
 }
 function getLastW(name){for(let i=D.history.length-1;i>=0;i--){const f=D.history[i].sets.filter(s=>s.ex===name&&s.w>0);if(f.length){const l=f[f.length-1];return{w:l.w,r:l.r,rir:l.rir}}}return null}
+/* Der Satz an derselben Stelle der letzten Einheit: Satz 1 misst sich an
+   Satz 1. Hat sie weniger Sätze, gilt ihr letzter. Die Vorgabe für den ersten
+   Satz stand bis Runde 4 auf getLastW, also auf dem müdesten Satz mit dem
+   niedrigsten RIR — und zog das Gewicht deshalb jedes Mal eine Stufe zurück
+   (Bankdrücken: 30 kg × 6 bei RIR 2 im ersten Satz, Vorgabe 28 kg × 6). */
+function getLastSetAt(name,idx){for(let i=D.history.length-1;i>=0;i--){const f=D.history[i].sets.filter(s=>s.ex===name&&s.w>0);if(f.length){const l=f[Math.min(Math.max(0,idx),f.length-1)];return{w:l.w,r:l.r,rir:l.rir}}}return null}
 /* Zeichengenau war hier falsch: „Bankdrücken" und „Bankdrücken (Bench
    Press)" sind dieselbe Übung, und wer sie einmal anders geschrieben hat,
    verlor seinen ganzen Verlauf. Abgeglichen wird über den klammerfreien
@@ -6584,7 +6598,7 @@ function logTargetExercise(){
   if(!ex||!Array.isArray(ex.logged))return null;
   return ex;
 }
-function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;if(ex.logged.length>=ex.sets&&D.active.openEx===logTgt.exIdx)D.active.openEx=null;startTmr();renderWo();toastSatz(`Wiederholt: ${de(last.w)} kg × ${last.r}`,ex,ex.logged.length-1);scrollToActiveCard()}
+function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});logTgt.exIdx=pullForward(logTgt.exIdx);save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;if(ex.logged.length>=ex.sets&&D.active.openEx===logTgt.exIdx)D.active.openEx=null;startTmr();renderWo();toastSatz(`Wiederholt: ${de(last.w)} kg × ${last.r}`,ex,ex.logged.length-1);scrollToActiveCard()}
 function skipEx(ei){
   const ex=activeExercisesSafe()[ei];
   if(!ex)return;
@@ -10283,17 +10297,15 @@ function openLog(ei){
   if(!cardio&&rm)hint+=` • 1RM: ${rm.rm}kg`;
   document.getElementById('log-hint').textContent=hint||'';
   /* Zielvorgabe als EINE ruhige Zeile über den Eingabefeldern: nur die Zahl,
-     ohne die Begründung (die steht im Training bei der Übung). „Übernehmen"
-     erscheint, wenn es ein Gewicht zu übernehmen gibt. Ohne Zahl und ohne
-     Einheit (Deload ohne Referenz) bleibt die Zeile weg. */
+     ohne die Begründung (die steht im Training bei der Übung). Ohne Zahl und
+     ohne Einheit (Deload ohne Referenz) bleibt die Zeile weg. „Übernehmen"
+     daneben ist mit Runde 4 entfallen: die Felder stehen schon auf dem Ziel. */
   const tgtBox=document.getElementById('log-target');
   const tgt=nextSetTarget(ex);
   if(tgtBox){
     tgtBox.innerHTML=tgt&&(tgt.num||tgt.unit)?`<div class="log-tgt"><span class="tg-l">Ziel</span><span class="tg-v">`+
       (tgt.num?`<span class="tg-n">${esc(de(tgt.num))}</span>`+(tgt.r?`<span class="tg-u">kg ×</span><span class="tg-n">${esc(tgt.r)}</span>`:`<span class="tg-u">${esc(tgt.unit)}</span>`)
-              :`<span class="tg-u">${esc(tgt.unit||'')}</span>`)+`</span>`+
-      (tgt.w?`<button type="button" class="tg-take" onpointerdown="event.preventDefault()" onclick="takeTarget()">${icon('down',16)}Übernehmen</button>`:'')+
-      `</div>`:'';
+              :`<span class="tg-u">${esc(tgt.unit||'')}</span>`)+`</span></div>`:'';
   }
   document.getElementById('log-w-lab').textContent=cardio?'Minuten':'Gewicht';
   document.getElementById('log-w-unit').textContent=cardio?'min':'kg';
@@ -10312,10 +10324,18 @@ function openLog(ei){
     if(lastS){weightInput.value=lastS.r||'';repInput.value=lastS.w||'';pickRir(lastS.rir)}
     else if(lastH){weightInput.value=lastH.r||'';repInput.value=lastH.w||'';pickRir(lastH.rir)}
     else{weightInput.value='';repInput.value='';pickRir(ex.rir||2)}
+  }else if(tgt&&tgt.w){
+    /* Training-Ziel (Runde 4): Das Fenster öffnet mit dem, was der Knopf
+       zeigt — Gewicht und Wiederholungen des Ziels, RIR wie im Plan. Vorher
+       stand hier der letzte Satz: Der Knopf sagte 28 kg × 8, „Satz speichern“
+       speicherte 30 kg × 8 mit RIR 1, und die Vorgabe kam nie vom Fleck. Nennt
+       das Ziel keine Wiederholungen (Deload), bleiben die vom letzten Satz. */
+    const prev=lastS||lastH;
+    weightInput.value=tgt.w;repInput.value=tgt.r||(prev?prev.r:'');pickRir(planRir(ex));
   }else{
     if(lastS){weightInput.value=lastS.w;repInput.value=lastS.r;pickRir(lastS.rir)}
     else if(lastH){weightInput.value=lastH.w;repInput.value=lastH.r;pickRir(lastH.rir)}
-    else{weightInput.value='';repInput.value='';pickRir(ex.rir||2)}
+    else{weightInput.value='';repInput.value='';pickRir(planRir(ex))}
   }
   document.getElementById('log-note').value='';
   document.getElementById('log-note-box').hidden=true;
@@ -10362,17 +10382,9 @@ function showLogErr(id,text){
   showFieldErr(id,text);
   document.getElementById(id).focus();
 }
-/* „Übernehmen" in der Zielzeile: Gewicht (und, wenn die Vorgabe sie nennt,
-   Wiederholungen) auf die Vorgabe setzen. Gerechnet wird wie beim Öffnen
-   über nextSetTarget, damit Zeile und Felder dieselbe Zahl meinen. */
-function takeTarget(){
-  const ex=logTargetExercise();
-  const t=ex&&nextSetTarget(ex);
-  if(!t||!t.w)return;
-  document.getElementById('log-w').value=t.w;
-  if(t.r)document.getElementById('log-r').value=t.r;
-  syncLogSave();
-}
+/* RIR wie im Plan. Ohne Vorgabe 2, wie die RIR-Kreise es immer vorschlagen;
+   eine Vorgabe von 0 bleibt 0 (`ex.rir||2` machte daraus 2). */
+function planRir(ex){const v=parseInt(ex&&ex.rir);return Number.isFinite(v)?v:2}
 function confirmLog(){
   unlockAudio();
   const ex=logTargetExercise();
@@ -10393,14 +10405,45 @@ function confirmLog(){
      Die graue Darstellung des Knopfes (syncLogSave) ist nur der Hinweis davor,
      geprüft wird hier. */
   if((cardio?a:b)<1){showLogErr(cardio?'log-w':'log-r',cardio?'Minuten eintragen':'Wiederholungen eintragen');return}
+  logSet(ex,a,b,rir,note);
+}
+/* Ein Tipp speichert das Ziel (Runde 4, neue Funktion): Gewicht und
+   Wiederholungen wie über dem Knopf, RIR wie im Plan. Wer anders gehoben
+   hat, öffnet mit „Anpassen“ das Satz-Fenster oder korrigiert mit „Ändern“
+   in der Meldung. Ein zweiter Tipp in der ersten Sekunde zählt nicht: Der
+   Knopf steht danach an derselben Stelle und speichert schon den nächsten
+   Satz. Ohne Ziel mit Gewicht und Wiederholungen öffnet er das Fenster. */
+let quickLogAt=0;
+function quickTarget(ex){
+  if(!ex||isCardioExercise(ex))return null;
+  const t=nextSetTarget(ex);
+  return t&&parseFloat(t.w)>0&&parseInt(t.r)>=1?t:null;
+}
+function quickLog(ei){
+  unlockAudio();
+  if(Date.now()-quickLogAt<1000)return;
+  const ex=activeExercisesSafe()[ei];
+  if(!ex)return;
+  const t=quickTarget(ex);
+  if(!t){openLog(ei);return}
+  quickLogAt=Date.now();
+  logTgt={exIdx:ei};
+  logSet(ex,parseFloat(t.w),parseInt(t.r),planRir(ex),'');
+}
+/* Speichert einen Satz an `ex` (= Übung logTgt.exIdx): aus dem Satz-Fenster
+   (confirmLog) oder mit einem Tipp (quickLog). `a`/`b` wie die Felder des
+   Fensters: Gewicht und Wiederholungen, bei Cardio Minuten und Stufe. */
+function logSet(ex,a,b,rir,note){
+  const cardio=isCardioExercise(ex);
   /* t: wann der Satz geloggt wurde. Daran misst sich, ob das Training noch
      läuft oder liegengeblieben ist (PB-115). */
   const entry=cardio?{w:b,r:Math.round(a),rir,note,mode:'cardio',t:Date.now()}:{w:a,r:b,rir,note,t:Date.now()};
   const hadHistory=getAllSets(ex.name).filter(s=>s.w>0).length>0;
   const isPR=!cardio&&a>0&&b>0&&hadHistory&&checkPR(ex.name,a,b);
   ex.logged.push(entry);
+  logTgt.exIdx=pullForward(logTgt.exIdx);
   justLoggedKey=logTgt.exIdx+':'+(ex.logged.length-1);
-  /* confirmLog zeichnet das Workout mehrfach neu; der erste Render darf den
+  /* logSet zeichnet das Workout mehrfach neu; der erste Render darf den
      Schlüssel nicht verbrauchen, sonst läuft das Aufpoppen nie. Er lebt
      deshalb 700 ms. Ein Bestwert trägt zusätzlich 1,2 s die Marke „PR“. */
   clearTimeout(justLoggedTimer);
@@ -10561,21 +10604,31 @@ function renderFocusBar(){
   const paused=!timerInt&&timerPausedRemaining>0;
   const tRem=paused?timerPausedRemaining:getTimerRemaining();
   const tState=timerInt?'run':(timerStartedAt>0&&tRem<=0?'done':'');
+  const R=40,CIRC=2*Math.PI*R;
+  /* Training-Raus-Pause (Runde 4): Läuft keine Pause, steht hier nur ein
+     breiter Knopf „Pause starten“. „0:00“, „Überspringen“ (tat dann nichts)
+     und „+30 s“ (machte aus 0:00 eine stehende 0:30) kommen erst mit der
+     Pause; „+30 s“ verlängert dann wie bisher. */
+  if(!tState&&!paused){
+    tf.innerHTML=`<div class="focus-bar"><button type="button" class="fb-ring fb-go" onclick="startTmr()"><svg viewBox="0 0 88 88" aria-hidden="true">`+
+      `<circle cx="44" cy="44" r="${R}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="8"/></svg>`+
+      `<span>Pause starten</span><span class="fb-rp" aria-hidden="true">${icon('play',12)}</span></button></div>`;
+    return;
+  }
   /* Der Ring leert sich mit der Restzeit — er zeigt, wie viel Pause NOCH übrig
      ist, nicht wie viel schon herum ist. Das ist die Frage, die man sich
      zwischen zwei Sätzen tatsächlich stellt. Am Ende steht er voll. */
   const restTotal=Math.max(1,getTimerTotal());
   const restPct=tState==='done'?1:Math.max(0,Math.min(1,tRem/restTotal));
-  const R=40,CIRC=2*Math.PI*R;
   const ringCol=tState==='done'?'var(--accent)':tState==='run'?'var(--text)':'rgba(255,255,255,.55)';
   /* Zwischen zwei Partnern eines Supersatzes ist es kein Ausruhen, sondern der
      Umbau: die Zeile nennt die Übung, zu der es weitergeht. */
   const liste=activeExercisesSafe();
   const ai=activeIndex(liste);
   const umbau=ai>=0&&groupMembers(liste,ai).length&&liste.some(e=>e!==liste[ai]&&e.ss===liste[ai].ss&&!e.skipped&&(e.logged||[]).length>(liste[ai].logged||[]).length);
-  const label=tState==='run'?(umbau?'Weiter mit '+esc(liste[ai].name):'Pause läuft'):tState==='done'?'Los':paused?'Pausiert':'Pause starten';
+  const label=tState==='run'?(umbau?'Weiter mit '+esc(liste[ai].name):'Pause läuft'):tState==='done'?'Los':'Pausiert';
   /* Ist die Pause vorbei, räumt ein Tipp auf den Ring die Pause weg — er startet nicht still die volle Pause von vorn. */
-  const ringAct=tState==='run'?'Pause anhalten':paused?'Pause fortsetzen':tState==='done'?'Pause beenden':'Pause starten';
+  const ringAct=tState==='run'?'Pause anhalten':paused?'Pause fortsetzen':'Pause beenden';
   const zahl=tState==='done'?'+'+fmtT(Math.max(0,getTimerElapsed()-timerTgt)):fmtT(tRem);
   tf.innerHTML=`<div class="focus-bar${tState==='done'?' end':''}">`+
     `<button type="button" class="fb-ring" onclick="${tState==='done'?'resetTmr()':'startTmr()'}" aria-label="${ringAct}" aria-describedby="fb-t"><svg viewBox="0 0 88 88" aria-hidden="true">`+
@@ -10591,8 +10644,11 @@ function renderFocusBar(){
     `</div>`+
   `</div>`;
 }
-/* Kopf des laufenden Trainings: Name der Einheit, Wochentag und Satzstand,
-   darunter eine feine Linie nach Sätzen. */
+/* Kopf des laufenden Trainings: Name der Einheit, Satzstand und die Übung,
+   die danach kommt, darunter eine feine Linie nach Sätzen. Bis Runde 4 stand
+   statt der nächsten Übung der Wochentag aus dem Plan — am Donnerstag hieß
+   FullBody A „Dienstag“, und „Danach“ begann immer unter der unteren Leiste.
+   Im Supersatz zählt die Übung nach der Gruppe; Übersprungene zählen nicht. */
 function renderWoHead(){
   const t=document.getElementById('wo-title');
   if(!t)return;
@@ -10605,25 +10661,44 @@ function renderWoHead(){
     return;
   }
   const{geplant,fertig}=activeSetStand();
-  const plan=D.plan&&D.plan[D.active.planKey];
-  const tag=plan&&plan.day?(TAGE[plan.day]||plan.day):'';
+  const liste=activeExercisesSafe();
+  const ai=activeIndex(liste);
+  let weiter='';
+  if(ai>=0){
+    const grp=groupMembers(liste,ai);
+    const n=liste.find((e,i)=>i!==ai&&!grp.includes(i)&&!e.skipped&&(e.logged||[]).length<e.sets);
+    weiter=n?'danach '+n.name:'letzte Übung';
+  }
   t.textContent=planDisplayName(D.active.planKey);
-  sub.textContent=[tag,`${fertig} von ${geplant} Sätzen`].filter(Boolean).join(', ');
+  sub.textContent=[`${fertig} von ${geplant} Sätzen`,weiter].filter(Boolean).join(', ');
   more.style.display='';prog.style.display='';
   document.getElementById('wo-prog-i').style.width=(geplant?Math.min(100,Math.round(fertig/geplant*100)):0)+'%';
 }
-/* Der Knopf „Satz N loggen“ der aktiven Übung. Bis zur Training-Übersicht
-   vom 05.11. stand er fest über der unteren Leiste und verdeckte mit seinem
-   Verlauf 92 px Liste; jetzt sitzt er in der Karte direkt unter dem Ziel.
-   Beschriftung wie damals: links der Satz — im Supersatz die Übung, die dran
-   ist —, rechts das Ziel. */
+/* Der Knopf der aktiven Übung. Bis zur Training-Übersicht vom 05.11. stand
+   er fest über der unteren Leiste und verdeckte mit seinem Verlauf 92 px
+   Liste; jetzt sitzt er in der Karte direkt unter dem Ziel. Links steht der
+   Satz — im Supersatz die Übung, die dran ist.
+   Seit Runde 4 speichert er mit einem Tipp das Ziel darüber („Satz 3
+   speichern“, quickLog); „Anpassen“ daneben öffnet das Satz-Fenster. Ohne
+   Ziel mit Gewicht und Wiederholungen bleibt es beim Knopf, der das Fenster
+   öffnet, rechts das Ziel, soweit es eins gibt; bei Cardio heißt er
+   „Minuten eintragen“. */
 function woLogBtn(list,ei){
   const ex=list[ei];
   const tgt=nextSetTarget(ex);
+  const gruppe=groupMembers(list,ei).length;
+  if(quickTarget(ex)){
+    const was=gruppe?`<i>${esc(ex.name)}</i> speichern`:`Satz ${ex.logged.length+1} speichern`;
+    return `<div class="wo-log-row"><button type="button" class="wo-log" onclick="quickLog(${ei})"><span>${was}</span></button>`+
+      `<button type="button" class="wo-log-adj" aria-label="Anpassen" onclick="unlockAudio();openLog(${ei})">${icon('edit',18)}<span class="lbl">Anpassen</span></button></div>`;
+  }
   const ziel=tgt&&tgt.num?`${de(tgt.num)} kg${tgt.r?' × '+tgt.r:''}`:'';
-  const was=groupMembers(list,ei).length?`<i>${esc(ex.name)}</i> loggen`:`Satz ${ex.logged.length+1} loggen`;
+  const was=gruppe?`<i>${esc(ex.name)}</i> loggen`:logLabel(ex);
   return `<button type="button" class="wo-log" onclick="unlockAudio();openLog(${ei})"><span>${was}</span>${ziel?`<b>${esc(ziel)}</b>`:''}</button>`;
 }
+/* „Satz N loggen“, bei Cardio „Minuten eintragen“ (Runde 4): dort zählen
+   Minuten, keine Sätze. */
+function logLabel(ex){return isCardioExercise(ex)?'Minuten eintragen':`Satz ${ex.logged.length+1} loggen`}
 function renderWo(){
   applyVisualTheme();
   const c=document.getElementById('wo-c');
@@ -10690,7 +10765,7 @@ function renderWo(){
       `<div class="wo-act-top">`+
         `<div class="exdemo-thumb" onclick="showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="wo-act-name"><div class="n">${esc(ex.name)}${skipped?' <span style="opacity:.7;font-size:var(--fs-12);font-weight:600">(übersprungen)</span>':''}</div>`+
-        `<div class="m">${esc(muscleName(ex.muscle))}, ${esc(reps(ex))} Wdh.${ex.rir!==null?` mit RIR ${esc(ex.rir)}`:''}${cardio?', Cardio':''}</div>`+
+        `<div class="m">${cardio?`Cardio, ${esc(reps(ex))} min`:`${esc(muscleName(ex.muscle))}, ${esc(reps(ex))} Wdh.${ex.rir!==null?` mit RIR ${esc(ex.rir)}`:''}`}</div>`+
         `<div class="setdots">${Array.from({length:ex.sets},(_,si)=>`<span class="setdot${ex.logged[si]?' on':si===ex.logged.length&&isActive?' now':''}"></span>`).join('')}</div></div>`+
         `<div class="wo-action-row">${done?'<span style="color:var(--green);font-size:var(--fs-16)">✓</span>':''}`+
         `<button type="button" class="wo-icon-btn" title="Optionen" onclick="openExerciseMenu(${ei})">⋯</button>`+
@@ -10750,7 +10825,7 @@ function woExBody(ex,ei,isActive,round){
     if(chips.length)h+=`<div class="wo-chips">${chips.join('')}</div>`;
     /* Die aktive Übung loggt ihr Knopf unter dem Ziel; eine von Hand
        aufgeklappte andere bekommt einen eigenen, ruhigen. */
-    if(!done&&!isActive)h+=`<button type="button" class="wo-log-in" onclick="unlockAudio();openLog(${ei})">Satz ${ex.logged.length+1} loggen</button>`;
+    if(!done&&!isActive)h+=`<button type="button" class="wo-log-in" onclick="unlockAudio();openLog(${ei})">${logLabel(ex)}</button>`;
   }else{
     h+=`<button type="button" class="btn btn-s btn-g" style="margin-top:8px" onclick="unskipEx(${ei})">↩ Doch machen</button>`;
   }
@@ -10893,6 +10968,32 @@ function jumpToActiveExercise(){
   if(activeIndex(activeExercisesSafe())<0){toast('Alle Übungen erledigt');return}
   scrollToActiveCard();
 }
+/* Training-Vorziehen (Runde 4): Ein Satz an einer Übung aus „Danach“ macht
+   sie zur aktiven Karte, bis ihre Sätze fertig sind — mit ihren Supersatz-
+   Partnern. Sie rückt dafür vor die Übung, die bisher dran war; die steht
+   damit an erster Stelle von „Danach“. Vorher galt weiter die Reihenfolge des
+   Plans: Nach jedem Satz sprang die Liste zurück zur übersprungenen Übung, und
+   den nächsten Satz der vorgezogenen fand man erst 606 px tiefer.
+   Aufgerufen direkt nach dem Speichern; gibt den neuen Index der Übung zurück. */
+function pullForward(ei){
+  const list=activeExercisesSafe();
+  const ex=list[ei];
+  const ai=activeIndex(list);
+  if(!ex||ex.skipped||ai<0||ai===ei||(ex.logged||[]).length>=ex.sets)return ei;
+  const grp=groupMembers(list,ai);
+  if(grp.includes(ei))return ei;
+  const vor=grp.length?grp[0]:ai;
+  if(ei<vor)return ei;
+  const eigene=groupMembers(list,ei);
+  const mit=(eigene.length?eigene:[ei]).filter(i=>i>vor);
+  const reihe=[...list.keys()].filter(i=>!mit.includes(i));
+  reihe.splice(reihe.indexOf(vor),0,...mit);
+  const neu=reihe.map(i=>list[i]);
+  list.splice(0,list.length,...neu);
+  /* Eine von Hand aufgeklappte Zeile hing am alten Index. */
+  D.active.openEx=null;
+  return list.indexOf(ex);
+}
 function moveActiveExercise(ei,dir){
   const a=activeExercisesSafe();
   const n=ei+dir;
@@ -10952,16 +11053,22 @@ function openExerciseMenu(ei){
   const safe=jsStr(ex.name);
   document.getElementById('alt-title').textContent=ex.name;
   document.getElementById('alt-sub').textContent=`${muscleName(ex.muscle)} · ${ex.logged.length}/${ex.sets} Sätze geloggt`;
+  /* Menü der Übung (Runde 4): „Übung überspringen“ steht oben, und alles
+     passt ohne Scrollen (vorher 8 Einträge, 721 px, Überspringen an 7.
+     Stelle unter dem Bildrand). „Übung tauschen“ und „Ausführung ansehen“
+     stehen hier nicht mehr: Die Karte hat „Alternative“ und das Bild. Nur die
+     Supersatz-Karte zeigt kein Bild — dort bleibt „Ausführung ansehen“. */
+  const liste=activeExercisesSafe();
+  const ohneBild=groupMembers(liste,activeIndex(liste)).includes(ei);
   document.getElementById('alt-list').innerHTML=
-    `<button class="alt-item" onclick="cm('m-alt');showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')"><span class="alt-ico">${icon('play',20)}</span><span style="flex:1"><div class="alt-name">Ausführung ansehen</div><div class="alt-meta">Animierte Demo + Cues</div></span></button>`+
-    `<button class="alt-item" onclick="cm('m-alt');openAlternative(${ei})"><span class="alt-ico">${icon('swap',20)}</span><span style="flex:1"><div class="alt-name">Übung tauschen</div><div class="alt-meta">Alternative für ${esc(muscleName(ex.muscle))}</div></span></button>`+
-    `<button class="alt-item" onclick="cm('m-alt');openExNote('${safe}')"><span class="alt-ico">${icon('note',20)}</span><span style="flex:1"><div class="alt-name">Notiz bearbeiten</div><div class="alt-meta">Wird bei jeder Session angezeigt</div></span></button>`+
-    `<button class="alt-item" onclick="cm('m-alt');showExHist('${safe}')"><span class="alt-ico">${icon('chart',20)}</span><span style="flex:1"><div class="alt-name">Verlauf</div><div class="alt-meta">Alle bisherigen Sätze</div></span></button>`+
-    (ei>0?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},-1)"><span class="alt-ico">↑</span><span style="flex:1"><div class="alt-name">Nach oben schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
-    (ei<activeExercisesSafe().length-1?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},1)"><span class="alt-ico">↓</span><span style="flex:1"><div class="alt-name">Nach unten schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
     (ex.skipped
       ?`<button class="alt-item" onclick="cm('m-alt');unskipEx(${ei})"><span class="alt-ico">↩</span><span style="flex:1"><div class="alt-name">Doch machen</div><div class="alt-meta">Übersprungen rückgängig</div></span></button>`
       :`<button class="alt-item" onclick="cm('m-alt');skipEx(${ei})"><span class="alt-ico">⏭</span><span style="flex:1"><div class="alt-name">Übung überspringen</div><div class="alt-meta">Zählt nicht in die Session</div></span></button>`)+
+    (ohneBild?`<button class="alt-item" onclick="cm('m-alt');showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')"><span class="alt-ico">${icon('play',20)}</span><span style="flex:1"><div class="alt-name">Ausführung ansehen</div><div class="alt-meta">Animierte Demo + Cues</div></span></button>`:'')+
+    `<button class="alt-item" onclick="cm('m-alt');openExNote('${safe}')"><span class="alt-ico">${icon('note',20)}</span><span style="flex:1"><div class="alt-name">Notiz bearbeiten</div><div class="alt-meta">Wird bei jeder Session angezeigt</div></span></button>`+
+    `<button class="alt-item" onclick="cm('m-alt');showExHist('${safe}')"><span class="alt-ico">${icon('chart',20)}</span><span style="flex:1"><div class="alt-name">Verlauf</div><div class="alt-meta">Alle bisherigen Sätze</div></span></button>`+
+    (ei>0?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},-1)"><span class="alt-ico">↑</span><span style="flex:1"><div class="alt-name">Nach oben schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
+    (ei<liste.length-1?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},1)"><span class="alt-ico">↓</span><span style="flex:1"><div class="alt-name">Nach unten schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
     `<button class="alt-item" style="border-color:color-mix(in srgb,var(--red) 30%,transparent)" onclick="cm('m-alt');removeActiveExercise(${ei})"><span class="alt-ico">${icon('trash',20)}</span><span style="flex:1"><div class="alt-name" style="color:var(--red)">Aus dieser Session entfernen</div><div class="alt-meta">Plan bleibt unverändert</div></span></button>`;
   om('m-alt');
 }
@@ -11355,7 +11462,7 @@ function nextSetTarget(ex){
   if(isCardioExercise(ex))return null;
   const setNr=ex.logged.length;
   const prevInSession=setNr>0?ex.logged[setNr-1]:null;
-  const last=getLastW(ex.name);
+  const last=getLastSetAt(ex.name,setNr);
   const ref=prevInSession&&prevInSession.w>0?prevInSession:last;
   if(!ref||!ref.w)return{icon:icon('target',17),num:'',unit:`${esc(ex.rmin)}–${esc(ex.rmax)} Wdh`,why:'Noch keine Referenz — dieser Satz setzt sie.',
     text:`Erste Referenz setzen: <b>${esc(ex.rmin)}–${esc(ex.rmax)}</b> Wdh${ex.rir!==null?` bei RIR ${esc(ex.rir)}`:''}.`};
