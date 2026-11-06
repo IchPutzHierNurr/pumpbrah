@@ -236,7 +236,6 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
 .btn:active{transform:scale(var(--press));box-shadow:0 6px 16px var(--accent-glow);filter:brightness(1.05)}
 .btn-o{background:transparent;border:1.5px solid var(--accent);color:var(--accent);box-shadow:none}
 .btn-g{background:var(--bg3);color:var(--text);border:1px solid var(--line);box-shadow:none}
-.btn-r{background:linear-gradient(180deg,var(--red),#d02a46);color:#fff;box-shadow:0 10px 24px rgba(255,59,92,.28)}
 .btn-green{background:linear-gradient(180deg,var(--green),#22b657);color:#04120a;box-shadow:0 10px 24px rgba(46,224,106,.24)}
 .btn-orange{background:linear-gradient(180deg,var(--orange),#e0930f);color:#160f02;box-shadow:0 10px 24px rgba(255,176,32,.24)}
 .btn-s{width:auto;display:inline-block;margin-top:0;padding:9px 15px;font-size:var(--fs-14);border-radius:12px}
@@ -522,6 +521,7 @@ body.no-nav{padding-bottom:0}
 /* workout summary: eine große Zahl (das Volumen), vier kleine Werte, dann nur,
    was sich bewegt hat. „Fertig“ sitzt fest unten (.sheet-cta). */
 #m-wosummary .sheet-cta .btn{min-height:52px}
+#m-wosummary .sheet-cta .cta-sub{min-height:44px;margin-top:4px}
 .wo-sum-sub{margin:-10px 0 16px;font-size:var(--fs-14);line-height:17px;color:var(--text2)}
 .wo-sum-hero{padding:16px;border-radius:28px;background:var(--mat-hero);box-shadow:var(--edge-strong),var(--shadow-2)}
 .wo-sum-cap{display:block;font-size:var(--fs-11);font-weight:700;line-height:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
@@ -948,11 +948,11 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .cta-sub:active{color:var(--text)}
 /* Kopf: Übungsname, darunter der Satzstand, rechts das Schließen-Kreuz mit 44 px.
    Ein eigener Titel „Satz loggen" und die Demo-Kachel entfallen; Name und
-   Speichern-Knopf sagen dasselbe. */
+   Speichern-Knopf sagen dasselbe. „Satz korrigieren“ trägt denselben Kopf. */
 .mdl-log .log-top{display:flex;align-items:center;gap:12px;min-height:44px;margin-bottom:12px}
 .mdl-log .log-top>div{flex:1;min-width:0}
-.mdl-log #log-name{font-size:var(--fs-22);line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mdl-log #log-sub{font-size:var(--fs-14);line-height:16px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mdl-log .log-name{font-size:var(--fs-22);line-height:24px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mdl-log .log-sub{font-size:var(--fs-14);line-height:16px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mdl-log #log-hint{color:var(--t3)}
 .mdl-log #log-hint:not(:empty)::before{content:' · '}
 /* Beschriftungszeile über dem Feld: links das Label, beim Gewicht rechts der
@@ -1023,6 +1023,9 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .mdl-log .log-sec button[hidden]{display:none}
 .mdl-log .log-sec [aria-expanded="true"] .v{display:none}
 .mdl-log .log-sec .m{font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);font-variant-numeric:tabular-nums;color:var(--t3)}
+/* Satz korrigieren: „Satz löschen“ als rote Schrift unter „Speichern“, wie
+   „Tag löschen“ im Plan; ein Tipp lässt sich mit „Rückgängig“ zurücknehmen. */
+.mdl-log .log-sec .se-del{color:var(--red);font-weight:600}
 /* Die Zielvorgabe: eine ruhige graue Zeile ohne Akzent und ohne Begründung.
    Die Felder darunter stehen beim Öffnen schon auf ihr. */
 .log-tgt{display:flex;align-items:center;gap:8px;min-height:52px;margin-bottom:12px;padding:0 16px;border-radius:14px;
@@ -2551,14 +2554,37 @@ code.sr-code{cursor:auto}
 <div class="ig" style="margin-bottom:6px"><label for="eg-vf">Viszerales Fett</label><input type="number" inputmode="numeric" id="eg-vf"></div>
 <div class="sheet-cta"><button class="btn" id="egym-save-btn" onclick="saveEgymEntry()">✓ Messung speichern</button></div>
 </div></div>
-<div class="mbg" id="m-setedit" data-guard><div class="mdl">
-<div class="mt">SATZ KORRIGIEREN <button class="mc" aria-label="Schließen" onclick="closeSetEditor()">✕</button></div>
-<div id="se-sub" style="font-size:var(--fs-12);color:var(--text3);margin-bottom:12px"></div>
-<div class="ig" style="margin-bottom:8px"><label id="se-lab-w" for="edit-set-w">Gewicht (kg)</label><input type="number" inputmode="decimal" step="0.5" id="edit-set-w"></div>
-<div class="ig" style="margin-bottom:8px"><label id="se-lab-r" for="edit-set-r">Wiederholungen</label><input type="number" inputmode="numeric" id="edit-set-r"></div>
-<div class="ig" style="margin-bottom:8px"><label for="edit-set-rir">RIR</label><input type="number" inputmode="numeric" id="edit-set-rir"></div>
+<!-- Satz korrigieren ist gebaut wie das Satz-Fenster (Runde 4): Name, welcher
+     Satz, große Zahlen mit Plus und Minus, RIR-Kreise, „Speichern“. Löschen steht
+     als rote Schrift darunter und lässt sich zurücknehmen. -->
+<div class="mbg" id="m-setedit" data-guard><div class="mdl mdl-log">
+<div class="log-top">
+<div><div class="log-name" id="se-name"></div><div class="log-sub" id="se-sub"></div></div>
+<button class="mc" aria-label="Schließen" onclick="closeSetEditor()">✕</button>
+</div>
+<div class="ir log-cols">
+<div class="ig"><div class="log-lab"><label for="edit-set-w" id="se-lab-w">Gewicht</label></div>
+<div class="stepper"><div class="stepper-val"><input type="number" inputmode="decimal" step="0.5" id="edit-set-w" placeholder="0" aria-describedby="edit-set-w-err" onfocus="this.select()"><span class="stepper-unit" id="se-unit-w">kg</span></div>
+<div class="stepper-pm"><button type="button" class="stepper-btn" id="se-w-minus" aria-label="Gewicht verringern" onpointerdown="event.preventDefault();stepHold('edit-set-w',-2.5)" onclick="if(event.detail===0)stepVal('edit-set-w',-2.5)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" class="stepper-btn" id="se-w-plus" aria-label="Gewicht erhöhen" onpointerdown="event.preventDefault();stepHold('edit-set-w',2.5)" onclick="if(event.detail===0)stepVal('edit-set-w',2.5)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+<div class="ig-err" id="edit-set-w-err" hidden></div></div>
+<div class="ig"><div class="log-lab"><label for="edit-set-r" id="se-lab-r">Wiederholungen</label></div>
+<div class="stepper"><div class="stepper-val"><input type="number" inputmode="numeric" id="edit-set-r" placeholder="0" aria-describedby="edit-set-r-err" onfocus="this.select()"><span class="stepper-unit" id="se-unit-r"></span></div>
+<div class="stepper-pm"><button type="button" class="stepper-btn" id="se-r-minus" aria-label="Wiederholungen verringern" onpointerdown="event.preventDefault();stepHold('edit-set-r',-1)" onclick="if(event.detail===0)stepVal('edit-set-r',-1)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" class="stepper-btn" id="se-r-plus" aria-label="Wiederholungen erhöhen" onpointerdown="event.preventDefault();stepHold('edit-set-r',1)" onclick="if(event.detail===0)stepVal('edit-set-r',1)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+<div class="ig-err" id="edit-set-r-err" hidden></div></div>
+</div>
+<div class="log-rir"><div class="rir-lab log-rir-lab" id="se-rir-lab">RIR</div>
+<div class="rir-circles" id="se-rir-circles" role="radiogroup" aria-label="Wiederholungen im Tank" data-lab="se-rir-lab" onkeydown="rirKey(event)">
+<button type="button" class="rir-c rir-5" role="radio" aria-checked="false" aria-label="RIR 5" data-v="5" tabindex="-1" onclick="pickRirEdit(5)">5</button>
+<button type="button" class="rir-c rir-4" role="radio" aria-checked="false" aria-label="RIR 4" data-v="4" tabindex="-1" onclick="pickRirEdit(4)">4</button>
+<button type="button" class="rir-c rir-3" role="radio" aria-checked="false" aria-label="RIR 3" data-v="3" tabindex="-1" onclick="pickRirEdit(3)">3</button>
+<button type="button" class="rir-c rir-2" role="radio" aria-checked="false" aria-label="RIR 2" data-v="2" tabindex="-1" onclick="pickRirEdit(2)">2</button>
+<button type="button" class="rir-c rir-1" role="radio" aria-checked="false" aria-label="RIR 1" data-v="1" tabindex="-1" onclick="pickRirEdit(1)">1</button>
+<button type="button" class="rir-c rir-0" role="radio" aria-checked="false" aria-label="RIR 0" data-v="0" tabindex="-1" onclick="pickRirEdit(0)">0</button>
+</div>
+<div class="ig-err" id="edit-set-rir-err" hidden></div></div>
+<input type="hidden" id="edit-set-rir" aria-describedby="edit-set-rir-err">
 <div class="sheet-cta"><button type="button" class="btn" id="se-save">✓ Speichern</button>
-<button type="button" class="btn btn-r" id="se-del">🗑️ Satz löschen</button></div>
+<div class="log-sec"><button type="button" class="se-del" id="se-del">Satz löschen</button></div></div>
 </div></div>
 <div class="mbg" id="m-histedit" data-guard><div class="mdl">
 <div class="mt">SESSION KORRIGIEREN <button class="mc" aria-label="Schließen" onclick="cm('m-histedit')">✕</button></div>
@@ -2594,7 +2620,7 @@ code.sr-code{cursor:auto}
 </div></div>
 <div class="mbg" id="m-log"><div class="mdl mdl-log">
 <div class="log-top">
-<div><div id="log-name"></div><div id="log-sub"><span id="log-set"></span><span id="log-hint"></span></div></div>
+<div><div class="log-name" id="log-name"></div><div class="log-sub" id="log-sub"><span id="log-set"></span><span id="log-hint"></span></div></div>
 <button class="mc" aria-label="Schließen" onclick="cm('m-log')">✕</button>
 </div>
 <div id="log-target"></div>
@@ -2675,7 +2701,8 @@ code.sr-code{cursor:auto}
 <div class="mbg" id="m-wosummary"><div class="mdl">
 <div class="mt">Workout gespeichert <button class="mc" aria-label="Schließen" onclick="cm('m-wosummary')">✕</button></div>
 <div id="wo-sum-content"></div>
-<div class="sheet-cta"><button class="btn" onclick="cm('m-wosummary')">Fertig</button></div>
+<div class="sheet-cta"><button class="btn" onclick="cm('m-wosummary')">Fertig</button>
+<button type="button" class="cta-sub" id="wo-sum-resume" onclick="resumeWorkout()">Weiter trainieren</button></div>
 </div></div>
 <div class="mbg" id="m-exnote" data-guard><div class="mdl">
 <div class="mt">NOTIZ <button class="mc" aria-label="Schließen" onclick="cm('m-exnote')">✕</button></div>
@@ -4253,7 +4280,7 @@ function cm(id){
   /* Zusammenfassung: ✕, Wischen, Tipp daneben, Zurück-Geste und „Fertig“
      enden alle hier, und alle landen auf Start. Läuft nichts mehr, gibt es
      keinen leeren Workout-Screen, auf dem man hängen bleibt. */
-  if(id==='m-wosummary'&&!D.active)go('dash');
+  if(id==='m-wosummary'){woResume=null;if(!D.active)go('dash')}
 }
 /* Sheets stapeln sich in der Reihenfolge, in der sie geöffnet werden — nicht
    in der, in der sie zufällig im Dokument stehen. Der Scheibenrechner steht
@@ -6542,25 +6569,43 @@ function openSetEditor(ei,si){
      mit PB-096 gelernt, dieser hier noch nicht — dieselbe Beschriftung,
      dieselbe Einladung zur Falschkorrektur. */
   const cardio=isCardioExercise(ex);
-  const lw=document.getElementById('se-lab-w');
-  const lr=document.getElementById('se-lab-r');
-  if(lw)lw.textContent=cardio?'Stufe':'Gewicht (kg)';
-  if(lr)lr.textContent=cardio?'Minuten':'Wiederholungen';
-  const sub=document.getElementById('se-sub');
-  if(sub)sub.textContent=cardio
-    ?`Satz ${si+1} · ${ex.name} · geloggt mit ${s.r} min${s.w?` · Stufe ${s.w}`:''}`
-    :`Satz ${si+1} · ${ex.name} · geloggt mit ${de(s.w)} kg × ${s.r} @ RIR ${s.rir}`;
+  const text=(id,t)=>{const el=document.getElementById(id);if(el)el.textContent=t};
+  text('se-lab-w',cardio?'Stufe':'Gewicht');
+  text('se-lab-r',cardio?'Minuten':'Wiederholungen');
+  text('se-unit-w',cardio?'':'kg');
+  text('se-unit-r',cardio?'min':'');
+  [['w',cardio?'Stufe':'Gewicht'],['r',cardio?'Minuten':'Wiederholungen']].forEach(([k,was])=>{
+    const m=document.getElementById(`se-${k}-minus`),p=document.getElementById(`se-${k}-plus`);
+    if(m)m.setAttribute('aria-label',was+' verringern');
+    if(p)p.setAttribute('aria-label',was+' erhöhen');
+  });
+  /* Kopf wie im Satz-Fenster (Runde 4): der Name, darunter welcher Satz. Der
+     alte Wert steht nicht mehr als Text darüber, die Felder zeigen ihn. */
+  text('se-name',ex.name);
+  text('se-sub',`Satz ${si+1} korrigieren`);
   const setze=(id,wert)=>{const el=document.getElementById(id);if(el)el.value=wert};
-  setze('edit-set-w',s.w);setze('edit-set-r',s.r);setze('edit-set-rir',s.rir);
+  setze('edit-set-w',s.w);setze('edit-set-r',s.r);
+  const rir=parseInt(s.rir,10);
+  pickRirEdit(Number.isFinite(rir)?rir:'');
+  clearFieldErrs(document.getElementById('m-setedit'));
   /* Die beiden Aktionen tragen ihr Ziel als Funktion, nicht als Zeichenkette
      im Markup — so kann kein Übungsname aus einem Handler ausbrechen. */
   const save=document.getElementById('se-save');
   const del=document.getElementById('se-del');
   if(save)save.onclick=()=>saveEditSet(ei,si);
   if(del)del.onclick=()=>deleteSet(ei,si);
+  /* Kein Autofokus, wie im Satz-Fenster: die Tastatur kommt erst beim Tipp
+     ins Feld. */
   om('m-setedit');
-  const feld=document.getElementById('edit-set-w');
-  if(feld)feld.focus();
+}
+function pickRirEdit(v){
+  const el=document.getElementById('edit-set-rir');
+  if(!el)return;
+  el.value=v;
+  el.removeAttribute('aria-invalid');
+  const err=document.getElementById('edit-set-rir-err');
+  if(err)err.hidden=true;
+  markRir('se-rir-circles',v);
 }
 function closeSetEditor(){setEditRef=null;cm('m-setedit')}
 function saveEditSet(ei,si){
@@ -6572,19 +6617,42 @@ function saveEditSet(ei,si){
     const v=el?(ganz?parseInt(el.value,10):parseFloat(el.value)):NaN;
     return Math.min(max,Math.max(0,isNaN(v)?0:v));
   };
+  /* Geprüft wird wie im Satz-Fenster (Runde 4): mindestens 1 Wiederholung
+     (bei Cardio: 1 Minute), RIR 0 bis 5 wie die Kreise. Vorher speicherte ein
+     leeres Feld 0 Wiederholungen und ein getippter RIR 9 blieb stehen — der
+     Satz zählte trotzdem als erledigt. Jetzt steht der Fehler am Feld, und
+     nichts wird gespeichert. */
+  const cardio=isCardioExercise(ziel.ex);
+  const r=zahl('edit-set-r',999,true);
+  const rirEl=document.getElementById('edit-set-rir');
+  const rir=rirEl?parseInt(rirEl.value,10):NaN;
+  if(r<1){showLogErr('edit-set-r',cardio?'Minuten eintragen':'Wiederholungen eintragen');return}
+  if(!(rir>=0&&rir<=5)){showFieldErr('edit-set-rir','RIR wählen, 0 bis 5');return}
   eintrag.w=zahl('edit-set-w',2000,false);
-  eintrag.r=zahl('edit-set-r',999,true);
+  eintrag.r=r;
   /* Der RIR war bisher nicht korrigierbar, stand aber im Kopf des Editors —
      der Dialog zeigte also einen Wert, den er nicht änderte. */
-  eintrag.rir=zahl('edit-set-rir',10,true);
+  eintrag.rir=rir;
   save();closeSetEditor();renderWo();toast('Satz aktualisiert');
 }
 function deleteSet(ei,si){
   const ziel=findeSatzZiel(ei,si);
   if(!ziel){toast('Dieser Satz gehört nicht mehr zur Session');closeSetEditor();renderWo();return}
-  ziel.ex.logged.splice(ziel.si,1);save();
+  /* Löschen fragt nicht nach, es lässt sich zurücknehmen (Runde 4) — wie das
+     Überspringen einer Übung. Der Satz kommt an seine alte Stelle zurück; die
+     Übung wird über ihr Objekt gefunden, hilfsweise über ihre id, weil ein
+     Abgleich die Liste in den acht Sekunden neu gebaut haben kann. */
+  const ex=ziel.ex,si2=ziel.si;
+  const weg=ex.logged.splice(si2,1)[0];save();
   closeSetEditor();
-  renderWo();toast('Satz gelöscht');
+  renderWo();
+  toastAction('Satz gelöscht','Rückgängig',()=>{
+    const liste=activeExercisesSafe();
+    const zu=liste.includes(ex)?ex:liste.find(e=>e&&ex.id!=null&&e.id===ex.id);
+    if(!zu||!Array.isArray(zu.logged)){toast('Diese Übung gehört nicht mehr zur Session');return}
+    zu.logged.splice(Math.min(si2,zu.logged.length),0,weg);
+    save();renderWo();
+  });
 }
 /* logTgt merkt sich einen INDEX in D.active.exercises. Dieser Index kann
    veralten, während der Log-Dialog offen ist: Übung entfernen, Tag wechseln
@@ -6598,7 +6666,25 @@ function logTargetExercise(){
   if(!ex||!Array.isArray(ex.logged))return null;
   return ex;
 }
-function redoLast(){const ex=logTargetExercise();if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}if(!ex.logged.length){toast('Kein vorheriger Satz');return}const last=ex.logged[ex.logged.length-1];ex.logged.push({...last,t:Date.now()});logTgt.exIdx=pullForward(logTgt.exIdx);save();cm('m-log');const isC=ex.type==='main'&&['chest','back','legs'].includes(ex.muscle);timerTgt=isC?D.settings.compound:D.settings.isolation;if(timerInt){clearInterval(timerInt);timerInt=null}timerStartedAt=0;if(ex.logged.length>=ex.sets&&D.active.openEx===logTgt.exIdx)D.active.openEx=null;startTmr();renderWo();toastSatz(`Wiederholt: ${de(last.w)} kg × ${last.r}`,ex,ex.logged.length-1);scrollToActiveCard()}
+function redoLast(){
+  const ex=logTargetExercise();
+  if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}
+  if(!ex.logged.length){toast('Kein vorheriger Satz');return}
+  const last=ex.logged[ex.logged.length-1];
+  ex.logged.push({...last,t:Date.now()});
+  logTgt.exIdx=pullForward(logTgt.exIdx);
+  save();cm('m-log');
+  /* Dieselbe Pause wie nach „Satz speichern“ (Runde 4). Vorher galt hier eine
+     alte Regel — Brust, Rücken und Beine immer schwer, der Supersatz-Partner
+     zählte nicht —, und im Supersatz liefen 2 Minuten statt 25 Sekunden. */
+  timerTgt=restAfterSet(ex);
+  if(timerInt){clearInterval(timerInt);timerInt=null}
+  timerStartedAt=0;timerPausedRemaining=0;
+  if(ex.logged.length>=ex.sets&&D.active.openEx===logTgt.exIdx)D.active.openEx=null;
+  startTmr();renderWo();
+  toastSatz(`Wiederholt: ${de(last.w)} kg × ${last.r}`,ex,ex.logged.length-1);
+  scrollToActiveCard();
+}
 function skipEx(ei){
   const ex=activeExercisesSafe()[ei];
   if(!ex)return;
@@ -10206,16 +10292,38 @@ function workoutCompareLine(c){
     (c.teilweise?`<div class="wo-sum-cmp note">Verglichen: ${c.shared===1?'die eine Übung, die in beiden vorkam':`die ${c.shared} Übungen, die in beiden vorkamen`}</div>`:'');
 }
 /* Ohne zweite Frage: Der Knopf „Workout speichern“ steht erst unter der
-   Liste, wenn alles erledigt ist, und im ⋯-Fenster ist es schon der zweite Tipp. */
+   Liste, wenn alles erledigt ist, und im ⋯-Fenster ist es schon der zweite Tipp.
+   Wer zu früh getippt hat, nimmt in der Zusammenfassung „Weiter trainieren“. */
 function endWorkout(){
   if(!D.active)return;
+  /* Die Meldung des letzten Satzes geht mit (Runde 4): Sie lag sonst bis zu
+     5 s über der Zusammenfassung, und ihr „Ändern“ fand den Satz nicht mehr. */
+  toastWeg('satz');
   const s=sessionFromActive(D.active);
   const dur=s.duration;
   if(s.sets.length===0){D.active=null;save();resetTmr();go('dash');toast('Kein Satz geloggt');return}
   const previousSimilar=[...D.history].reverse().find(h=>h.planKey===s.planKey&&h.sets&&h.sets.length);
+  /* Was sich bewegt hat (Runde 4): Jede Übung vergleicht ihren besten Satz
+     von heute mit dem besten beim letzten Mal — erst das Gewicht, bei
+     gleichem Gewicht die Wiederholungen. Vorher zählte nur das schwerste
+     Gewicht gegen das schwerste aller Zeiten: mehr Wiederholungen standen als
+     „unverändert“ da, und wer vor Monaten einmal schwerer war, bekam ein ▼. */
+  const bester=sets=>sets.reduce((b,x)=>{
+    const w=parseFloat(x.w)||0,r=parseInt(x.r)||0;
+    return !b||w>b.w||(w===b.w&&r>b.r)?{w,r}:b;
+  },null);
+  const kraft=(sets,key)=>strengthSets(sets).filter(x=>baseNameKey(x.ex)===key&&(parseInt(x.r)||0)>0);
   const progData=[];
   const exNames=[...new Set(s.sets.map(x=>x.ex))];
-  exNames.forEach(name=>{const current=strengthSets(s.sets).filter(x=>x.ex===name);if(!current.length)return;const curMax=Math.max(...current.map(x=>parseFloat(x.w)||0));const prevSets=strengthSets(getAllSets(name)).filter(x=>x.w>0);if(prevSets.length>0){const prevMax=Math.max(...prevSets.map(x=>parseFloat(x.w)||0));progData.push({name,curMax,prevMax,diff:curMax-prevMax})}});
+  exNames.forEach(name=>{
+    const key=baseNameKey(name);
+    const cur=bester(kraft(s.sets,key));
+    if(!cur)return;
+    let prev=null;
+    for(let i=D.history.length-1;i>=0&&!prev;i--)prev=bester(kraft((D.history[i]||{}).sets,key));
+    if(prev)progData.push({name,cur,prev,dw:cur.w-prev.w,dr:cur.r-prev.r});
+  });
+  woResume={id:s.id,active:cloneData(D.active)};
   D.history.push(s);
   D.active=null;
   save();
@@ -10236,22 +10344,51 @@ function endWorkout(){
   let sh=`<div class="wo-sum-sub">${esc(planDisplayName(s.planKey))}, ${esc(s.date)}</div>`;
   sh+=`<div class="wo-sum-hero"><span class="wo-sum-cap">Volumen</span><div class="wo-sum-num"><b>${Math.round(totalW).toLocaleString('de-DE')}</b><span>kg</span></div>${workoutCompareLine(cmp)}`+
     `<div class="wo-sum-stats">${stat('Dauer',`${dur}<small> min</small>`)}${stat('Sätze',`${s.sets.length}${setsDiff}`)}${stat('Übungen',exNames.length)}${stat('Ø RIR',avgRir)}${cardioMin?stat('Cardio',`${cardioMin}<small> min</small>`):''}</div></div>`;
-  /* Nur, was sich bewegt hat. Verglichen wird mit dem schwersten Gewicht, das
-     in dieser Übung bisher geloggt war; der Rest steht als ein Satz da. */
-  const moved=progData.filter(p=>Math.abs(p.diff)>=.005);
+  /* Nur, was sich bewegt hat, mit beiden Sätzen („37 × 11, letztes Mal
+     37 × 10“); der Rest steht als ein Satz da. Ohne Gewicht zählen nur die
+     Wiederholungen („15 Wdh.“). */
+  const satz=b=>b.w>0?`${kg(b.w)} × ${b.r}`:`${b.r} Wdh.`;
+  const moved=progData.filter(p=>Math.abs(p.dw)>=.005||p.dr!==0);
   const still=progData.length-moved.length;
   if(moved.length){
-    sh+=`<div class="wo-sum-sec">Was sich bewegt hat</div><div class="wo-sum-prog">`+moved.map(p=>
-      `<div class="wo-sp-row"><b>${esc(p.name)}</b><span>${kg(p.curMax)} kg, vorher ${kg(p.prevMax)} kg</span>`+
-      `<div class="d"><i>${p.diff>0?'▲':'▼'}</i>${p.diff>0?'+':'−'}${kg(Math.abs(p.diff))} kg</div></div>`).join('')+`</div>`;
+    sh+=`<div class="wo-sum-sec">Was sich bewegt hat</div><div class="wo-sum-prog">`+moved.map(p=>{
+      const inKg=Math.abs(p.dw)>=.005;
+      const hoch=inKg?p.dw>0:p.dr>0;
+      const um=inKg?kg(Math.abs(p.dw))+' kg':Math.abs(p.dr)+' Wdh.';
+      return `<div class="wo-sp-row"><b>${esc(p.name)}</b><span>${satz(p.cur)}, letztes Mal ${satz(p.prev)}</span>`+
+        `<div class="d"><i>${hoch?'▲':'▼'}</i>${hoch?'+':'−'}${um}</div></div>`;
+    }).join('')+`</div>`;
   }
-  if(still)sh+=`<p class="wo-sum-still">${still===1?'Eine Übung':still+' Übungen'} unverändert.</p>`;
+  if(still)sh+=`<p class="wo-sum-still">${still===1?'Eine Übung':still+' Übungen'} wie beim letzten Mal.</p>`;
   document.getElementById('wo-sum-content').innerHTML=sh;
   om('m-wosummary');
   releaseWakeLock();
   try{localStorage.removeItem('pb_timer')}catch{}
   renderLiveBar();
   renderWo();
+}
+/* „Weiter trainieren“ in der Zusammenfassung (Runde 4, neue Funktion): Wer zu
+   früh gespeichert hat, holt die Einheit mit allen Sätzen zurück ins
+   Training, solange die Zusammenfassung offen ist. Vorher blieb nur ein
+   Neustart bei 0 Sätzen — und zwei Einheiten am selben Tag in der Historie.
+   Die Einheit verlässt die Historie wie beim Löschen, mit Grabstein: Liegt sie
+   schon in der Cloud, bringt kein Abgleich sie zurück. Das Training läuft
+   deshalb unter neuer Kennung weiter, sonst träfe derselbe Grabstein die
+   Einheit, die beim nächsten Speichern entsteht. */
+let woResume=null;
+function resumeWorkout(){
+  const r=woResume;woResume=null;
+  const i=r?D.history.findIndex(h=>h&&h.id===r.id):-1;
+  if(!r||D.active||i<0){cm('m-wosummary');toast('Diese Einheit lässt sich nicht mehr fortsetzen');return}
+  addTombstone('history',histSessionKey(D.history[i]));
+  D.history.splice(i,1);
+  D.active={...r.active,id:newSessionId()};
+  save();
+  queueCloudSave(true);
+  cm('m-wosummary');
+  go('wo');
+  renderAll();renderHist();renderAna();
+  requestWakeLock();
 }
 function isCardioExercise(ex){
   if(!ex)return false;
@@ -10430,6 +10567,16 @@ function quickLog(ei){
   logTgt={exIdx:ei};
   logSet(ex,parseFloat(t.w),parseInt(t.r),planRir(ex),'');
 }
+/* Die Pause nach einem Satz an `ex` (aufgerufen, wenn er schon in ex.logged
+   steht). Im Supersatz folgt kein Ausruhen, sondern der Partner: kurze
+   Umbauzeit statt voller Pause. Die lange Pause kommt erst nach dem letzten
+   Partner der Runde — erkennbar daran, dass er gleich viele Sätze geloggt hat.
+   „Satz speichern“, der Ein-Tipp-Knopf und „Wie Satz 2“ rechnen alle hier. */
+function restAfterSet(ex){
+  const partners=D.active?supersetPartners(D.active.exercises,ex):[];
+  const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&!p.skipped);
+  return pending.length?SUPERSET_GAP:restSecondsFor(ex.name,ex.muscle,ex.type);
+}
 /* Speichert einen Satz an `ex` (= Übung logTgt.exIdx): aus dem Satz-Fenster
    (confirmLog) oder mit einem Tipp (quickLog). `a`/`b` wie die Felder des
    Fensters: Gewicht und Wiederholungen, bei Cardio Minuten und Stufe. */
@@ -10457,12 +10604,7 @@ function logSet(ex,a,b,rir,note){
   },1200);
   save();
   cm('m-log');
-  /* Im Supersatz folgt kein Ausruhen, sondern der Partner: kurze Umbauzeit
-     statt voller Pause. Die lange Pause kommt erst nach dem letzten Partner
-     der Runde — erkennbar daran, dass er gleich viele Sätze geloggt hat. */
-  const partners=D.active?supersetPartners(D.active.exercises,ex):[];
-  const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&!p.skipped);
-  timerTgt=pending.length?SUPERSET_GAP:restSecondsFor(ex.name,ex.muscle,ex.type);
+  timerTgt=restAfterSet(ex);
   /* Die Supersatz-Karte folgt der Runde: eine angetippte Partnerzeile ist mit
      dem Satz erledigt. Wer als Nächstes dran ist, sagt die Pausenzeile. */
   const inCard=groupMembers(D.active.exercises,activeIndex(D.active.exercises)).includes(logTgt.exIdx);
@@ -10495,7 +10637,7 @@ function logSet(ex,a,b,rir,note){
    dafür offen). Gesucht wird beim Tipp, nicht jetzt: in den 5 s kann ein
    Abgleich die Liste umgebaut haben. */
 function toastSatz(text,ex,si){
-  toastRender(text,{knopf:'Ändern',ms:5000,fn:()=>{
+  toastRender(text,{id:'satz',knopf:'Ändern',ms:5000,fn:()=>{
     const liste=activeExercisesSafe();
     let i=liste.indexOf(ex);
     if(i<0&&ex.id!=null)i=liste.findIndex(e=>e&&e.id===ex.id);
