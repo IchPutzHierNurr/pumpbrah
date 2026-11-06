@@ -236,7 +236,6 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
 .btn:active{transform:scale(var(--press));box-shadow:0 6px 16px var(--accent-glow);filter:brightness(1.05)}
 .btn-o{background:transparent;border:1.5px solid var(--accent);color:var(--accent);box-shadow:none}
 .btn-g{background:var(--bg3);color:var(--text);border:1px solid var(--line);box-shadow:none}
-.btn-green{background:linear-gradient(180deg,var(--green),#22b657);color:#04120a;box-shadow:0 10px 24px rgba(46,224,106,.24)}
 .btn-orange{background:linear-gradient(180deg,var(--orange),#e0930f);color:#160f02;box-shadow:0 10px 24px rgba(255,176,32,.24)}
 .btn-s{width:auto;display:inline-block;margin-top:0;padding:9px 15px;font-size:var(--fs-14);border-radius:12px}
 
@@ -435,12 +434,6 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);text-alig
 /* Kopf mit zwei Handgriffen (Übung-Fenster): Bibliothek und Schließen (.mc), je 44 px hoch. */
 .mt-act{display:flex;align-items:center;gap:8px}
 .mt-act .btn{min-height:44px;margin:0;padding:0 16px}
-
-/* sick banner */
-.sick-banner{background:linear-gradient(135deg,color-mix(in srgb,var(--red) 12%,var(--bg2)),var(--bg2));border:1px solid color-mix(in srgb,var(--red) 24%,transparent);border-radius:var(--radius);padding:15px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
-.sick-banner .si{font-size:var(--fs-30)}
-.sick-banner .st2{font-weight:800;color:var(--red);font-size:var(--fs-14)}
-.sick-banner .sd{font-size:var(--fs-12);color:var(--text2)}
 
 /* login / onboarding — flacher Grund, kein Lichtschein, kein Leuchtbalken
    unter dem Schriftzug (onb-licht). Ohne Tab-Leiste kein Abstand dafür. */
@@ -672,8 +665,9 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 
 /* profile */
 .profile-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
-/* Im Setup-Hero sitzt der Knopf rechts unten in der Fläche, nicht darunter. */
-.set-hero .profile-actions{position:absolute;right:14px;bottom:12px;margin:0}
+/* Im Profil-Kopf steht der Knopf rechts neben dem Namen; die Zeile darunter
+   hat die ganze Breite (Runde 4: vorher lag er unten rechts über ihr). */
+.set-hero .profile-actions{flex:0 0 auto;margin:0}
 .set-hero .profile-pic-btn{padding:7px 12px;font-size:var(--fs-11);background:rgba(255,255,255,.08)}
 .profile-pic-btn{padding:10px 15px;border-radius:999px;border:1px solid var(--line);background:var(--bg3);color:var(--text);font-size:var(--fs-12);font-weight:700;cursor:pointer;transition:.15s}
 .profile-pic-btn:active{transform:scale(var(--press))}
@@ -1899,17 +1893,20 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .rep{display:flex;gap:11px;padding:13px;border-radius:17px;margin-bottom:9px;
   background:var(--mat-2),rgba(255,255,255,.03);border:1px solid var(--line)}
 
-/* --- Übungen nach Trend --- */
+/* --- Übungen nach Trend ---
+   Der Name hat die ganze Breite der Karte, Einheiten, Kurve und Prozent
+   stehen darunter (Runde 4: auf 320 px blieben ihm 130 px, vier von fünf
+   Namen waren gekürzt). */
 .prow{
-  display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:18px;margin-bottom:8px;cursor:pointer;
+  display:flex;flex-wrap:wrap;align-items:center;column-gap:11px;row-gap:6px;padding:11px 13px;border-radius:18px;margin-bottom:8px;cursor:pointer;
   background:rgba(255,255,255,.04);border:1px solid var(--line);
   transition:transform var(--dur-micro) var(--sp);
 }
 .prow:active{transform:scale(var(--press-l))}
 .prow.stale{border-color:color-mix(in srgb,var(--red) 30%,transparent);background:color-mix(in srgb,var(--red) 6%,transparent)}
+.prow>b{flex:0 0 100%;min-width:0;font-size:var(--fs-14);overflow-wrap:anywhere}
 .prow .bd{flex:1;min-width:0}
-.prow .bd b{display:block;font-size:var(--fs-14);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.prow .bd span{display:block;margin-top:2px;font-size:var(--fs-12);line-height:1.3;color:var(--text2);font-variant-numeric:tabular-nums}
+.prow .bd span{display:block;font-size:var(--fs-12);line-height:1.3;color:var(--text2);font-variant-numeric:tabular-nums}
 .prow .tspark{flex:0 0 62px;width:62px;height:26px}
 .prow .kg{
   font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);line-height:1;
@@ -2005,9 +2002,10 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 }
 .sh-av.has-image{color:transparent}
 .sh-av:active{transform:scale(var(--press))}
-.sh-bd{min-width:0}
-.sh-name{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);line-height:1;letter-spacing:1.5px}
-.sh-status{font-size:var(--fs-12);color:var(--text2);margin-top:3px}
+.sh-bd{flex:1;min-width:0}
+.sh-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sh-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Bebas Neue',sans-serif;font-size:var(--fs-30);line-height:1;letter-spacing:1.5px}
+.sh-status{font-size:var(--fs-12);color:var(--text2);margin-top:6px}
 
 .set-card{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--r-lg);
   padding:2px 14px;margin-bottom:14px}
@@ -2067,6 +2065,7 @@ code.sr-code{cursor:auto}
   font-family:'Space Grotesk',sans-serif;font-size:var(--fs-14);font-weight:600;color:var(--text2)}
 .mdl-ask button:active{transform:scale(var(--press))}
 .mdl-ask button:disabled{opacity:.5;cursor:default}
+.mdl-ask button[hidden]{display:none}
 /* Rückfrage aus askSheet(): steht der rote Knopf allein vorn, hält er den
    Abstand zum Text. „Verwerfen“ und „Weiter schreiben“ stehen nebeneinander. */
 #m-ask .ask-row:not(.ask-pair)>.ask-del:first-child{margin-top:16px}
@@ -2317,7 +2316,6 @@ code.sr-code{cursor:auto}
 <div class="ltitle-slot"><button type="button" class="sync-fail" id="sync-fail" hidden onclick="retrySync()" aria-label="Nicht gesichert. Tippen, um es erneut zu versuchen">Nicht gesichert</button></div>
 </div>
 </div>
-<div id="sick-area"></div>
 <div id="d-next-card"></div>
 <div id="d-week-card"></div>
 <div id="meso-area"></div>
@@ -2430,24 +2428,20 @@ code.sr-code{cursor:auto}
 <div class="set-hero">
 <div class="sh-av" id="prof-avatar" onclick="document.getElementById('profile-pic-input')&&document.getElementById('profile-pic-input').click()">?</div>
 <div class="sh-bd">
-<div class="sh-name" id="prof-name">—</div>
-<div class="sh-status" id="prof-status">Eingeloggt · Cloud Sync aktiv</div>
+<div class="sh-top"><div class="sh-name" id="prof-name">—</div><div class="profile-actions"></div></div>
+<div class="sh-status" id="prof-status">Nur auf diesem Gerät</div>
 </div>
 </div>
 <div class="st">Training <div class="ln"></div></div>
 <div class="set-card">
 <div class="sr">
-<div class="sr-bd"><b>Satzpause Grundübung</b><span>Brust, Rücken, Beine</span></div>
+<div class="sr-bd"><b>Satzpause Grundübung</b><span>Drücken, Ziehen, Rudern, Beinpresse, Kreuzheben</span></div>
 <div class="sr-step" role="group" aria-label="Satzpause Grundübung"><button type="button" class="sr-pm" aria-label="Satzpause Grundübung kürzer" onpointerdown="event.preventDefault();pauseHold('compound',-PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('compound',-PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14"/></svg></button><output id="set-c" aria-live="polite">2:00</output><button type="button" class="sr-pm" aria-label="Satzpause Grundübung länger" onpointerdown="event.preventDefault();pauseHold('compound',PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('compound',PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
 </div>
-<div class="sr">
-<div class="sr-bd"><b>Satzpause Isolation</b><span>Schultern, Arme, Core</span></div>
+<div class="sr sr-last">
+<div class="sr-bd"><b>Satzpause Isolation</b><span>Beinbeuger, Waden, Seitheben, Arme, Core</span></div>
 <div class="sr-step" role="group" aria-label="Satzpause Isolation"><button type="button" class="sr-pm" aria-label="Satzpause Isolation kürzer" onpointerdown="event.preventDefault();pauseHold('isolation',-PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('isolation',-PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M5 12h14"/></svg></button><output id="set-i" aria-live="polite">2:00</output><button type="button" class="sr-pm" aria-label="Satzpause Isolation länger" onpointerdown="event.preventDefault();pauseHold('isolation',PAUSE_SCHRITT)" onclick="if(event.detail===0)pauseStep('isolation',PAUSE_SCHRITT)"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div>
 </div>
-<label class="sr sr-last sr-switch">
-<span class="sr-bd"><b>Krank-Modus</b><span id="sick-label">Nicht aktiv</span></span>
-<span class="sw-toggle"><input type="checkbox" id="sick-toggle" role="switch" aria-describedby="sick-label" onchange="toggleSick()"><span class="sw-track"></span><span class="sw-knob"></span></span>
-</label>
 </div>
 <div class="st">Körperanalyse <div class="ln"></div></div>
 <div class="set-card">
@@ -2490,6 +2484,14 @@ code.sr-code{cursor:auto}
 <button type="button" class="ask-go" onclick="exportData()"><svg class="ic" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Backup zuerst laden</button>
 <button type="button" class="ask-del" id="reset-go" onclick="resetAll()">Alles löschen</button>
 <button type="button" class="ask-cancel" id="reset-cancel" onclick="cm('m-reset')">Abbrechen</button>
+</div></div>
+<div class="mbg" id="m-sicherung"><div class="mdl mdl-ask" role="dialog" aria-modal="true" aria-labelledby="sicherung-t">
+<h2 class="ask-t" id="sicherung-t">Sicherung laden?</h2>
+<p class="ask-lead" id="sicherung-lead"></p>
+<h3 class="ask-st">In der Sicherung</h3>
+<div class="ask-list" id="sicherung-list"></div>
+<button type="button" class="ask-go" id="sicherung-go" onclick="sicherungUebernehmen()"></button>
+<button type="button" class="ask-cancel" id="sicherung-cancel" onclick="cm('m-sicherung')">Abbrechen</button>
 </div></div>
 <div class="mbg" id="m-newkey"><div class="mdl mdl-ask" role="dialog" aria-modal="true" aria-labelledby="newkey-t">
 <h2 class="ask-t" id="newkey-t">Neuen Schlüssel erzeugen?</h2>
@@ -3092,6 +3094,9 @@ function normalizeData(){
   D.settings.compound=Math.max(0,parseInt(D.settings.compound)||120);
   D.settings.isolation=Math.max(0,parseInt(D.settings.isolation)||120);
   if(!D.notes||typeof D.notes!=='object')D.notes={};
+  /* D.health trug den Krank-Modus (raus in Runde 4). Der Block bleibt im Stand,
+     damit ältere Geräte am selben Konto ihn weiter vorfinden; gelesen wird er
+     nicht mehr. */
   if(!D.health)D.health={sick:false,sickSince:null,sickDays:0};
   if(!D.bio)D.bio={height:null,weights:[]};
   if(!Array.isArray(D.bio.weights))D.bio.weights=[];
@@ -3270,7 +3275,39 @@ function save(){
    -------------------------------------------------------------------------- */
 const CLOUD_WRITE_DELAY=4000;
 let cloudWriteTimer=null;
+/* --------------------------------------------------------------------------
+   NOCH NICHT IN DER CLOUD (Runde 4, Funkloch)
+   Ohne Empfang scheiterte jedes Schreiben mit der Meldung „Sync
+   fehlgeschlagen“, nach jedem Satz. Kam das Netz zurück, schrieb die App
+   nicht von selbst nach: Der Abgleich beim Öffnen schrieb nur, wenn das
+   Zusammenführen etwas änderte, und meldete danach „gesichert“. In der
+   Cloud lief das Training weiter, bis zur nächsten Änderung.
+   Jetzt merkt sich das Gerät, seit wann eine Änderung noch nicht in der
+   Cloud ist (cloudOffen, auch über einen Neustart, pb_cloud_offen), und
+   schreibt nach: beim Öffnen, beim Zurückkehren in die App, wenn das Netz
+   wiederkommt und wenn die Cloud sich wieder meldet. Eine Meldung gibt es
+   nicht mehr; die Sätze sind auf dem Gerät sicher. Das Profil sagt „Nicht
+   gesichert seit 18:05“, Start zeigt „Nicht gesichert“.
+   -------------------------------------------------------------------------- */
+let cloudOffen=0,cloudAenderung=0,cloudLaeuft=0;
+try{cloudOffen=parseInt(localStorage.getItem('pb_cloud_offen'))||0}catch{}
+function cloudOffenMerken(){
+  cloudAenderung++;
+  if(cloudOffen)return;
+  cloudOffen=Date.now();
+  try{localStorage.setItem('pb_cloud_offen',String(cloudOffen))}catch{}
+}
+function cloudOffenErledigt(){
+  cloudOffen=0;
+  try{localStorage.removeItem('pb_cloud_offen')}catch{}
+}
+function cloudNachholen(){
+  if(cloudOffen&&!cloudLaeuft&&useFirebase&&db&&syncCode&&!kontoFehlt)queueCloudSave(true);
+}
 function queueCloudSave(sofort){
+  /* Auch solange Firebase noch lädt: Die Änderung ist dann noch nicht in der
+     Cloud, und startSync schreibt sie nach. */
+  if(syncCode&&syncCode!=='offline')cloudOffenMerken();
   if(!useFirebase||!db||!syncCode)return;
   if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null}
   if(sofort===true)return flushCloudSave();
@@ -3280,8 +3317,9 @@ function queueCloudSave(sofort){
    des Tabs. `visibilitychange` ist der einzige davon, der auf iOS zuverlässig
    feuert — `beforeunload` tut es dort nicht. */
 if(typeof document!=='undefined'){
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')queueCloudSave(true)});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')queueCloudSave(true);else cloudNachholen()});
   window.addEventListener('pagehide',()=>queueCloudSave(true));
+  window.addEventListener('online',()=>cloudNachholen());
 }
 function flushCloudSave(){
   if(!useFirebase||!db||!syncCode||kontoFehlt)return;
@@ -3290,13 +3328,14 @@ function flushCloudSave(){
   /* War das Konto schon einmal da und fehlt jetzt, wird es nicht neu angelegt:
      es ist umgezogen oder gelöscht (siehe kontoWeg). */
   const pruefen=doc=>{if(!doc.exists&&warDa)throw new Error(KONTO_WEG)};
-  const localSnapshot=cloneData(D);
+  const localSnapshot=cloneData(D),nr=cloudAenderung;
   const zusammenfuehren=remote=>{
     const merged=remote?mergeSyncedSnapshot(cloneData(localSnapshot),remote):cloneData(localSnapshot);
     if(!merged.meta)merged.meta={};
     merged.meta.updatedAt=Math.max(dataStamp(localSnapshot),Date.now());
     return cloudSafeSnapshot(merged);
   };
+  cloudLaeuft++;
   cloudWriteQueue=cloudWriteQueue.catch(()=>{}).then(()=>{
     /* Ältere SDK-Fassungen ohne runTransaction fallen auf den alten Weg
        zurück — schlechter, aber besser als kein Sync. */
@@ -3304,13 +3343,23 @@ function flushCloudSave(){
       return ref.get().then(doc=>{pruefen(doc);return ref.set(zusammenfuehren(doc.exists?doc.data():null))});
     return db.runTransaction(t=>
       t.get(ref).then(doc=>{pruefen(doc);t.set(ref,zusammenfuehren(doc.exists?doc.data():null))}));
-  }).then(()=>{if(code===syncCode)kontoGesehen(code);updateSyncState(true)}).catch(e=>{
+  }).then(()=>{
+    cloudLaeuft--;
+    if(code!==syncCode)return;
+    kontoGesehen(code);
+    /* Erledigt nur, wenn seit dem Abzug nichts Neues dazukam — sonst
+       schreibt das nächste Schreiben auch das. */
+    if(nr===cloudAenderung)cloudOffenErledigt();
+    updateSyncState(true,true);
+  }).catch(e=>{
+    cloudLaeuft--;
     /* Nur wenn es noch das Konto des Geräts ist — ein Schreiben, das vor dem
        eigenen Schlüsselwechsel losging, meint den alten Namen. */
     if(e&&e.message===KONTO_WEG){if(code===syncCode)kontoWeg();return}
-    console.error('PUMPBRAH: Sync fehlgeschlagen',e);
+    /* Ohne Netz kein Fehler im Training: Es bleibt bei „Nicht gesichert“,
+       bis das Nachholen klappt. */
+    console.warn('PUMPBRAH: Noch nicht in der Cloud',e);
     updateSyncState(false);
-    toast('Sync fehlgeschlagen');
   });
 }
 function loadLocal(){try{const s=localStorage.getItem('pb_data');if(s)D=JSON.parse(s)}catch{}normalizeData()}
@@ -3335,10 +3384,13 @@ function startSync(){
       kontoGesehen();
       altenNamenLoeschen();
       const remote=doc.data();
-      const before=JSON.stringify(D);
+      const before=JSON.stringify(D),lief=D.active;
       D=mergeSyncedData(remote);
+      /* Vor normalizeData: dort endet ein liegengebliebenes Training auch hier. */
+      const woanders=!!lief&&!D.active;
       normalizeData();
       localStorage.setItem('pb_data',JSON.stringify(D));
+      if(woanders)trainingAndersBeendet(lief);
       /* Früher stand hier ein nacktes ref.set(). Das war derselbe Fehler wie
          PB-022, nur an einer anderen Stelle — und ein blindes set() macht die
          Transaktion des ANDEREN Geräts wertlos: es überschreibt sie einfach.
@@ -3349,8 +3401,11 @@ function startSync(){
       /* Sofort, nicht gebündelt: Nach dem Zusammenführen beim Anmelden muss
          die Cloud unverzüglich stimmen. Wartet man hier vier Sekunden, sieht
          ein zweites Gerät, das sich in diesem Fenster anmeldet, veraltete
-         Daten — und schreibt sie zurück. */
-      if(JSON.stringify(D)!==before)queueCloudSave(true);
+         Daten — und schreibt sie zurück.
+         Ebenso, wenn noch etwas vom letzten Mal fehlt (Funkloch, cloudOffen):
+         dann stimmt die Cloud nicht, auch wenn das Zusammenführen nichts
+         ändert. */
+      if(JSON.stringify(D)!==before||cloudOffen)queueCloudSave(true);
     }else{
       normalizeData();
       /* Ebenso beim allerersten Anlegen des Kontos. */
@@ -3363,25 +3418,58 @@ function startSync(){
     if(!doc.exists&&!ausCache(doc)&&kontoWarDa()){kontoWeg();return}
     if(doc.exists){
       const remote=doc.data();
-      const before=JSON.stringify(D);
+      const before=JSON.stringify(D),lief=D.active;
       D=mergeSyncedData(remote);
+      const woanders=!!lief&&!D.active;
       normalizeData();
       if(JSON.stringify(D)!==before){
         localStorage.setItem('pb_data',JSON.stringify(D));
+        if(woanders)trainingAndersBeendet(lief);
         renderAll();
       }
     }
     updateSyncState(true);
+    /* Die Cloud meldet sich wieder: was im Funkloch liegen blieb, jetzt. */
+    if(!ausCache(doc))cloudNachholen();
   },e=>{console.error('PUMPBRAH: Realtime sync fehlgeschlagen',e);updateSyncState(false)});
+}
+/* Training auf dem anderen Gerät gespeichert (Runde 4): Der Abgleich nimmt
+   das laufende Training hier weg. Vorher blieb die leere Trainings-Seite
+   stehen, ohne markierten Platz unten und ohne Meldung, und die Pause lief
+   weiter bis „Pause vorbei“ samt Ton. Jetzt endet die Pause still, die App
+   wechselt auf Start und sagt, was passiert ist; „Ansehen“ öffnet die
+   Einheit in der Historie. */
+function trainingAndersBeendet(lief){
+  /* Ein offenes Satz-Fenster gehört zu diesem Training: Es geht mit. */
+  ['m-log','m-setedit'].forEach(id=>cm(id));logTgt=null;
+  resetTmr();
+  try{localStorage.removeItem('pb_timer')}catch{}
+  releaseWakeLock();
+  toastWeg('satz');
+  const wo=document.getElementById('s-wo');
+  if(wo&&wo.classList.contains('active'))go('dash');
+  const name=planDisplayName(lief.planKey),id=activeSessionId(lief);
+  const s=(D.history||[]).find(h=>h&&h.id===id);
+  if(!s){toast(`${name} ist auf dem anderen Gerät beendet.`);return}
+  const key=histSessionKey(s);
+  toastAction(`${name} ist auf dem anderen Gerät gespeichert.`,'Ansehen',()=>{
+    calSelDay=null;histOpenKey=key;
+    go('hist');
+    const r=document.querySelector('#hl .hs-row[aria-expanded="true"]');
+    if(r)r.scrollIntoView({block:'center'});
+  });
 }
 /* Das Sichern meldet sich nur, wenn es nicht klappt: „Nicht gesichert" oben
    rechts auf Start, ein Tipp versucht es erneut. Der Zeitpunkt des letzten
-   erfolgreichen Abgleichs steht im Profil. Ohne Cloud gibt es nichts zu melden. */
-let lastSyncOk=0;
-function updateSyncState(online){
-  if(online)lastSyncOk=Date.now();
+   erfolgreichen Abgleichs steht im Profil. Ohne Cloud gibt es nichts zu melden.
+   Ein Lesen aus der Cloud macht nur „gesichert“, wenn hier nichts mehr offen
+   ist; mit offener Änderung zählt erst das Schreiben (geschrieben). */
+let lastSyncOk=0,syncFehler=false;
+function updateSyncState(online,geschrieben){
+  if(!online)syncFehler=true;
+  else if(geschrieben||!cloudOffen){lastSyncOk=Date.now();syncFehler=false}
   const el=document.getElementById('sync-fail');
-  if(el)el.hidden=!(useFirebase&&!online);
+  if(el)el.hidden=!(useFirebase&&syncFehler&&cloudOffen);
   const st=document.getElementById('prof-status');
   if(st)st.textContent=profileStatusText();
 }
@@ -3390,11 +3478,14 @@ function retrySync(){
   if(el)el.hidden=true;
   queueCloudSave(true);
 }
+/* Eine Zeile, die neben dem Namen Platz hat (Runde 4: vorher „Eingeloggt ·
+   Cloud-Sync aktiv · gesichert 20:40“, zweizeilig unter „Bild wählen“). */
 function profileStatusText(){
   if(kontoFehlt)return'Konto nicht mehr in der Cloud';
   if(!useFirebase)return'Nur auf diesem Gerät';
-  const um=lastSyncOk?new Date(lastSyncOk).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):'';
-  return'Eingeloggt · Cloud-Sync aktiv'+(um?' · gesichert '+um:'');
+  const uhr=t=>new Date(t).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  if(syncFehler&&cloudOffen)return'Nicht gesichert seit '+uhr(cloudOffen);
+  return'Sync aktiv'+(lastSyncOk?', gesichert '+uhr(lastSyncOk):'');
 }
 /* --------------------------------------------------------------------------
    SYNC-SCHLÜSSEL
@@ -3638,7 +3729,6 @@ function obToggleList(field,value,el){
     const on=(obData[field]||[]).includes(c.dataset.v);
     c.classList.toggle('on',on);c.setAttribute('aria-checked',String(on));
   });
-  haptic(8);
 }
 function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';attachKeyboardAvoidance();obStep=0;renderObStep()}
 /* Einrichten (onb-schritte): neun Striche statt „Schritt 8/9", der Name des
@@ -4305,7 +4395,6 @@ function sheetDirty(id){
     &&bg.__stand!==undefined&&sheetFields(bg)!==bg.__stand;
 }
 function nudgeSheet(id){
-  haptic(8);
   const sheet=document.querySelector('#'+id+' .mdl');
   if(!sheet)return;
   sheet.classList.add('settling');
@@ -4426,7 +4515,6 @@ function go(id,y){
     if(y)window.scrollTo(0,y);
   });
   placeToast();
-  haptic(6);
 }
 /* Tipp auf einen Platz der unteren Leiste (und auf die Leiste des laufenden
    Trainings): zurück an die Stelle, an der du warst. Ein zweiter Tipp auf den
@@ -4436,7 +4524,6 @@ function tab(id){
   if(!target)return;
   if(target.classList.contains('active')){
     window.scrollTo({top:0,behavior:prefersReducedMotion()?'auto':'smooth'});
-    haptic(6);
     return;
   }
   if(id==='plan'&&planAufDran()){go(id,0);return}
@@ -4490,9 +4577,33 @@ function attr(s){return esc(s)}
 function prefersReducedMotion(){
   try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch{return false}
 }
-function haptic(pattern){
-  if(prefersReducedMotion())return;
-  try{if(navigator.vibrate)navigator.vibrate(pattern)}catch{}
+/* Ein kurzes Ticken bestätigt „Satz speichern“ und „Workout speichern“, mit
+   verschwitzten Fingern im Studio (Runde 4). Sonst tickt nichts mehr: Die App
+   rief vorher an 40 Stellen navigator.vibrate, das Safari auf dem iPhone
+   nicht kennt — das Handy vibrierte also nie.
+   Der Umweg: Seit iOS 18 gibt ein Schalter (<input type="checkbox" switch>)
+   beim Umlegen ein Ticken, auch wenn man nur sein Label antippt. tick()
+   legt ein unsichtbares Label mit Schalter an, tippt es an und nimmt es
+   wieder weg. Das klappt nur im selben Tipp des Nutzers, deshalb steht es
+   direkt im Speichern; am Pausenende bleiben Ton und Lime-Zeile. Wo es weder
+   den Umweg noch navigator.vibrate gibt, passiert nichts: Das Label hängt
+   versteckt im <head>, ohne Fokus und ohne Vorlesetext. „Bewegung
+   reduzieren“ gilt hier nicht, ein Ticken bewegt nichts auf dem Bildschirm. */
+function tick(){
+  try{
+    if(typeof navigator.vibrate==='function'){navigator.vibrate(10);return}
+    const label=document.createElement('label');
+    label.setAttribute('aria-hidden','true');
+    label.style.display='none';
+    const schalter=document.createElement('input');
+    schalter.type='checkbox';
+    schalter.setAttribute('switch','');
+    schalter.tabIndex=-1;
+    label.appendChild(schalter);
+    document.head.appendChild(label);
+    label.click();
+    label.remove();
+  }catch{}
 }
 /* Zahlen in der Anzeige mit Komma: de() für gegebene Zahlen, de1() mit genau
    einer Nachkommastelle (Tonnen, RIR, Schnitte). */
@@ -4770,9 +4881,7 @@ function attachSheetGestures(){
           sheet.style.transform='';bg.style.opacity='';
           sheet.classList.remove('settling');
         },240);
-        haptic(10);
       }else{
-        if(dy>Math.min(150,height*0.28))haptic(8);
         sheet.style.transform='';bg.style.opacity='';
         setTimeout(()=>sheet.classList.remove('settling'),320);
       }
@@ -5617,7 +5726,7 @@ function getWeeklyVolume(includeSecondary){
   Object.values(vol).forEach(v=>{v.sets=Math.round(v.sets*10)/10;v.indirect=Math.round(v.indirect*10)/10});
   return vol;
 }
-function toggleSick(){if(D.health.sick){D.health.sick=false;D.health.sickSince=null;D.health.sickDays=0;toast('Krank-Modus aus.')}else{D.health.sick=true;D.health.sickSince=new Date().toISOString();D.health.sickDays=0;toast('Krank-Modus an. Workouts pausiert.')}save();renderDash();renderSettings()}function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}/* Oben stand eine Kennzahlen-Tabelle (All-Time Max, Est. 1RM, Median, Ø RIR,
+function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}/* Oben stand eine Kennzahlen-Tabelle (All-Time Max, Est. 1RM, Median, Ø RIR,
    Trend, Datenpunkte); raus in Runde 4. Höchstgewicht und 1RM stehen groß an
    den Diagrammen, der Trend ist die Linie selbst. */
 let h='';/* Je Einheit ein Punkt: der schwerste Arbeitssatz. Jeder Satz einzeln ergäbe
@@ -5688,7 +5797,7 @@ function renderPlan(){
     d.setAttribute('role','tab');
     d.setAttribute('aria-selected',k===curTab?'true':'false');
     d.innerHTML=`<span>${esc(planDisplayName(k))}</span><span class="dn">${esc(planDayLabel(v.day))}</span>`;
-    d.onclick=()=>{curTab=k;renderPlan();haptic(8)};
+    d.onclick=()=>{curTab=k;renderPlan()};
     t.appendChild(d);
   });
   if(!t.dataset.edges){t.dataset.edges='1';t.addEventListener('scroll',()=>planTabEdges(t),{passive:true})}
@@ -5729,8 +5838,8 @@ function syncPlanSortUI(){
   if(bar)bar.hidden=planSort;
   if(sort)sort.hidden=!planSort;
 }
-function startPlanSort(){planSort=true;syncPlanSortUI();renderPL();haptic(8)}
-function endPlanSort(){planSort=false;syncPlanSortUI();renderPL();haptic(8)}
+function startPlanSort(){planSort=true;syncPlanSortUI();renderPL()}
+function endPlanSort(){planSort=false;syncPlanSortUI();renderPL()}
 function startPlanDay(){startWorkout(curTab);go('wo')}
 /* Der feste Knopf unten ist „Starten“; im Sortier-Modus ist er „Fertig“ — so
    bleibt das Ende des Modus auch mitten in einer langen Liste erreichbar.
@@ -5903,7 +6012,6 @@ function applyLibHint(){
   pickRirAdd(item.rir===undefined?2:item.rir);
   syncRirRow();
   refreshLibHint();
-  haptic(8);
   toast('Werte aus der Bibliothek übernommen');
 }
 function openAddEx(){editRef=null;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Neue Übung';document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);syncRirRow();document.getElementById('a-btn').textContent='Übung hinzufügen';refreshLibHint();om('m-add')}
@@ -6228,7 +6336,7 @@ function showExDemo(name,muscle,type){
   om('m-exdemo');
 }
 /* Rückwärtskompatibler Name — alte Aufrufstellen zeigen jetzt die Demo. */
-function setDemoSpeed(s){exDemoState.speed=s;renderExDemo();haptic(8)}
+function setDemoSpeed(s){exDemoState.speed=s;renderExDemo()}
 function toggleDemoPlay(){exDemoState.paused=!exDemoState.paused;renderExDemo()}
 function openExWebSearch(){
   const m=exDemoState.name.match(/\(([^)]+)\)/);
@@ -6327,7 +6435,6 @@ function togglePlanDayChip(d){
   planDaySelected=planDaySelected.includes(d)?planDaySelected.filter(x=>x!==d):[...planDaySelected,d];
   planDaySelected.sort((a,b)=>WEEKDAYS.indexOf(a)-WEEKDAYS.indexOf(b));
   renderPlanDayChips();
-  haptic(8);
 }
 function openPlanDayModal(mode,sourceKey){
   planDayMode=mode;
@@ -6421,12 +6528,12 @@ function movePlanDay(dir,key){
   const keys=Object.keys(D.plan||{});
   const i=keys.indexOf(key||curTab);
   const j=i+dir;
-  if(i<0||j<0||j>=keys.length){haptic(6);return}
+  if(i<0||j<0||j>=keys.length)return;
   [keys[i],keys[j]]=[keys[j],keys[i]];
   const rebuilt={};
   keys.forEach(k=>{rebuilt[k]=D.plan[k]});
   D.plan=rebuilt;
-  save();markPlanDirty();renderPlan();renderDash();syncPlanDayOrder();haptic(10);
+  save();markPlanDirty();renderPlan();renderDash();syncPlanDayOrder();
 }
 function saveBioHeight(v){D.bio.height=parseFloat(v)||null;save();renderBio()}
 function saveBioBirthday(v){D.bio.birthday=v||null;save();renderBio()}
@@ -6576,7 +6683,6 @@ function commitWeightDelete(){
 function openExNote(name){document.getElementById('exn-name').textContent=name;document.getElementById('exn-text').value=D.notes[name]||'';document.getElementById('exn-text').dataset.ex=name;om('m-exnote')}
 function saveExNote(){const name=document.getElementById('exn-text').dataset.ex;const txt=document.getElementById('exn-text').value.trim();if(txt)D.notes[name]=txt;else delete D.notes[name];save();cm('m-exnote');renderPL();toast('Notiz gespeichert!')}
 function startWorkout(pk){
-  if(D.health.sick){toast('Krank-Modus ist an');return}
   /* Vorher: eine laufende Session hat jedes `pk` verschluckt und wortlos
      zur alten zurückgeführt — für den Nutzer sah es aus, als hätte der
      Button nicht reagiert. Jetzt geht es direkt in den Wechsel-Dialog. */
@@ -6602,7 +6708,6 @@ function startWorkout(pk){
   D.active={id:newSessionId(),planKey:pk,startTime:Date.now(),exercises:applyDeloadToExercises(base),compact:false,deload:deloadActive()};
   woDoneOpen=false;
   save();go('wo');renderWo();requestWakeLock();
-  haptic([15,50,15]);
 }
 /* PB-081: Einen geloggten Satz zu korrigieren war zwar möglich, aber nur über
    eine 500-Millisekunden-Haltegeste, die nirgends stand. Wer sie nicht kannte
@@ -6872,7 +6977,7 @@ function startTmrInterval(){
     const rem=getTimerRemaining();
     if(rem>0){tickTimerBar();return}
     clearInterval(timerInt);timerInt=null;timerPausedRemaining=0;
-    haptic([200,100,200]);beep();
+    beep();
     persistTimer();
     /* PB-087: Hier stand ein Zugriff auf ein Element, das es nicht gibt.
        Die Leiste zeichnet sich jetzt selbst neu — sonst behauptet sie
@@ -6911,7 +7016,7 @@ function resetTmr(){
 function adjTmr(s){
   if(timerPausedRemaining>0)timerPausedRemaining=Math.max(0,timerPausedRemaining+s);
   else timerTgt=Math.max(0,timerTgt+s);
-  persistTimer();renderWo();haptic(6);
+  persistTimer();renderWo();
 }
 /* Bildschirm bleibt während des Workouts an — sonst muss man zwischen
    jedem Satz entsperren. */
@@ -6935,7 +7040,6 @@ document.addEventListener('visibilitychange',()=>{
 });
 /* PR-Feier: kurz, laut, dann wieder weg. */
 function celebratePR(text,sub){
-  haptic([18,60,18,60,40]);
   const badge=document.createElement('div');
   badge.className='pr-badge';
   badge.innerHTML=`${esc(text)}${sub?`<small>${esc(sub)}</small>`:''}`;
@@ -7596,7 +7700,6 @@ function toggleSection(key){
   D.ui.sections[key]=!D.ui.sections[key];
   save();
   applySectionState(key);
-  haptic(8);
 }
 /* Kein Rot, Blau oder Orange: die gehören den Volumenzonen (über MRV, Info,
    unter MEV). Whoop-Rot war vom MRV-Rot nicht zu unterscheiden (ΔE 1,9).
@@ -7999,7 +8102,6 @@ function toggleSuperset(idx){
   const key=nextSupersetKey(list);
   ex.ss=key;partner.ss=key;
   save();markPlanDirty();renderPlan();renderDash();
-  haptic([10,30,10]);
   toast(`Supersatz: ${ex.name} + ${partner.name}`);
 }
 function restSecondsFor(name,muscle,type){
@@ -8789,7 +8891,7 @@ async function sharePlanLink(){
 function copyShareCode(){copyText(shareState.code,'Code kopiert ✓')}
 function copyText(text,okMsg){
   if(!text)return;
-  const done=()=>{toast(okMsg);haptic(10)};
+  const done=()=>toast(okMsg);
   if(navigator.clipboard&&navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
   }else fallbackCopy(text,done);
@@ -8859,12 +8961,10 @@ async function startPlanImport(code){
 function setImportMode(mode){
   importState.mode=mode==='replace'?'replace':'add';
   renderImportPreview();
-  haptic(8);
 }
 function toggleImportPausen(){
   importState.pausen=!importState.pausen;
   renderImportPreview();
-  haptic(8);
 }
 function renderImportPreview(){
   const p=importState.payload;
@@ -8929,7 +9029,6 @@ function confirmPlanImport(ok){
   cm('m-importpreview');
   renderAll();
   go('plan');
-  haptic([15,50,15]);
   toast(`${added} ${added===1?'Trainingstag':'Trainingstage'} importiert`);
   importState={payload:null,mode:'add',pausen:false};
 }
@@ -8946,7 +9045,7 @@ function checkSharedPlanLink(){
 
 const EG_FIELDS=['bioage','kraft','kardio','stoff','flex','bmi','gewicht','kfp','kfkg','ffm','smm','kwp','kwl','ezw','izw','bmr','vf','pw','mmal','mmar','mmbl','mmbr','mmru','mual','muar','mubl','mubr','muru'];
 function saveSetting(k,v){D.settings[k]=parseInt(v)||0;save()}
-function doLogout(){if(unsubscribe)unsubscribe();localStorage.removeItem('pb_sync');location.reload()}
+function doLogout(){if(unsubscribe)unsubscribe();localStorage.removeItem('pb_sync');localStorage.removeItem('pb_cloud_offen');location.reload()}
 /* „Alle Daten löschen": erst zeigen, was verloren geht, dann ein Backup
    anbieten. Zwei Tipps (Löschen → Alles löschen), keine Geste — das geht mit
    Tastatur, VoiceOver und Schaltersteuerung gleich. */
@@ -9133,25 +9232,124 @@ function exportData(){
     toast('Exportiert!');
   });
 }
+/* --------------------------------------------------------------------------
+   SICHERUNG LADEN (Runde 4)
+   Vorher lief der Import über denselben Weg wie der Cloud-Abgleich
+   (mergeSyncedData): Was hier gelöscht war, filterte der Grabstein auch aus
+   der Datei, und es kam „Importiert!“ — auch bei einer Datei, die gar keine
+   Sicherung war (ihr Inhalt landete in den Daten).
+   Jetzt zeigt ein Fenster von unten, was in der Sicherung steht und was hier
+   fehlt, und holt genau das zurück: Einheiten, auch gelöschte, Messungen
+   und eigene Übungen. Plan und Einstellungen bleiben, wie sie sind; nichts
+   wird gelöscht. Gelöschte Einheiten kommen unter neuer Kennung zurück, wie
+   bei „Rückgängig“: Ihr Grabstein ist vielleicht schon in der Cloud, und
+   kein Abgleich nimmt ihn zurück. Gelöschte Messungen und Übungen bleiben
+   weg: ihr Grabstein hängt am Datum oder Namen, die Cloud nähme sie gleich
+   wieder. Die Meldung danach nennt, was übernommen wurde.
+   -------------------------------------------------------------------------- */
+let sicherungStand=null;
+function istSicherung(d){
+  const obj=x=>!!x&&typeof x==='object'&&!Array.isArray(x);
+  return obj(d)&&Array.isArray(d.history)&&(obj(d.plan)||obj(d.settings));
+}
+/* Die Sicherung so aufbereitet wie eigene Daten (Sätze, Kennungen), ohne D
+   anzufassen. Ein offenes Training in der Datei zählt nicht: es ist keine
+   Einheit, und normalizeData würde es sonst als liegengeblieben übernehmen. */
+function sicherungLesen(d){
+  const roh=cloneData(d);
+  delete roh.active;
+  const vorher=D,notiz=autoSavedNotice;
+  try{D=roh;normalizeData();return D}
+  finally{D=vorher;autoSavedNotice=notiz}
+}
+/* Was aus der Sicherung hier fehlt. Eine gelöschte Einheit, die schon unter
+   neuer Kennung zurück ist (Rückgängig, ein früherer Import), zählt nicht:
+   gleicher Inhalt, andere Kennung. */
+function sicherungFehlt(b){
+  normalizeData();
+  const inhalt=x=>histSessionKey({...x,id:undefined});
+  const da=new Set(D.history.map(histSessionKey)),daInhalt=new Set(D.history.map(inhalt));
+  const grab=new Set(D.deleted.history);
+  const einheiten=b.history.filter(x=>{
+    const k=histSessionKey(x);
+    return !da.has(k)&&!(grab.has(k)&&daInhalt.has(inhalt(x)));
+  });
+  const wDa=new Set(D.bio.weights.map(w=>dateKey(w&&w.date)));
+  const weights=b.bio.weights.filter(w=>{const k=dateKey(w&&w.date);return k&&!wDa.has(k)&&!D.deleted.weights.includes(k)});
+  const eDa=new Set(D.egym.measurements.map(egymKey));
+  const egym=b.egym.measurements.filter(m=>!eDa.has(egymKey(m))&&!D.deleted.egym.includes(egymKey(m))&&!D.deleted.egym.includes(dateKey(m&&m.date)));
+  const uDa=new Set(D.library.custom.map(x=>libKey(x&&x.name)));
+  const uebungen=b.library.custom.filter(x=>{const k=libKey(x&&x.name);return k&&!uDa.has(k)&&!D.deleted.libraryCustom.includes(k)});
+  return {einheiten,grab,weights,egym,uebungen,messungen:weights.length+egym.length};
+}
+function fehltText(f){
+  const anzahl=(n,eins,mehr)=>`${n} ${n===1?eins:mehr}`;
+  const teile=[];
+  if(f.einheiten.length)teile.push(anzahl(f.einheiten.length,'Einheit','Einheiten'));
+  if(f.messungen)teile.push(anzahl(f.messungen,'Messung','Messungen'));
+  if(f.uebungen.length)teile.push(anzahl(f.uebungen.length,'eigene Übung','eigene Übungen'));
+  return teile.length>1?teile.slice(0,-1).join(', ')+' und '+teile[teile.length-1]:teile[0]||'';
+}
 function importData(e){
   const f=e.target.files[0];
   if(!f)return;
   const r=new FileReader();
   r.onload=function(ev){
-    try{
-      const d=JSON.parse(ev.target.result);
-      D=mergeSyncedData(d);
-      normalizeData();
-      save();
-      toast('Importiert!');
-      renderAll();renderHist();renderSettings();renderAna();
-    }catch(err){
+    let d=null;
+    try{d=JSON.parse(ev.target.result)}catch{}
+    if(!istSicherung(d)){toastBleibt('Keine PUMPBRAH-Sicherung',{id:'import'});return}
+    try{openSicherung(d,f.lastModified)}
+    catch(err){
       console.error('PUMPBRAH: Import fehlgeschlagen',err);
       toastBleibt('Import fehlgeschlagen',{id:'import'});
     }
   };
   r.readAsText(f);
   e.target.value='';
+}
+function openSicherung(d,dateiZeit){
+  const b=sicherungLesen(d);
+  sicherungStand=b;
+  const f=sicherungFehlt(b);
+  const tage=Object.keys(b.plan||{}).filter(k=>b.plan[k]&&Array.isArray(b.plan[k].exercises)).length;
+  const zeilen=[['Einheiten',b.history.length],['Davon fehlen hier',f.einheiten.length],['Trainingstage im Plan',tage],
+    ['Messungen',b.bio.weights.length+b.egym.measurements.length]];
+  if(f.messungen)zeilen.push(['Davon fehlen hier',f.messungen]);
+  if(f.uebungen.length)zeilen.push(['Eigene Übungen, die hier fehlen',f.uebungen.length]);
+  document.getElementById('sicherung-list').innerHTML=zeilen.map(([t,w])=>`<div class="ask-li"><span>${t}</span><b>${esc(w)}</b></div>`).join('');
+  const stand=dataStamp(d)||dateiZeit;
+  const vom=stand?`Datei vom ${new Date(stand).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})}. `:'';
+  const was=fehltText(f);
+  document.getElementById('sicherung-lead').textContent=vom+(was?'Was hier fehlt, kommt zurück. Nichts wird gelöscht.':'Hier fehlt nichts daraus.');
+  const los=document.getElementById('sicherung-go');
+  los.hidden=!was;
+  los.textContent=was?was+' zurückholen':'';
+  document.getElementById('sicherung-cancel').textContent=was?'Abbrechen':'Schließen';
+  om('m-sicherung');
+}
+/* Beim Tipp neu gerechnet: In der Zwischenzeit kann ein Abgleich etwas
+   gebracht haben, das dann nicht doppelt kommt. */
+function sicherungUebernehmen(){
+  const b=sicherungStand;sicherungStand=null;
+  cm('m-sicherung');
+  if(!b)return;
+  const f=sicherungFehlt(b);
+  const was=fehltText(f);
+  if(!was){toast('Hier fehlt nichts aus der Sicherung');return}
+  const jetzt=Date.now();
+  f.einheiten.forEach(x=>{
+    const n=cloneData(x);
+    if(f.grab.has(histSessionKey(x))){n.id=newSessionId();n.updatedAt=jetzt}
+    D.history.push(n);
+  });
+  f.weights.forEach(w=>D.bio.weights.push(cloneData(w)));
+  D.bio.weights.sort((x,y)=>dateKey(x.date).localeCompare(dateKey(y.date)));
+  f.egym.forEach(m=>D.egym.measurements.push(cloneData(m)));
+  f.uebungen.forEach(x=>D.library.custom.push(cloneData(x)));
+  save();
+  toast(was+' zurückgeholt');
+  renderAll();renderHist();renderSettings();renderAna();
+  if(f.messungen)renderBio();
 }
 function toggleEgym(on){
   if(!D.egym)D.egym={enabled:false,measurements:[]};
@@ -9566,7 +9764,7 @@ function renderAnaProgress(){
     const zahl=prozent===null?'—':(prozent>0?'+':prozent<0?'−':'')+Math.abs(prozent);
     const stand=p.bodyweight?`zuletzt ${esc(p.last)} Wdh`:`e1RM ${esc(de1(p.last))} kg`;
     return`<div class="prow${warn?' stale':''}" onclick="showExHist('${jsStr(p.name)}')">`+
-      `<div class="bd"><b>${esc(p.name)}</b>`+
+      `<b>${esc(p.name)}</b><div class="bd">`+
       `<span>${p.sessions} Einheiten, ${stand}`+
       `${warn?`, stagniert seit ${p.stale}`:''}</span></div>`+
       trendSpark(p.series)+
@@ -9580,7 +9778,6 @@ function toggleTrendAll(){
   D.ui.trendAll=!D.ui.trendAll;
   save();
   renderAnaProgress();
-  haptic(8);
 }
 /* Der Wochenbericht: erst ein Satz, der die Woche einordnet, dann Belege.
    Bewusst in dieser Reihenfolge — wer Zahlen zuerst zeigt, überlässt dem
@@ -9672,7 +9869,6 @@ function swapStaleExercise(name){
   if(alt.note)ex.note=alt.note;
   save();markPlanDirty();coachInvalidate();
   curTab=loc.dayKey;renderPlan();renderDash();renderAna();
-  haptic([12,40,12]);
   toastAction(`Getauscht: ${alt.name}`,'Rückgängig',()=>{
     const d=D.plan[loc.dayKey];
     const e=d&&(d.exercises||[]).find(x=>x===ex||(vorher.id&&x.id===vorher.id));
@@ -10040,11 +10236,6 @@ function renderSettings(){
   }
   document.getElementById('prof-status').textContent=profileStatusText();
   renderKonto();
-  /* Krank-Modus ist ein Zustand: der Schalter zeigt ihn, darunter seit wann. */
-  const seit=D.health.sick&&D.health.sickSince?new Date(D.health.sickSince):null;
-  document.getElementById('sick-toggle').checked=!!D.health.sick;
-  document.getElementById('sick-label').textContent=!D.health.sick?'Nicht aktiv'
-    :seit&&!isNaN(seit)?'Aktiv seit '+seit.toLocaleDateString('de-DE',{day:'numeric',month:'short'}):'Aktiv';
   if(!D.egym)D.egym={enabled:false,measurements:[]};
   toggleEgym(D.egym.enabled);
   const bn=document.getElementById('backup-note');
@@ -10085,13 +10276,9 @@ function renderSettings(){
       input.onchange=saveProfileImage;
       hero.appendChild(input);
     }
-    let actions=hero.querySelector('.profile-actions');
-    if(!actions){
-      actions=document.createElement('div');
-      actions.className='profile-actions';
-      hero.appendChild(actions);
-    }
-    actions.innerHTML=D.ui.avatar
+    /* Der Platz steht im Markup neben dem Namen (.sh-top). */
+    const actions=hero.querySelector('.profile-actions');
+    if(actions)actions.innerHTML=D.ui.avatar
       ?`<button class="profile-pic-btn" onclick="clearProfileImage()">Bild entfernen</button>`
       :`<button class="profile-pic-btn" onclick="document.getElementById('profile-pic-input').click()">Bild wählen</button>`;
   }
@@ -10109,7 +10296,7 @@ function openVolZones(){
 function setVolumeMode(mode){
   ensureUIState();
   D.ui.volMode=mode==='direct'?'direct':'total';
-  save();renderAna();haptic(8);
+  save();renderAna();
 }
 function detectDeload(){
   if(!D.history.length)return null;
@@ -10147,7 +10334,7 @@ function renderDeload(){
   if(!el)return;
   ensureUIState();
   if(renderDeloadActive())return;
-  if(D.health.sick||(D.ui.deloadSnoozedUntil&&Date.now()<D.ui.deloadSnoozedUntil)){el.innerHTML='';return}
+  if(D.ui.deloadSnoozedUntil&&Date.now()<D.ui.deloadSnoozedUntil){el.innerHTML='';return}
   const d=detectDeload();
   if(!d){el.innerHTML='';return}
   el.innerHTML=`<div class="deload-banner"><div class="dl-head"><span class="dl-ico">🪫</span><span class="dl-title">Deload empfohlen</span></div>${d.reasons.map(r=>`<div class="dl-reason">${esc(r)}</div>`).join('')}<div class="dl-tip">💡 Eine Woche mit rund 60 % der Sätze bei RIR 4. Die App stellt deine Workouts automatisch um — dein Trainingsplan bleibt unverändert.</div><div class="dl-actions"><button class="btn btn-s btn-orange" style="margin:0" onclick="startDeload()">🪫 Deload starten</button><button class="btn btn-s btn-g" style="margin:0" onclick="snoozeDeload()">7 Tage ausblenden</button></div></div>`;
@@ -10281,11 +10468,6 @@ function renderDash(){
   renderDeload();
   runCountUps(document.getElementById('s-dash'));
   runBarGrows(document.getElementById('s-dash'));
-  const sa=document.getElementById('sick-area');
-  if(D.health.sick){
-    const days=D.health.sickSince?Math.ceil((Date.now()-new Date(D.health.sickSince).getTime())/864e5):0;
-    sa.innerHTML=`<div class="sick-banner"><div class="si">🤒</div><div><div class="st2">Krank gemeldet</div><div class="sd">Tag ${days} — Training pausiert</div></div><button class="btn btn-s btn-green" style="margin-left:auto" onclick="toggleSick()">✓ Gesund</button></div>`;
-  }else sa.innerHTML='';
 }
 /* --------------------------------------------------------------------------
    VERGLEICH ZWEIER EINHEITEN — nur über das, was in BEIDEN vorkam
@@ -10377,6 +10559,7 @@ function endWorkout(){
   D.history.push(s);
   D.active=null;
   save();
+  tick();
   /* Ein beendetes Workout ist der Moment, in dem man die Daten sicher wissen
      will — hier wird nicht auf den Sammel-Timer gewartet. */
   queueCloudSave(true);
@@ -10625,7 +10808,11 @@ function quickLog(ei){
 function restAfterSet(ex){
   const partners=D.active?supersetPartners(D.active.exercises,ex):[];
   const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&!p.skipped);
-  return pending.length?SUPERSET_GAP:restSecondsFor(ex.name,ex.muscle,ex.type);
+  if(pending.length)return SUPERSET_GAP;
+  /* Nach der Runde gilt die längere Pause der Partner, wie in der Dauer des
+     Plans (workloadSeconds). Vorher zählte nur die Übung, mit der die Runde
+     endete: Kreuzheben mit Wadenheben bekam 1:30 statt 2:00 (Runde 4). */
+  return Math.max(...[ex,...partners.filter(p=>!p.skipped)].map(x=>restSecondsFor(x.name,x.muscle,x.type)));
 }
 /* Speichert einen Satz an `ex` (= Übung logTgt.exIdx): aus dem Satz-Fenster
    (confirmLog) oder mit einem Tipp (quickLog). `a`/`b` wie die Felder des
@@ -10638,6 +10825,7 @@ function logSet(ex,a,b,rir,note){
   const hadHistory=getAllSets(ex.name).filter(s=>s.w>0).length>0;
   const isPR=!cardio&&a>0&&b>0&&hadHistory&&checkPR(ex.name,a,b);
   ex.logged.push(entry);
+  tick();
   logTgt.exIdx=pullForward(logTgt.exIdx);
   justLoggedKey=logTgt.exIdx+':'+(ex.logged.length-1);
   /* logSet zeichnet das Workout mehrfach neu; der erste Render darf den
@@ -10669,12 +10857,12 @@ function logSet(ex,a,b,rir,note){
   renderWo();
   const melde=text=>toastSatz(text,ex,ex.logged.length-1);
   if(cardio){
-    melde(`${entry.r} min${entry.w?` · Stufe ${entry.w}`:''}`);haptic(12);
+    melde(`${entry.r} min${entry.w?` · Stufe ${entry.w}`:''}`);
   }else if(isPR){
     celebratePR('NEUER PR!',`${de(a)} kg × ${b} · e1RM ${de(calc1RM(a,b))} kg`);
     melde(`Neuer Rekord: ${de(a)} kg × ${b} · e1RM ${de(calc1RM(a,b))} kg`);
   }else{
-    melde(`${de(a)} kg × ${b} · RIR ${rir}`);haptic(12);
+    melde(`${de(a)} kg × ${b} · RIR ${rir}`);
   }
   /* Nach jedem Satz steht die Übung, die jetzt dran ist, mit Namen direkt
      unter dem festen Kopf. */
@@ -10771,7 +10959,6 @@ function applyTimeBudget(){
   if(!r)return;
   if(!r.changes.length){toast('Passt schon in dein Zeitfenster');return}
   toast(`${r.before} → ${r.after} min · ${r.changes.length} Anpassungen`);
-  haptic([12,40,12]);
 }
 /* PB-087: Die Leiste war Teil von renderWo() und wurde deshalb nur gezeichnet,
    wenn jemand den ganzen Workout-Screen neu baute. Am Ende der Pause tat das
@@ -11072,7 +11259,7 @@ function woGroupCard(list,grp,act,ords){
 function toggleWoRow(ei){
   if(!D.active)return;
   D.active.openEx=D.active.openEx===ei?null:ei;
-  renderWo();haptic(6);
+  renderWo();
 }
 /* Die Gruppe „Erledigt“ auf- und zuklappen. Zu schließt sie auch eine daraus
    geöffnete Übung — die hielte die Gruppe sonst gleich wieder offen. */
@@ -11082,7 +11269,7 @@ function toggleWoDone(){
   woDoneOpen=!(b&&b.getAttribute('aria-expanded')==='true');
   const o=activeExercisesSafe()[D.active.openEx];
   if(!woDoneOpen&&o&&!o.skipped&&(o.logged||[]).length>=o.sets)D.active.openEx=null;
-  renderWo();haptic(6);
+  renderWo();
 }
 /* ==========================================================================
    §17 — LIVE-STEUERUNG IM WORKOUT
@@ -11141,7 +11328,7 @@ function toggleWorkoutCompact(){
   D.active.compact=!D.active.compact;
   /* „Alle aufklappen“ zeigt auch die erledigten. */
   woDoneOpen=D.active.compact;
-  save();renderWo();haptic(8);
+  save();renderWo();
 }
 /* Die aktive Karte mit ihrer Oberkante direkt unter den festen Kopf rollen —
    nie mittig, nie darunter versteckt (Training-Übersicht 05.11.; vorher
@@ -11194,7 +11381,7 @@ function moveActiveExercise(ei,dir){
   const n=ei+dir;
   if(n<0||n>=a.length)return;
   [a[ei],a[n]]=[a[n],a[ei]];
-  save();renderWo();haptic(10);
+  save();renderWo();
 }
 function adjustActiveSets(ei,delta){
   const ex=activeExercisesSafe()[ei];
@@ -11202,7 +11389,7 @@ function adjustActiveSets(ei,delta){
   const next=Math.max(1,(parseInt(ex.sets)||1)+delta);
   if(next<ex.logged.length){toast('Es sind schon '+ex.logged.length+' Sätze geloggt');return}
   ex.sets=next;
-  save();renderWo();haptic(8);
+  save();renderWo();
 }
 function unskipEx(ei){
   const ex=activeExercisesSafe()[ei];
@@ -11383,7 +11570,6 @@ function applyWorkoutSwitch(key,strategy){
     save();renderWo();
   });
   else toast('Gewechselt zu '+planDisplayName(target));
-  haptic([12,40,12]);
 }
 /* ==========================================================================
    AUFWÄRMSÄTZE
@@ -11458,7 +11644,6 @@ function startDeload(ok){
   D.ui.deloadSnoozedUntil=0;
   save();renderDash();if(D.active)renderWo();
   toast('Deload aktiv für 7 Tage');
-  haptic([12,40,12]);
 }
 function endDeload(){
   ensureUIState();
@@ -11517,7 +11702,6 @@ function startMeso(weeks){
   m.block=(parseInt(m.block)||0)+1;
   save();renderDash();
   toast(`Mesozyklus gestartet — ${m.weeks} Wochen`);
-  haptic([12,40,12]);
   /* Ein neuer Block ist der natürliche Moment für frische Reize. Vorschlagen,
      nicht durchführen: Welche Übung man behalten will, weiß nur der Nutzer. */
   if(m.block>1)setTimeout(()=>proposeRotation(),400);
@@ -11604,7 +11788,6 @@ function applyRotation(){
   save();markPlanDirty();coachInvalidate();
   renderPlan();renderDash();renderAna();
   cm('m-rotation');
-  haptic([12,40,12]);
   toast(`${picked.length} ${picked.length===1?'Übung':'Übungen'} rotiert`);
 }
 function stopMeso(){
@@ -12151,7 +12334,6 @@ function commitSwap(persistToPlan){
   pendingSwap=null;
   save();cm('m-alt');renderWo();renderPL();
   toast(persistToPlan?'Getauscht & im Plan gespeichert ✓':'Alternative eingesetzt: '+swapped.name);
-  haptic([10,30,10]);
 }
 document.addEventListener('click',function(e){
   const btn=e.target.closest&&e.target.closest('#alt-list [data-alt-index]');
