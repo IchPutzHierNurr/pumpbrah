@@ -278,9 +278,8 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
    erst danach abgeschnitten — die Zeile wächst um wenige Pixel, der Name
    bleibt lesbar. */
 .exr-n{font-weight:700;font-size:var(--fs-14);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.exr-n .ssb{color:#4ea1ff;background:color-mix(in srgb,#4ea1ff 15%,transparent)}
 /* 11 px statt 9,5 px; ohne Sperrung und mit knapperem Rand braucht das
-   Schild so viel Platz wie vorher, „Supersatz SA" passt auch bei 320 px. */
+   Schild so viel Platz wie vorher. */
 .exr-n .uni{font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);font-weight:800;letter-spacing:0;
   color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);
   border-radius:6px;padding:1px 3px;margin-left:4px;vertical-align:1px;white-space:nowrap}
@@ -290,6 +289,15 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
 .exr.open .exr-a{transform:rotate(180deg)}
 .exr-d{display:none;padding:0 13px 13px}
 .exr.open .exr-d{display:block;animation:screenIn .22s ease}
+/* Ohne Notiz und ohne „Letztes Mal“ gibt es nichts aufzuklappen. */
+.exr.open .exr-d:empty{display:none}
+/* Supersatz im Plan: Kopfzeile, die Übungen eingerückt und links verbunden, davor A1, A2 wie im Training. */
+.ssg{margin:6px 0 8px}
+.ssg-h{display:flex;align-items:center;gap:6px;font-size:var(--fs-12);font-weight:600;color:var(--text2);padding:2px 0 6px 2px}
+.ssg-b{border-left:2px solid var(--bg5);padding-left:10px;margin-left:6px}
+.ssg-b .exr{margin-bottom:8px}
+.ssg-b .exr:last-child{margin-bottom:0}
+.ssk{font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);font-weight:600;color:var(--text2);margin-right:6px}
 .exr-note{font-size:var(--fs-12);color:var(--text2);background:var(--bg3);border-radius:12px;padding:9px 11px;line-height:1.5;border-left:2px solid var(--accent);margin-bottom:6px}
 .exr-note.pn{border-left-color:var(--orange)}
 .exr-note.mn{border-left-color:var(--blue)}
@@ -302,6 +310,7 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
 
 /* inputs */
 .ir{display:flex;gap:9px;align-items:flex-end;margin-bottom:10px}
+.ir[hidden]{display:none}
 .ig{flex:1}
 .ig label{display:block;font-size:var(--fs-11);text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:5px;font-weight:700}
 /* ============================================================
@@ -1614,6 +1623,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .wo-step b{margin-left:2px;font:700 var(--fs-14) 'JetBrains Mono',monospace;color:var(--text)}
 @media (max-width:359px){.wo-tools{flex-wrap:wrap}.wo-step{margin-left:0}}
 .wo-note{margin-top:10px;font-size:var(--fs-12);color:var(--text2);padding:7px 10px;background:rgba(255,255,255,.06);border-radius:10px}
+.wo-note+.wo-note{margin-top:4px}
 .wo-hist{margin-top:4px}
 .wo-hist summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 4px;font-size:var(--fs-14);line-height:17px;color:var(--text2);cursor:pointer;list-style:none}
 .wo-hist summary::-webkit-details-marker{display:none}
@@ -2340,9 +2350,9 @@ code.sr-code{cursor:auto}
 <div class="plan-card card">
 <button class="btn btn-s plan-save-btn" id="plan-save-btn" onclick="savePlanChanges()" style="display:none">💾 Plan speichern</button>
 <div class="plan-save-state" id="plan-save-state" style="display:none">✓ Automatisch gespeichert & synchronisiert</div>
-<div id="coach-area"></div>
 <div class="dtabs" id="pt" role="tablist" aria-label="Trainingstag"></div>
 <div id="pl"></div>
+<div id="coach-area"></div>
 <div class="plan-go" id="plan-go" hidden><button type="button" class="btn" id="plan-go-btn" onclick="planGo()"></button></div>
 </div>
 </div>
@@ -2638,18 +2648,18 @@ code.sr-code{cursor:auto}
 <div class="ig"><label for="a-rmax">Wdh. bis</label><input type="number" inputmode="numeric" min="1" max="100" id="a-rmax" value="12" autocomplete="off" aria-describedby="a-num-err"></div>
 </div>
 <div class="ig-err" id="a-num-err" hidden></div>
-<div class="ir"><div class="ig"><div class="rir-lab" id="a-rir-lab">RIR 2 – noch 2 Wiederholungen im Tank</div>
+<div class="ir" id="a-rir-row"><div class="ig"><div class="rir-lab" id="a-rir-lab">RIR 2 – noch 2 Wiederholungen im Tank</div>
 <div class="rir-circles" id="a-rir-circles" role="radiogroup" aria-label="Wiederholungen im Tank" data-lab="a-rir-lab" onkeydown="rirKey(event)">
-<button type="button" class="rir-c rir-5" role="radio" aria-checked="false" aria-label="RIR 5" data-v="5" tabindex="-1" onclick="pickRirAdd(5)">5</button>
-<button type="button" class="rir-c rir-4" role="radio" aria-checked="false" aria-label="RIR 4" data-v="4" tabindex="-1" onclick="pickRirAdd(4)">4</button>
-<button type="button" class="rir-c rir-3" role="radio" aria-checked="false" aria-label="RIR 3" data-v="3" tabindex="-1" onclick="pickRirAdd(3)">3</button>
-<button type="button" class="rir-c rir-2" role="radio" aria-checked="true" aria-label="RIR 2" data-v="2" tabindex="0" onclick="pickRirAdd(2)">2</button>
-<button type="button" class="rir-c rir-1" role="radio" aria-checked="false" aria-label="RIR 1" data-v="1" tabindex="-1" onclick="pickRirAdd(1)">1</button>
-<button type="button" class="rir-c rir-0" role="radio" aria-checked="false" aria-label="RIR 0" data-v="0" tabindex="-1" onclick="pickRirAdd(0)">0</button>
+<button type="button" class="rir-c rir-5" role="radio" aria-checked="false" aria-label="RIR 5" data-v="5" tabindex="-1" onclick="tapRirAdd(5)">5</button>
+<button type="button" class="rir-c rir-4" role="radio" aria-checked="false" aria-label="RIR 4" data-v="4" tabindex="-1" onclick="tapRirAdd(4)">4</button>
+<button type="button" class="rir-c rir-3" role="radio" aria-checked="false" aria-label="RIR 3" data-v="3" tabindex="-1" onclick="tapRirAdd(3)">3</button>
+<button type="button" class="rir-c rir-2" role="radio" aria-checked="true" aria-label="RIR 2" data-v="2" tabindex="0" onclick="tapRirAdd(2)">2</button>
+<button type="button" class="rir-c rir-1" role="radio" aria-checked="false" aria-label="RIR 1" data-v="1" tabindex="-1" onclick="tapRirAdd(1)">1</button>
+<button type="button" class="rir-c rir-0" role="radio" aria-checked="false" aria-label="RIR 0" data-v="0" tabindex="-1" onclick="tapRirAdd(0)">0</button>
 </div>
 <input type="hidden" id="a-rir" value="2">
 </div></div>
-<div class="ir"><div class="ig"><label for="a-type">Typ</label><select id="a-type"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
+<div class="ir"><div class="ig"><label for="a-type">Typ</label><select id="a-type" onchange="syncRirRow()"><option value="main">Hauptübung</option><option value="pre">Pre-Workout</option><option value="mob">Mobility</option></select></div>
 <div class="ig"><label for="a-mus">Muskelgruppe</label><select id="a-mus"><option value="chest">Brust</option><option value="back">Rücken</option><option value="legs">Beine</option><option value="shoulders">Schultern</option><option value="arms">Arme</option><option value="core">Core</option></select></div></div>
 <div class="ir"><div class="ig"><label for="a-note">Notiz</label><textarea id="a-note" rows="2" placeholder="z. B. Schulterblätter fixiert, kurzer Brustkontakt…" autocomplete="off" autocapitalize="sentences"></textarea></div></div>
 <div style="font-size:var(--fs-12);color:var(--text2);margin-bottom:8px" id="a-target"></div>
@@ -4077,7 +4087,8 @@ const ICON_PATHS={
   skip:'<path d="M6 5.5 14 12l-8 6.5zM18 5v14"/>',
   chev:'<path d="m9 6 6 6-6 6"/>',
   undo:'<path d="M9 5 4 10l5 5M4 10h9.5a5.5 5.5 0 0 1 0 11H11"/>',
-  pause:'<path d="M9 6v12M15 6v12"/>'
+  pause:'<path d="M9 6v12M15 6v12"/>',
+  link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'
 };
 function icon(key,size){
   const d=ICON_PATHS[key]||ICON_PATHS.arms;
@@ -4441,6 +4452,7 @@ function tab(id){
     haptic(6);
     return;
   }
+  if(id==='plan'&&planAufDran()){go(id,0);return}
   go(id,tabScroll[target.id]||0);
 }
 /* Satzstand des laufenden Trainings, ohne übersprungene Übungen. */
@@ -5712,8 +5724,26 @@ function startPlanSort(){planSort=true;syncPlanSortUI();renderPL();haptic(8)}
 function endPlanSort(){planSort=false;syncPlanSortUI();renderPL();haptic(8)}
 function startPlanDay(){startWorkout(curTab);go('wo')}
 /* Der feste Knopf unten ist „Starten“; im Sortier-Modus ist er „Fertig“ — so
-   bleibt das Ende des Modus auch mitten in einer langen Liste erreichbar. */
-function planGo(){if(planSort)endPlanSort();else startPlanDay()}
+   bleibt das Ende des Modus auch mitten in einer langen Liste erreichbar.
+   Läuft ein Training, heißt er „Weiter trainieren“ und führt hinein, auf
+   jedem Tag (Runde 4): Vorher stand dort „FullBody A starten“, und ein Tipp
+   wechselte das laufende FullBody B ohne Frage zu A. Den Tag wechselt das
+   Training selbst, mit Rückfrage. */
+function planGo(){if(planSort)endPlanSort();else if(D.active)tab('wo');else startPlanDay()}
+/* Der Plan öffnet auf dem Tag, der läuft, sonst auf dem, den Start als
+   nächsten nennt (nextPlanDay, Runde 4) — vorher immer auf dem ersten. Wer
+   selbst einen anderen Tag wählt, findet ihn beim nächsten Öffnen wieder,
+   bis ein anderer Tag dran ist. */
+let planDran=null;
+function planAufDran(){
+  const nk=nextPlanDay();
+  const k=D.active&&D.plan[D.active.planKey]?D.active.planKey:nk&&D.plan[nk.key]?nk.key:null;
+  if(!k||k===planDran)return false;
+  planDran=k;
+  if(curTab===k)return false;
+  curTab=k;
+  return true;
+}
 function renderPL(){
   const c=document.getElementById('pl');
   const p=D.plan[curTab];
@@ -5727,19 +5757,20 @@ function renderPL(){
   const wt=planDayLabel(p.day);
   let h=`<div class="plan-day"><div class="plan-day-n">${p.exercises.reduce((a,e)=>a+(parseInt(e.sets)||0),0)}</div>`+
     `<div class="plan-day-tx"><span>Sätze${parseDayString(p.day).length===1?' am '+esc(wt):''}</span><b>${n} ${n===1?'Übung':'Übungen'}</b>${mins?`<span>rund ${mins} Minuten</span>`:''}</div></div>`;
-  p.exercises.forEach((ex,i)=>{
-    const iC=ex.type==='pre'?'c-pre':ex.type==='mob'?'c-mob':'c-'+ex.muscle;
+  /* Supersätze heißen wie im Training A1, A2, B1 … (exOrdinals). */
+  const ords=exOrdinals(p.exercises);
+  const zeile=(ex,i)=>{
     const cC=ex.type==='pre'?'pre':ex.type==='mob'?'mob':'';
     const nC=ex.type==='pre'?'pn':ex.type==='mob'?'mn':'';
     const last=getLastW(ex.name);
     const uNote=D.notes[ex.name];
     const safe=jsStr(ex.name);
     const openCls=openPlanRows.has(ex.name)?' open':'';
-    h+=`<div class="exr ${cC}${openCls}">`+
+    const ssk=/^[A-Z]/.test(ords[i])?`<span class="ssk">${esc(ords[i])}</span>`:'';
+    return`<div class="exr ${cC}${openCls}">`+
       `<div class="exr-h"${planSort?'':` onclick="togglePlanRow(this,'${safe}')"`}>`+
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
-        `<div class="exr-b"><div class="exr-n">${esc(ex.name)}`+
-          (ex.ss?`<span class="uni ssb">Supersatz ${esc(ex.ss)}</span>`:'')+
+        `<div class="exr-b"><div class="exr-n">${ssk}${esc(ex.name)}`+
           (isUnilateral(ex.name,ex)?'<span class="uni">pro Seite</span>':'')+`</div>`+
         `<div class="exr-m"><b>${esc(ex.sets)} × ${esc(reps(ex))}</b>${ex.rir!==null?`<span>RIR ${esc(ex.rir)}</span>`:''}${last?`<span>${esc(de(last.w))} kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
         /* Eine Aktion je Zeile hat dem Namen die Breite zurückgegeben: erst
@@ -5751,19 +5782,36 @@ function renderPL(){
           :`<button type="button" class="exr-act" aria-label="Mehr zu ${attr(ex.name)}" aria-haspopup="menu" onclick="event.stopPropagation();openPlanExMenu(${i})">${icon('more',22)}</button>`}</div>`+
       `</div>`+
       `<div class="exr-d">${ex.note?`<div class="exr-note ${nC}">${esc(ex.note)}</div>`:''}${uNote?`<div class="exr-note" style="border-left-color:var(--purple)">📝 ${esc(uNote)}</div>`:''}`+
+        /* Aufgeklappt nur Notiz und „Letztes Mal“ (Runde 4): Ausführung, Notiz
+           und Verlauf stehen im ⋯-Menü, die Ausführung auch hinter dem Bild. */
         `${last?`<div style="font-size:var(--fs-11);color:var(--text2);margin-bottom:6px">Letztes Mal: <b style="color:var(--text);font-family:JetBrains Mono,monospace">${esc(de(last.w))} kg × ${esc(last.r)}</b></div>`:''}`+
-        `<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${icon('play',14)}Ausführung</button><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();openExNote('${safe}')">${icon('note',14)}Notiz</button><button class="btn btn-s btn-g ib" onclick="event.stopPropagation();showExHist('${safe}')">${icon('chart',14)}Verlauf</button></div>`+
       `</div></div>`;
+  };
+  /* Ein Supersatz steht als Gruppe da (Runde 4): Kopfzeile „Supersatz A, im
+     Wechsel“, die Übungen darunter eingerückt und links verbunden, an der
+     Stelle der ersten. Vorher trug jede ein Schild „Supersatz SA“, das Namen
+     in zwei Zeilen drückte. Gespeichert bleibt die Kennung (ex.ss) wie bisher.
+     Im Sortier-Modus steht die echte Reihenfolge, ohne Gruppen. */
+  const gezeigt=new Set();
+  p.exercises.forEach((ex,i)=>{
+    if(gezeigt.has(i))return;
+    if(planSort||!/^[A-Z]/.test(ords[i])){h+=zeile(ex,i);return}
+    const glieder=p.exercises.map((e,j)=>j).filter(j=>p.exercises[j].ss===ex.ss);
+    glieder.forEach(j=>gezeigt.add(j));
+    h+=`<div class="ssg"><div class="ssg-h">${icon('link',14)}Supersatz ${esc(ords[i].charAt(0))}, im Wechsel</div>`+
+      `<div class="ssg-b">${glieder.map(j=>zeile(p.exercises[j],j)).join('')}</div></div>`;
   });
   c.innerHTML=h;
   const goBtn=document.getElementById('plan-go-btn');
-  if(goBtn)goBtn.innerHTML=planSort?icon('check',20)+'Fertig':icon('play',20)+esc(planDisplayName(curTab))+' starten';
+  if(goBtn)goBtn.innerHTML=planSort?icon('check',20)+'Fertig':D.active?icon('play',20)+'Weiter trainieren':icon('play',20)+esc(planDisplayName(curTab))+' starten';
 }
 /* Überlaufmenü einer Planübung — teilt sich das Sheet mit dem Workout-Menü. */
 function openPlanExMenu(i){
   const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];
   if(!ex)return;
   const safe=jsStr(ex.name);
+  /* Die Gruppe heißt wie im Plan und im Training (A, B …), nicht nach ihrer gespeicherten Kennung „SA“. */
+  const ord=String(exOrdinals(D.plan[curTab].exercises)[i]);
   document.getElementById('alt-title').textContent=ex.name;
   document.getElementById('alt-sub').textContent=`${muscleName(ex.muscle)} · ${ex.sets}×${reps(ex)}`;
   const row=(ic,title,sub,act,danger)=>
@@ -5776,7 +5824,7 @@ function openPlanExMenu(i){
     row('note','Persönliche Notiz','Wird bei jeder Session angezeigt',`openExNote('${safe}')`)+
     row('chart','Verlauf','Alle bisherigen Sätze und e1RM',`showExHist('${safe}')`)+
     row('copy',ex.ss?'Kopplung lösen':'Als Supersatz koppeln',
-      ex.ss?`Zurzeit gekoppelt (${ex.ss}) — eine gemeinsame Pause`
+      ex.ss?`Zurzeit gekoppelt${/^[A-Z]/.test(ord)?` (Supersatz ${ord.charAt(0)})`:''} — eine gemeinsame Pause`
            :'Im Wechsel mit einer passenden Übung, spart Pausenzeit',`toggleSuperset(${i})`)+
     row('trash','Aus dem Plan entfernen','Deine Historie bleibt erhalten',`delEx(${i})`,true);
   om('m-alt');
@@ -5844,12 +5892,13 @@ function applyLibHint(){
   document.getElementById('a-rmax').value=item.rx;
   if(item.note)document.getElementById('a-note').value=item.note;
   pickRirAdd(item.rir===undefined?2:item.rir);
+  syncRirRow();
   refreshLibHint();
   haptic(8);
   toast('Werte aus der Bibliothek übernommen');
 }
-function openAddEx(){editRef=null;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Neue Übung';document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);document.getElementById('a-btn').textContent='Übung hinzufügen';refreshLibHint();om('m-add')}
-function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Übung bearbeiten';document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;pickRirAdd(ex.rir||0);document.getElementById('a-type').value=ex.type;document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='Änderungen speichern';refreshLibHint();om('m-add')}
+function openAddEx(){editRef=null;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Neue Übung';document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);syncRirRow();document.getElementById('a-btn').textContent='Übung hinzufügen';refreshLibHint();om('m-add')}
+function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Übung bearbeiten';document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;pickRirAdd(ex.rir);document.getElementById('a-type').value=ex.type;syncRirRow();document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='Änderungen speichern';refreshLibHint();om('m-add')}
 /* Name und Zahlen der beiden Übungsfenster (Plan: a-…, Bibliothek: libe-…).
    Früher deutete confirmAddEx falsche Eingaben still um: Sätze −5 wurden 1,
    Wdh 12 bis 8 wurden 12 bis 12, 9999 Sätze gingen durch. Jetzt sagt das Feld,
@@ -5875,7 +5924,7 @@ function readExForm(p){
   if(first){first.focus();return null}
   return{name,sets,rmin,rmax};
 }
-function confirmAddEx(){const f=readExForm('a');if(!f)return;const obj={id:Date.now(),name:f.name,sets:f.sets,rmin:f.rmin,rmax:f.rmax,rir:document.getElementById('a-type').value==='main'?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
+function confirmAddEx(){const f=readExForm('a');if(!f)return;const obj={id:Date.now(),name:f.name,sets:f.sets,rmin:f.rmin,rmax:f.rmax,rir:document.getElementById('a-type').value==='main'&&document.getElementById('a-rir').value!==''?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
   if(editRef){
     /* PB-086: Hier stand ein gemerkter INDEX. Der Cloud-Listener ersetzt in
        `D=mergeSyncedData(remote)` das ganze Datenobjekt — auch bei offenem
@@ -6228,7 +6277,21 @@ function rirKey(e){
   next.focus();next.click();
 }
 function pickRir(v){document.getElementById('log-rir').value=v;markRir('log-rir-circles',v)}
-function pickRirAdd(v){document.getElementById('a-rir').value=v;markRir('a-rir-circles',v)}
+/* Plan-Editor: Eine Übung ohne RIR-Vorgabe (Stütz, Tragen, Cardio) hat keinen
+   gewählten Kreis, darüber steht „RIR: keine Vorgabe“, gespeichert wird ohne
+   RIR (Runde 4). Vorher setzte das Fenster RIR 0, „keine Wiederholung mehr im
+   Tank“, und im Plan stand „Unterarmstütz 3 × 30–60, RIR 0“. Ein zweiter Tipp
+   auf den gewählten Kreis hebt die Wahl auf. Bei Aufwärmen und Mobility fällt
+   die Zeile weg: dort wird RIR nie gespeichert. */
+function pickRirAdd(v){
+  const n=v===null||v===undefined||v===''?NaN:parseInt(v);
+  const frei=!Number.isFinite(n);
+  document.getElementById('a-rir').value=frei?'':n;
+  markRir('a-rir-circles',frei?null:n);
+  if(frei)document.getElementById('a-rir-lab').textContent='RIR: keine Vorgabe';
+}
+function tapRirAdd(v){pickRirAdd(document.getElementById('a-rir').value===String(v)?null:v)}
+function syncRirRow(){document.getElementById('a-rir-row').hidden=document.getElementById('a-type').value!=='main'}
 /* ==========================================================================
    §10 — TRAININGSPLAN-VERWALTUNG
    Vorher: drei verschachtelte prompt()-Dialoge. Auf iOS blockieren die den
@@ -8146,7 +8209,9 @@ function renderCoachCard(){
   if(!Object.keys(D.plan||{}).length){mount.innerHTML='';return}
   const a=coachAnalyzePlan();
   /* Kein Satz über der Tabelle und kein Absatz mit Quellenangabe darunter:
-     die Tabelle und ihre Legende sagen es. Eine Zeile erklärt „ind.". */
+     die Tabelle und ihre Legende sagen es. Eine Zeile erklärt „ind.".
+     Sie steht unter der letzten Übung (Runde 4): Auf der Plan-Seite kommen
+     zuerst die Tage und ihre Übungen, vorher erst nach 678 px Tabelle. */
   mount.innerHTML=`<div class="coach-card">`+
     `<div class="coach-h"><div class="t">Wochenvolumen</div><div class="src">MEV · MAV · MRV</div></div>`+
     coachMatrixHTML(a)+
@@ -10860,6 +10925,9 @@ function woExBody(ex,ei,isActive,round){
   const lastSets=getAllSets(ex.name).filter(s=>s.w>0||s.r>0).slice(-6);
   const series=lastSets.map(s=>cardio?(s.r||0):(s.w||0));
   let h='';
+  /* Die Notiz aus dem Plan steht unter dem Namen, die persönliche darunter
+     (Runde 4). Vorher stand die Plan-Notiz nur abgeschnitten im Satz-Fenster. */
+  if(ex.note)h+=`<div class="wo-note">${esc(ex.note)}</div>`;
   if(D.notes[ex.name])h+=`<div class="wo-note">📝 ${esc(D.notes[ex.name])}</div>`;
   if(!skipped&&!done){
     const tgt=nextSetTarget(ex);
@@ -11674,22 +11742,38 @@ function openLibrary(){
   om('m-lib');
   setTimeout(()=>document.getElementById('lib-search').focus(),200);
 }
+/* Die Suche schaut nur in den Namen, deutsch und englisch (Runde 4), und
+   zeigt eine Liste ohne Gruppen: zuerst die Namen, die mit dem Suchwort
+   beginnen, dann die mit einem Wort, das so beginnt, dann der Rest. Vorher
+   suchte sie auch im Hinweis und ordnete nach Muskelgruppe: „seit“ fand 51
+   Übungen, 41 nur über „Pro Seite“ oder „einseitig“, und das erste Seitheben
+   stand an 23. Stelle. */
+function libSearchRank(item,q){
+  const n=exDisplayName(item.name).toLowerCase();
+  if(n.startsWith(q))return 0;
+  if(n.split(/[\s(\/-]+/).some(w=>w.startsWith(q)))return 1;
+  return n.includes(q)?2:3;
+}
 function renderLib(q){
   q=String(q||'').toLowerCase().trim();
   const c=document.getElementById('lib-content');
+  const zeile=item=>{
+    const rp=item.rn===item.rx?item.rn:item.rn+'–'+item.rx;
+    return`<div class="lib-item" onclick="event.stopPropagation();pickLibraryItem('${encodeURIComponent(item.name)}')">`+
+      `<span class="exdemo-thumb" style="width:38px;height:38px;flex:0 0 38px" onclick="event.stopPropagation();showExDemo('${jsStr(item.name)}','${jsStr(item.m)}','${jsStr(item.t)}')">${exerciseVisual(item.name,item.m,item.t,{speed:3,thumb:true})}</span>`+
+      `<div class="li-name">${esc(exDisplayName(item.name))}</div><div class="li-info">${esc(item.s)}×${esc(rp)}</div></div>`;
+  };
   let h='';
-  allLibraryCategories().forEach((cat,ci)=>{
-    const fl=q?cat.items.filter(i=>i.name.toLowerCase().includes(q)||String(i.note||'').toLowerCase().includes(q)):cat.items;
-    if(!fl.length)return;
-    h+=`<div class="lib-cat${q?' open':''}" onclick="this.classList.toggle('open')"><div class="lib-cat-hdr"><span class="ic-wrap" style="width:32px;height:32px;flex:0 0 32px;border-radius:10px">${icon(catIconKey(cat.cat),18)}</span>${esc(catLabel(cat.cat))}<span class="lib-cnt">${esc(fl.length)}</span><span class="lib-arr">▸</span></div><div class="lib-items">`;
-    fl.forEach(item=>{
-      const rp=item.rn===item.rx?item.rn:item.rn+'–'+item.rx;
-      h+=`<div class="lib-item" onclick="event.stopPropagation();pickLibraryItem('${encodeURIComponent(item.name)}')">`+
-        `<span class="exdemo-thumb" style="width:38px;height:38px;flex:0 0 38px" onclick="event.stopPropagation();showExDemo('${jsStr(item.name)}','${jsStr(item.m)}','${jsStr(item.t)}')">${exerciseVisual(item.name,item.m,item.t,{speed:3,thumb:true})}</span>`+
-        `<div class="li-name">${esc(exDisplayName(item.name))}</div><div class="li-info">${esc(item.s)}×${esc(rp)}</div></div>`;
+  if(q){
+    const treffer=allLibraryCategories().flatMap(cat=>cat.items).filter(i=>i.name.toLowerCase().includes(q));
+    treffer.sort((a,b)=>libSearchRank(a,q)-libSearchRank(b,q)||exDisplayName(a.name).localeCompare(exDisplayName(b.name),'de'));
+    if(treffer.length)h=`<div class="lib-cat open"><div class="lib-items">${treffer.map(zeile).join('')}</div></div>`;
+  }else{
+    allLibraryCategories().forEach(cat=>{
+      if(!cat.items.length)return;
+      h+=`<div class="lib-cat" onclick="this.classList.toggle('open')"><div class="lib-cat-hdr"><span class="ic-wrap" style="width:32px;height:32px;flex:0 0 32px;border-radius:10px">${icon(catIconKey(cat.cat),18)}</span>${esc(catLabel(cat.cat))}<span class="lib-cnt">${esc(cat.items.length)}</span><span class="lib-arr">▸</span></div><div class="lib-items">${cat.items.map(zeile).join('')}</div></div>`;
     });
-    h+=`</div></div>`;
-  });
+  }
   c.innerHTML=h||'<div class="empty">Keine Übung gefunden</div>';
 }
 function pickLibraryItem(encodedName){
@@ -11712,8 +11796,9 @@ function pickLibraryItem(encodedName){
   document.getElementById('a-sets').value=item.s;
   document.getElementById('a-rmin').value=item.rn;
   document.getElementById('a-rmax').value=item.rx;
-  pickRirAdd(item.rir||0);
+  pickRirAdd(item.rir===undefined?2:item.rir);
   document.getElementById('a-type').value=item.t;
+  syncRirRow();
   document.getElementById('a-mus').value=item.m;
   document.getElementById('a-note').value=item.note||'';
   document.getElementById('a-target').textContent='Wird zu: '+(curTab||'').replace('_',' ');
