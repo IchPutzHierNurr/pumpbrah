@@ -1322,14 +1322,15 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 
 /* ============================================================================
    START — erst der Weg zum Training, dann der Stand der Woche
-   Nächstes Workout, Wochenvolumen mit einer Skala für alle Zeilen, drei
-   Kennzahlen. Der Akzent steht nur auf dem Hauptknopf.
+   Nächstes Workout, Wochenvolumen mit einer Skala für alle Zeilen, ein
+   laufender Mesozyklus. Der Akzent steht nur auf dem Hauptknopf.
    ============================================================================ */
 #d-next-card .next-card-shot{
   position:relative;margin-bottom:12px;padding:16px;border-radius:20px;
   background:var(--mat-1),var(--bg2);box-shadow:var(--edge),var(--shadow-1);
 }
 .next-card-shot .nx-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:var(--fs-14);font-weight:500;line-height:1.3;color:var(--text2)}
+.next-card-shot .nx-pause b{margin-left:6px;font:600 var(--fs-16)/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:var(--accent)}
 .next-card-shot .row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-top:4px}
 .next-card-shot .big{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-44);line-height:1;font-weight:400;letter-spacing:.01em;color:var(--text)}
 .next-card-shot .small{margin-left:auto;font-size:var(--fs-14);font-weight:500;line-height:1.3;color:var(--text2);text-align:right}
@@ -1362,11 +1363,6 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 }
 .hero-info svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .hero-info:active{transform:scale(var(--press-s))}
-.hero-tag{
-  position:absolute;top:12px;right:52px;display:inline-flex;align-items:center;height:28px;padding:0 12px;
-  border-radius:999px;background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line);
-  font-size:var(--fs-12);font-weight:500;color:var(--text2);
-}
 /* Eine Skala für alle Zeilen: Minimum bei einem Drittel, bester Bereich bei
    zwei Dritteln, Obergrenze am Ende (barPos). Die Kerben stehen deshalb in
    jeder Zeile an derselben Stelle, das Korridorband läuft hinter allen. */
@@ -1399,7 +1395,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .wg-v small{font-size:var(--fs-11);font-weight:400;color:var(--t3)}
 /* Unter dem Minimum: Streifen statt reiner Farbe, damit Orange und Grün auch
    ohne Farbsehen zu trennen sind. */
-.wg-fill.low,.wg-sw,.mv-fill.low{
+.wg-fill.low,.mv-fill.low{
   background:repeating-linear-gradient(135deg,var(--orange) 0 4px,color-mix(in srgb,var(--orange) 55%,transparent) 4px 8px);
 }
 /* iPhone SE: schmalere Namensspalte, damit MAV und MRV nicht ineinanderlaufen. */
@@ -1408,33 +1404,8 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
   .wg-n{font-size:var(--fs-12)}
   .wg-scale{font-size:var(--fs-11)}
 }
-.wg-foot{margin:4px -16px -16px;border-top:1px solid var(--line)}
-.wg-note{
-  display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 16px;border:0;background:none;
-  font-family:inherit;font-size:var(--fs-14);font-weight:500;line-height:1.35;color:var(--text2);text-align:left;cursor:pointer;
-}
-div.wg-note{cursor:default}
-.wg-note b{font-weight:700;color:var(--text)}
-.wg-note .tx{flex:1}
-.wg-note svg{flex:none;width:20px;height:20px;fill:none;stroke:var(--t3);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform var(--dur-el) var(--out)}
-.wg-foot.open .wg-note svg{transform:rotate(90deg)}
-.wg-sw{flex:none;width:20px;height:8px;border-radius:999px}
-.wg-detail{display:none;padding:0 16px 16px;font-size:var(--fs-14);line-height:1.5;color:var(--text2)}
-.wg-foot.open .wg-detail{display:block}
-.wg-detail b{font-weight:700;color:var(--text)}
-.wg-detail p+p{margin-top:8px}
-
-.kpi-card{display:flex;margin-bottom:12px;border-radius:20px;background:var(--mat-1),var(--bg2);box-shadow:var(--edge),var(--shadow-1)}
-.kpi-c{flex:1;min-width:0;padding:16px 12px}
-.kpi-c+.kpi-c{border-left:1px solid var(--line)}
-.kpi-l{font-size:var(--fs-11);font-weight:700;line-height:1;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
-.kpi-v{margin-top:8px;font-family:'Bebas Neue',sans-serif;font-size:var(--fs-38);line-height:1;font-variant-numeric:tabular-nums;color:var(--text)}
-.kpi-v small{margin-left:2px;font-size:var(--fs-22);color:var(--t3)}
-/* Die Einheit ist bewusst NICHT Bebas: Bebas hat nur Großbuchstaben, ein
-   kleines „t" für Tonnen wird dort zu einem großen T. */
-.kpi-v small.u{margin-left:4px;font-family:'Space Grotesk',sans-serif;font-size:var(--fs-14);font-weight:500}
-.kpi-s{margin-top:4px;font-size:var(--fs-12);line-height:1.3;color:var(--text2)}
-.kpi-s.dim{color:var(--t3)}
+.wg-foot{display:flex;align-items:center;min-height:44px;margin:4px -16px -16px;padding:8px 16px;border-top:1px solid var(--line);
+  font-size:var(--fs-14);font-weight:500;line-height:1.35;color:var(--text2)}
 
 /* „Nicht gesichert": steht nur bei einer Störung, ein Tipp versucht es erneut. */
 .sync-fail{display:flex;align-items:center;min-height:44px;padding:0 4px;border:0;background:none;font-family:inherit;font-size:var(--fs-14);font-weight:600;color:var(--red);cursor:pointer}
@@ -1993,12 +1964,12 @@ div.wg-note{cursor:default}
   background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 9%,transparent),transparent)}
 .meso-card.deload{border-color:color-mix(in srgb,#4ea1ff 32%,transparent);
   background:linear-gradient(135deg,color-mix(in srgb,#4ea1ff 10%,transparent),transparent)}
-.meso-card .mc-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.meso-card .mc-h,#meso-sheet .mc-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .meso-card .mc-t{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);letter-spacing:.5px}
 .meso-card .mc-f{font-family:'JetBrains Mono',monospace;font-size:var(--fs-12);color:var(--accent);font-weight:700}
-.meso-card .mc-wk{display:flex;align-items:center;gap:8px;font-size:var(--fs-12);color:var(--text2)}
+.meso-card .mc-wk,#meso-sheet .mc-wk{display:flex;align-items:center;gap:8px;font-size:var(--fs-12);color:var(--text2)}
 /* Wochen − und +: 44 px wie die Satzpause im Profil. */
-.meso-card .mc-wk button{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:14px;
+.meso-card .mc-wk button,#meso-sheet .mc-wk button{display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:14px;
   background:rgba(255,255,255,.07);box-shadow:var(--edge),inset 0 0 0 1px var(--line);color:var(--text);
   font-family:inherit;font-size:var(--fs-16);line-height:1;cursor:pointer;touch-action:manipulation}
 .meso-card .mc-bar{position:relative;height:8px;border-radius:999px;background:rgba(255,255,255,.09);margin:11px 0 9px}
@@ -2007,6 +1978,10 @@ div.wg-note{cursor:default}
 .meso-card.deload .mc-bar i{background:#4ea1ff}
 .meso-card .mc-bar u{position:absolute;top:-2px;width:2px;height:12px;background:rgba(255,255,255,.28)}
 .meso-card .mc-d{font-size:var(--fs-12);color:var(--text2);line-height:1.5}
+/* Fenster „Mesozyklus“ aus dem Plan-Menü: Dauer mit − und +, eine Erklärung, „Zyklus starten“ unten. */
+#meso-sheet .mc-l{font-size:var(--fs-16);font-weight:600;color:var(--text)}
+#meso-sheet .mc-wk{font-size:var(--fs-14)}
+#meso-sheet>.mc-d{margin:12px 0 16px;font-size:var(--fs-14);color:var(--text2);line-height:1.5}
 .meso-card .mc-d b{color:var(--text)}
 .meso-card .mc-act{display:flex;gap:8px;margin-top:10px}
 
@@ -2223,7 +2198,7 @@ code.sr-code{cursor:auto}
 .seg button{transition:color .22s var(--ease),transform var(--dur-micro) var(--sp)}
 .plan-add,.plan-more,.hero-info,.trend-more,.sh-av,.setbtn,.mdl-ask .ask-cancel,
 .toast .ta-b,.toast .ta-x,.sync-fail,.exr-h,.hex,.hs-row,.fb-ring,.wo-why,.warmup summary,.wo-hist summary,
-.hist-cal summary,.share-code summary,.st.st-tog,.be-del,.hs-edit,.meso-card .mc-wk button,.alt-row,.menu-row,
+.hist-cal summary,.share-code summary,.st.st-tog,.be-del,.hs-edit,.meso-card .mc-wk button,#meso-sheet .mc-wk button,.alt-row,.menu-row,
 .lib-cat-hdr,.cta-sub,.mdl-log .log-link,.mdl-log .log-sec button,.wo-step button{transition:transform var(--dur-micro) var(--sp)}
 /* Bisher ohne Nachgeben: die Plan-Zeilen, die Übungen einer geöffneten
    Einheit, der Pausenring und die übrigen Zeilen und kleinen Tasten. */
@@ -2231,7 +2206,7 @@ code.sr-code{cursor:auto}
 .cta-sub:active,.wo-why:active,.warmup summary:active,.wo-hist summary:active,.hist-cal summary:active{transform:scale(var(--press-l))}
 .fb-ring:active,.seg button:active,.alt-filter:active,.sync-fail:active,.share-code summary:active,
 .mdl-log .log-link:active,.mdl-log .log-sec button:active{transform:scale(var(--press))}
-.be-del:active,.hs-edit:active,.meso-card .mc-wk button:active,.wo-step button:active,.sr-num .setbtn:active{transform:scale(var(--press-s))}
+.be-del:active,.hs-edit:active,.meso-card .mc-wk button:active,#meso-sheet .mc-wk button:active,.wo-step button:active,.sr-num .setbtn:active{transform:scale(var(--press-s))}
 
 /* --- Regel 6: Trefferflächen ---------------------------------------------
    Jede Taste fängt mindestens 44 × 44 px. Wo Symbol oder Knopf kleiner
@@ -2346,7 +2321,6 @@ code.sr-code{cursor:auto}
 <div id="sick-area"></div>
 <div id="d-next-card"></div>
 <div id="d-week-card"></div>
-<div id="d-kpi-row"></div>
 <div id="meso-area"></div>
 <div id="deload-area"></div>
 </div>
@@ -2777,6 +2751,10 @@ code.sr-code{cursor:auto}
 </div></div>
 <div class="mbg" id="m-planmenu"><div class="mdl">
 <div id="planmenu-list"></div>
+</div></div>
+<div class="mbg" id="m-meso"><div class="mdl">
+<div class="mt">Mesozyklus <button class="mc" aria-label="Schließen" onclick="cm('m-meso')">✕</button></div>
+<div id="meso-sheet"></div>
 </div></div>
 <div class="mbg" id="m-woswitch"><div class="mdl">
 <div class="mt">TRAININGSTAG WECHSELN <button class="mc" aria-label="Schließen" onclick="cm('m-woswitch')">✕</button></div>
@@ -4482,7 +4460,12 @@ function renderLiveBar(){
   n.textContent=planDisplayName(D.active.planKey);
   tickLiveBar();
 }
+/* Auf Start ersetzt die Läuft-Karte die Leiste; ihre rechte obere Ecke zeigt
+   dieselbe Pause, jede Sekunde neu, und bleibt ohne Pause leer (Runde 4). */
+function startPauseHTML(){return timerInt?`Pause<b>${fmtT(getTimerRemaining())}</b>`:''}
 function tickLiveBar(){
+  const ecke=document.getElementById('nx-pause');
+  if(ecke){const h=startPauseHTML();if(ecke.innerHTML!==h)ecke.innerHTML=h}
   if(!D.active||!document.body.classList.contains('has-live'))return;
   const st=document.getElementById('lb-s'),t=document.getElementById('lb-t');
   if(!st||!t)return;
@@ -7492,7 +7475,6 @@ function ensureUIState(){
   if(!D.ui.accent||!accentPresets()[D.ui.accent])D.ui.accent='volt';
   D.ui.mode='dark';
   if(D.ui.avatar===undefined)D.ui.avatar='';
-  if(D.ui.homeNoteOpen===undefined)D.ui.homeNoteOpen=false;
   if(D.ui.deloadSnoozedUntil===undefined)D.ui.deloadSnoozedUntil=0;
   if(D.ui.volMode!=='direct'&&D.ui.volMode!=='total')D.ui.volMode='total';
   if(!D.ui.deload||typeof D.ui.deload!=='object')D.ui.deload={active:false,since:0,until:0};
@@ -9810,9 +9792,10 @@ function runBarGrows(root){
    miteinander zu tun haben, ist keine Information.
 
    Jetzt steht dort die Frage, die man wirklich beantwortet haben will: Wie
-   viele Gruppen liegen im produktiven Korridor, und welche nicht? Die Summe
-   ist nicht verschwunden — sie steht in der Erklärzeile, in derselben Einheit
-   wie die Grenzen (PB-104), zusammen mit der Zahl roher Sätze.
+   viele Gruppen liegen im produktiven Korridor, und welche nicht? Welche
+   fehlen, zeigen die gestreiften Balken mit „8/10“. Die Zeile darunter, die
+   das noch einmal in Worten sagte und die Summe nannte, ist weg (Runde 4);
+   die Zählregel steht in Zahlen.
    -------------------------------------------------------------------------- */
 function weeklyGroupStatus(){
   const vol=getWeeklyVolume(true);
@@ -9826,7 +9809,7 @@ function weeklyGroupStatus(){
    enge Plan-Matrix gedacht; hier ist Platz für ausgeschriebene Namen, nur die
    Schulterköpfe bleiben gekürzt. */
 const WG_NAMEN={shoulders:'Seitl. Schulter',front:'Vord. Schulter',rear:'Hint. Schulter',hams:'Beinbeuger'};
-function buildWeekGauge(totalSets,rohSaetze){
+function buildWeekGauge(){
   const groups=weeklyGroupStatus();
   const gesamt=groups.length;
   /* „Im Korridor" heißt: mindestens am Minimum, höchstens an der
@@ -9835,13 +9818,10 @@ function buildWeekGauge(totalSets,rohSaetze){
   /* „Gedeckt" zählt als in Ordnung: Die Gruppe braucht kein direktes Volumen
      und bekommt es über die Grundübungen. */
   const drin=groups.filter(x=>x.st.key!=='low'&&x.st.key!=='high');
-  const unten=groups.filter(x=>x.st.key==='low');
-  const oben=groups.filter(x=>x.st.key==='high');
   /* Ohne einen Satz in den letzten 7 Tagen liegt formal jede Gruppe unter ihrem
      Minimum — aber das ist kein Mangel, es ist ein leerer Anfang. Grau und
      ohne „fehlt"-Hinweise, bis der erste Satz gezählt ist. */
   const leer=gesamt>0&&groups.every(x=>x.sets<=0);
-  const nennen=(list,grenze)=>list.map(x=>`${esc(muscleName(x.g))} <b>${de(x.sets)}</b>/${grenze(x)}`).join(', ');
   const balken=groups.map(x=>{
     const zeigeMin=x.st.key==='low'&&!leer;
     return `<div class="wg-row"><span class="wg-n">${esc(WG_NAMEN[x.g]||volGroupShort(x.g))}</span>`+
@@ -9849,39 +9829,19 @@ function buildWeekGauge(totalSets,rohSaetze){
       `<i class="wg-mk a"></i><i class="wg-mk b"></i></span>`+
       `<span class="wg-v">${de(x.sets)}${zeigeMin?`<small>/${x.lm.mev}</small>`:''}</span></div>`;
   }).join('');
-  /* Die alte Summenzahl ist nicht falsch, sie ist nur keine Überschrift.
-     Unter dem Tipp erklärt sie sich selbst — in derselben Einheit wie die
-     Grenzen, neben der Zahl, die der Nutzer selbst gezählt hat (PB-104). */
-  const regel=Number.isFinite(rohSaetze)
-    ? `<p>Gezählt wie die Muskelgrenzen: ein direkter Satz 1,0, ein mitbeteiligter Muskel 0,5. Du hast <b>${rohSaetze} Sätze ausgeführt</b>, gewichtet ${totalSets} Punkte.</p>`
-    : '';
-  /* Eine Zeile sagt den Stand; ein Tipp klappt die Zahlen und die Zählregel
-     darunter auf. Der Zustand liegt in D.ui und überlebt Neuzeichnen. */
-  let kopf='',detail='';
-  if(!gesamt)kopf='Sobald ein Trainingsplan steht, wird hier Woche für Woche gemessen.';
-  else if(leer)kopf='Noch kein Satz in den letzten 7 Tagen. Mit dem ersten Satz füllen sich die Balken.';
-  else{
-    kopf=unten.length
-      ? `<i class="wg-sw"></i><span class="tx"><b>${unten.length}</b> ${unten.length===1?'Gruppe':'Gruppen'} unter dem Minimum</span>`
-      : oben.length
-        ? `<span class="tx"><b>${oben.length}</b> ${oben.length===1?'Gruppe':'Gruppen'} über der Obergrenze</span>`
-        : `<span class="tx">Alle <b>${gesamt}</b> Gruppen im Korridor</span>`;
-    detail=(unten.length?`<p>Unter dem Minimum: ${nennen(unten,x=>x.lm.mev)}</p>`:'')+
-      (oben.length?`<p>Über der Obergrenze: ${nennen(oben,x=>x.lm.mrv)}</p>`:'')+regel;
-  }
-  const offen=!!(D.ui&&D.ui.homeNoteOpen);
-  const fuss=detail
-    ? `<div class="wg-foot${offen?' open':''}" id="wg-foot"><button type="button" class="wg-note" onclick="toggleHomeNote()" aria-expanded="${offen}">${kopf}`+
-      `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><div class="wg-detail">${detail}</div></div>`
-    : `<div class="wg-foot"><div class="wg-note">${kopf.startsWith('<')?kopf:`<span class="tx">${kopf}</span>`}</div></div>`;
+  /* Eine Zeile unter den Balken nur, solange nichts gezählt ist (Runde 4):
+     Mit Sätzen wiederholte sie die große Zahl und die gestreiften Balken.
+     Das Schild „Noch nichts gezählt“ oben ist aus demselben Grund weg — die
+     graue 0 und diese Zeile sagen es schon. */
+  const kopf=!gesamt?'Sobald ein Trainingsplan steht, wird hier Woche für Woche gemessen.'
+    :leer?'Noch kein Satz in den letzten 7 Tagen. Mit dem ersten Satz füllen sich die Balken.':'';
   return`<div class="mesh-hero${leer?' is-leer':''}">`+
     `<button type="button" class="hero-info" onclick="openVolZones()" aria-label="Volumenzonen erklären">`+
     `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg></button>`+
-    (leer?`<span class="hero-tag">Noch nichts gezählt</span>`:'')+
     `<div class="mesh-row"><div class="mesh-num countup" data-count="${leer?0:drin.length}" data-count-key="wk-n" data-count-dur="900">0</div>`+
     `<div class="mesh-side"><div class="o">Wochenvolumen</div><div class="u">von ${gesamt} Gruppen</div><div class="o">im Korridor</div></div></div>`+
     (balken?`<div class="wg-list"><div class="wg-scale"><span class="s-mev">MEV</span><span class="s-mav">MAV</span><span class="s-mrv">MRV</span><span class="s-n">Sätze</span></div><i class="wg-band"></i>${balken}</div>`:'')+
-    fuss+`</div>`;
+    (kopf?`<p class="wg-foot">${kopf}</p>`:'')+`</div>`;
 }/* Satzpause: 30 Sekunden bis 10 Minuten in Schritten zu 15 Sekunden,
    gespeichert weiter in Sekunden. Ein krummer alter Wert (100 s) rastet beim
    ersten Tipp auf das Raster ein. */
@@ -10007,26 +9967,6 @@ function renderSettings(){
       :`<button class="profile-pic-btn" onclick="document.getElementById('profile-pic-input').click()">Bild wählen</button>`;
   }
 }
-function ensureHomeUIState(){
-  if(!D.ui)D.ui={accent:'volt',mode:'dark',avatar:''};
-  if(D.ui.avatar===undefined)D.ui.avatar='';
-  if(D.ui.homeNoteOpen===undefined)D.ui.homeNoteOpen=false;
-}
-function toggleHomeNote(){
-  ensureHomeUIState();
-  D.ui.homeNoteOpen=!D.ui.homeNoteOpen;
-  save();
-  syncHomeNoteUI();
-  haptic(8);
-}
-function syncHomeNoteUI(){
-  ensureHomeUIState();
-  const foot=document.getElementById('wg-foot');
-  if(!foot)return;
-  foot.classList.toggle('open',!!D.ui.homeNoteOpen);
-  const btn=foot.querySelector('button.wg-note');
-  if(btn)btn.setAttribute('aria-expanded',D.ui.homeNoteOpen?'true':'false');
-}
 /* Drei Definitionen, nie von selbst: das „i" in der großen Karte öffnet sie.
    Die Zahlen kommen aus MUSCLE_LANDMARKS, am Beispiel Brust. */
 function openVolZones(){
@@ -10086,26 +10026,14 @@ function renderDeload(){
 /* Läuft ein Deload, ersetzt sein Statusbanner die Empfehlung. */
 /* Der Mesozyklus-Streifen: Woche, Phase, Faktor, ein Balken. Er steht über
    dem Deload-Banner, weil er den größeren Rahmen beschreibt — und er
-   verschwindet vollständig, solange kein Zyklus läuft. */
-function renderMeso(){
-  const el=document.getElementById('meso-area');
-  if(!el)return;
-  const st=mesoState();
-  const m=ensureMesoState();
-  if(!st){
-    el.innerHTML=`<div class="meso-card off">`+
-      `<div class="mc-h"><div class="mc-t">Mesozyklus</div>`+
-      `<div class="mc-wk"><button type="button" onclick="setMesoWeeks(-1)">−</button>`+
-      `<span>${esc(m.weeks)} Wochen</span>`+
-      `<button type="button" onclick="setMesoWeeks(1)">+</button></div></div>`+
-      `<div class="mc-d">Volumen steigt über ${esc(m.weeks-1)} Wochen von ${Math.round(MESO_START_FACTOR*100)} % auf 100 % deines Plans, danach eine Entlastungswoche mit halbem Volumen. Der Plan selbst bleibt unverändert.</div>`+
-      `<button class="btn btn-s" style="margin:10px 0 0" onclick="startMeso(${esc(m.weeks)})">Zyklus starten</button>`+
-    `</div>`;
-    return;
-  }
+   verschwindet vollständig, solange kein Zyklus läuft.
+   Das Angebot zum Starten steht nicht mehr auf Start (Runde 4), sondern im
+   Plan-Menü unter „Mesozyklus“ als Fenster von unten. Das Fenster zeigt
+   einen laufenden Zyklus mit derselben Karte wie Start. */
+function mesoCardHTML(st){
   const pct=Math.round(st.week/st.weeks*100);
   const cls=st.deload?'deload':'build';
-  el.innerHTML=`<div class="meso-card ${cls}">`+
+  return`<div class="meso-card ${cls}">`+
     `<div class="mc-h"><div class="mc-t">Woche ${esc(st.week)} von ${esc(st.weeks)}</div>`+
     `<div class="mc-f">Sätze ×${esc(st.factor.toFixed(2).replace('.',','))}</div></div>`+
     `<div class="mc-bar"><i data-grow="${pct}%" data-grow-key="meso" style="width:0"></i>`+
@@ -10116,11 +10044,26 @@ function renderMeso(){
       : st.over ? 'Der Zyklus ist durch — starte den nächsten, dann beginnt die Steigerung neu.'
       : 'Das Workout übernimmt den Faktor automatisch. Dein Plan bleibt unverändert.'}</div>`+
     `<div class="mc-act">`+
-      (st.over?`<button class="btn btn-s" style="margin:0" onclick="startMeso(${esc(st.weeks)})">Nächster Zyklus</button>`:'')+
+      (st.over?`<button class="btn btn-s" style="margin:0" onclick="cm('m-meso');startMeso(${esc(st.weeks)})">Nächster Zyklus</button>`:'')+
       `<button class="btn btn-s btn-g" style="margin:0" onclick="stopMeso()">Beenden</button>`+
     `</div></div>`;
-  runBarGrows(el);
 }
+function renderMeso(){
+  const st=mesoState();
+  const el=document.getElementById('meso-area');
+  if(el){el.innerHTML=st?mesoCardHTML(st):'';if(st)runBarGrows(el)}
+  const box=document.getElementById('meso-sheet');
+  if(!box)return;
+  if(st){box.innerHTML=mesoCardHTML(st);runBarGrows(box);return}
+  const m=ensureMesoState();
+  box.innerHTML=`<div class="mc-h"><div class="mc-l">Dauer</div>`+
+      `<div class="mc-wk"><button type="button" onclick="setMesoWeeks(-1)">−</button>`+
+      `<span>${esc(m.weeks)} Wochen</span>`+
+      `<button type="button" onclick="setMesoWeeks(1)">+</button></div></div>`+
+    `<div class="mc-d">Volumen steigt über ${esc(m.weeks-1)} Wochen von ${Math.round(MESO_START_FACTOR*100)} % auf 100 % deines Plans, danach eine Entlastungswoche mit halbem Volumen. Der Plan selbst bleibt unverändert.</div>`+
+    `<div class="sheet-cta"><button type="button" class="btn" onclick="cm('m-meso');startMeso(${esc(m.weeks)})">Zyklus starten</button></div>`;
+}
+function openMesoSheet(){renderMeso();om('m-meso')}
 function renderDeloadActive(){
   const el=document.getElementById('deload-area');
   if(!el)return false;
@@ -10129,18 +10072,29 @@ function renderDeloadActive(){
   el.innerHTML=`<div class="deload-banner" style="border-color:color-mix(in srgb,var(--blue) 32%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--blue) 12%,var(--bg2)),var(--bg2))"><div class="dl-head"><span class="dl-ico">🪫</span><span class="dl-title" style="color:var(--blue)">Deload läuft</span></div><div class="dl-reason" style="--dot:var(--blue)">Noch ${esc(left)} ${left===1?'Tag':'Tage'} · Sätze auf ~60 %, RIR-Vorgabe 4</div><div class="dl-tip">Workouts, die du jetzt startest, sind automatisch reduziert. Gewichte bewusst leicht lassen — der Sinn ist Erholung, nicht Sparflamme mit vollem Gewicht.</div><div class="dl-actions"><button class="btn btn-s btn-g" style="margin:0" onclick="endDeload()">Deload beenden</button></div></div>`;
   return true;
 }
-/* Der nächste Trainingstag im Plan, von heute an gerechnet; ohne passenden
-   Wochentag der erste Tag. Start, Zahlen und Historie führen alle hierhin. */
+/* Der nächste Trainingstag im Plan, von heute an gerechnet. Start, Zahlen und
+   Historie führen alle hierhin.
+   Ist heute schon eine Einheit gespeichert, ist heute erledigt (Runde 4): Die
+   Suche beginnt morgen. Vorher bot Start nach „Fertig“ bis Mitternacht
+   dasselbe Workout noch einmal an. Ohne Wochentage im Plan kommt der Tag nach
+   dem zuletzt trainierten, sonst stünde dort immer wieder der erste. */
 function nextPlanDay(){
   const dayMap={0:'So',1:'Mo',2:'Di',3:'Mi',4:'Do',5:'Fr',6:'Sa'};
   const now=new Date();
   const planKeys=Object.keys(D.plan||{});
-  for(let i=0;i<7;i++){
+  const heute=dateKey(now.toLocaleDateString('de-DE'));
+  const erledigt=(D.history||[]).some(h=>h&&dateKey(h.date)===heute);
+  const ab=erledigt?1:0;
+  for(let i=ab;i<ab+7;i++){
     const dShort=dayMap[(now.getDay()+i)%7];
     const match=planKeys.find(k=>D.plan[k].day===dShort||String(D.plan[k].day).includes(dShort));
     if(match)return{key:match,offset:i};
   }
-  return planKeys.length?{key:planKeys[0],offset:0}:null;
+  if(!planKeys.length)return null;
+  const zuletzt=(D.history||[]).filter(h=>h&&planKeys.includes(h.planKey))
+    .reduce((b,h)=>!b||dateKey(h.date)>=dateKey(b.date)?h:b,null);
+  const i=zuletzt?planKeys.indexOf(zuletzt.planKey)+1:0;
+  return{key:planKeys[i%planKeys.length],offset:erledigt?null:0};
 }
 /* Der Block für leere Seiten (Zahlen, Historie), solange kein Training
    gespeichert ist: was hier erscheinen wird und der Weg zum ersten, mit dem
@@ -10159,53 +10113,20 @@ function leerBlockHTML(iconKey,text){
   return`<div class="leer-block"><div class="leer-ic">${icon(iconKey,22)}</div><h2 class="leer-t">Noch kein Workout</h2><p class="leer-p">${esc(text)}</p>${knopf}</div>`;
 }
 function renderDash(){
-  ensureHomeUIState();
-  const week=weeklyHistorySeries(6);
-  const currentWeek=week[week.length-1]||[];
-  /* Der Ring wird an MEV/MAV/MRV gemessen — also muss er auch RECHNEN wie
-     sie: mit der anteiligen Beteiligung der mitarbeitenden Muskeln und mit
-     einseitigen Übungen doppelt (PB-104). Der Rohwert daneben ist die Zahl,
-     die der Nutzer selbst gezählt hat; er gehört in die Erklärung, nicht in
-     den Vergleich. */
-  const punkte=weeklyLoadPoints();
-  const rohSaetze=currentWeek.reduce((a,s)=>a+strengthSets(s.sets).filter(x=>!x.type||x.type==='main').length,0);
-  document.getElementById('d-week-card').innerHTML=buildWeekGauge(punkte,rohSaetze);
-  const workoutsCurrent=currentWeek.length;
-  const workoutsPrev=(week[week.length-2]||[]).length;
-  const tonnage=(sessions)=>sessions.reduce((sum,s)=>sum+sessionVolume(s),0);
-  const tonCur=tonnage(currentWeek);
-  const tonPrev=tonnage(week[week.length-2]||[]);
-  const rirAvg=(sessions)=>{const vals=[];sessions.forEach(s=>strengthSets(s.sets).forEach(x=>{if(x.rir!==undefined)vals.push(x.rir)}));return vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:0};
-  const rirCur=rirAvg(currentWeek);
-  const tonTrend=tonPrev?Math.round(((tonCur-tonPrev)/tonPrev)*100):0;
-  /* Intensität = Anteil der Arbeitssätze, die nah am Muskelversagen lagen.
-     Das ist die Kennzahl, die auf einem Volumen-Dashboard sonst fehlt: 30
-     lockere Sätze und 30 harte Sätze sind derselbe Balken, aber nicht
-     dasselbe Training. */
-  const weekStrength=currentWeek.flatMap(s=>strengthSets(s.sets).filter(x=>!x.type||x.type==='main'));
-  const hardSets=weekStrength.filter(x=>Number(x.rir)<=2).length;
-  const intensity=weekStrength.length?Math.round((hardSets/weekStrength.length)*100):0;
-  const planDays=Math.max(1,Object.keys(D.plan||{}).length);
-  /* Drei Kennzahlen in einer Karte. Die Intensität steht als Zeile unter dem
-     Ø RIR, weil beide aus denselben Sätzen rechnen. Die Veränderung zur
-     Vorwoche ist grau: Grün und Rot gehören den Volumenzuständen. */
-  const tonSub=tonPrev
-    ? `${tonTrend>0?'+':tonTrend<0?'−':''}${Math.abs(tonTrend)}\u00a0% zur Vorwoche`
-    : 'noch keine Vorwoche';
-  document.getElementById('d-kpi-row').innerHTML=
-    `<div class="kpi-card">`+
-    `<div class="kpi-c"><div class="kpi-l">Frequenz</div><div class="kpi-v"><span class="countup" data-count="${workoutsCurrent}" data-count-key="kpi-freq">0</span><small>/${planDays}</small></div><div class="kpi-s">Trainingstage</div></div>`+
-    `<div class="kpi-c"><div class="kpi-l">Tonnage</div><div class="kpi-v"><span class="countup" data-count="${(tonCur/1000).toFixed(1)}" data-count-dec="1" data-count-comma="1" data-count-key="kpi-ton">0</span><small class="u">t</small></div><div class="kpi-s${tonPrev?'':' dim'}">${tonSub}</div></div>`+
-    `<div class="kpi-c"><div class="kpi-l">Ø RIR</div><div class="kpi-v">${rirCur?de(rirCur.toFixed(1)):'—'}</div><div class="kpi-s${weekStrength.length?'':' dim'}">${weekStrength.length?`${intensity}\u00a0% bei RIR\u00a0≤\u00a02`:'noch keine Sätze'}</div></div>`+
-    `</div>`;
+  /* Unter dem Wochenvolumen stand eine Zeile mit Frequenz, Tonnage und Ø RIR.
+     Sie ist weg (Runde 4): Tonnage und Ø RIR stehen mit denselben Werten in
+     Zahlen, und die Zeile zählte ab Montag, während die Karte darüber die
+     letzten 7 Tage zählt — die Tonnage meldete so fast immer ein Minus. */
+  document.getElementById('d-week-card').innerHTML=buildWeekGauge();
   const nk=nextPlanDay();
   const nc=document.getElementById('d-next-card');
   if(D.active){
     /* Läuft ein Training, ist die obere Karte der Weg zurück hinein — statt
-       „Nächstes Workout“ mit einem zweiten Startknopf. */
+       „Nächstes Workout“ mit einem zweiten Startknopf. Oben rechts steht die
+       laufende Pause wie in der schmalen Leiste der anderen Seiten, nicht der
+       Wochentag aus dem Plan (Runde 4). */
     const st=activeSetStand();
-    const p=D.plan&&D.plan[D.active.planKey];
-    nc.innerHTML=`<div class="next-card-shot"><div class="nx-top"><span>Läuft</span><span>${esc(p&&p.day?(TAGE[p.day]||p.day):'')}</span></div>`+
+    nc.innerHTML=`<div class="next-card-shot"><div class="nx-top"><span>Läuft</span><span class="nx-pause" id="nx-pause">${startPauseHTML()}</span></div>`+
       `<div class="row"><div class="big">${esc(planDisplayName(D.active.planKey).toUpperCase()||'WORKOUT')}</div><div class="small">${st.fertig} von ${st.geplant} Sätzen</div></div>`+
       `<button type="button" class="play" onclick="tab('wo')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 18 12 8 18.5z" fill="currentColor"/></svg>Weiter trainieren</button></div>`;
   }else if(!nk){
@@ -11172,7 +11093,8 @@ function openWorkoutMenu(){
   om('m-womenu');
 }
 /* Das ⋯ im Kopf des Plans: alles, was den Plan als Ganzes oder einen Tag
-   betrifft. „+ Übung“ steht als einziger Knopf daneben. */
+   betrifft. „+ Übung“ steht als einziger Knopf daneben. Hier startet auch der
+   Mesozyklus (Runde 4); auf Start steht er nur, solange einer läuft. */
 function openPlanMenu(){
   const n=((D.plan[curTab]||{}).exercises||[]).length;
   const row=(fn,ic,text,cls)=>`<button type="button" class="menu-row${cls?' '+cls:''}" onclick="cm('m-planmenu');${fn}">${icon(ic,20)}<span>${text}</span></button>`;
@@ -11181,6 +11103,7 @@ function openPlanMenu(){
     row('renamePlanDay()','edit','Tag bearbeiten')+
     row('duplicatePlanDay()','copy','Tag duplizieren')+
     (n>1?row('startPlanSort()','swap','Reihenfolge ändern'):'')+
+    row('openMesoSheet()','trend','Mesozyklus')+
     row('openLibraryEditor()','book','Bibliothek')+
     row('openPlanShare()','copy','Plan teilen')+
     row('openPlanImport()','down','Plan importieren')+
