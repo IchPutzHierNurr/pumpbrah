@@ -430,6 +430,8 @@ textarea{font-family:'Space Grotesk',sans-serif;font-size:var(--fs-16);text-alig
 .mdl::before{content:'';display:block;width:40px;height:4px;border-radius:4px;background:var(--bg5);margin:-8px auto 14px}
 @keyframes su{from{transform:translateY(100%)}to{transform:none}}
 .mt{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-22);letter-spacing:1px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+/* Der Titel bricht um, statt das ✕ aus dem Fenster zu schieben (10.11.). */
+.mt>span{min-width:0;overflow-wrap:anywhere}
 /* Das ✕ jedes Fensters: 44 × 44 px. */
 .mc{flex:0 0 44px;width:44px;height:44px;border-radius:11px;background:var(--bg3);border:1px solid var(--line);color:var(--text);font-size:var(--fs-16);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .mc:active{transform:scale(var(--press-s))}
@@ -541,7 +543,10 @@ body.no-nav{padding-bottom:0}
 .wo-sum-stats small{font-size:var(--fs-12);font-weight:500;color:var(--text2)}
 .wo-sum-sec{margin:24px 0 8px 4px;font-size:var(--fs-14);line-height:17px;font-weight:500;color:var(--text2)}
 .wo-sum-prog{padding:0 16px;border-radius:20px;background:var(--mat-1),var(--bg2);box-shadow:var(--edge),var(--shadow-1)}
-.wo-sp-row{display:grid;grid-template-columns:1fr auto;column-gap:12px;align-items:center;min-height:56px;padding:8px 0;border-top:1px solid var(--line)}
+/* Lange Namen ohne Leerzeichen brechen um (10.11.): Vorher schob ein Name wie
+   „Kurzhantelschrägbankdrückenmaschine“ die Veränderung aus dem Bildschirm. */
+.wo-sp-row{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center;min-height:56px;padding:8px 0;border-top:1px solid var(--line)}
+.wo-sp-row b{overflow-wrap:anywhere}
 .wo-sp-row:first-child{border-top:0}
 .wo-sp-row b{font-size:var(--fs-16);line-height:20px;font-weight:600}
 .wo-sp-row span{grid-column:1;font:500 var(--fs-12)/16px 'JetBrains Mono',monospace;color:var(--text2)}
@@ -1335,7 +1340,7 @@ button,.btn,.ni,.dtab,.exr-act,.wo-alt-btn,.wo-icon-btn,.alt-item,.alt-row{touch
 .next-card-shot .nx-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:var(--fs-14);font-weight:500;line-height:1.3;color:var(--text2)}
 .next-card-shot .nx-pause b{margin-left:6px;font:600 var(--fs-16)/1 'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:var(--accent)}
 .next-card-shot .row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-top:4px}
-.next-card-shot .big{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-44);line-height:1;font-weight:400;letter-spacing:.01em;color:var(--text)}
+.next-card-shot .big{font-family:'Bebas Neue',sans-serif;font-size:var(--fs-44);line-height:1;font-weight:400;letter-spacing:.01em;color:var(--text);overflow-wrap:anywhere;hyphens:auto}
 .next-card-shot .small{margin-left:auto;font-size:var(--fs-14);font-weight:500;line-height:1.3;color:var(--text2);text-align:right}
 .next-card-shot .play,.leer-block .play{
   display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:56px;margin-top:12px;
@@ -2826,6 +2831,29 @@ function mergeLocalOnlyFields(next){
   return merged;
 }
 function dataStamp(data){return data&&data.meta&&Number(data.meta.updatedAt)||0}
+/* Je Bereich ein eigener Zeitstempel (10.11.). Vorher entschied EIN Stempel
+   für das ganze Dokument, und flushCloudSave setzte ihn beim Schreiben auf
+   „jetzt“. Ein Gerät, das gerade einen Satz loggte, wirkte damit jünger als
+   eine spätere Änderung am anderen Gerät, und Pausen, Plan oder das laufende
+   Training des anderen Geräts verschwanden still. Jetzt stempelt save() nur
+   die Bereiche, die sich seit dem letzten Speichern geändert haben, zum
+   Zeitpunkt der Änderung; zusammengeführt wird jeder Bereich nach seinem
+   eigenen Stempel. Stände ohne Bereichsstempel (ältere Geräte) zählen mit
+   ihrem Gesamtstempel wie bisher. */
+const SYNC_BEREICHE=['active','plan','settings','notes','profile','ui'];
+function bereichStempel(data,k){const b=data&&data.meta&&data.meta.bereiche;return Number(b&&b[k])||dataStamp(data)}
+function bereicheStempeln(vorher){
+  if(!D.meta)D.meta={};
+  const alt=dataStamp(D),jetzt=Date.now();
+  const b=D.meta.bereiche&&typeof D.meta.bereiche==='object'?D.meta.bereiche:{};
+  const json=v=>JSON.stringify(v===undefined?null:v);
+  SYNC_BEREICHE.forEach(k=>{
+    if(!Number(b[k]))b[k]=alt;
+    if(!vorher||json(D[k])!==json(vorher[k]))b[k]=jetzt;
+  });
+  D.meta.bereiche=b;
+  D.meta.updatedAt=jetzt;
+}
 function shouldApplyRemote(remote){
   const remoteStamp=dataStamp(remote),localStamp=dataStamp(D);
   if(remoteStamp||localStamp)return remoteStamp>=localStamp;
@@ -2963,11 +2991,75 @@ function mergeHistory(localHistory,remoteHistory,tombstones){
   const dead=new Set(tombstones||[]);
   return merged.filter(s=>!dead.has(histSessionKey(s)));
 }
+/* Das laufende Training wird gesondert zusammengeführt (10.11.). Vorher
+   gewann es als Ganzes mit dem jüngeren Stand: Ein zweites Gerät mit altem
+   Stand schrieb sein active:null, und Training und Sätze waren auf beiden
+   Geräten weg. Ein anderswo schon gespeichertes Training kam dagegen als
+   laufend zurück, wenn das zweite Gerät offline noch einen Satz loggte.
+   Jetzt gilt:
+   - Steht die Kennung in der Historie oder unter den Grabsteinen, ist das
+     Training beendet oder verworfen. Es läuft nicht wieder an; Sätze, die
+     ein Gerät danach noch geloggt hat, kommen in die gespeicherte Einheit.
+   - Sonst gewinnt null nicht über ein laufendes Training.
+   - Gleiche Kennung auf beiden Seiten: Aufbau vom jüngeren Stand, die Sätze
+     jeder Übung werden über ihre Zeit t vereinigt; gelöschte Sätze stehen
+     mit ihrer Zeit in active.weg und kommen nicht zurück. */
+function activeInEinheit(a,s){
+  let dazu=0;
+  (a.exercises||[]).forEach(ex=>{
+    if(!ex||ex.skipped)return;
+    const n=(s.sets||[]).filter(x=>x&&x.ex===ex.name).length;
+    (ex.logged||[]).slice(n).forEach((l,i)=>{
+      if(!l)return;
+      s.sets.push({ex:ex.name,nr:n+i+1,w:l.w,r:l.r,rir:l.rir,note:l.note||'',muscle:ex.muscle,type:ex.type,mode:l.mode||''});
+      dazu++;
+    });
+  });
+  if(dazu)s.updatedAt=Date.now();
+}
+function mergeActive(localActive,remoteActive,preferRemote,history,grab){
+  const laeuft=a=>{
+    if(!a||typeof a!=='object'||!Array.isArray(a.exercises))return false;
+    const id=activeSessionId(a);
+    if((grab||[]).includes('id|'+id))return false;
+    const s=(history||[]).find(h=>h&&h.id===id);
+    if(s){activeInEinheit(a,s);return false}
+    return true;
+  };
+  const erste=preferRemote?remoteActive:localActive,zweite=preferRemote?localActive:remoteActive;
+  const e1=laeuft(erste),e2=laeuft(zweite);
+  if(!e1)return e2?zweite:null;
+  if(!e2||activeSessionId(erste)!==activeSessionId(zweite))return erste;
+  const weg=[...new Set([...(erste.weg||[]),...(zweite.weg||[])])];
+  const benutzt=new Set();
+  erste.exercises.forEach(ex=>{
+    if(!ex)return;
+    let j=zweite.exercises.findIndex((e,i)=>!benutzt.has(i)&&e&&e.name===ex.name&&e.id===ex.id);
+    if(j<0)j=zweite.exercises.findIndex((e,i)=>!benutzt.has(i)&&e&&e.name===ex.name);
+    if(j<0)return;
+    benutzt.add(j);
+    const liste=Array.isArray(ex.logged)?ex.logged:[];
+    const zeiten=new Set(liste.map(l=>l&&l.t).filter(Boolean));
+    const dazu=(zweite.exercises[j].logged||[]).filter(l=>l&&l.t&&!zeiten.has(l.t)&&!weg.includes(l.t));
+    ex.logged=dazu.length?[...liste,...dazu].sort((x,y)=>((x&&x.t)||0)-((y&&y.t)||0)):liste;
+  });
+  if(weg.length)erste.weg=weg.slice(-200);
+  return erste;
+}
 function mergeSyncedData(remote){
   const local=cloneData(D);
   const incoming=cloneData(remote);
   const preferRemote=shouldApplyRemote(incoming);
-  const merged=mergeLocalOnlyFields(preferRemote?{...local,...incoming}:{...incoming,...local});
+  const basis=preferRemote?{...local,...incoming}:{...incoming,...local};
+  const bereiche={};
+  SYNC_BEREICHE.forEach(k=>{
+    const sl=bereichStempel(local,k),sr=bereichStempel(incoming,k);
+    bereiche[k]=Math.max(sl,sr);
+    if(k==='active')return;
+    const [a,b]=sr>=sl?[incoming[k],local[k]]:[local[k],incoming[k]];
+    basis[k]=a!==undefined?a:b;
+  });
+  const merged=mergeLocalOnlyFields(basis);
   merged.deleted=mergeTombstones(local.deleted,incoming.deleted);
   const localBio=local.bio||{},remoteBio=incoming.bio||{};
   const primaryBio=preferRemote?remoteBio:localBio;
@@ -3002,7 +3094,9 @@ function mergeSyncedData(remote){
   merged.library.custom=mergeLibraryCustom(localLibrary.custom,remoteLibrary.custom,preferRemote).filter(item=>!merged.deleted.libraryCustom.includes(libKey(item&&item.name)));
   merged.library.deleted=[...new Set([...(localLibrary.deleted||[]),...(remoteLibrary.deleted||[])])];
   merged.history=mergeHistory(local.history,remote.history,merged.deleted.history);
-  merged.meta={...(local.meta||{}),...(incoming.meta||{}),updatedAt:Math.max(dataStamp(local),dataStamp(incoming))};
+  merged.active=mergeActive(local.active,incoming.active,
+    bereichStempel(incoming,'active')>=bereichStempel(local,'active'),merged.history,merged.deleted.history);
+  merged.meta={...(local.meta||{}),...(incoming.meta||{}),updatedAt:Math.max(dataStamp(local),dataStamp(incoming)),bereiche};
   /* Der Anzeigename (Sync-Schlüssel) hängt nicht daran, wessen ui-Block
      gewinnt: ein Stand ohne Namen löscht ihn nicht. */
   const name=(preferRemote?[incoming,local]:[local,incoming]).map(x=>x.ui&&x.ui.name).find(Boolean);
@@ -3064,6 +3158,10 @@ function normalizeData(){
      erklären, warum der Plan so aussieht, und überleben Reload und Sync. */
   if(!D.profile||typeof D.profile!=='object')D.profile={};
   if(!D.plan||typeof D.plan!=='object')D.plan={...DEFAULT_PLAN};
+  /* Ein Plantag, der kein Objekt ist (null aus Cloud oder Backup), wird
+     entfernt statt übersprungen (10.11.): Start, Plan und Zahlen brachen an
+     ihm ab („reading 'exercises'“). */
+  Object.keys(D.plan).forEach(k=>{if(!D.plan[k]||typeof D.plan[k]!=='object')delete D.plan[k]});
   Object.values(D.plan).forEach(day=>{
     if(!day||typeof day!=='object')return;
     if(!Array.isArray(day.exercises))day.exercises=[];
@@ -3071,7 +3169,20 @@ function normalizeData(){
     pruneLoneSupersets(day.exercises);
   });
   if(!Array.isArray(D.history))D.history=[];
+  /* Einträge, die keine Einheit sind, fallen weg (10.11.): Ein einziges null
+     in der Historie brach hier ab, die App blieb auf der Anmeldeseite stehen,
+     und auch „Ohne Konto starten“ tat nichts. */
+  D.history=D.history.filter(x=>x&&typeof x==='object');
   D.history.forEach(session=>{
+    /* Ohne Datum (10.11.) brachen Zahlen und Profil beim Zeichnen ab. Das
+       Datum kommt aus dem letzten Bearbeiten oder aus der Kennung, die beim
+       Anlegen die Uhrzeit trägt; sonst bleibt es leer, die Einheit bleibt. */
+    if(typeof session.date!=='string'||!session.date.trim()){
+      const m=/^[SA]([0-9a-z]+)/.exec(String(session.id||''));
+      const ausId=m?parseInt(m[1],36):0;
+      const t=Number(session.updatedAt)>0?Number(session.updatedAt):ausId>1e12&&ausId<4e12?ausId:0;
+      session.date=t?new Date(t).toLocaleDateString('de-DE'):'';
+    }
     /* Bewusst KEINE ID für Altdaten nachträglich vergeben: jedes Gerät würde
        eine andere würfeln und dieselbe Session damit doppelt anlegen.
        Altdaten laufen weiter über den Inhalts-Hash, neue Sessions über ihre
@@ -3085,7 +3196,7 @@ function normalizeData(){
       if(!session.skipped.length)delete session.skipped;
     }else if(session.skipped!==undefined)delete session.skipped;
     if(!Array.isArray(session.sets))session.sets=[];
-    session.sets=session.sets.map(set=>({
+    session.sets=session.sets.filter(x=>x&&typeof x==='object').map(set=>({
       ex:String(set.ex||'Unbenannte Übung'),
       nr:parseInt(set.nr)||1,
       w:parseFloat(set.w)||0,
@@ -3115,7 +3226,10 @@ function normalizeData(){
   /* PB-095: Altdaten bekommen ihre Kennung aus dem Datum abgeleitet — so
      kommen zwei Geräte unabhängig auf dieselbe, und aus einer Messung wird
      beim Zusammenführen nicht plötzlich zwei. */
-  D.egym.measurements.forEach(m=>{if(m&&!m.id)m.id='m'+dateKey(m.date)});
+  /* Einträge, die keine Messung sind, fallen weg (10.11.): Zahlen brach
+     sonst an „reading 'bioage'“ ab. */
+  D.egym.measurements=D.egym.measurements.filter(m=>m&&typeof m==='object');
+  D.egym.measurements.forEach(m=>{if(!m.id)m.id='m'+dateKey(m.date)});
   /* PB-115: Hier stand „älter als 24 Stunden → D.active=null". Wer ein
      Training anfing, Sätze loggte und dann vergaß, auf „Beenden" zu tippen,
      verlor beim nächsten Öffnen jeden einzelnen Satz — ohne Nachfrage, ohne
@@ -3127,6 +3241,8 @@ function normalizeData(){
     if(!Array.isArray(D.active.exercises)){D.active=null}
     else{
       D.active.exercises=D.active.exercises.map(ex=>{const n=normalizeExercise(ex);if(!Array.isArray(n.logged))n.logged=[];return n});
+      if(D.active.weg!==undefined&&!Array.isArray(D.active.weg))delete D.active.weg;
+      else if(D.active.weg)D.active.weg=D.active.weg.map(Number).filter(Boolean).slice(-200);
       pruneLoneSupersets(D.active.exercises);
     }
   }
@@ -3246,8 +3362,11 @@ function showAutoSavedNotice(){
 }
 function save(){
   normalizeData();
-  if(!D.meta)D.meta={};
-  D.meta.updatedAt=Date.now();
+  /* Was sich seit dem letzten Speichern geändert hat, bekommt seinen
+     Bereichsstempel (10.11., siehe bereicheStempeln). */
+  let vorher=null;
+  try{vorher=JSON.parse(localStorage.getItem('pb_data')||'null')}catch{}
+  bereicheStempeln(vorher);
   /* Voller Speicher: Der Satz liegt nur noch im Arbeitsspeicher. Die Meldung
      bleibt mit „Backup laden“ stehen, bis ein Speichern wieder klappt. */
   try{localStorage.setItem('pb_data',JSON.stringify(D));if(toastStay)toastWeg('speicher')}
@@ -3318,7 +3437,9 @@ function queueCloudSave(sofort){
   /* Auch solange Firebase noch lädt: Die Änderung ist dann noch nicht in der
      Cloud, und startSync schreibt sie nach. */
   if(syncCode&&syncCode!=='offline')cloudOffenMerken();
-  if(!useFirebase||!db||!syncCode)return;
+  /* Ohne Firebase (beim Öffnen kein Netz, 10.11.): sagen, dass es nicht in
+     der Cloud ist, statt „Nur auf diesem Gerät“. */
+  if(!useFirebase||!db||!syncCode){if(firebaseFertig&&syncCode&&syncCode!=='offline'&&!kontoFehlt)updateSyncState(false);return}
   if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null}
   if(sofort===true)return flushCloudSave();
   cloudWriteTimer=setTimeout(()=>{cloudWriteTimer=null;flushCloudSave()},CLOUD_WRITE_DELAY);
@@ -3327,9 +3448,37 @@ function queueCloudSave(sofort){
    des Tabs. `visibilitychange` ist der einzige davon, der auf iOS zuverlässig
    feuert — `beforeunload` tut es dort nicht. */
 if(typeof document!=='undefined'){
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')queueCloudSave(true);else cloudNachholen()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')queueCloudSave(true);else{cloudNachholen();firebaseErneut()}});
   window.addEventListener('pagehide',()=>queueCloudSave(true));
-  window.addEventListener('online',()=>cloudNachholen());
+  window.addEventListener('online',()=>{cloudNachholen();firebaseErneut()});
+}
+/* Firebase erneut laden (10.11.): Kam beim Öffnen kein Netz, lud der Kopf
+   die beiden Dateien genau einmal, und bis zum nächsten Neustart wurde
+   nichts nachgeholt. Jetzt hängt die App sie neu ein, wenn das Netz
+   wiederkommt oder die App wieder in den Vordergrund kommt, und verbindet
+   dann wie beim Start (startSync schreibt Offenes nach). */
+let firebaseLaedt=false;
+function firebaseErneut(){
+  if(db||firebaseLaedt||!firebaseFertig||!syncCode||syncCode==='offline'||kontoFehlt)return;
+  const verbinden=()=>{
+    firebaseLaedt=false;
+    if(db||!firebaseDa()||!syncCode||syncCode==='offline')return;
+    useFirebase=initFirebase();
+    if(useFirebase&&db)startSync();else updateSyncState(false);
+  };
+  const fehlt=[];
+  if(typeof firebase==='undefined')fehlt.push('firebase-app-compat.js');
+  if(typeof firebase==='undefined'||typeof firebase.firestore!=='function')fehlt.push('firebase-firestore-compat.js');
+  if(!fehlt.length){verbinden();return}
+  firebaseLaedt=true;
+  let offen=fehlt.length;
+  const weiter=()=>{if(--offen===0)verbinden()};
+  fehlt.forEach(datei=>{
+    const el=document.createElement('script');
+    el.src='https://www.gstatic.com/firebasejs/10.14.1/'+datei;
+    el.async=false;el.onload=el.onerror=weiter;
+    document.head.appendChild(el);
+  });
 }
 function flushCloudSave(){
   if(!useFirebase||!db||!syncCode||kontoFehlt)return;
@@ -3342,7 +3491,10 @@ function flushCloudSave(){
   const zusammenfuehren=remote=>{
     const merged=remote?mergeSyncedSnapshot(cloneData(localSnapshot),remote):cloneData(localSnapshot);
     if(!merged.meta)merged.meta={};
-    merged.meta.updatedAt=Math.max(dataStamp(localSnapshot),Date.now());
+    /* Der Stempel sagt, wann zuletzt etwas GEÄNDERT wurde, nicht wann es
+       geschrieben wurde (10.11.): Mit „jetzt“ überstimmte jedes Schreiben
+       eine spätere Änderung am anderen Gerät. */
+    merged.meta.updatedAt=Math.max(dataStamp(localSnapshot),dataStamp(merged));
     return cloudSafeSnapshot(merged);
   };
   cloudLaeuft++;
@@ -3421,7 +3573,7 @@ function startSync(){
       /* Ebenso beim allerersten Anlegen des Kontos. */
       queueCloudSave(true);
     }
-    renderAll();
+    renderAll();profilNachAbgleich();
     updateSyncState(true);
   }).catch(e=>{console.error('PUMPBRAH: Initial sync fehlgeschlagen',e);updateSyncState(false)});
   unsubscribe=ref.onSnapshot(doc=>{
@@ -3435,13 +3587,19 @@ function startSync(){
       if(JSON.stringify(D)!==before){
         localStorage.setItem('pb_data',JSON.stringify(D));
         if(woanders)trainingAndersBeendet(lief);
-        renderAll();
+        renderAll();profilNachAbgleich();
       }
     }
     updateSyncState(true);
     /* Die Cloud meldet sich wieder: was im Funkloch liegen blieb, jetzt. */
     if(!ausCache(doc))cloudNachholen();
   },e=>{console.error('PUMPBRAH: Realtime sync fehlgeschlagen',e);updateSyncState(false)});
+}
+/* renderAll zeichnet das Profil nicht (10.11.): Nach einem Abgleich zeigte es
+   weiter die alten Pausen, und ein Tipp auf + sprang vom neuen Wert aus. */
+function profilNachAbgleich(){
+  const s=document.getElementById('s-settings');
+  if(s&&s.classList.contains('active'))renderSettings();
 }
 /* Training auf dem anderen Gerät gespeichert (Runde 4): Der Abgleich nimmt
    das laufende Training hier weg. Vorher blieb die leere Trainings-Seite
@@ -3479,9 +3637,11 @@ function updateSyncState(online,geschrieben){
   if(!online)syncFehler=true;
   else if(geschrieben||!cloudOffen){lastSyncOk=Date.now();syncFehler=false}
   const el=document.getElementById('sync-fail');
-  if(el)el.hidden=!(useFirebase&&syncFehler&&cloudOffen);
+  if(el)el.hidden=!(syncFehler&&cloudOffen&&(useFirebase||(syncCode&&syncCode!=='offline')));
   const st=document.getElementById('prof-status');
   if(st)st.textContent=profileStatusText();
+  const kz=document.getElementById('konto-zustand');
+  if(kz)kz.textContent=kontoZustandText();
 }
 function retrySync(){
   const el=document.getElementById('sync-fail');
@@ -3492,8 +3652,9 @@ function retrySync(){
    Cloud-Sync aktiv · gesichert 20:40“, zweizeilig unter „Bild wählen“). */
 function profileStatusText(){
   if(kontoFehlt)return'Konto nicht mehr in der Cloud';
-  if(!useFirebase)return'Nur auf diesem Gerät';
   const uhr=t=>new Date(t).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  /* Angemeldet, aber Firebase kam nicht (kein Netz beim Öffnen, 10.11.). */
+  if(!useFirebase)return syncFehler&&cloudOffen&&syncCode&&syncCode!=='offline'?'Nicht gesichert seit '+uhr(cloudOffen):'Nur auf diesem Gerät';
   if(syncFehler&&cloudOffen)return'Nicht gesichert seit '+uhr(cloudOffen);
   return'Sync aktiv'+(lastSyncOk?', gesichert '+uhr(lastSyncOk):'');
 }
@@ -3551,7 +3712,7 @@ function kontoWeg(){
 }
 /* „Mit Sync-Schlüssel verbinden" (offline) und „Neu anmelden": die Daten
    auf dem Gerät gehen mit ins Konto, statt beim Anmelden zu verschwinden. */
-function syncVerbinden(){try{localStorage.setItem('pb_mitnehmen','1')}catch{}doLogout()}
+function syncVerbinden(){try{localStorage.setItem('pb_mitnehmen','1')}catch{}doLogout(true)}
 /* Eingerichtet ist, wer das Einrichten einmal abgeschlossen hat. Bis November
    2026 hieß das „hat eine Körpergröße" — seit die Körperdaten freiwillig sind
    (onb-kurz), trägt der Stand ein eigenes Merkmal. Alte Stände haben es nicht:
@@ -3722,6 +3883,10 @@ let obStep=0;let obData={height:null,weight:null,days:3,focus:'balanced',experie
    Inline-Rahmen, den „Zurück" vergisst. */
 function obPick(field,value,el){
   obData[field]=value;
+  /* „Bauch Beine Po“ gibt es nur bei „Weiblich“ (10.11.). Wer danach auf
+     „Männlich“ wechselte, behielt das Ziel unsichtbar, und der Plan wurde
+     danach gebaut. Es gilt wieder die Vorgabe „Ausgeglichen“. */
+  if(field==='gender'&&value!=='female'&&obData.focus==='bbp')obData.focus='balanced';
   if(el&&el.parentElement)[...el.parentElement.children].forEach(c=>{
     c.classList.toggle('on',c===el);c.setAttribute('aria-checked',String(c===el));
   });
@@ -3740,7 +3905,10 @@ function obToggleList(field,value,el){
     c.classList.toggle('on',on);c.setAttribute('aria-checked',String(on));
   });
 }
-function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';attachKeyboardAvoidance();obStep=0;renderObStep()}
+/* attachFieldBehavior auch hier (10.11.): Es hing nur in showApp, und beim
+   Einrichten lief showApp noch nie. Return in Geburtsdatum, Größe und Gewicht
+   tat deshalb nichts; jetzt löst es „Weiter“ aus (data-primary). */
+function startOnboarding(){document.getElementById('login-screen').style.display='none';document.getElementById('onboard-screen').style.display='flex';attachKeyboardAvoidance();attachFieldBehavior();obStep=0;renderObStep()}
 /* Einrichten (onb-schritte): neun Striche statt „Schritt 8/9", der Name des
    Schritts ist der Titel, „Weiter" sitzt fest unten. Jede Karte liest ihren
    Zustand aus obData — „Zurück" zeigt, was schon gewählt und eingetragen ist,
@@ -3783,7 +3951,7 @@ function renderObStep(){
      „Überspringen" (Schritt 9) fehlt — sonst rutscht „Weiter" doch wieder. */
   const luecke='<span class="ob-gap" aria-hidden="true"></span>';
   c.innerHTML=`<div class="ob-body">${s.html}</div><div class="ob-foot">`+
-    (letzter?`<button class="btn" onclick="finishOnboarding()">Plan erstellen</button>`:`<button class="btn" onclick="obNext(${obStep})">WEITER →</button>`)+
+    (letzter?`<button class="btn" data-primary onclick="finishOnboarding()">Plan erstellen</button>`:`<button class="btn" data-primary onclick="obNext(${obStep})">WEITER →</button>`)+
     (obStep>0?`<button type="button" class="ob-link" onclick="obBack()">Zurück</button>`:luecke)+
     (obStep>0&&!letzter?`<button type="button" class="ob-link" onclick="obSkip()">Rest überspringen, Plan erstellen</button>`:luecke)+
     `</div>`;
@@ -4788,7 +4956,11 @@ function clearFieldErrs(root){
   root.querySelectorAll('[aria-invalid]').forEach(el=>el.removeAttribute('aria-invalid'));
   root.querySelectorAll('.ig-err').forEach(el=>{el.hidden=true});
 }
+let feldVerhaltenDa=false;
 function attachFieldBehavior(){
+  /* Nur einmal: Einrichten und showApp rufen es beide (10.11.). */
+  if(feldVerhaltenDa)return;
+  feldVerhaltenDa=true;
   /* Sobald man in ein markiertes Feld tippt, geht die Markierung und die Zeile
      darunter — auch bei den Feldern, die sich diese Zeile teilen; geprüft wird
      beim nächsten Speichern wieder. */
@@ -5674,13 +5846,18 @@ function perSessionSeries(sets,score){
   });
   return Object.values(by).sort((a,b)=>(parseGermanDate(a.date)||0)-(parseGermanDate(b.date)||0));
 }
-function getLastW(name){for(let i=D.history.length-1;i>=0;i--){const f=D.history[i].sets.filter(s=>s.ex===name&&s.w>0);if(f.length){const l=f[f.length-1];return{w:l.w,r:l.r,rir:l.rir}}}return null}
+/* Körpergewicht (10.11.): Eine Einheit, in der die Übung nur mit 0 kg steht
+   (Klimmzüge 0 × 8), ist auch ein letztes Mal. Vorher galt die Übung als nie
+   trainiert: „Erste Referenz setzen“ und ein leeres Satz-Fenster. Sätze mit
+   Gewicht gehen weiter vor. */
+function letzteSaetze(sess,name){const alle=(sess.sets||[]).filter(s=>s.ex===name);const f=alle.filter(s=>s.w>0);return f.length?f:alle.filter(s=>s.r>0)}
+function getLastW(name){for(let i=D.history.length-1;i>=0;i--){const f=letzteSaetze(D.history[i],name);if(f.length){const l=f[f.length-1];return{w:l.w,r:l.r,rir:l.rir}}}return null}
 /* Der Satz an derselben Stelle der letzten Einheit: Satz 1 misst sich an
    Satz 1. Hat sie weniger Sätze, gilt ihr letzter. Die Vorgabe für den ersten
    Satz stand bis Runde 4 auf getLastW, also auf dem müdesten Satz mit dem
    niedrigsten RIR — und zog das Gewicht deshalb jedes Mal eine Stufe zurück
    (Bankdrücken: 30 kg × 6 bei RIR 2 im ersten Satz, Vorgabe 28 kg × 6). */
-function getLastSetAt(name,idx){for(let i=D.history.length-1;i>=0;i--){const f=D.history[i].sets.filter(s=>s.ex===name&&s.w>0);if(f.length){const l=f[Math.min(Math.max(0,idx),f.length-1)];return{w:l.w,r:l.r,rir:l.rir}}}return null}
+function getLastSetAt(name,idx){for(let i=D.history.length-1;i>=0;i--){const f=letzteSaetze(D.history[i],name);if(f.length){const l=f[Math.min(Math.max(0,idx),f.length-1)];return{w:l.w,r:l.r,rir:l.rir}}}return null}
 /* Zeichengenau war hier falsch: „Bankdrücken" und „Bankdrücken (Bench
    Press)" sind dieselbe Übung, und wer sie einmal anders geschrieben hat,
    verlor seinen ganzen Verlauf. Abgeglichen wird über den klammerfreien
@@ -5710,7 +5887,7 @@ function checkPR(exName,w,r){const prev=getAllSets(exName).filter(s=>s.w>0);if(!
 /* Volumen zählt nur echte Arbeitssätze: Cardio, Mobility und Pre-Workout
    sind kein Hypertrophie-Reiz und dürfen die MEV/MAV/MRV-Einordnung nicht
    nach oben treiben. */
-function getWeeklyVolume(includeSecondary){
+function getWeeklyVolume(includeSecondary,mitLaufend){
   const weekAgo=Date.now()-7*864e5;
   const vol={};
   const bump=(m,sets,volume)=>{
@@ -5718,7 +5895,13 @@ function getWeeklyVolume(includeSecondary){
     vol[m].sets+=sets;
     vol[m].volume+=volume;
   };
-  (D.history||[]).forEach(s=>{
+  /* mitLaufend (10.11.): Die Wochenkarte auf Start zählt die Sätze des
+     laufenden Trainings mit. Vorher stand dort mitten im Training die 0 und
+     „Noch kein Satz in den letzten 7 Tagen. Mit dem ersten Satz füllen sich
+     die Balken.“ */
+  const einheiten=(D.history||[]).slice();
+  if(mitLaufend&&D.active&&Array.isArray(D.active.exercises))einheiten.push(sessionFromActive(D.active));
+  einheiten.forEach(s=>{
     const d=parseGermanDate(s.date);
     if(!d||d.getTime()<weekAgo)return;
     (s.sets||[]).forEach(set=>{
@@ -5918,7 +6101,7 @@ function renderPL(){
         `<div class="exdemo-thumb" style="width:44px;height:44px;flex:0 0 44px" onclick="event.stopPropagation();showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')">${exerciseVisual(ex.name,ex.muscle,ex.type,{speed:3,thumb:true})}</div>`+
         `<div class="exr-b"><div class="exr-n">${ssk}${esc(ex.name)}`+
           (isUnilateral(ex.name,ex)?'<span class="uni">pro Seite</span>':'')+`</div>`+
-        `<div class="exr-m"><b>${esc(ex.sets)} × ${esc(reps(ex))}</b>${ex.rir!==null?`<span>RIR ${esc(ex.rir)}</span>`:''}${last?`<span>${esc(de(last.w))} kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
+        `<div class="exr-m"><b>${esc(ex.sets)} × ${esc(reps(ex))}</b>${ex.rir!==null?`<span>RIR ${esc(ex.rir)}</span>`:''}${last&&last.w>0?`<span>${esc(de(last.w))} kg</span>`:''}</div>${coachBadge(ex.name,ex.muscle,ex.type)}</div>`+
         /* Eine Aktion je Zeile hat dem Namen die Breite zurückgegeben: erst
            drei, dann vier Knöpfe haben ihn auf "ATG: Tibialis R…"
            zusammengequetscht. Alles Weitere steht im ⋯-Menü, Sortieren im
@@ -6897,7 +7080,11 @@ function deleteSet(ei,si){
      Übung wird über ihr Objekt gefunden, hilfsweise über ihre id, weil ein
      Abgleich die Liste in den acht Sekunden neu gebaut haben kann. */
   const ex=ziel.ex,si2=ziel.si;
-  const weg=ex.logged.splice(si2,1)[0];save();
+  const weg=ex.logged.splice(si2,1)[0];
+  /* Die Zeit des gelöschten Satzes bleibt stehen (10.11.): Ein Gerät mit
+     altem Stand bringt ihn beim Zusammenführen sonst zurück (mergeActive). */
+  if(weg&&weg.t&&D.active)D.active.weg=[...(Array.isArray(D.active.weg)?D.active.weg:[]),weg.t].slice(-200);
+  save();
   closeSetEditor();
   renderWo();
   /* Mit Kennung (10.11.), damit endWorkout die Meldung mitnimmt. */
@@ -6982,10 +7169,14 @@ function restoreTimer(){
        0:57 von 2:00 sonst fast voll. Alte Stände ohne span heilen sich wie
        bisher über getTimerTotal. */
     timerSpan=parseInt(t.span)||0;
-    if(t.running&&t.startedAt){
+    /* Abgelaufen, während die App zu war oder schon vorher (running:false mit
+       Startzeit, 10.11.): Der Zustand „vorbei“ bleibt mit Überzeit („+0:30
+       Los“), wie ohne Neuladen. Vorher stand danach nur „Pause starten“. */
+    if(t.startedAt&&(t.running||!timerPausedRemaining)){
       timerStartedAt=t.startedAt;
-      if(getTimerRemaining()>0)startTmrInterval();
-      else{timerStartedAt=0;timerTgt=0}
+      if(t.running&&getTimerRemaining()>0)startTmrInterval();
+      else if(timerTgt>0){stopOvertime();overInt=setInterval(tickTimerBar,500)}
+      else timerStartedAt=0;
     }
   }catch{}
 }
@@ -9155,7 +9346,29 @@ function checkSharedPlanLink(){
 
 const EG_FIELDS=['bioage','kraft','kardio','stoff','flex','bmi','gewicht','kfp','kfkg','ffm','smm','kwp','kwl','ezw','izw','bmr','vf','pw','mmal','mmar','mmbl','mmbr','mmru','mual','muar','mubl','mubr','muru'];
 function saveSetting(k,v){D.settings[k]=parseInt(v)||0;save()}
-function doLogout(){if(unsubscribe)unsubscribe();localStorage.removeItem('pb_sync');localStorage.removeItem('pb_cloud_offen');location.reload()}
+/* Abmelden (10.11.): Vorher entfernte es pb_sync und pb_cloud_offen sofort
+   und lud neu. Das gebündelte Schreiben (4 s) ging nicht mehr raus, und nach
+   einem Funkloch waren die nicht gesicherten Sätze nach dem Wiederanmelden
+   weg, ohne Rückfrage: Die Anmeldung ersetzt die Daten des Geräts durch die
+   Cloud-Fassung. Jetzt schreibt Abmelden zuerst; bleibt danach etwas offen,
+   sagt ein Fenster, was verloren geht. ok===true meldet ohne Rückfrage ab. */
+function doLogout(ok){
+  const fertig=()=>{if(unsubscribe)unsubscribe();localStorage.removeItem('pb_sync');localStorage.removeItem('pb_cloud_offen');location.reload()};
+  if(ok===true||!cloudOffen||!syncCode||syncCode==='offline'||kontoFehlt){fertig();return}
+  const knopf=document.getElementById('logout-go');
+  const fragen=()=>{
+    if(knopf){knopf.disabled=false;knopf.textContent='Abmelden'}
+    if(!cloudOffen){fertig();return}
+    const uhr=new Date(cloudOffen).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+    askSheet({titel:'Abmelden?',
+      folge:`Was du seit ${uhr} Uhr geändert hast, ist noch nicht in der Cloud. Abmelden löscht es von diesem Gerät.`,
+      tat:'Trotzdem abmelden',fn:()=>doLogout(true)});
+  };
+  if(!useFirebase||!db){fragen();return}
+  if(knopf){knopf.disabled=true;knopf.textContent='Sichert …'}
+  queueCloudSave(true);
+  Promise.race([cloudWriteQueue,new Promise(r=>setTimeout(r,6000))]).then(fragen,fragen);
+}
 /* „Alle Daten löschen": erst zeigen, was verloren geht, dann ein Backup
    anbieten. Zwei Tipps (Löschen → Alles löschen), keine Geste — das geht mit
    Tastatur, VoiceOver und Schaltersteuerung gleich. */
@@ -9212,16 +9425,23 @@ function resetAll(){
    -------------------------------------------------------------------------- */
 function exportCSV(){
   normalizeData();
-  const rows=[['Datum','Trainingstag','Übung','Muskel','Volumengruppe','Satz','Gewicht_kg','Wiederholungen','RIR','Typ','Notiz']];
+  /* Cardio (10.11.): Ein Cardio-Satz trägt die Minuten in r und die Stufe in
+     w. Vorher standen sie unter „Wiederholungen“ und „Gewicht_kg“, dazu RIR 2
+     und Typ main. Jetzt haben sie eigene Spalten am Ende; die übrigen Spalten
+     bleiben, wo sie waren. */
+  const rows=[['Datum','Trainingstag','Übung','Muskel','Volumengruppe','Satz','Gewicht_kg','Wiederholungen','RIR','Typ','Notiz','Minuten','Stufe']];
+  const zahl=v=>v===undefined||v===null?'':String(v).replace('.',',');
   (D.history||[]).forEach(s=>{
     (s.sets||[]).forEach((x,i)=>{
+      const cardio=isCardioSet(x);
       rows.push([
         s.date||'', planDisplayName(s.planKey||''), x.ex||'', x.muscle||'',
         volGroupOf(x.ex,x.muscle,x.type)||'', x.nr||(i+1),
-        String(x.w===undefined||x.w===null?'':x.w).replace('.',','),
-        x.r===undefined||x.r===null?'':x.r,
-        x.rir===undefined||x.rir===null?'':x.rir,
-        x.type||'main', (x.note||'').replace(/[\r\n;]/g,' ')
+        cardio?'':zahl(x.w),
+        cardio||x.r===undefined||x.r===null?'':x.r,
+        cardio||x.rir===undefined||x.rir===null?'':x.rir,
+        cardio?'cardio':x.type||'main', (x.note||'').replace(/[\r\n;]/g,' '),
+        cardio?zahl(x.r):'', cardio?zahl(x.w):''
       ]);
     });
   });
@@ -10243,8 +10463,8 @@ function runBarGrows(root){
    das noch einmal in Worten sagte und die Summe nannte, ist weg (Runde 4);
    die Zählregel steht in Zahlen.
    -------------------------------------------------------------------------- */
-function weeklyGroupStatus(){
-  const vol=getWeeklyVolume(true);
+function weeklyGroupStatus(mitLaufend){
+  const vol=getWeeklyVolume(true,mitLaufend);
   return plannedMuscleGroups().map(g=>{
     const lm=MUSCLE_LANDMARKS[g];
     const sets=Math.round((((vol[g]||{}).sets)||0)*10)/10;
@@ -10256,7 +10476,7 @@ function weeklyGroupStatus(){
    Schulterköpfe bleiben gekürzt. */
 const WG_NAMEN={shoulders:'Seitl. Schulter',front:'Vord. Schulter',rear:'Hint. Schulter',hams:'Beinbeuger'};
 function buildWeekGauge(){
-  const groups=weeklyGroupStatus();
+  const groups=weeklyGroupStatus(true);
   const gesamt=groups.length;
   /* „Im Korridor" heißt: mindestens am Minimum, höchstens an der
      Erholungsgrenze. Über dem Optimum ist ausdrücklich in Ordnung — das ist
@@ -10316,6 +10536,12 @@ function syncSchluesselTipp(){
   if(!schluesselOffen){schluesselOffen=true;renderKonto();document.getElementById('sync-key')?.focus();return}
   copyText(syncSchluesselAnzeige(syncCode),'Schlüssel kopiert');
 }
+/* Wie die Zeile oben im Profil (10.11.): Vorher stand hier „Sync ist aktiv.“,
+   während oben „Nicht gesichert seit …“ stand. */
+function kontoZustandText(){
+  if(kontoFehlt)return'Dein Konto liegt nicht mehr unter diesem Schlüssel.';
+  return useFirebase&&!(syncFehler&&cloudOffen)?'Sync ist aktiv.':'Gerade keine Verbindung zur Cloud.';
+}
 function renderKonto(){
   const el=document.getElementById('konto-card');
   if(!el)return;
@@ -10325,17 +10551,17 @@ function renderKonto(){
     return;
   }
   const alterName=!istSyncSchluessel(syncCode);
-  const zustand=kontoFehlt?'Dein Konto liegt nicht mehr unter diesem Schlüssel.':useFirebase?'Sync ist aktiv.':'Gerade keine Verbindung zur Cloud.';
+  const zustand=kontoZustandText();
   const schluessel=alterName
     ?`<code class="sr-code">${esc(syncCode)}</code>`
     :`<button type="button" class="sr-code" id="sync-key" onclick="syncSchluesselTipp()" aria-label="${schluesselOffen?'Sync-Schlüssel '+syncSchluesselAnzeige(syncCode)+' kopieren':'Sync-Schlüssel zeigen'}">${schluesselOffen?syncSchluesselAnzeige(syncCode):'•••• •••• ••'}</button>`;
-  el.innerHTML=`<div class="sr"><div class="sr-bd"><b>Angemeldet als ${esc(anzeigeName())}</b><span>${zustand}</span></div></div>`+
+  el.innerHTML=`<div class="sr"><div class="sr-bd"><b>Angemeldet als ${esc(anzeigeName())}</b><span id="konto-zustand">${zustand}</span></div></div>`+
     `<div class="sr"><div class="sr-bd"><b>Sync-Schlüssel</b><span>${alterName?'Dein Schlüssel ist dein Name. Wer ihn errät, sieht deine Daten.':'Tippen zeigt ihn, Tippen auf den Schlüssel kopiert ihn.'}</span></div>${schluessel}</div>`+
     `<div class="sr sr-tight"><div class="sr-bd"><span>In der Cloud liegen Trainings, Pläne und Körperdaten. „Alle Daten löschen“ entfernt auch diese Kopie.</span></div></div>`+
     `<div class="set-grid">`+
     (alterName&&!kontoFehlt&&useFirebase?`<button type="button" class="setbtn set-wide" onclick="om('m-newkey')">Neuen Schlüssel erzeugen</button>`:'')+
     (kontoFehlt?`<button type="button" class="setbtn set-wide" onclick="syncVerbinden()">Neu anmelden</button>`
-      :`<button type="button" class="setbtn set-wide set-ghost" onclick="doLogout()">Abmelden</button>`)+
+      :`<button type="button" class="setbtn set-wide set-ghost" id="logout-go" onclick="doLogout()">Abmelden</button>`)+
     `</div>`;
 }
 function renderSettings(){
@@ -10667,6 +10893,9 @@ function endWorkout(ok){
         tat:'Workout verwerfen',fn:()=>endWorkout(true)});
       return;
     }
+    /* Grabstein (10.11.): Ein verworfenes Training kommt über ein zweites
+       Gerät, das es noch offen hat, nicht zurück (siehe mergeActive). */
+    addTombstone('history','id|'+activeSessionId(D.active));
     D.active=null;save();resetTmr();go('dash');toast(n?'Workout verworfen':'Kein Satz geloggt');return;
   }
   const previousSimilar=[...D.history].reverse().find(h=>h.planKey===s.planKey&&h.sets&&h.sets.length);
@@ -12082,6 +12311,15 @@ function nextSetTarget(ex){
   const prevInSession=setNr>0?ex.logged[setNr-1]:null;
   const last=getLastSetAt(ex.name,setNr);
   const ref=prevInSession&&prevInSession.w>0?prevInSession:last;
+  /* Satz 1 nach einer Einheit nur mit Körpergewicht (10.11.): eine
+     Wiederholung mehr als beim letzten Mal, höchstens bis zur Obergrenze.
+     w '0', damit das Fenster auf dem Ziel öffnet; einen Ein-Tipp-Knopf gibt
+     es ohne Gewicht nicht. */
+  if(ref&&!(parseFloat(ref.w)>0)&&parseInt(ref.r)>0){
+    const r0=parseInt(ref.r),tr=Math.max(r0,Math.min(parseInt(ex.rmax)||12,r0+1));
+    return{icon:icon('target',17),num:'',w:'0',r:String(tr),unit:`${tr} Wdh.`,why:`Letztes Mal ${r0} Wdh. — eine Wiederholung mehr.`,
+      text:`Ziel: <b>${tr} Wdh.</b> — letztes Mal ${r0} Wdh.`};
+  }
   if(!ref||!ref.w)return{icon:icon('target',17),num:'',unit:`${esc(ex.rmin)}–${esc(ex.rmax)} Wdh`,why:'Noch keine Referenz — dieser Satz setzt sie.',
     text:`Erste Referenz setzen: <b>${esc(ex.rmin)}–${esc(ex.rmax)}</b> Wdh${ex.rir!==null?` bei RIR ${esc(ex.rir)}`:''}.`};
   const rmax=parseInt(ex.rmax)||12,rmin=parseInt(ex.rmin)||8;
