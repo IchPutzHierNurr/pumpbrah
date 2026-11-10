@@ -11260,6 +11260,7 @@ function toggleWoRow(ei){
   if(!D.active)return;
   D.active.openEx=D.active.openEx===ei?null:ei;
   renderWo();
+  if(D.active.openEx===ei)scrollToWoCard(ei);
 }
 /* Die Gruppe „Erledigt“ auf- und zuklappen. Zu schließt sie auch eine daraus
    geöffnete Übung — die hielte die Gruppe sonst gleich wieder offen. */
@@ -11339,12 +11340,31 @@ function toggleWorkoutCompact(){
 function scrollToActiveCard(){
   const i=activeIndex(activeExercisesSafe());
   const el=i>=0?document.getElementById('wo-ex-'+i):null;
-  if(!el){window.scrollTo({top:0,behavior:prefersReducedMotion()?'auto':'smooth'});return false}
+  if(!el){window.scrollTo({top:0,behavior:prefersReducedMotion()||scrollY>innerHeight*0.5?'auto':'smooth'});return false}
   const kopf=document.getElementById('wo-sticky-top');
   const abstand=kopf?kopf.getBoundingClientRect().height+(parseFloat(getComputedStyle(kopf).marginBottom)||0):0;
   el.style.scrollMarginTop=Math.round(abstand)+'px';
-  el.scrollIntoView({behavior:prefersReducedMotion()?'auto':'smooth',block:'start'});
+  el.scrollIntoView({behavior:woScrollBehavior(el,abstand),block:'start'});
   return true;
+}
+/* Weich rollen nur über kurze Strecken. Nach dem Vorziehen lag die Karte bis
+   zu 750 px tiefer; das Gleiten zog die ganze Liste unter dem unscharfen Kopf
+   durch, und das Bild verschwamm. Weiter als ein halber Bildschirm springt
+   die Seite deshalb (10.11.). */
+function woScrollBehavior(el,abstand){
+  if(prefersReducedMotion())return 'auto';
+  const weg=Math.abs(el.getBoundingClientRect().top-abstand);
+  return weg>innerHeight*0.5?'auto':'smooth';
+}
+/* Eine aufgeklappte Karte (vorziehen, korrigieren) direkt unter den festen
+   Kopf holen, damit ihr Loggen-Knopf sichtbar ist. */
+function scrollToWoCard(ei){
+  const el=document.getElementById('wo-ex-'+ei);
+  if(!el)return;
+  const kopf=document.getElementById('wo-sticky-top');
+  const abstand=kopf?kopf.getBoundingClientRect().height+(parseFloat(getComputedStyle(kopf).marginBottom)||0):0;
+  el.style.scrollMarginTop=Math.round(abstand)+'px';
+  el.scrollIntoView({behavior:woScrollBehavior(el,abstand),block:'start'});
 }
 function jumpToActiveExercise(){
   if(activeIndex(activeExercisesSafe())<0){toast('Alle Übungen erledigt');return}
@@ -11828,6 +11848,22 @@ function applyDeloadToExercises(list){
    den Satz. Beides aus EINER Quelle, damit große Zahl und Begründung nie
    auseinanderlaufen. */
 function nextSetTarget(ex){
+  /* Folgesätze (10.11.): Ab Satz 2 gilt, was in dieser Einheit schon steht —
+     Gewicht und Wiederholungen des vorigen Satzes. Vorher rechnete die App
+     auch hier weiter (RIR zu niedrig → eine Stufe leichter, obere Grenze →
+     eine Stufe schwerer), und das Satz-Fenster öffnete mit diesem errechneten
+     Gewicht statt mit dem, das gerade auf der Stange liegt. Die Rechnung gilt
+     nur noch für Satz 1, gegen die letzte Einheit. */
+  if(!isCardioExercise(ex)){
+    const n=(ex.logged||[]).length;
+    const prev=n>0?ex.logged[n-1]:null;
+    const pw=prev?parseFloat(prev.w)||0:0,pr=prev?parseInt(prev.r)||0:0;
+    if(pw>0&&pr>0){
+      const w=String(pw);
+      return{icon:icon('target',17),num:w,w,r:String(pr),unit:`kg × ${esc(pr)}`,why:`Wie Satz ${n}.`,
+        text:`Wie Satz ${n}: <b>${esc(de(w))} kg × ${esc(pr)}</b>.`};
+    }
+  }
   if(deloadActive()&&!isCardioExercise(ex)){
     const last=getLastW(ex.name);
     if(last&&last.w>0){
