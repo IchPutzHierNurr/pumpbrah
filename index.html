@@ -276,7 +276,9 @@ body.has-live .screen{padding-bottom:calc(168px + env(safe-area-inset-bottom,0px
    Breite: „Kabelrudern sitz…", „Katana Extensio…". Jetzt bis zu zwei Zeilen,
    erst danach abgeschnitten — die Zeile wächst um wenige Pixel, der Name
    bleibt lesbar. */
-.exr-n{font-weight:700;font-size:var(--fs-14);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.exr-n{font-weight:700;font-size:var(--fs-14);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  /* Ein langes Wort bricht um statt mitten im Wort abzureißen (10.11., 320 px: „Trizepsdrück“). */
+  overflow-wrap:anywhere;hyphens:auto}
 /* 11 px statt 9,5 px; ohne Sperrung und mit knapperem Rand braucht das
    Schild so viel Platz wie vorher. */
 .exr-n .uni{font-family:'JetBrains Mono',monospace;font-size:var(--fs-11);font-weight:800;letter-spacing:0;
@@ -2629,7 +2631,7 @@ code.sr-code{cursor:auto}
 </div>
 </div></div>
 <div class="mbg" id="m-add" data-guard><div class="mdl mdl-ex">
-<div class="mt"><span id="a-title">Neue Übung</span> <span class="mt-act"><button type="button" class="btn btn-s btn-g ib" onclick="cm('m-add');openLibrary()"><span data-ic="book"></span>Bibliothek</button><button class="mc" aria-label="Schließen" onclick="cm('m-add')">✕</button></span></div>
+<div class="mt"><span id="a-title">Neue Übung</span> <span class="mt-act"><button type="button" class="btn btn-s btn-g ib" onclick="openLibrary()"><span data-ic="book"></span>Bibliothek</button><button class="mc" aria-label="Schließen" onclick="cm('m-add')">✕</button></span></div>
 <div class="ir"><div class="ig"><label for="a-name">Name</label><input type="text" id="a-name" placeholder="z. B. Bankdrücken…" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-describedby="a-name-err" oninput="refreshLibHint()"><div class="ig-err" id="a-name-err" hidden></div></div></div>
 <div id="a-libhint" class="libhint" style="display:none"></div>
 <div class="ir">
@@ -2741,7 +2743,7 @@ code.sr-code{cursor:auto}
 <div style="font-size:var(--fs-11);color:var(--text3);margin-top:8px" id="pd-hint">Mehrfachauswahl möglich. Der nächste Tag wird auf dem Dashboard vorgeschlagen.</div>
 <div class="pd-order" id="pd-order" hidden>
 <div class="lab" id="pd-order-lab">Reihenfolge im Plan</div>
-<div class="pd-order-b" role="group" aria-labelledby="pd-order-lab"><button type="button" class="btn btn-g" id="pd-earlier" onclick="movePlanDay(-1,planDayOriginal)">Früher</button><span id="pd-order-n"></span><button type="button" class="btn btn-g" id="pd-later" onclick="movePlanDay(1,planDayOriginal)">Später</button></div>
+<div class="pd-order-b" role="group" aria-labelledby="pd-order-lab"><button type="button" class="btn btn-g" id="pd-earlier" onclick="movePlanDay(-1,planDayOriginal)">Früher</button><span id="pd-order-n"></span><input type="hidden" id="pd-order-val"><button type="button" class="btn btn-g" id="pd-later" onclick="movePlanDay(1,planDayOriginal)">Später</button></div>
 </div>
 <div class="sheet-cta"><button class="btn" id="pd-save" onclick="savePlanDay()">Speichern</button>
 <button class="btn btn-g" onclick="cm('m-planday')">Abbrechen</button></div>
@@ -3016,9 +3018,16 @@ function mergeSyncedSnapshot(localSnapshot,remote){
   try{return mergeSyncedData(remote)}
   finally{D=previous}
 }
+/* Übungs-Kennung (10.11.): Vorher Date.now()+Math.random()*1000|0 — beim
+   Duplizieren bekamen alle Übungen dieselbe Millisekunde und nur 1000
+   Zufallswerte, beim Import kollidierte Date.now()+i+Zufall. Rund jede 30.
+   Kopie trug zwei gleiche ids, und „Satz korrigieren“ traf die andere Übung.
+   Jetzt zählt die Kennung von der Uhr aus hoch und wiederholt sich nie. */
+let uebungsIdZuletzt=0;
+function neueUebungsId(){uebungsIdZuletzt=Math.max(Date.now(),uebungsIdZuletzt+1);return uebungsIdZuletzt}
 function normalizeExercise(ex){
   if(!ex||typeof ex!=='object')ex={};
-  if(!ex.id)ex.id=Date.now()+Math.random()*1000|0;
+  if(!ex.id)ex.id=neueUebungsId();
   ex.name=String(ex.name||'Unbenannte Übung').trim()||'Unbenannte Übung';
   ex.sets=Math.max(1,parseInt(ex.sets)||3);
   ex.rmin=Math.max(0,parseInt(ex.rmin)||8);
@@ -3177,7 +3186,7 @@ function sessionFromActive(a,opts){
   const s={id:activeSessionId(a),updatedAt:Date.now(),
     date:new Date(start).toLocaleDateString('de-DE'),
     planKey:a.planKey,duration:Math.max(1,Math.floor((end-start)/60000)),sets:[]};
-  (a.exercises||[]).forEach(ex=>{if(!ex.skipped)(ex.logged||[]).forEach((l,i)=>{s.sets.push({ex:ex.name,nr:i+1,w:l.w,r:l.r,rir:l.rir,note:l.note,muscle:ex.muscle,type:ex.type})})});
+  (a.exercises||[]).forEach(ex=>{if(!ex.skipped)(ex.logged||[]).forEach((l,i)=>{s.sets.push({ex:ex.name,nr:i+1,w:l.w,r:l.r,rir:l.rir,note:l.note,muscle:ex.muscle,type:ex.type,mode:l.mode||''})})});
   /* Was übersprungen wurde, gehört in die Einheit — nicht als Strafe, sondern
      als Erklärung (PB-107). */
   const uebersprungen=(a.exercises||[])
@@ -4336,6 +4345,7 @@ function cm(id){
      schloss. Hier endet er, weil hier jeder dieser Wege vorbeikommt. */
   if(id==='m-egym')egymEditKey=null;
   if(id==='m-setedit')setEditRef=null;
+  if(id==='m-planday')planDayOrderZurueck();
   const el=document.getElementById(id);
   if(el){
     el.classList.remove('show');
@@ -5734,12 +5744,13 @@ function getWeeklyVolume(includeSecondary){
   Object.values(vol).forEach(v=>{v.sets=Math.round(v.sets*10)/10;v.indirect=Math.round(v.indirect*10)/10});
   return vol;
 }
-function showExHist(name){document.getElementById('exh-name').textContent=name;const sets=strengthSets(getAllSets(name)).filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}/* Oben stand eine Kennzahlen-Tabelle (All-Time Max, Est. 1RM, Median, Ø RIR,
+function showExHist(name){document.getElementById('exh-name').textContent=name;/* Ohne Zusatzgewicht (10.11.): Hängendes Beinheben und Co. zeigten nur „Keine Daten“, obwohl Trend und Historie die Wiederholungen werten. Hat kein Satz Gewicht, zählen die Wiederholungen. */const alleSaetze=strengthSets(getAllSets(name));const ohneGewicht=!alleSaetze.some(s=>s.w>0);const sets=ohneGewicht?alleSaetze.filter(s=>s.r>0):alleSaetze.filter(s=>s.w>0);if(!sets.length){document.getElementById('exh-content').innerHTML='<div class="empty">Keine Daten</div>';om('m-exhist');return}/* Oben stand eine Kennzahlen-Tabelle (All-Time Max, Est. 1RM, Median, Ø RIR,
    Trend, Datenpunkte); raus in Runde 4. Höchstgewicht und 1RM stehen groß an
    den Diagrammen, der Trend ist die Linie selbst. */
 let h='';/* Je Einheit ein Punkt: der schwerste Arbeitssatz. Jeder Satz einzeln ergäbe
    vier gleiche Punkte je Einheit und eine Treppe statt einer Linie. Das Datum
    steht unter dem Punkt, der Bestwert ist der gefüllte. */
+if(ohneGewicht){const reps=perSessionSeries(sets,s=>s.r);if(reps.length>=2){const best=Math.max(...reps.map(e=>e.v));h+=`<div class="prog"><div class="prog-h">Meiste Wiederholungen je Einheit <span class="chart-key"><i></i>Bestwert</span></div>${chartSumLine(reps[0].v,reps[reps.length-1].v,'Wdh.',0,reps[0].date,reps[reps.length-1].date)}${svgChart(reps.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:150,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' Wdh.',mark:reps.findIndex(e=>e.v===best),label:'Meiste Wiederholungen '+name,noun:'Einheiten'})}</div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>'+exhTageHTML(sets);document.getElementById('exh-content').innerHTML=h;om('m-exhist');return}
 const topSets=perSessionSeries(sets,s=>s.w);
 if(topSets.length>=2){const best=Math.max(...topSets.map(e=>e.v));const bi=topSets.findIndex(e=>e.v===best);h+=`<div class="prog"><div class="prog-h">Schwerster Arbeitssatz je Einheit <span class="chart-key"><i></i>Bestwert</span></div>${chartSumLine(topSets[0].v,topSets[topSets.length-1].v,'kg',undefined,topSets[0].date,topSets[topSets.length-1].date)}${svgChart(topSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:150,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:bi,label:'Schwerster Arbeitssatz '+name,noun:'Einheiten'})}</div>`;}
 const rmSets=perSessionSeries(sets.filter(s=>s.w>0&&s.r>0&&s.r<=15),s=>calc1RM(s.w,s.r));if(rmSets.length>=2){const firstRm=rmSets[0].v,lastRm=rmSets[rmSets.length-1].v;const delta=firstRm?((lastRm-firstRm)/firstRm*100):0;const bestRm=Math.max(...rmSets.map(e=>e.v));h+=`<div class="prog"><div class="prog-h">Geschätzter 1RM <span>${delta>0?'+':''}${de1(delta)}\u00a0% seit Beginn</span></div>${chartSumLine(firstRm,lastRm,'kg',undefined,rmSets[0].date,rmSets[rmSets.length-1].date)}${svgChart(rmSets.map(e=>({v:e.v,label:kurzDatum(e.date)})),{w:chartWidth(true),h:140,color:'var(--accent)',showGrid:true,showArea:false,xLabels:true,unit:' kg',mark:rmSets.findIndex(e=>e.v===bestRm),label:'Geschätzter 1RM '+name,noun:'Einheiten'})}</div>`;}h+='<div class="st">ALLE SÄTZE <div class="ln"></div></div>'+exhTageHTML(sets);document.getElementById('exh-content').innerHTML=h;om('m-exhist')}
@@ -5758,7 +5769,7 @@ function exhTageHTML(sets){
     const rir=t.s.map(s=>parseFloat(s.rir)).filter(Number.isFinite);
     const lo=Math.min(...rir),hi=Math.max(...rir);
     return`<div class="hr exh-tag"><div class="se">${esc(t.date||'')}</div>`+
-      `<div class="exh-s">${gruppen.map((g,i)=>`<b>${esc(de(g.w))}\u00a0kg</b>\u00a0× <span class="exh-r">${g.r.map(r=>esc(r)).join('\u00a0· ')}${i<gruppen.length-1?',':''}</span>`).join(' ')}</div>`+
+      `<div class="exh-s">${gruppen.map((g,i)=>(g.w?`<b>${esc(de(g.w))}\u00a0kg</b>\u00a0× `:'')+`<span class="exh-r">${g.r.map(r=>esc(r)).join('\u00a0· ')}${g.w?'':'\u00a0Wdh.'}${i<gruppen.length-1?',':''}</span>`).join(' ')}</div>`+
       (rir.length?`<div class="exh-rir">RIR ${esc(lo===hi?lo:lo+'–'+hi)}</div>`:'')+`</div>`;
   }).join('');
 }
@@ -5767,7 +5778,12 @@ function renderPlanSaveState(){
   const btn=document.getElementById('plan-save-btn');
   const state=document.getElementById('plan-save-state');
   if(btn)btn.style.display='none';
-  if(state)state.style.display=planDirty?'block':'none';
+  if(state){
+    state.style.display=planDirty?'block':'none';
+    /* „& synchronisiert“ nur mit Cloud (10.11.): Nur auf diesem Gerät wird
+       nichts abgeglichen. */
+    state.textContent=syncCode&&syncCode!=='offline'?'✓ Automatisch gespeichert & synchronisiert':'✓ Automatisch gespeichert';
+  }
 }
 function markPlanDirty(){
   planDirty=true;
@@ -5864,8 +5880,12 @@ let planDran=null;
 function planAufDran(){
   const nk=nextPlanDay();
   const k=D.active&&D.plan[D.active.planKey]?D.active.planKey:nk&&D.plan[nk.key]?nk.key:null;
-  if(!k||k===planDran)return false;
-  planDran=k;
+  /* Das laufende Training gehört in die Marke (10.11.): Startete man den Tag,
+     der ohnehin dran war, nachdem man einen anderen nur angeschaut hatte,
+     blieb die Marke gleich und der Plan auf dem angeschauten Tag stehen. */
+  const marke=(D.active&&k===D.active.planKey?'L'+(D.active.id||D.active.startTime)+'|':'')+k;
+  if(!k||marke===planDran)return false;
+  planDran=marke;
   if(curTab===k)return false;
   curTab=k;
   return true;
@@ -6022,8 +6042,8 @@ function applyLibHint(){
   refreshLibHint();
   toast('Werte aus der Bibliothek übernommen');
 }
-function openAddEx(){editRef=null;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Neue Übung';document.getElementById('a-target').textContent='Wird zu: '+curTab.replace('_',' ');document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);syncRirRow();document.getElementById('a-btn').textContent='Übung hinzufügen';refreshLibHint();om('m-add')}
-function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Übung bearbeiten';document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;pickRirAdd(ex.rir);document.getElementById('a-type').value=ex.type;syncRirRow();document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=curTab.replace('_',' ')+' (Edit)';document.getElementById('a-btn').textContent='Änderungen speichern';refreshLibHint();om('m-add')}
+function openAddEx(){editRef=null;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Neue Übung';document.getElementById('a-target').textContent='Wird zu: '+planDisplayName(curTab);document.getElementById('a-name').value='';document.getElementById('a-note').value='';document.getElementById('a-sets').value=3;document.getElementById('a-rmin').value=8;document.getElementById('a-rmax').value=12;pickRirAdd(2);/* Typ und Muskel zurück auf den Anfang (10.11.): Sie blieben von der zuletzt bearbeiteten Übung stehen, ein neues Bankdrücken wurde so zu Pre-Workout / Beine. */document.getElementById('a-type').value='main';document.getElementById('a-mus').value='chest';syncRirRow();document.getElementById('a-btn').textContent='Übung hinzufügen';refreshLibHint();om('m-add')}
+function openEditEx(i){const ex=(D.plan[curTab]||{exercises:[]}).exercises[i];if(!ex)return;editRef=ex;editTab=curTab;clearFieldErrs(document.getElementById('m-add'));document.getElementById('a-title').textContent='Übung bearbeiten';document.getElementById('a-name').value=ex.name;document.getElementById('a-sets').value=ex.sets;document.getElementById('a-rmin').value=ex.rmin;document.getElementById('a-rmax').value=ex.rmax;pickRirAdd(ex.rir);document.getElementById('a-type').value=ex.type;syncRirRow();document.getElementById('a-mus').value=ex.muscle;document.getElementById('a-note').value=ex.note||'';document.getElementById('a-target').textContent=planDisplayName(curTab)+' (Edit)';document.getElementById('a-btn').textContent='Änderungen speichern';refreshLibHint();om('m-add')}
 /* Name und Zahlen der beiden Übungsfenster (Plan: a-…, Bibliothek: libe-…).
    Früher deutete confirmAddEx falsche Eingaben still um: Sätze −5 wurden 1,
    Wdh 12 bis 8 wurden 12 bis 12, 9999 Sätze gingen durch. Jetzt sagt das Feld,
@@ -6049,7 +6069,7 @@ function readExForm(p){
   if(first){first.focus();return null}
   return{name,sets,rmin,rmax};
 }
-function confirmAddEx(){const f=readExForm('a');if(!f)return;const obj={id:Date.now(),name:f.name,sets:f.sets,rmin:f.rmin,rmax:f.rmax,rir:document.getElementById('a-type').value==='main'&&document.getElementById('a-rir').value!==''?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
+function confirmAddEx(){const f=readExForm('a');if(!f)return;const obj={id:neueUebungsId(),name:f.name,sets:f.sets,rmin:f.rmin,rmax:f.rmax,rir:document.getElementById('a-type').value==='main'&&document.getElementById('a-rir').value!==''?parseInt(document.getElementById('a-rir').value):null,note:document.getElementById('a-note').value.trim(),type:document.getElementById('a-type').value,muscle:document.getElementById('a-mus').value};const tag=editTab||curTab;const liste=(D.plan[tag]||{}).exercises;if(!Array.isArray(liste)){toast('Diesen Trainingstag gibt es nicht mehr');cm('m-add');editRef=null;editTab=null;renderPL();return}
   if(editRef){
     /* PB-086: Hier stand ein gemerkter INDEX. Der Cloud-Listener ersetzt in
        `D=mergeSyncedData(remote)` das ganze Datenobjekt — auch bei offenem
@@ -6447,6 +6467,7 @@ function togglePlanDayChip(d){
 function openPlanDayModal(mode,sourceKey){
   planDayMode=mode;
   planDayOriginal=sourceKey||null;
+  planDayOrderStart=mode==='rename'?Object.keys(D.plan||{}):null;
   const src=sourceKey?D.plan[sourceKey]:null;
   const titles={add:'NEUER TRAININGSTAG',rename:'TAG BEARBEITEN',duplicate:'TAG DUPLIZIEREN'};
   document.getElementById('pd-title').textContent=titles[mode]||'TRAININGSTAG';
@@ -6467,6 +6488,24 @@ function duplicatePlanDay(){if(!curTab){toast('Erst einen Tag wählen');return}o
 /* In „Tag bearbeiten“ steht unter den Wochentagen, an welcher Stelle der Tag
    im Plan liegt; „Früher“ und „Später“ verschieben ihn (die Pfeile neben den
    Tabs sind dafür weggefallen). */
+/* „Früher“ und „Später“ speichern sofort, gehören aber zum Fenster (10.11.):
+   Verwerfen, Abbrechen und ✕ setzen die Reihenfolge zurück, wie sie beim
+   Öffnen war. Vorher kam nach „Verwerfen“ der Name zurück, die neue
+   Reihenfolge blieb gespeichert. Das versteckte Feld pd-order-val macht die
+   Verschiebung für den Eingabeschutz sichtbar. */
+let planDayOrderStart=null;
+function planDayOrderZurueck(){
+  const alt=planDayOrderStart;
+  planDayOrderStart=null;
+  if(!alt||!D.plan)return;
+  const keys=Object.keys(D.plan);
+  const soll=[...alt.filter(k=>keys.includes(k)),...keys.filter(k=>!alt.includes(k))];
+  if(soll.join('\u0001')===keys.join('\u0001'))return;
+  const rebuilt={};
+  soll.forEach(k=>{rebuilt[k]=D.plan[k]});
+  D.plan=rebuilt;
+  save();markPlanDirty();renderPlan();renderDash();
+}
 function syncPlanDayOrder(){
   const box=document.getElementById('pd-order');
   if(!box)return;
@@ -6474,6 +6513,8 @@ function syncPlanDayOrder(){
   const i=keys.indexOf(planDayOriginal);
   box.hidden=!(planDayMode==='rename'&&i>=0&&keys.length>1);
   document.getElementById('pd-order-n').textContent=i>=0?`Tag ${i+1} von ${keys.length}`:'';
+  const val=document.getElementById('pd-order-val');
+  if(val)val.value=String(i);
   document.getElementById('pd-earlier').disabled=i<=0;
   document.getElementById('pd-later').disabled=i<0||i>=keys.length-1;
 }
@@ -6504,11 +6545,14 @@ function savePlanDay(){
     const src=planDayOriginal?D.plan[planDayOriginal]:null;
     D.plan[key]={
       day:dayStr,
-      exercises:planDayMode==='duplicate'&&src?cloneData(src.exercises||[]).map(e=>({...normalizeExercise(e),id:Date.now()+Math.random()*1000|0})):[]
+      exercises:planDayMode==='duplicate'&&src?cloneData(src.exercises||[]).map(e=>({...normalizeExercise(e),id:neueUebungsId()})):[]
     };
     curTab=key;
   }
-  save();markPlanDirty();cm('m-planday');renderPlan();renderDash();
+  planDayOrderStart=null;
+  /* Die schmale Trainingsleiste nennt den laufenden Tag (10.11.): nach dem
+     Umbenennen sofort mit neuem Namen. */
+  save();markPlanDirty();cm('m-planday');renderPlan();renderDash();renderLiveBar();
   toast(planDayMode==='rename'?'Tag aktualisiert ✓':planDayMode==='duplicate'?'Tag dupliziert ✓':'Tag erstellt ✓');
 }
 /* Ein ganzer Tag ist mehr als eine Zeile: Er fragt im eigenen Fenster und
@@ -6543,8 +6587,10 @@ function movePlanDay(dir,key){
   D.plan=rebuilt;
   save();markPlanDirty();renderPlan();renderDash();syncPlanDayOrder();
 }
-function saveBioHeight(v){D.bio.height=parseFloat(v)||null;save();renderBio()}
-function saveBioBirthday(v){D.bio.birthday=v||null;save();renderBio()}
+/* Auch der EGYM-Kopf rechnet mit Alter und Größe (10.11.): Er bat nach dem
+   Eintragen weiter um das Geburtsdatum. */
+function saveBioHeight(v){D.bio.height=parseFloat(v)||null;save();renderBio();renderEgym()}
+function saveBioBirthday(v){D.bio.birthday=v||null;save();renderBio();renderEgym()}
 function getRealAge(){if(!D.bio.birthday)return null;const bd=new Date(D.bio.birthday);const now=new Date();let age=now.getFullYear()-bd.getFullYear();if(now.getMonth()<bd.getMonth()||(now.getMonth()===bd.getMonth()&&now.getDate()<bd.getDate()))age--;return age}
 function calcFitnessAge(){const realAge=getRealAge();if(!realAge)return null;let fa=realAge;const factors=[];const ws=weightSeries();const lastW=ws.length?ws[ws.length-1].kg:null;if(lastW&&D.bio.height){const hm=D.bio.height/100;const bmi=lastW/(hm*hm);if(bmi>=20&&bmi<=24.9){fa-=2;factors.push({label:'BMI optimal',val:-2,color:'var(--green)'})}else if(bmi>=18.5&&bmi<20||bmi>=25&&bmi<27){factors.push({label:'BMI okay',val:0,color:'var(--text2)'})}else if(bmi>=27&&bmi<30){fa+=2;factors.push({label:'BMI erhöht',val:+2,color:'var(--orange)'})}else if(bmi>=30){fa+=4;factors.push({label:'BMI hoch',val:+4,color:'var(--red)'})}else{fa+=2;factors.push({label:'BMI niedrig',val:+2,color:'var(--orange)'})}}const historyTimes=[];D.history.forEach(s=>{const p=String(s.date||'').split('.');if(p.length===3){const t=new Date(p[2],p[1]-1,p[0]).getTime();if(!isNaN(t))historyTimes.push(t)}});weightSeries().forEach(w=>{const k=dateKey(w&&w.date);const m=String(k).match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)historyTimes.push(new Date(+m[1],+m[2]-1,+m[3]).getTime())});const trackingDays=historyTimes.length?Math.max(0,Math.floor((Date.now()-Math.min(...historyTimes))/864e5)):0;const windowDays=Math.min(28,Math.max(trackingDays,7));const windowStart=Date.now()-windowDays*864e5;const recentSessions=D.history.filter(s=>{const p=s.date.split('.');if(p.length!==3)return false;return new Date(p[2],p[1]-1,p[0]).getTime()>windowStart});const sessPerWeek=recentSessions.length/(windowDays/7);if(sessPerWeek>=4){fa-=4;factors.push({label:'Frequenz top ('+de(sessPerWeek.toFixed(1))+'/Wo)',val:-4,color:'var(--green)'})}else if(sessPerWeek>=3){fa-=3;factors.push({label:'Frequenz gut ('+de(sessPerWeek.toFixed(1))+'/Wo)',val:-3,color:'var(--green)'})}else if(sessPerWeek>=2){fa-=1;factors.push({label:'Frequenz okay ('+de(sessPerWeek.toFixed(1))+'/Wo)',val:-1,color:'var(--neon)'})}else if(sessPerWeek>=1){factors.push({label:'Frequenz mäßig ('+de(sessPerWeek.toFixed(1))+'/Wo)',val:0,color:'var(--text2)'})}else if(trackingDays>=14){fa+=3;factors.push({label:'Kaum Training',val:+3,color:'var(--red)'})}else{factors.push({label:'Frequenz: zu wenig Daten',val:0,color:'var(--text2)'})}const twelveWeeksAgo=Date.now()-84*864e5;const weekBuckets=new Array(12).fill(0);D.history.forEach(s=>{const p=s.date.split('.');if(p.length!==3)return;const d=new Date(p[2],p[1]-1,p[0]).getTime();if(d>twelveWeeksAgo){const weekIdx=Math.floor((Date.now()-d)/(7*864e5));if(weekIdx<12)weekBuckets[weekIdx]++}});const observedWeeks=Math.min(12,Math.max(1,Math.ceil(Math.max(trackingDays,1)/7)));const activeWeeks=weekBuckets.filter(w=>w>0).length;const consistency=activeWeeks/observedWeeks;if(trackingDays<28){factors.push({label:'Konsistenz: zu wenig Daten',val:0,color:'var(--text2)'})}else if(consistency>=0.8){fa-=2;factors.push({label:'Sehr konsistent',val:-2,color:'var(--green)'})}else if(consistency>=0.55){fa-=1;factors.push({label:'Konsistent',val:-1,color:'var(--neon)'})}else if(consistency>=0.3){factors.push({label:'Teils konsistent',val:0,color:'var(--text2)'})}else{fa+=2;factors.push({label:'Inkonsistent',val:+2,color:'var(--orange)'})}const allSets=[];D.history.forEach(s=>s.sets.forEach(set=>{if(set.w>0)allSets.push(set)}));if(allSets.length>0&&lastW){const maxes={};allSets.forEach(s=>{if(!maxes[s.ex]||s.w>maxes[s.ex])maxes[s.ex]=s.w});const bestCompound=Math.max(...Object.values(maxes));const ratio=bestCompound/lastW;if(ratio>=1.5){fa-=3;factors.push({label:'Kraftniveau stark ('+de(ratio.toFixed(1))+'× Körpergewicht)',val:-3,color:'var(--green)'})}else if(ratio>=1.0){fa-=1;factors.push({label:'Kraftniveau gut ('+de(ratio.toFixed(1))+'× Körpergewicht)',val:-1,color:'var(--neon)'})}else if(ratio>=0.6){factors.push({label:'Kraftniveau aufbauend ('+de(ratio.toFixed(1))+'× Körpergewicht)',val:0,color:'var(--text2)'})}else{fa+=1;factors.push({label:'Kraftniveau Anfänger',val:+1,color:'var(--orange)'})}}return{fitnessAge:Math.max(14,Math.round(fa)),realAge,factors}}
 /* Das Fitnessalter ist dieselbe Art Aussage wie BioAge: eine Zahl, die erst
@@ -6745,8 +6791,14 @@ let setEditRef=null;
 function findeSatzZiel(ei,si){
   const liste=activeExercisesSafe();
   if(setEditRef){
-    let i=liste.findIndex(e=>e&&e.id===setEditRef.exId);
-    if(i<0)i=liste.findIndex(e=>e&&e.name===setEditRef.name);
+    /* Zuerst die gemerkte Stelle, wenn dort noch dieselbe Übung steht
+       (10.11.): Ältere Kopien eines Tags tragen zwei Übungen mit gleicher id,
+       und die Suche nach der id allein fand immer die erste der beiden. */
+    const r=setEditRef,da=liste[r.ei];
+    let i=da&&da.id===r.exId&&da.name===r.name?r.ei:-1;
+    if(i<0)i=liste.findIndex(e=>e&&e.id===r.exId&&e.name===r.name);
+    if(i<0)i=liste.findIndex(e=>e&&e.id===r.exId);
+    if(i<0)i=liste.findIndex(e=>e&&e.name===r.name);
     if(i>=0&&Array.isArray(liste[i].logged)&&liste[i].logged[setEditRef.si])
       return{ex:liste[i],ei:i,si:setEditRef.si};
     return null;
@@ -6760,7 +6812,7 @@ function openSetEditor(ei,si){
   const ex=activeExercisesSafe()[ei];
   const s=ex&&Array.isArray(ex.logged)?ex.logged[si]:null;
   if(!s)return;
-  setEditRef={exId:ex.id,name:ex.name,si};
+  setEditRef={exId:ex.id,name:ex.name,si,ei};
   /* PB-099: Cardio misst Minuten und eine Stufe. Der Historien-Editor hat das
      mit PB-096 gelernt, dieser hier noch nicht — dieselbe Beschriftung,
      dieselbe Einladung zur Falschkorrektur. */
@@ -7815,7 +7867,11 @@ function weeklyHistorySeries(weeks=6){
     const p=String(session.date||'').split('.');
     if(p.length!==3)return;
     const d=new Date(p[2],p[1]-1,p[0]);
-    const diffWeeks=Math.floor((weekStart-new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7)))/(7*864e5));
+    /* Gerundet statt abgerundet (10.11.): Über die Umstellung auf Sommerzeit
+       ist die Spanne zwischen zwei Montagen eine Stunde kürzer als volle
+       Wochen, Math.floor zählte eine Woche zu wenig, und die Vorwoche landete
+       in „diese Woche“. */
+    const diffWeeks=Math.round((weekStart-new Date(d.getFullYear(),d.getMonth(),d.getDate()-((d.getDay()+6)%7)))/(7*864e5));
     const idx=weeks-1-diffWeeks;
     if(idx>=0&&idx<weeks)buckets[idx].push(session);
   });
@@ -9073,7 +9129,7 @@ function confirmPlanImport(ok){
       key=`${key}_${n}`;
     }
     D.plan[key]={day:day[1],exercises:day[2].map((e,i)=>({
-      id:Date.now()+i+Math.floor(Math.random()*1000),
+      id:neueUebungsId(),
       name:e[0],sets:e[1],rmin:e[2],rmax:e[3],rir:e[4],type:e[5],muscle:e[6],note:e[7],ss:e[8]||null
     }))};
     added++;
@@ -9431,7 +9487,9 @@ function toggleEgym(on){
    leer steht, ist danach leer. */
 let egymEditKey=null;
 function fillEgymForm(m){
-  document.getElementById('egym-date').value=m&&m.date?dateKey(m.date):new Date().toISOString().split('T')[0];
+  /* Das lokale Datum, nicht das UTC-Datum (10.11.): Nach Mitternacht stand
+     sonst bis 1 bzw. 2 Uhr der gestrige Tag im Feld. */
+  document.getElementById('egym-date').value=m&&m.date?dateKey(m.date):dateKey(new Date().toLocaleDateString('de-DE'));
   EG_FIELDS.forEach(k=>{
     const el=document.getElementById('eg-'+k);
     if(!el)return;
@@ -9457,7 +9515,7 @@ function editEgymEntry(i){
 }
 function saveEgymEntry(){
   if(!D.egym)D.egym={enabled:true,measurements:[]};
-  const e={date:document.getElementById('egym-date').value||new Date().toISOString().split('T')[0]};
+  const e={date:document.getElementById('egym-date').value||dateKey(new Date().toLocaleDateString('de-DE'))};
   EG_FIELDS.forEach(k=>{const el=document.getElementById('eg-'+k);const v=el?parseFloat(el.value):NaN;e[k]=isNaN(v)?null:v});
   removeTombstone('egym',dateKey(e.date));
   D.egym.enabled=true;
@@ -9569,7 +9627,7 @@ function bioHeroHTML(m,realAge){
   }
   const bio=parseFloat(m.bioage)||0;
   if(!realAge){
-    return`<div class="bio-hero"><div class="eyebrow2">EGYM BioAge · ${esc(m.date||'')}</div>`+
+    return`<div class="bio-hero"><div class="eyebrow2">EGYM BioAge · ${esc(germanFromKey(m.date))}</div>`+
       `<div class="bio-delta"><span class="n mesh-num">${esc(bio)}</span><span class="u">Jahre biologisch</span></div>`+
       `<div class="bio-sub">Trag dein Geburtsdatum ein, dann rechnet die App den Abstand zu deinem echten Alter aus.</div></div>`;
   }
@@ -9581,7 +9639,7 @@ function bioHeroHTML(m,realAge){
     ?`Biologisch <b>${bio}</b> — exakt dein kalendarisches Alter.`
     :`Biologisch <b>${bio}</b>, kalendarisch <b>${realAge}</b>. Dein Körper ist ${abs===1?'ein Jahr':abs+' Jahre'} ${word} als dein Ausweis.`;
   return`<div class="bio-hero">`+
-    `<div class="eyebrow2">EGYM BioAge · Messung ${esc(m.date||'')}</div>`+
+    `<div class="eyebrow2">EGYM BioAge · Messung ${esc(germanFromKey(m.date))}</div>`+
     `<div class="bio-delta"><span class="n" style="color:${col}">${diff>0?'+':diff<0?'−':'±'}${esc(abs)}</span>`+
       `<span class="u">Jahre ${esc(word)}</span></div>`+
     `<div class="bio-sub">${line}</div>`+
@@ -9690,12 +9748,15 @@ function renderEgym(){
   if(ms.length>=2){
     let ch='';
     [{l:'BioAge',k:'bioage',c:'var(--accent)'},{l:'Körperfett %',k:'kfp',c:'#ffb020'},{l:'Skelettmuskelmasse',k:'smm',c:'#4ea1ff'},{l:'Körperwasser %',k:'kwp',c:'#2ee06a'}].forEach(cs=>{
-      const pts=ms.filter(x=>x[cs.k]!==null&&x[cs.k]!==undefined&&x[cs.k]!=='').map(x=>({v:parseFloat(x[cs.k]),label:String(x.date||'').substring(5)}));
+      /* Datum wie sonst in der App „05.11.“ statt „11-05“ (10.11.). */
+      const pts=ms.filter(x=>x[cs.k]!==null&&x[cs.k]!==undefined&&x[cs.k]!=='').map(x=>({v:parseFloat(x[cs.k]),label:kurzDatum(germanFromKey(x.date))}));
       if(pts.length>=2){
-        const med=pts.map(p=>p.v).sort((a,b)=>a-b)[Math.floor(pts.length/2)];
+        /* „⌀“ ist der Mittelwert (10.11.), wie beim Gewichtsverlauf. Hier
+           stand der obere Median: 18,4 und 15,2 zeigten „⌀ 18,4“. */
+        const med=pts.reduce((a,p)=>a+p.v,0)/pts.length;
         const first=pts[0].v,last=pts[pts.length-1].v;
         const delta=Math.round((last-first)*10)/10;
-        ch+=`<div class="prog" style="margin-bottom:8px"><div class="prog-h">${cs.l}<span>${last}${delta?` <small style="color:var(--text3)">(${delta>0?'+':''}${delta})</small>`:''}</span></div>`+
+        ch+=`<div class="prog" style="margin-bottom:8px"><div class="prog-h">${cs.l}<span>${chartNum(last)}${delta?` <small style="color:var(--text3)">(${delta>0?'+':''}${chartNum(delta)})</small>`:''}</span></div>`+
           svgChart(pts,{h:100,color:cs.c,median:med,showGrid:true,xLabels:pts.length<=10,label:cs.l,noun:'Messungen'})+`</div>`;
       }
     });
@@ -9708,9 +9769,9 @@ function renderEgym(){
       const ri=ms.length-1-i;
       const diff=(realAge&&x.bioage)?Math.round((parseFloat(x.bioage)-realAge)*10)/10:null;
       return`<div class="rep" style="align-items:center">`+
-        `<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--fs-14)">${esc(x.date)}</div>`+
+        `<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:var(--fs-14)">${esc(germanFromKey(x.date))}</div>`+
         `<div style="font-size:var(--fs-11);color:var(--text3);font-family:'JetBrains Mono',monospace">`+
-        `BioAge ${esc(x.bioage||'—')}${diff===null?'':` (${diff>0?'+':''}${diff})`} · KFA ${esc(x.kfp||'—')} % · SMM ${esc(x.smm||'—')} kg</div></div>`+
+        `BioAge ${esc(de(x.bioage)||'—')}${diff===null?'':` (${diff>0?'+':''}${esc(de(diff))})`} · KFA ${esc(de(x.kfp)||'—')} % · SMM ${esc(de(x.smm)||'—')} kg</div></div>`+
         `<button class="hs-edit" aria-label="Messung korrigieren" onclick="editEgymEntry(${ri})">${icon('edit',16)}</button>`+
         `<button class="be-del" aria-label="Messung löschen" onclick="delEgymEntry(${ri})">${icon('trash',16)}</button>`+
       `</div>`;
@@ -9991,7 +10052,10 @@ function renderAnaReport(){
   const st=landmarkState(weeklyLoadPoints(),lm);
   const rir=work.length?(work.reduce((a,x)=>a+(parseFloat(x.rir)||0),0)/work.length):0;
   const minutes=cur.reduce((a,s)=>a+(parseInt(s.duration)||0),0);
-  const vol=getWeeklyVolume(D.ui&&D.ui.volMode!=='direct');
+  /* Die Note zählt wie die Kopfzeile darüber (weeklyGroupStatus) immer mit
+     indirekten Sätzen (10.11.). Der Schalter „Nur direkt“ stellt nur die Liste
+     um; vorher sprang die Note von A auf A−, die Kopfzeile blieb bei 10 von 10. */
+  const vol=getWeeklyVolume(true);
   const low=Object.keys(MUSCLE_LANDMARKS).map(k=>({k,sets:(vol[k]&&vol[k].sets)||0,lm:MUSCLE_LANDMARKS[k]}))
     .filter(m=>m.sets<m.lm.mev).sort((a,b)=>(a.sets-a.lm.mev)-(b.sets-b.lm.mev));
   /* Note aus drei Achsen: Volumen im Korridor, Frequenz erreicht, kein
@@ -10020,8 +10084,11 @@ function renderAnaReport(){
       `<div class="gtile"><div class="gl">Tonnage</div><div class="gv"><span class="countup">${de1(tonCur/1000)}</span><small>t</small></div>`+
       `<div class="gd" style="color:${tonFarbe}">${esc(tonText)}</div></div>`+
       `<div class="gtile"><div class="gl">Arbeitssätze</div><div class="gv"><span class="countup">${sets}</span></div>`+
-      `<div class="gd">${gruppen.length?`${drin} von ${gruppen.length} Gruppen im Korridor`:'—'}</div></div>`+
-      `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${rir?de1(rir):'—'}</div>`+
+      /* Die große Zahl zählt ab Montag, die Gruppen die letzten 7 Tage wie auf
+         Start (10.11.): Am Montagmorgen stand „0“ über „4 von 10 Gruppen im
+         Korridor“. Die Zeile nennt jetzt ihren Zeitraum. */
+      `<div class="gd">${gruppen.length?`${drin} von ${gruppen.length} Gruppen im Korridor, letzte 7 Tage`:'—'}</div></div>`+
+      `<div class="gtile"><div class="gl">Ø RIR</div><div class="gv">${work.length?de1(rir):'—'}</div>`+
       `<div class="gd">${!work.length?'noch keine Sätze':rir<1.5?'nah am Versagen':rir<3?'sauber gesteuert':'viel Luft nach oben'}</div></div>`+
       `<div class="gtile"><div class="gl">Zeit</div><div class="gv">${de1(minutes/60)}<small>h</small></div>`+
       `<div class="gd">${cur.length?`${einheiten}, Ø ${Math.round(minutes/cur.length)} min`:'—'}</div></div>`+
@@ -11623,7 +11690,7 @@ function addExerciseToWorkout(){
 function pushExerciseToActiveWorkout(item){
   if(!D.active)return false;
   const ex=normalizeExercise({
-    id:Date.now()+Math.random()*1000|0,
+    id:neueUebungsId(),
     name:exDisplayName(item.name),
     sets:item.s||item.sets||3,
     rmin:item.rn||item.rmin||8,
@@ -11935,9 +12002,16 @@ function applyRotation(){
 }
 function stopMeso(){
   const m=ensureMesoState();
+  /* Mit Rückgängig (10.11.), wie Übung entfernen und Satz löschen: Ein Tipp
+     verlor sonst „Woche 3 von 5“, ein Neustart beginnt bei Woche 1. */
+  const vorher={active:m.active,start:m.start};
   m.active=false;m.start=0;
   save();renderDash();
-  toast('Mesozyklus beendet');
+  toastAction('Mesozyklus beendet','Rückgängig',()=>{
+    const n=ensureMesoState();
+    n.active=vorher.active;n.start=vorher.start;
+    save();renderDash();
+  });
 }
 function setMesoWeeks(delta){
   const m=ensureMesoState();
@@ -12050,7 +12124,7 @@ function nextSetTarget(ex){
 }
 function normalizeAltItem(item){
   return{
-    id:Date.now()+Math.random()*1000|0,
+    id:neueUebungsId(),
     name:item.name,
     sets:item.s||item.sets||3,
     rmin:item.rn||item.rmin||8,
@@ -12215,7 +12289,7 @@ function pickLibraryItem(encodedName){
   syncRirRow();
   document.getElementById('a-mus').value=item.m;
   document.getElementById('a-note').value=item.note||'';
-  document.getElementById('a-target').textContent='Wird zu: '+(curTab||'').replace('_',' ');
+  document.getElementById('a-target').textContent='Wird zu: '+planDisplayName(curTab);
   document.getElementById('a-btn').textContent='Übung hinzufügen';
   om('m-add');
   toast('Bibliothek: '+item.name);
@@ -12265,7 +12339,7 @@ function editLibraryExercise(name){
   ensureLibraryState();
   const item=findLibraryEditorItem(name);
   if(!item)return;
-  libEditOriginal={name:item.name,custom:!!item.custom,planSource:!!item.planSource};
+  libEditOriginal={name:item.name,custom:!!item.custom,planSource:!!item.planSource,rir:item.rir};
   document.getElementById('libe-name').value=item.name;
   document.getElementById('libe-sets').value=item.s||3;
   document.getElementById('libe-rmin').value=item.rn||8;
@@ -12294,7 +12368,10 @@ function addLibraryExercise(){
     s:f.sets,
     rn:f.rmin,
     rx:f.rmax,
-    rir:2,
+    /* Der Editor hat kein RIR-Feld: Beim Bearbeiten bleibt der RIR des
+       Originals (10.11.), auch „keine Vorgabe“. Vorher stand hier fest 2, und
+       ein bearbeiteter Unterarmstütz kam mit „RIR 2“ in den Plan. */
+    rir:libEditOriginal&&libEditOriginal.rir!==undefined?libEditOriginal.rir:2,
     t:document.getElementById('libe-type').value,
     m:document.getElementById('libe-muscle').value,
     note:document.getElementById('libe-note').value.trim()
@@ -12357,7 +12434,11 @@ function renderLibLists(){
 function renderLibraryEditor(q){
   ensureLibraryState();
   q=String(q||'').toLowerCase().trim();
-  const list=allLibraryCategories().flatMap(cat=>cat.items.map(item=>({...item,cat:cat.cat}))).filter(item=>!q||item.name.toLowerCase().includes(q)||String(item.note||'').toLowerCase().includes(q));
+  /* Wie die Bibliothek im Übungsfenster (10.11.): nur im Namen suchen,
+     Treffer am Namensanfang zuerst (libSearchRank). Hier suchte die Suche noch
+     im Hinweis, „seit“ fand 51 Übungen statt 10. */
+  const list=allLibraryCategories().flatMap(cat=>cat.items.map(item=>({...item,cat:cat.cat}))).filter(item=>!q||item.name.toLowerCase().includes(q));
+  if(q)list.sort((a,b)=>libSearchRank(a,q)-libSearchRank(b,q)||exDisplayName(a.name).localeCompare(exDisplayName(b.name),'de'));
   const box=document.getElementById('libe-list');
   if(!list.length){box.innerHTML='<div class="empty">Keine Übungen gefunden</div>';return}
   box.innerHTML=list.map(item=>{
@@ -12474,7 +12555,7 @@ function commitSwap(persistToPlan){
   const old=D.active.exercises[targetIndex];
   if(!old)return;
   const swapped=normalizeExercise({
-    id:Date.now()+Math.random()*1000|0,
+    id:neueUebungsId(),
     /* Aus der Bibliothek kommt nur der deutsche Name (10.11.), wie bei „Übung
        hinzufügen“; ein Name aus dem eigenen Plan bleibt, wie er ist. */
     name:swapName(picked),sets:picked.sets,rmin:picked.rmin,rmax:picked.rmax,
