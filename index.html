@@ -2557,6 +2557,7 @@ code.sr-code{cursor:auto}
 </div>
 <div class="ig-err" id="edit-set-rir-err" hidden></div></div>
 <input type="hidden" id="edit-set-rir" aria-describedby="edit-set-rir-err">
+<div class="log-note" id="se-note-box" hidden><input type="text" id="edit-set-note" placeholder="z.B. Griff enger, Pause kurz" aria-label="Notiz zum Satz"></div>
 <div class="sheet-cta"><button type="button" class="btn" id="se-save">✓ Speichern</button>
 <div class="log-sec"><button type="button" class="se-del" id="se-del">Satz löschen</button></div></div>
 </div></div>
@@ -2600,7 +2601,7 @@ code.sr-code{cursor:auto}
 <div class="ir log-cols">
 <div class="ig"><div class="log-lab"><label for="log-w" id="log-w-lab">Gewicht</label><button type="button" class="log-link" onclick="openPlates(document.getElementById('log-w').value,true)">Scheiben<svg class="ic" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg></button></div>
 <div class="stepper"><div class="stepper-val"><input type="number" inputmode="decimal" step="0.5" id="log-w" placeholder="0" aria-describedby="log-w-err" oninput="syncLogSave()" onfocus="this.select()"><span class="stepper-unit" id="log-w-unit">kg</span></div>
-<div class="stepper-pm"><button type="button" class="stepper-btn" id="log-w-minus" aria-label="Gewicht verringern" onpointerdown="event.preventDefault();stepHold('log-w',-2.5)" onclick="if(event.detail===0)stepVal('log-w',-2.5)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" class="stepper-btn" id="log-w-plus" aria-label="Gewicht erhöhen" onpointerdown="event.preventDefault();stepHold('log-w',2.5)" onclick="if(event.detail===0)stepVal('log-w',2.5)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+<div class="stepper-pm"><button type="button" class="stepper-btn" id="log-w-minus" aria-label="Gewicht verringern" onpointerdown="event.preventDefault();stepHold('log-w',-logWStep)" onclick="if(event.detail===0)stepVal('log-w',-logWStep)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14"/></svg></button><button type="button" class="stepper-btn" id="log-w-plus" aria-label="Gewicht erhöhen" onpointerdown="event.preventDefault();stepHold('log-w',logWStep)" onclick="if(event.detail===0)stepVal('log-w',logWStep)"><svg class="ic" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
 <div class="ig-err" id="log-w-err" hidden></div></div>
 <div class="ig"><div class="log-lab"><label for="log-r" id="log-r-lab">Wiederholungen</label></div>
 <div class="stepper"><div class="stepper-val"><input type="number" inputmode="numeric" id="log-r" placeholder="0" aria-describedby="log-r-err" oninput="syncLogSave()" onfocus="this.select()"></div>
@@ -4237,6 +4238,7 @@ function toastRender(text,o){
   el.className='toast';
   el.dataset.id=o.id||'';
   el.dataset.bleibt=o.bleibt?'1':'';
+  el.dataset.oben='';
   el.innerHTML='<span class="ta-t"></span>';
   el.firstChild.textContent=String(text);
   const knopf=(cls,label,fn)=>{
@@ -4309,6 +4311,12 @@ function placeToast(){
     if(r&&r.height&&r.top<h)el.style.bottom=Math.round(h-r.top-8)+'px';
     return;
   }
+  /* Läge die Meldung auf dem Knopf der aktiven Übung, steht sie oben unter
+     dem Kopf (10.11.); die Stelle setzt scrollToActiveCard. Vorher fing
+     „… · Ändern“ 5 s lang die Tipps auf „Satz speichern“ ab, und „Anpassen“
+     traf „Ändern“. */
+  const wo=document.getElementById('s-wo');
+  if(el.dataset.oben&&wo&&wo.classList.contains('active')){el.style.bottom='auto';el.style.top=el.dataset.oben+'px';return}
   let rand=h;
   const nav=document.querySelector('.bnav');
   if(nav){
@@ -6319,7 +6327,7 @@ const EXLIB=[
     {name:"Faszienrolle Oberschenkel (Foam Roll Quads)",s:1,rn:60,rx:90,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, langsam"},
     {name:"Dehnen Beinbeuger (Hamstring Stretch)",s:2,rn:45,rx:60,rir:null,t:"mob",m:"legs",note:"Sekunden pro Seite, Rücken gerade"}]}
 ];function filterLib(q){renderLib(q)}
-function stepVal(id,delta){const el=document.getElementById(id);const v=parseFloat(el.value)||0;el.value=Math.max(0,+(v+delta).toFixed(1));el.dispatchEvent(new Event('input',{bubbles:true}))}
+function stepVal(id,delta){const el=document.getElementById(id);const v=parseFloat(el.value)||0;el.value=Math.max(0,Math.round((v+delta)*100)/100);el.dispatchEvent(new Event('input',{bubbles:true}))}
 let stepTimer=null,stepDelay=null;
 function stepHold(id,delta){stepVal(id,delta);stepDelay=setTimeout(()=>{stepTimer=setInterval(()=>stepVal(id,delta),100)},350);const stop=(e)=>{if(e)e.preventDefault();clearTimeout(stepDelay);clearInterval(stepTimer);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop)};document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop)}
 /* ==========================================================================
@@ -6773,6 +6781,10 @@ function openSetEditor(ei,si){
   text('se-sub',`Satz ${si+1} korrigieren`);
   const setze=(id,wert)=>{const el=document.getElementById(id);if(el)el.value=wert};
   setze('edit-set-w',s.w);setze('edit-set-r',s.r);
+  /* Die Notiz des Satzes steht hier zum Lesen und Ändern (10.11.). Vorher
+     gab es sie nur als 📝 mit title — das zeigt das iPhone nie. */
+  const notizBox=document.getElementById('se-note-box');
+  if(notizBox){notizBox.hidden=!s.note;setze('edit-set-note',s.note||'')}
   const rir=parseInt(s.rir,10);
   pickRirEdit(Number.isFinite(rir)?rir:'');
   clearFieldErrs(document.getElementById('m-setedit'));
@@ -6821,6 +6833,8 @@ function saveEditSet(ei,si){
   /* Der RIR war bisher nicht korrigierbar, stand aber im Kopf des Editors —
      der Dialog zeigte also einen Wert, den er nicht änderte. */
   eintrag.rir=rir;
+  const notizBox=document.getElementById('se-note-box');
+  if(notizBox&&!notizBox.hidden)eintrag.note=document.getElementById('edit-set-note').value.trim();
   save();closeSetEditor();renderWo();toast('Satz aktualisiert');
 }
 function deleteSet(ei,si){
@@ -6834,13 +6848,14 @@ function deleteSet(ei,si){
   const weg=ex.logged.splice(si2,1)[0];save();
   closeSetEditor();
   renderWo();
-  toastAction('Satz gelöscht','Rückgängig',()=>{
+  /* Mit Kennung (10.11.), damit endWorkout die Meldung mitnimmt. */
+  toastRender('Satz gelöscht',{id:'satzweg',knopf:'Rückgängig',fn:()=>{
     const liste=activeExercisesSafe();
     const zu=liste.includes(ex)?ex:liste.find(e=>e&&ex.id!=null&&e.id===ex.id);
     if(!zu||!Array.isArray(zu.logged)){toast('Diese Übung gehört nicht mehr zur Session');return}
     zu.logged.splice(Math.min(si2,zu.logged.length),0,weg);
     save();renderWo();
-  });
+  }});
 }
 /* logTgt merkt sich einen INDEX in D.active.exercises. Dieser Index kann
    veralten, während der Log-Dialog offen ist: Übung entfernen, Tag wechseln
@@ -6859,7 +6874,10 @@ function redoLast(){
   if(!ex){cm('m-log');logTgt=null;toast('Übung nicht mehr in dieser Session');return}
   if(!ex.logged.length){toast('Kein vorheriger Satz');return}
   const last=ex.logged[ex.logged.length-1];
-  ex.logged.push({...last,t:Date.now()});
+  /* Die Notiz kommt aus dem Fenster, nicht vom vorigen Satz (10.11.): Satz 2
+     trug sonst „Schulter zwickt“ von Satz 1, und das gerade Getippte war weg. */
+  const notiz=document.getElementById('log-note');
+  ex.logged.push({...last,note:notiz?notiz.value.trim():'',t:Date.now()});
   logTgt.exIdx=pullForward(logTgt.exIdx);
   save();cm('m-log');
   /* Dieselbe Pause wie nach „Satz speichern“ (Runde 4). Vorher galt hier eine
@@ -6870,7 +6888,8 @@ function redoLast(){
   timerStartedAt=0;timerPausedRemaining=0;
   if(ex.logged.length>=ex.sets&&D.active.openEx===logTgt.exIdx)D.active.openEx=null;
   startTmr();renderWo();
-  toastSatz(`Wiederholt: ${de(last.w)} kg × ${last.r}`,ex,ex.logged.length-1);
+  /* Cardio meldet Minuten und Stufe wie logSet (10.11.), nicht „8 kg × 20“. */
+  toastSatz(isCardioExercise(ex)?`Wiederholt: ${last.r} min${last.w?` · Stufe ${last.w}`:''}`:`Wiederholt: ${de(last.w)} kg × ${last.r}`,ex,ex.logged.length-1);
   scrollToActiveCard();
 }
 function skipEx(ei){
@@ -6897,7 +6916,7 @@ function skipEx(ei){
    ========================================================================== */
 let timerPausedRemaining=0;
 function persistTimer(){
-  try{localStorage.setItem('pb_timer',JSON.stringify({startedAt:timerStartedAt,tgt:timerTgt,running:!!timerInt,paused:timerPausedRemaining}))}catch{}
+  try{localStorage.setItem('pb_timer',JSON.stringify({startedAt:timerStartedAt,tgt:timerTgt,running:!!timerInt,paused:timerPausedRemaining,span:timerSpan}))}catch{}
 }
 function restoreTimer(){
   try{
@@ -6907,6 +6926,10 @@ function restoreTimer(){
     if(!t||!D.active)return;
     timerTgt=parseInt(t.tgt)||0;
     timerPausedRemaining=parseInt(t.paused)||0;
+    /* Der Nenner des Rings kommt mit (10.11.); nach dem Neuladen stand er bei
+       0:57 von 2:00 sonst fast voll. Alte Stände ohne span heilen sich wie
+       bisher über getTimerTotal. */
+    timerSpan=parseInt(t.span)||0;
     if(t.running&&t.startedAt){
       timerStartedAt=t.startedAt;
       if(getTimerRemaining()>0)startTmrInterval();
@@ -7000,7 +7023,12 @@ function startTmr(){
   if(timerPausedRemaining>0){
     timerTgt=timerPausedRemaining;
     timerPausedRemaining=0;
-  }else if(timerTgt<=0)timerTgt=D.settings.compound;
+  }else{
+    if(timerTgt<=0)timerTgt=D.settings.compound;
+    /* Eine neue Pause misst ihren Ring an sich selbst (10.11.). Vorher blieb
+       der größte je gesehene Wert stehen: 25 s Umbau nach 2:00 zeigten 21 %. */
+    timerSpan=timerTgt;
+  }
   timerStartedAt=Date.now();
   startTmrInterval();
   renderWo();
@@ -7014,6 +7042,13 @@ function resetTmr(){
   renderWo();
 }
 function adjTmr(s){
+  /* Ist die Pause schon vorbei, heißt „30 Sekunden mehr“: 30 s ab jetzt
+     (10.11.). Vorher wuchs nur die abgelaufene Zeit, und die Leiste stand auf
+     „Pause starten“ — ein Tipp darauf zählte dann 2:30 ab. */
+  if(s>0&&timerStartedAt>0&&!timerInt&&timerPausedRemaining<=0&&getTimerRemaining()<=0){
+    timerTgt=s;timerSpan=s;timerStartedAt=Date.now();
+    startTmrInterval();renderWo();return;
+  }
   if(timerPausedRemaining>0)timerPausedRemaining=Math.max(0,timerPausedRemaining+s);
   else timerTgt=Math.max(0,timerTgt+s);
   persistTimer();renderWo();
@@ -7133,16 +7168,18 @@ function openHistEdit(i){
    Neuzeichnen laufen, sonst verliert ein Satzlöschen die übrigen Eingaben. */
 function harvestHistEdit(){
   if(!histEditDraft)return;
-  const zahl=(id,max,ganz)=>{
+  /* Ein leeres Feld bei Wdh. und RIR bleibt leer (10.11.), statt still zu
+     einer 0 zu werden; saveHistEdit lehnt es ab. Leeres Gewicht ist 0 kg. */
+  const zahl=(id,max,ganz,leer)=>{
     const el=document.getElementById(id);
     if(!el)return null;
     const v=ganz?parseInt(el.value,10):parseFloat(el.value);
-    return Math.min(max,Math.max(0,isNaN(v)?0:v));
+    return isNaN(v)?leer:Math.min(max,Math.max(0,v));
   };
   histEditDraft.sets.forEach((x,k)=>{
-    const w=zahl('he-w-'+k,2000,false);if(w!==null)x.w=w;
-    const r=zahl('he-r-'+k,999,true);if(r!==null)x.r=r;
-    const rir=zahl('he-rir-'+k,10,true);if(rir!==null)x.rir=rir;
+    const w=zahl('he-w-'+k,2000,false,0);if(w!==null)x.w=w;
+    const r=zahl('he-r-'+k,999,true,'');if(r!==null)x.r=r;
+    const rir=zahl('he-rir-'+k,10,true,'');if(rir!==null)x.rir=rir;
   });
   const dur=document.getElementById('he-dur');
   if(dur)histEditDraft.duration=Math.min(1440,Math.max(0,parseInt(dur.value,10)||0));
@@ -7211,6 +7248,23 @@ function saveHistEdit(){
     return;
   }
   if(!histEditDraft.sets.length){toast('Ohne Sätze keine Session — lösch sie stattdessen');return}
+  /* Geprüft wird wie in „Satz korrigieren“ (10.11.): mindestens 1
+     Wiederholung (bei Cardio 1 Minute), RIR 0 bis 5. Vorher hieß es
+     „Session korrigiert“, gespeichert waren 0 Wdh., RIR 9 und RIR 0 für ein
+     leeres Feld. Das Feld wird markiert, nichts wird gespeichert. */
+  for(let k=0;k<histEditDraft.sets.length;k++){
+    const x=histEditDraft.sets[k];
+    const rir=x.rir===''||x.rir===null||x.rir===undefined?NaN:+x.rir;
+    const feld=!(parseInt(x.r,10)>=1)?['he-r-'+k,isCardioSet(x)?'Minuten eintragen':'Wiederholungen eintragen']
+      :!(rir>=0&&rir<=5)?['he-rir-'+k,'RIR 0 bis 5 eintragen']:null;
+    if(feld){
+      markInvalid(feld[0]);
+      const el=document.getElementById(feld[0]);
+      if(el)el.scrollIntoView({block:'center',behavior:prefersReducedMotion()?'auto':'smooth'});
+      toast(`${x.ex||'Übung'}, Satz ${parseInt(x.nr,10)||k+1}: ${feld[1]}`);
+      return;
+    }
+  }
   const idx=findeHistEintrag();
   if(idx<0){
     toast('Diese Session gibt es nicht mehr');
@@ -10526,14 +10580,28 @@ function workoutCompareLine(c){
 /* Ohne zweite Frage: Der Knopf „Workout speichern“ steht erst unter der
    Liste, wenn alles erledigt ist, und im ⋯-Fenster ist es schon der zweite Tipp.
    Wer zu früh getippt hat, nimmt in der Zusammenfassung „Weiter trainieren“. */
-function endWorkout(){
+function endWorkout(ok){
   if(!D.active)return;
   /* Die Meldung des letzten Satzes geht mit (Runde 4): Sie lag sonst bis zu
-     5 s über der Zusammenfassung, und ihr „Ändern“ fand den Satz nicht mehr. */
-  toastWeg('satz');
+     5 s über der Zusammenfassung, und ihr „Ändern“ fand den Satz nicht mehr.
+     Ebenso „Satz gelöscht · Rückgängig“ (10.11.): Ihr Rückgängig fand die
+     Übung nach dem Speichern nicht mehr. */
+  toastWeg('satz');toastWeg('satzweg');
   const s=sessionFromActive(D.active);
   const dur=s.duration;
-  if(s.sets.length===0){D.active=null;save();resetTmr();go('dash');toast('Kein Satz geloggt');return}
+  if(s.sets.length===0){
+    /* Sätze an übersprungenen Übungen zählen nicht in die Session (10.11.).
+       Stehen nur solche da, verschwand das Training wortlos samt Sätzen, mit
+       der Meldung „Kein Satz geloggt“. Jetzt fragt ein Fenster mit der Folge. */
+    const n=loggedSetCount();
+    if(n&&ok!==true){
+      askSheet({titel:'Workout verwerfen?',
+        folge:`${n===1?'Der einzige geloggte Satz gehört':`Alle ${n} geloggten Sätze gehören`} zu übersprungenen Übungen. Sie zählen nicht in die Session und gehen mit dem Workout verloren. Mit „Doch machen“ im Menü der Übung holst du sie zurück.`,
+        tat:'Workout verwerfen',fn:()=>endWorkout(true)});
+      return;
+    }
+    D.active=null;save();resetTmr();go('dash');toast(n?'Workout verworfen':'Kein Satz geloggt');return;
+  }
   const previousSimilar=[...D.history].reverse().find(h=>h.planKey===s.planKey&&h.sets&&h.sets.length);
   /* Was sich bewegt hat (Runde 4): Jede Übung vergleicht ihren besten Satz
      von heute mit dem besten beim letzten Mal — erst das Gewicht, bei
@@ -10651,6 +10719,10 @@ function formatLastSetHint(ex,set){
   if(isCardioExercise(ex))return `${set.r} min`;
   return `${de(set.w)}kg×${set.r}`;
 }
+/* Schritt von Plus/Minus am ersten Feld: 2,5 kg, bei Cardio 1 Minute
+   (10.11.; vorher sprang es auch dort um 2,5, und gespeichert wurde
+   gerundet). */
+let logWStep=2.5;
 function openLog(ei){
   logTgt={exIdx:ei};
   const ex=D.active.exercises[ei];
@@ -10663,8 +10735,8 @@ function openLog(ei){
   const rm=getEx1RM(ex.name);
   let hint=uNote?'📝 '+uNote+' • ':ex.note?ex.note+' • ':'';
   if(lastH)hint+=`Letztes Mal: ${formatLastSetHint(ex,lastH)}`;
-  if(!cardio&&pr&&pr.w>0)hint+=` • PR: ${pr.w}kg`;
-  if(!cardio&&rm)hint+=` • 1RM: ${rm.rm}kg`;
+  if(!cardio&&pr&&pr.w>0)hint+=` • PR: ${de(pr.w)}kg`;
+  if(!cardio&&rm)hint+=` • 1RM: ${de(rm.rm)}kg`;
   document.getElementById('log-hint').textContent=hint||'';
   /* Zielvorgabe als EINE ruhige Zeile über den Eingabefeldern: nur die Zahl,
      ohne die Begründung (die steht im Training bei der Übung). Ohne Zahl und
@@ -10678,6 +10750,10 @@ function openLog(ei){
               :`<span class="tg-u">${esc(tgt.unit||'')}</span>`)+`</span></div>`:'';
   }
   document.getElementById('log-w-lab').textContent=cardio?'Minuten':'Gewicht';
+  logWStep=cardio?1:2.5;
+  /* „Scheiben“ rechnet Kilogramm; neben Minuten überschrieb es sie. */
+  const scheiben=document.querySelector('#m-log .log-link');
+  if(scheiben)scheiben.style.display=cardio?'none':'';
   document.getElementById('log-w-unit').textContent=cardio?'min':'kg';
   document.getElementById('log-r-lab').textContent=cardio?'Intensität / Stufe (optional)':'Wiederholungen';
   [['w',cardio?'Minuten':'Gewicht'],['r',cardio?'Stufe':'Wiederholungen']].forEach(([k,was])=>{
@@ -10807,7 +10883,9 @@ function quickLog(ei){
    „Satz speichern“, der Ein-Tipp-Knopf und „Wie Satz 2“ rechnen alle hier. */
 function restAfterSet(ex){
   const partners=D.active?supersetPartners(D.active.exercises,ex):[];
-  const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&!p.skipped);
+  /* Wer seine Sätze schon alle hat, kommt nicht mehr (10.11.): Bei 4 Sätzen
+     Beinbeuger gegen 3 Wadenheben lief nach dem vierten Satz nur der Umbau. */
+  const pending=partners.filter(p=>(p.logged||[]).length<(ex.logged||[]).length&&(p.logged||[]).length<(parseInt(p.sets)||0)&&!p.skipped);
   if(pending.length)return SUPERSET_GAP;
   /* Nach der Runde gilt die längere Pause der Partner, wie in der Dauer des
      Plans (workloadSeconds). Vorher zählte nur die Übung, mit der die Runde
@@ -11136,7 +11214,7 @@ function renderWo(){
       return `<div id="wo-ex-${ei}" class="wo-slim${done?' done':''}${skipped?' skipped':''}" onclick="toggleWoRow(${ei})">`+
         `${done?'<div class="i">✓</div>':skipped?'<div class="i">⤼</div>':`<div class="o">${ords[ei]}</div>`}`+
         `<div class="n">${esc(ex.name)}</div>`+
-        `<div class="r">${esc(ex.sets)}×${esc(reps(ex))}${done&&ex.logged.length?` · ${esc(ex.logged[ex.logged.length-1].w)} kg`:''}</div>`+
+        `<div class="r">${esc(ex.sets)}×${esc(reps(ex))}${done&&ex.logged.length?` · ${esc(cardio?ex.logged[ex.logged.length-1].r+' min':de(ex.logged[ex.logged.length-1].w)+' kg')}`:''}</div>`+
         `<div class="cv">›</div></div>`;
     }
     /* --- aufgeklappt: aktive Übung als Mesh-Karte, andere als normale Karte --- */
@@ -11343,8 +11421,34 @@ function scrollToActiveCard(){
   if(!el){window.scrollTo({top:0,behavior:prefersReducedMotion()||scrollY>innerHeight*0.5?'auto':'smooth'});return false}
   const kopf=document.getElementById('wo-sticky-top');
   const abstand=kopf?kopf.getBoundingClientRect().height+(parseFloat(getComputedStyle(kopf).marginBottom)||0):0;
-  el.style.scrollMarginTop=Math.round(abstand)+'px';
-  el.scrollIntoView({behavior:woScrollBehavior(el,abstand),block:'start'});
+  /* Der Knopf steht über der unteren Leiste (10.11.): Die Supersatz-Karte
+     ist so hoch, dass er bei 320 px nach jedem Satz ganz unter der Leiste
+     lag. Dann rollt die Karte so viel weiter wie nötig, höchstens so weit,
+     dass der Knopf selbst noch unter dem Kopf steht. */
+  const knopf=el.querySelector('.wo-log-row,.wo-log');
+  const er=el.getBoundingClientRect();
+  let mehr=0,kOben=0,kUnten=0;
+  if(knopf){
+    const kr=knopf.getBoundingClientRect(),nav=document.querySelector('.bnav');
+    const nr=nav?nav.getBoundingClientRect():null;
+    const unten=(nr&&nr.height?nr.top:innerHeight)-8;
+    kOben=kr.top-er.top;kUnten=kr.bottom-er.top;
+    mehr=Math.max(0,Math.min(abstand+kUnten-unten,kOben));
+  }
+  const ziel=abstand-mehr;
+  el.style.scrollMarginTop=Math.round(ziel)+'px';
+  el.scrollIntoView({behavior:woScrollBehavior(el,ziel),block:'start'});
+  /* Deckt die Meldung die Stelle, an der der Knopf gleich steht, rückt sie
+     nach oben unter den Kopf (placeToast). Gerechnet wird mit dem Ziel des
+     Rollens, nicht mit dem Bild von jetzt. */
+  const t=document.getElementById('toast');
+  if(knopf&&t&&t.classList.contains('show')&&!topSheet()){
+    const maxY=Math.max(0,document.documentElement.scrollHeight-innerHeight);
+    const nachY=Math.max(0,Math.min(maxY,scrollY+er.top-ziel));
+    const oben=er.top-(nachY-scrollY);
+    const tr=t.getBoundingClientRect();
+    if(tr.top<oben+kUnten&&tr.bottom>oben+kOben){t.dataset.oben=String(Math.round(abstand+8));placeToast()}
+  }
   return true;
 }
 /* Weich rollen nur über kurze Strecken. Nach dem Vorziehen lag die Karte bis
@@ -11396,11 +11500,25 @@ function pullForward(ei){
   D.active.openEx=null;
   return list.indexOf(ex);
 }
+/* Nach oben/unten schieben tauscht mit der nächsten Übung im selben Teil
+   der Liste (10.11.): Offenes mit Offenem, Erledigtes mit Erledigtem. Vorher
+   stand der direkte Nachbar oft unsichtbar in „Erledigt“, und getauscht
+   wurde, ohne dass sich etwas bewegte. Eine aufgeklappte Übung bleibt
+   aufgeklappt, wenn sich ihr Platz ändert. */
+function woMoveTarget(a,ei,dir){
+  const fertig=x=>!x.skipped&&(x.logged||[]).length>=x.sets;
+  if(!a[ei])return -1;
+  const f=fertig(a[ei]);
+  for(let n=ei+dir;n>=0&&n<a.length;n+=dir){if(a[n]&&fertig(a[n])===f)return n}
+  return -1;
+}
 function moveActiveExercise(ei,dir){
   const a=activeExercisesSafe();
-  const n=ei+dir;
-  if(n<0||n>=a.length)return;
+  const n=woMoveTarget(a,ei,dir);
+  if(n<0||!a[ei])return;
   [a[ei],a[n]]=[a[n],a[ei]];
+  const o=D.active.openEx;
+  if(o===ei)D.active.openEx=n;else if(o===n)D.active.openEx=ei;
   save();renderWo();
 }
 function adjustActiveSets(ei,delta){
@@ -11471,8 +11589,8 @@ function openExerciseMenu(ei){
     (ohneBild?`<button class="alt-item" onclick="cm('m-alt');showExDemo('${safe}','${jsStr(ex.muscle)}','${jsStr(ex.type)}')"><span class="alt-ico">${icon('play',20)}</span><span style="flex:1"><div class="alt-name">Ausführung ansehen</div><div class="alt-meta">Animierte Demo + Cues</div></span></button>`:'')+
     `<button class="alt-item" onclick="cm('m-alt');openExNote('${safe}')"><span class="alt-ico">${icon('note',20)}</span><span style="flex:1"><div class="alt-name">Notiz bearbeiten</div><div class="alt-meta">Wird bei jeder Session angezeigt</div></span></button>`+
     `<button class="alt-item" onclick="cm('m-alt');showExHist('${safe}')"><span class="alt-ico">${icon('chart',20)}</span><span style="flex:1"><div class="alt-name">Verlauf</div><div class="alt-meta">Alle bisherigen Sätze</div></span></button>`+
-    (ei>0?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},-1)"><span class="alt-ico">↑</span><span style="flex:1"><div class="alt-name">Nach oben schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
-    (ei<liste.length-1?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},1)"><span class="alt-ico">↓</span><span style="flex:1"><div class="alt-name">Nach unten schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
+    (woMoveTarget(liste,ei,-1)>=0?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},-1)"><span class="alt-ico">↑</span><span style="flex:1"><div class="alt-name">Nach oben schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
+    (woMoveTarget(liste,ei,1)>=0?`<button class="alt-item" onclick="cm('m-alt');moveActiveExercise(${ei},1)"><span class="alt-ico">↓</span><span style="flex:1"><div class="alt-name">Nach unten schieben</div><div class="alt-meta">Reihenfolge in dieser Session</div></span></button>`:'')+
     `<button class="alt-item" style="border-color:color-mix(in srgb,var(--red) 30%,transparent)" onclick="cm('m-alt');removeActiveExercise(${ei})"><span class="alt-ico">${icon('trash',20)}</span><span style="flex:1"><div class="alt-name" style="color:var(--red)">Aus dieser Session entfernen</div><div class="alt-meta">Plan bleibt unverändert</div></span></button>`;
   om('m-alt');
 }
@@ -11490,6 +11608,8 @@ function removeActiveExercise(ei,ok){
     return;
   }
   a.splice(ei,1);
+  const o=D.active.openEx;
+  if(o===ei)D.active.openEx=null;else if(typeof o==='number'&&o>ei)D.active.openEx=o-1;
   save();renderWo();toast('Aus Session entfernt');
 }
 /* Übung mitten im Workout ergänzen — greift auf dieselbe Bibliothek zu wie
@@ -11517,7 +11637,7 @@ function pushExerciseToActiveWorkout(item){
   ex.adhoc=true;
   D.active.exercises.push(ex);
   save();renderWo();
-  toast(item.name+' ergänzt');
+  toast(ex.name+' ergänzt');
   /* Guard MUSS im Timeout stehen, nicht davor: zwischen Aufruf und Ausführung
      kann das Workout beendet worden sein und D.active auf null stehen. */
   setTimeout(()=>{
@@ -11625,8 +11745,11 @@ function warmupPlan(workWeight,muscle,kind){
 function renderWarmup(ex){
   if(!ex||isCardioExercise(ex)||ex.type!=='main')return '';
   if((ex.logged||[]).length)return '';     // nur vor dem ersten Satz
-  const last=getLastW(ex.name);
-  const target=last&&last.w>0?last.w:0;
+  /* Gemessen am Ziel von heute (10.11.), nicht am letzten Gewicht: Im Deload
+     lagen sonst zwei Aufwärmsätze über den 20 kg des Arbeitssatzes. */
+  const ziel=parseFloat((nextSetTarget(ex)||{}).w)||0;
+  const last=ziel>0?null:getLastW(ex.name);
+  const target=ziel>0?ziel:last&&last.w>0?last.w:0;
   const plan=warmupPlan(target,ex.muscle,detectMovePattern(ex.name,ex.muscle,ex.type));
   if(!plan||!plan.length)return '';
   return `<details class="warmup"><summary><span>Aufwärmen</span><b>${plan.map(x=>esc(de(x.kg))).join(' · ')} kg</b>${icon('chev',16)}</summary>`+
@@ -11863,6 +11986,11 @@ function nextSetTarget(ex){
       return{icon:icon('target',17),num:w,w,r:String(pr),unit:`kg × ${esc(pr)}`,why:`Wie Satz ${n}.`,
         text:`Wie Satz ${n}: <b>${esc(de(w))} kg × ${esc(pr)}</b>.`};
     }
+    /* Körpergewicht (10.11.): 0 kg × 12 ist auch ein voriger Satz. Vorher fiel
+       er durch, und ab Satz 2 stand weiter „Erste Referenz setzen“. Ohne
+       Gewicht gibt es keinen Ein-Tipp-Knopf; das Fenster steht auf 0 × 12. */
+    if(prev&&pw===0&&pr>0)return{icon:icon('target',17),num:'',r:String(pr),unit:`${pr} Wdh.`,why:`Wie Satz ${n}.`,
+      text:`Wie Satz ${n}: <b>${esc(pr)} Wdh.</b>`};
   }
   if(deloadActive()&&!isCardioExercise(ex)){
     const last=getLastW(ex.name);
@@ -12063,10 +12191,13 @@ function pickLibraryItem(encodedName){
   const name=decodeURIComponent(encodedName);
   const item=allLibraryCategories().flatMap(cat=>cat.items).find(ex=>ex.name===name);
   if(!item)return;
-  cm('m-lib');
   /* Dieselbe Bibliothek bedient zwei Ziele: Plan-Editor und laufendes
-     Workout. Der Modus entscheidet, wohin die Übung wandert. */
-  if(addToWorkoutMode){
+     Workout. Der Modus entscheidet, wohin die Übung wandert. Er wird vor dem
+     Schließen gelesen (10.11.): cm('m-lib') setzt ihn zurück, und vorher
+     landete jede Übung aus „Übung hinzufügen“ im Training im Plan. */
+  const insTraining=addToWorkoutMode;
+  cm('m-lib');
+  if(insTraining){
     addToWorkoutMode=false;
     if(pushExerciseToActiveWorkout(item))return;
   }
@@ -12325,13 +12456,17 @@ function swapActiveExercise(ei,altIndex){
   const hasLogs=(old.logged||[]).length>0;
   const inPlan=(D.plan[D.active.planKey]||{exercises:[]}).exercises.some(e=>libKey(e.name)===libKey(old.name));
   document.getElementById('alt-title').textContent='Tausch bestätigen';
-  document.getElementById('alt-sub').innerHTML=`<b>${esc(old.name)}</b> → <b>${esc(picked.name)}</b>`;
+  document.getElementById('alt-sub').innerHTML=`<b>${esc(old.name)}</b> → <b>${esc(swapName(picked))}</b>`;
   document.getElementById('alt-list').innerHTML=
     (hasLogs?`<div class="target-hint" style="margin-bottom:10px"><span class="th-ico" style="color:var(--orange)">${icon('warn',17)}</span><span class="th-t">${old.logged.length} Sätze sind auf „${esc(old.name)}“ geloggt. Sie werden unter dem alten Namen gespeichert und gehen nicht verloren — die alte Übung bleibt als erledigter Block in der Session.</span></div>`:'')+
     `<button class="alt-item" onclick="commitSwap(false)"><span class="alt-ico">${icon('swap',20)}</span><span style="flex:1"><div class="alt-name">Nur diese Session</div><div class="alt-meta">Dein Trainingsplan bleibt unverändert.</div></span></button>`+
     (inPlan?`<button class="alt-item" onclick="commitSwap(true)"><span class="alt-ico">💾</span><span style="flex:1"><div class="alt-name">Session + Plan dauerhaft</div><div class="alt-meta">Ersetzt die Übung auch in „${esc(planDisplayName(D.active.planKey))}“ für alle künftigen Workouts.</div></span></button>`:'')+
     `<button class="alt-item" onclick="openAlternative(${targetIndex})"><span class="alt-ico">←</span><span style="flex:1"><div class="alt-name">Zurück zur Auswahl</div></span></button>`;
   return true;
+}
+function swapName(picked){
+  const eigen=Object.values(D.plan||{}).some(d=>(d.exercises||[]).some(e=>e.name===picked.name));
+  return eigen?picked.name:exDisplayName(picked.name);
 }
 function commitSwap(persistToPlan){
   if(!pendingSwap||!D.active)return;
@@ -12340,7 +12475,9 @@ function commitSwap(persistToPlan){
   if(!old)return;
   const swapped=normalizeExercise({
     id:Date.now()+Math.random()*1000|0,
-    name:picked.name,sets:picked.sets,rmin:picked.rmin,rmax:picked.rmax,
+    /* Aus der Bibliothek kommt nur der deutsche Name (10.11.), wie bei „Übung
+       hinzufügen“; ein Name aus dem eigenen Plan bleibt, wie er ist. */
+    name:swapName(picked),sets:picked.sets,rmin:picked.rmin,rmax:picked.rmax,
     rir:picked.rir,type:picked.type,muscle:picked.muscle,note:picked.note
   });
   swapped.logged=[];
